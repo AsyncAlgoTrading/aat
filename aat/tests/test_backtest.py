@@ -10,7 +10,7 @@ class TestBacktest:
                             'timestamp': '1558296780000',
                             'pair': 'USDBTC'
                             }])
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
         df.set_index(['timestamp', 'pair'])
         self.test_line = df.iloc[0]
 

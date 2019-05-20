@@ -14,11 +14,10 @@ from .strategy import TradingStrategy
 from .structs import TradeRequest, TradeResponse
 from .utils import ex_type_to_ex
 from .logging import LOG as log, SLIP as sllog, TXNS as tlog
-from .ui.server import ServerApplication
 
 
 class TradingEngine(object):
-    def __init__(self, options: TradingEngineConfig) -> None:
+    def __init__(self, options: TradingEngineConfig, ui) -> None:
         # running live?
         self._live = options.type == TradingType.LIVE
 
@@ -84,6 +83,9 @@ class TradingEngine(object):
         # pending orders to process (partial fills)
         self._pending = {OrderType.MARKET: [], OrderType.LIMIT: []}  # TODO in progress
 
+        # save UI class for later
+        self._ui_clazz = ui
+
     def exchanges(self):
         return self._exchanges
 
@@ -121,7 +123,7 @@ class TradingEngine(object):
     def run(self):
         if self._live or self._simulation or self._sandbox:
             port = 8081
-            self.application = ServerApplication(self)
+            self.application = self._ui_clazz(self)
             log.critical('')
             log.critical('Server listening on port: %s', port)
             log.critical('')

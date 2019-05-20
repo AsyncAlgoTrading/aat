@@ -44,7 +44,6 @@ test_verbose: ## run the tests with full output
 
 lint: ## run linter
 	flake8 aat 
-	yarn lint
 
 annotate: ## MyPy type annotation check
 	mypy -s aat 
