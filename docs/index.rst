@@ -7,7 +7,7 @@ aat
 ===================================
 Lightweight, extensible program for algorithmically trading.
 
-|build-status| |codecov| |gitter| |bch| |pypiv| |pypil| |docs| |site|
+|build-status| |codecov| |bch| |pypiv| |pypil| |docs| |site|
 
 
 .. toctree::
@@ -30,11 +30,6 @@ Introduction
     :alt: Codecov
     :scale: 100%
     :target: https://codecov.io/gh/timkpaine/aat
-
-.. |gitter| image:: https://img.shields.io/gitter/room/nwjs/nw.js.svg
-    :alt: Gitter
-    :scale: 100%
-    :target: https://gitter.im/aat/Lobby
 
 .. |bch| image:: https://bettercodehub.com/edge/badge/timkpaine/aat?branch=master
     :alt: BCH
