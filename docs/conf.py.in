@@ -117,7 +117,7 @@ html_sidebars = {
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'perspectivedoc'
+htmlhelp_basename = 'aatdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -144,7 +144,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'perspective.tex', 'perspective Documentation',
+    (master_doc, 'aat.tex', 'aat Documentation',
      'Tim Paine', 'manual'),
 ]
 
@@ -154,7 +154,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'perspective', 'perspective Documentation',
+    (master_doc, 'aat', 'aat Documentation',
      [author], 1)
 ]
 
@@ -165,15 +165,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'perspective', 'perspective Documentation',
-     author, 'perspective', 'One line description of project.',
+    (master_doc, 'aat', 'aat Documentation',
+     author, 'aat', 'One line description of project.',
      'Miscellaneous'),
 ]
 
 
 def run_apidoc(_):
     out_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'api'))
-    psp_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'perspective'))
+    psp_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'aat'))
     cmd_path = 'sphinx-apidoc'
     if hasattr(sys, 'real_prefix'):  # Check to see if we are in a virtualenv
         # If we are, assemble the path manually

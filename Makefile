@@ -1,6 +1,5 @@
-CONFIG=./config/sandbox_gemini.cfg
-EXCHANGE=gemini
-CURRENCY=USD
+CONFIG=./config/backtest_multi.cfg
+EXCHANGE=gdax
 
 
 runconfig: build ## Clean and make target, run target
@@ -34,24 +33,14 @@ build: ## build the package
 install: ## install the package
 	python3 setup.py install
 
-dist:  ## dist to pypi
-	python3 setup.py sdist upload -r pypi
-
-js:  ## build the js
-	yarn
-	yarn build
-
 tests: ## Clean and Make unit tests
 	python3 -m pytest -v ./build/`ls ./build | grep lib`/aat/tests --cov=aat
-	yarn test
 
 test: clean build lint ## run the tests for travis CI
 	@ python3 -m pytest -v ./build/`ls ./build | grep lib`/aat/tests --cov=aat
-	yarn test
 
 test_verbose: ## run the tests with full output
 	@ python3 -m pytest -vv ./build/`ls ./build | grep lib`/aat/tests --cov=aat
-	yarn test
 
 lint: ## run linter
 	flake8 aat 
@@ -65,6 +54,18 @@ annotate_l: ## MyPy type annotation check - count only
 
 docs:  ## Build the sphinx docs
 	make -C docs html
+
+micro:  ## steps before dist, defaults to previous tag + one micro
+	. scripts/deploy.sh MICRO
+
+minor:  ## steps before dist, defaults to previous tag + one micro
+	. scripts/deploy.sh MINOR
+
+major:  ## steps before dist, defaults to previous tag + one micro
+	. scripts/deploy.sh MAJOR
+
+dist:  ## dist to pypi
+	python3 setup.py sdist upload -r pypi
 
 clean: ## clean the repository
 	find . -name "__pycache__" | xargs rm -rf

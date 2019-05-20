@@ -1,3 +1,4 @@
+# # # # GENERATED FILE -- DO NOT MODIFY # # # #
 from setuptools import setup, find_packages
 from distutils.extension import Extension
 from codecs import open
@@ -23,11 +24,11 @@ with open(os.path.join(here, 'requirements.txt'), encoding='utf-8') as f:
 
 setup(
     name='aat',
-    version='0.0.1',
-    description='Algorithmic trading library',
+    version='0.0.2',
+    description='Analytics library',
     long_description=long_description,
     url='https://github.com/timkpaine/aat',
-    download_url='https://github.com/timkpaine/aat/archive/v0.0.3.tar.gz',
+    download_url='https://github.com/timkpaine/aat/archive/v0.0.2.tar.gz',
     author='Tim Paine',
     author_email='timothy.k.paine@gmail.com',
     license='Apache 2.0',
@@ -57,10 +58,10 @@ setup(
     },
 
     ext_modules=[
-        # Extension('algocoin/_extension', include_dirs=['algocoin/include'], sources=['algocoin/src/test.cpp'], libraries=['boost_python']),
         Extension(x,
                   include_dirs=["algocoin/include"],
                   sources=[y],
                   libraries=["boost_python"]) for x, y in zip(outputs, sources)
     ]
+
 )
