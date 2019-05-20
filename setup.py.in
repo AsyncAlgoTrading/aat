@@ -11,7 +11,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 sources = []
 outputs = []
-for path, subdirs, files in os.walk('algocoin/src'):
+for path, subdirs, files in os.walk('aat/src'):
     for name in files:
         fp = os.path.join(path, name)
         if fp.endswith('cpp'):
@@ -52,13 +52,13 @@ setup(
     extras_require={'dev': requires + ['pytest', 'pytest-cov', 'pylint', 'flake8']},
     entry_points={
         'console_scripts': [
-            'algocoin=algocoin:main',
+            'aat=aat:main',
         ],
     },
 
     ext_modules=[
         Extension(x,
-                  include_dirs=["algocoin/include"],
+                  include_dirs=["aat/include"],
                   sources=[y],
                   libraries=["boost_python"]) for x, y in zip(outputs, sources)
     ]

@@ -5,19 +5,15 @@ languages:
 - name: python
   production:
     exclude:
-      - /algocoin/tests/.*
+      - /aat/tests/.*
   test:
     include:
-      - /algocoin/tests/.*
+      - /aat/tests/.*
 
 exclude:
 - /docs/.*
 - .*/setup\.py
-- /algocoin/lib/oe/.*
-- /algocoin/lib/oe/poloniex/.*
 - /scripts/.*
-- /algocoin/lib/logging\.py
-- /algocoin/lib/define\.py
-- /algocoin/custom\_strategies\.py
-- /custom_strategies/.*
-- /algocoin/lib/strategies/.*
+- /aat/logging\.py
+- /aat/define\.py
+- /aat/strategies/.*
