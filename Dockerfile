@@ -23,4 +23,4 @@ RUN python3 -m pip install codecov nose2 mock flake8 pylint
 RUN python3 -m pip install -r requirements.txt
 
 RUN DOCKER=true make test
-RUN codecov --token 10cff21a-48fa-4326-9714-fd63aa7c785d
+RUN codecov --token caa422e7-7543-4adb-8ee1-e4a7ea24b988
