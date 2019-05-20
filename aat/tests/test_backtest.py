@@ -5,13 +5,14 @@ class TestBacktest:
     def setup(self):
         from ..config import BacktestConfig
         self.config = BacktestConfig()
-        df = pd.DataFrame([{'volume': '100',
-                            'close': '1',
+        df = pd.DataFrame([{'volume': 100.0,
+                            'close': 1.0,
                             'timestamp': '1558296780000',
+                            'exchange': 'GEMINI',
                             'pair': 'USDBTC'
                             }])
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-        df.set_index(['timestamp', 'pair'])
+        df.set_index(['timestamp', 'pair'], inplace=True)
         self.test_line = df.iloc[0]
 
     def teardown(self):
