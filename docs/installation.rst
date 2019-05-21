@@ -7,7 +7,7 @@ From Pip
 
 .. code:: bash
 
-    pip install algocoin
+    pip install aat
 
 From Source
 ============
