@@ -5,6 +5,9 @@ ADD . /usr/src/app
 
 RUN apt-get update
 RUN apt-get -y install apt-transport-https libtbb-dev cmake
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g yarn
 RUN apt-get -y remove python3
 
 RUN python3.7 -m pip install numpy
@@ -18,4 +21,3 @@ RUN cd boost_1_67_0 && CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:/usr/local/includ
 
 RUN ln -s /usr/local/lib/libboost_python37.so /usr/local/lib/libboost_python.so
 RUN ln -s /usr/local/lib/libboost_numpy37.so /usr/local/lib/libboost_numpy.so
-
