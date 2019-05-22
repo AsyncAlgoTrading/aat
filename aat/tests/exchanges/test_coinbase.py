@@ -7,13 +7,11 @@ class TestExchange:
         from ...exchanges.coinbase import CoinbaseExchange
         from ...enums import ExchangeType
 
-        with patch('os.environ'), patch('gdax.AuthenticatedClient') as m:
-            ec = ExchangeConfig()
-            ec.exchange_type = ExchangeType.COINBASE
-            m.getAccounts.return_value = []
-            e = CoinbaseExchange(ExchangeType.COINBASE, ec)
-            e._running = True
-            assert e
+        ec = ExchangeConfig()
+        ec.exchange_type = ExchangeType.COINBASE
+        e = CoinbaseExchange(ExchangeType.COINBASE, ec)
+        e._running = True
+        assert e
 
     def test_receive(self):
         from ...config import ExchangeConfig
