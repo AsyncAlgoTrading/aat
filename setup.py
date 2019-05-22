@@ -1,9 +1,11 @@
 # # # # GENERATED FILE -- DO NOT MODIFY # # # #
 from setuptools import setup, find_packages
+from shutil import copy
 from distutils.extension import Extension
 from codecs import open
 import os
 import os.path
+import fnmatch
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -21,6 +23,13 @@ for path, subdirs, files in os.walk('aat/src'):
 
 with open(os.path.join(here, 'requirements.txt'), encoding='utf-8') as f:
     requires = f.read().split()
+
+
+def find(pattern, path):
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            if fnmatch.fnmatch(name, pattern):
+                return os.path.join(root, name)
 
 setup(
     name='aat',
@@ -65,3 +74,12 @@ setup(
     ]
 
 )
+
+binding = find('test*.so', 'build')
+library = find('_cpp_helpers*.so', 'build')
+
+print("copying test.so")
+copy(binding, 'aat')
+
+print("copying _cpp_helpers.so")
+copy(library, 'aat/exchanges')

@@ -34,13 +34,13 @@ install: ## install the package
 	python3 setup.py install
 
 tests: ## Clean and Make unit tests
-	python3 -m pytest -v ./build/`ls ./build | grep lib`/aat/tests --cov=aat
+	python3 -m pytest -v ./aat/tests --cov=aat
 
 test: clean build lint ## run the tests for travis CI
-	@ python3 -m pytest -v ./build/`ls ./build | grep lib`/aat/tests --cov=aat
+	@ python3 -m pytest -v ./aat/tests --cov=aat
 
 test_verbose: ## run the tests with full output
-	@ python3 -m pytest -vv ./build/`ls ./build | grep lib`/aat/tests --cov=aat
+	@ python3 -m pytest -vv ./aat/tests --cov=aat
 
 lint: ## run linter
 	flake8 aat 
