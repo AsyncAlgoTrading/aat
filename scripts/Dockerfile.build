@@ -1,8 +1,5 @@
 FROM python:3.7
 
-WORKDIR /usr/src/app
-ADD . /usr/src/app
-
 RUN apt-get update
 RUN apt-get -y install apt-transport-https libtbb-dev cmake
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
