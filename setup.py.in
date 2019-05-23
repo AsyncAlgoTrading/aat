@@ -15,9 +15,10 @@ for path, subdirs, files in os.walk('aat/src'):
     for name in files:
         fp = os.path.join(path, name)
         if fp.endswith('cpp'):
-            outputs.append(fp.replace('.cpp', '').replace('/src', ''))
+            outputs.append(fp.replace('.cpp', '').replace('/src', '').replace('/', '.'))
             sources.append(fp)
-
+print(sources)
+print(outputs)
 with open(os.path.join(here, 'requirements.txt'), encoding='utf-8') as f:
     requires = f.read().split()
 
