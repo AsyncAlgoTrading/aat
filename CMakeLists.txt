@@ -45,7 +45,7 @@ endfunction()
 # BUILD CONFIGURATION #
 #######################
 option(CMAKE_BUILD_TYPE "Release/Debug build" RELEASE)
-option(CPP_BUILD_TESTS "Build the C++ Tests" OFF)
+option(CPP_BUILD_TESTS "Build the C++ Tests" ON)
 option(CPP_BUILD_STRICT "Build the C++ with strict warnings" OFF)
 
 if(DEFINED ENV{PSP_DEBUG})
@@ -119,7 +119,7 @@ set(CMAKE_CXX_FLAGS " \
 find_package(pybind11)
 if(NOT pybind11_FOUND)
     message("${Red}PyBind11 could not be located${ColorReset}")
-    build_dep("pybind11", "cmake/Pybind.txt.in")
+    build_dep("pybind11" "cmake/Pybind.txt.in")
 else()
     message("${Cyan}Found PyBind11 in ${pybind11_INCLUDE_DIRS}${ColorReset}")
 endif()
@@ -163,28 +163,28 @@ include_directories("${CMAKE_SOURCE_DIR}/cpp/include")
 ########################
 # Python extra targets #
 ########################
-add_library(test SHARED
-    ${CMAKE_SOURCE_DIR}/cpp/src/test.cpp
+add_library(binding SHARED
+    ${CMAKE_SOURCE_DIR}/cpp/src/binding.cpp
     ${HEADER_FILES})
-set_target_properties(test PROPERTIES
+set_target_properties(binding PROPERTIES
          LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat)
-target_link_libraries(test ${BOOST_PYTHON})
-target_link_libraries(test ${BOOST_NUMPY})
-target_link_libraries(test ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+target_link_libraries(binding ${BOOST_PYTHON})
+target_link_libraries(binding ${BOOST_NUMPY})
+target_link_libraries(binding ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 add_library(_cpp_helpers SHARED
     ${CMAKE_SOURCE_DIR}/cpp/src/exchanges/_cpp_helpers.cpp)
 set_target_properties(_cpp_helpers PROPERTIES
          LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat/exchanges)
-target_link_libraries(_cpp_helpers test)
+target_link_libraries(_cpp_helpers binding)
 target_link_libraries(_cpp_helpers ${BOOST_PYTHON})
 target_link_libraries(_cpp_helpers ${BOOST_NUMPY})
 target_link_libraries(_cpp_helpers ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 ########################
 
 if(CPP_BUILD_STRICT AND NOT WIN32)
-    target_compile_options(test PRIVATE -Wall -Werror)
-    target_compile_options(test PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
+    target_compile_options(binding PRIVATE -Wall -Werror)
+    target_compile_options(binding PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
     target_compile_options(_cpp_helpers PRIVATE -Wall -Werror)
     target_compile_options(_cpp_helpers PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
 endif()

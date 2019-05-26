@@ -2,8 +2,8 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
-#ifndef __AAT_TEST_HPP__
-#define __AAT_TEST_HPP__
+#ifndef __AAT_BINDING_HPP__
+#define __AAT_BINDING_HPP__
 void say_hello(const char* name);
 
 
