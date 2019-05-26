@@ -81,7 +81,10 @@ class TestStrategy(TradingStrategy):
     def onChange(self, data: MarketData) -> None:
         slog.info(data)
 
-    def onDone(self, data: MarketData) -> None:
+    def onFill(self, data: MarketData) -> None:
+        slog.info(data)
+
+    def onCancel(self, data: MarketData) -> None:
         slog.info(data)
 
     def onOpen(self, data: MarketData) -> None:

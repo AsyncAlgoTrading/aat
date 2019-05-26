@@ -1,5 +1,6 @@
 from .utils import config
-from .enums import TradingType, ExchangeType, PairType
+from .enums import TradingType, ExchangeType, PairType, InstrumentType
+from .structs import Instrument
 
 
 @config
@@ -7,6 +8,7 @@ class ExchangeConfig:
     exchange_types = [ExchangeType], []
     trading_type = TradingType, TradingType.NONE
     currency_pairs = [PairType], [PairType.BTCUSD]
+    instruments = [Instrument], [Instrument(type=InstrumentType.PAIR, underlying=PairType.BTCUSD)]
 
 
 @config

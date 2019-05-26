@@ -29,7 +29,8 @@ class TestSMACrossesStrategy:
         # unused
         s.onChange(None)
         s.onContinue(None)
-        s.onDone(None)
+        s.onFill(None)
+        s.onCancel(None)
         s.onHalt(None)
         s.onOpen(None)
         s.onReceived(None)

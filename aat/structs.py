@@ -9,8 +9,7 @@ from .enums import Side, \
                    TickType, \
                    TradeResult, \
                    InstrumentType, \
-                   RiskReason, \
-                   ChangeReason
+                   RiskReason
 from .utils import struct, NOPRINT
 
 
@@ -108,7 +107,6 @@ class MarketData:
 
     # maybe specific
     remaining = float, 0.0
-    reason = ChangeReason, ChangeReason.NONE
     sequence = int, -1
     exchange = ExchangeType
     order_type = OrderType, OrderType.NONE

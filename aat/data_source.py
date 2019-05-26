@@ -42,10 +42,10 @@ class StreamingDataSource(DataSource):
     def __init__(self, *args, **kwargs) -> None:
         self._running = False
         self._callbacks = {TickType.TRADE: [],
-                           TickType.RECEIVED: [],
                            TickType.ERROR: [],
                            TickType.OPEN: [],
-                           TickType.DONE: [],
+                           TickType.FILL: [],
+                           TickType.CANCEL: [],
                            TickType.CHANGE: [],
                            TickType.ANALYZE: [],
                            TickType.HALT: [],
@@ -79,14 +79,14 @@ class StreamingDataSource(DataSource):
     def onTrade(self, callback: Callback) -> None:
         self._callbacks[TickType.TRADE].append(callback)
 
-    def onReceived(self, callback: Callback) -> None:
-        self._callbacks[TickType.RECEIVED].append(callback)
-
     def onOpen(self, callback: Callback) -> None:
         self._callbacks[TickType.OPEN].append(callback)
 
-    def onDone(self, callback: Callback) -> None:
-        self._callbacks[TickType.DONE].append(callback)
+    def onFill(self, callback: Callback) -> None:
+        self._callbacks[TickType.FILL].append(callback)
+
+    def onCancel(self, callback: Callback) -> None:
+        self._callbacks[TickType.CANCEL].append(callback)
 
     def onChange(self, callback: Callback) -> None:
         self._callbacks[TickType.CHANGE].append(callback)
@@ -110,22 +110,14 @@ class StreamingDataSource(DataSource):
         if not isinstance(callback, Callback):
             raise Exception('%s is not an instance of class '
                             'Callback' % callback)
-
-        if callback.onTrade:
-            self.onTrade(callback.onTrade)
-        if callback.onReceived:
-            self.onReceived(callback.onReceived)
-        if callback.onOpen:
-            self.onOpen(callback.onOpen)
-        if callback.onDone:
-            self.onDone(callback.onDone)
-        if callback.onChange:
-            self.onChange(callback.onChange)
-        if callback.onError:
-            self.onError(callback.onError)
-        if callback.onAnalyze:
-            self.onAnalyze(callback.onAnalyze)
-        if callback.onHalt:
-            self.onHalt(callback.onHalt)
-        if callback.onContinue:
-            self.onContinue(callback.onContinue)
+        for att in ['onTrade',
+                    'onOpen',
+                    'onFill',
+                    'onCancel',
+                    'onChange',
+                    'onError',
+                    'onAnalyze',
+                    'onHalt',
+                    'onContinue']:
+            if hasattr(callback, att):
+                getattr(self, att)(getattr(callback, att))

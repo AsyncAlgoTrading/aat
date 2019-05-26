@@ -6,10 +6,9 @@ namespace py = pybind11;
 #define __AAT_BINDING_HPP__
 void say_hello(const char* name);
 
-
-PYBIND11_MODULE(test, m)
+PYBIND11_MODULE(binding, m)
 {
-    m.doc() = "A Test";
+    m.doc() = "C++ bindings";
     m.def("say_hello", &say_hello, "A test function");
 }
 #endif

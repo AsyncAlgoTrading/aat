@@ -1,8 +1,9 @@
 from configparser import ConfigParser
 from pydoc import locate
 from .config import TradingEngineConfig, BacktestConfig, StrategyConfig
-from .enums import TradingType
+from .enums import TradingType, InstrumentType
 from .exceptions import ConfigException
+from .structs import Instrument
 from .utils import str_to_exchange, set_verbose, str_to_currency_pair_type
 from .logging import LOG as log
 
@@ -137,7 +138,8 @@ def _parse_options(argv, config: TradingEngineConfig) -> None:
 
     if argv.get('currency_pairs'):
         config.exchange_options.currency_pairs = _parse_currencies(argv.get('currency_pairs'))
-
+        config.exchange_options.instruments = \
+            [Instrument(type=InstrumentType.PAIR, underlying=p) for p in config.exchange_options.currency_pairs]
 
 def _parse_live_options(argv, config: TradingEngineConfig) -> None:
     log.critical("\n\nWARNING: Live trading. money will be lost ;^)\n\n")

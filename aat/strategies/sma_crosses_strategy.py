@@ -160,7 +160,10 @@ class SMACrossesStrategy(TradingStrategy):
     def onContinue(self, data: MarketData) -> None:
         pass
 
-    def onDone(self, data: MarketData) -> None:
+    def onFill(self, data: MarketData) -> None:
+        pass
+
+    def onCancel(self, data: MarketData) -> None:
         pass
 
     def onHalt(self, data: MarketData) -> None:

@@ -51,7 +51,10 @@ class TestDataSource:
             def onOpen(self):
                 pass
 
-            def onDone(self):
+            def onFill(self):
+                pass
+
+            def onCancel(self):
                 pass
 
             def onChange(self):
@@ -74,8 +77,9 @@ class TestDataSource:
 
             t.registerCallback(TestCB())
             assert t._callbacks
-            assert len(t._callbacks) == 9
+            assert len(t._callbacks) == 10
             assert len(t._callbacks[TickType.ERROR]) == 1
 
-        except:
+        except Exception as e:
+            print(e)
             assert False

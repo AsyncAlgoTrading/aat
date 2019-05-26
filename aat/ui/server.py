@@ -4,8 +4,8 @@ import logging
 import tornado.ioloop
 import tornado.web
 from .handlers.accounts import ServerAccountsHandler
-from .handlers.messages import ServerMessagesHandler, ServerMessagesWSHandler
-from .handlers.orders import ServerOrdersHandler
+from .handlers.instruments import ServerInstrumentsHandler
+from .handlers.trades import ServerTradesHandler
 from .handlers.html import HTMLOpenHandler
 
 
@@ -39,20 +39,9 @@ class ServerApplication(tornado.web.Application):
         super(ServerApplication, self).__init__(
           extra_handlers + [
             (r"/api/json/v1/accounts", ServerAccountsHandler, {'trading_engine': trading_engine}),
-            (r"/api/json/v1/orders", ServerOrdersHandler, {'trading_engine': trading_engine,
-                                                           'psp_kwargs': {'view': 'hypergrid',
-                                                                          'columns': ['time', 'volume', 'price', 'instrument'],
-                                                                          'columnpivots': ['side'],
-                                                                          'sort': ['price', 'asc'],
-                                                                          'filters': ['reason', '==', 'ChangeReason.OPENED'],
-                                                                          }}),
-            (r"/api/json/v1/messages", ServerMessagesHandler, {'trading_engine': trading_engine,
-                                                               'psp_kwargs': {'view': 'y_line',
-                                                                              'aggregates': {'price': 'last'},
-                                                                              'columns': 'price',
-                                                                              'rowpivots': 'time',
-                                                                              'columnpivots': ['type', 'side']}}),
-            (r"/api/ws/v1/messages", ServerMessagesWSHandler, {'trading_engine': trading_engine}),
+            (r"/api/json/v1/instruments", ServerInstrumentsHandler, {'trading_engine': trading_engine}),
+            (r"/api/json/v1/trades", ServerTradesHandler, {'trading_engine': trading_engine,
+                                                           'psp_kwargs': {'view': 'hypergrid', 'limit': 100}}),
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": static}),
             (r"/(.*)", HTMLOpenHandler, {'template': '404.html'})
           ], **settings)

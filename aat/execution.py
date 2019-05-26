@@ -8,7 +8,6 @@ from .logging import EXEC as exlog
 class Execution(object):
     def __init__(self, options: ExecutionConfig, exchange: Exchange) -> None:
         self.trading_type = options.trading_type
-
         self._ex = exchange
         self._exs = []
 

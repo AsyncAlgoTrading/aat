@@ -27,7 +27,8 @@ class Book(object):
         volume = round(order.volume, 4)
 
         if order.side == Side.BUY:
-            if order.type == TickType.DONE:
+            if order.type == TickType.FILL or \
+               order.type == TickType.CANCEL:
                 if price not in self._bidd:
                     pass
                 else:
@@ -55,7 +56,8 @@ class Book(object):
                 self._bid.append(Order(price, volume))
                 self._bidd[price] = self._bid[-1]
         else:
-            if order.type == TickType.DONE:
+            if order.type == TickType.FILL or \
+               order.type == TickType.CANCEL:
                 if price not in self._askk:
                     pass
                 else:

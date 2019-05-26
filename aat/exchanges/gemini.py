@@ -4,7 +4,7 @@ from aiostream import stream
 from datetime import datetime
 from functools import lru_cache
 from ..define import EXCHANGE_MARKET_DATA_ENDPOINT
-from ..enums import Side, OrderType, OrderSubType, PairType, TickType, ChangeReason
+from ..enums import Side, OrderType, OrderSubType, PairType, TickType
 from ..exchange import Exchange
 from ..logging import LOG as log
 from ..structs import MarketData, Instrument, TradeResponse
@@ -65,11 +65,9 @@ class GeminiExchange(Exchange):
                         pass
 
                     if res.type != TickType.HEARTBEAT:
-                        if res.type not in self._messages:
-                            self._messages[res.type] = [res]
-                        else:
-                            self._messages[res.type].append(res)
-                        self._messages_all.append(res)
+                        if self._query_engine:
+                            self._query_engine.push(res)
+
 
                     if res.type == TickType.TRADE:
                         self._last = res
@@ -78,8 +76,10 @@ class GeminiExchange(Exchange):
                         self.callback(TickType.RECEIVED, res)
                     elif res.type == TickType.OPEN:
                         self.callback(TickType.OPEN, res)
-                    elif res.type == TickType.DONE:
-                        self.callback(TickType.DONE, res)
+                    elif res.type == TickType.FILL:
+                        self.callback(TickType.FILL, res)
+                    elif res.type == TickType.CANCEL:
+                        self.callback(TickType.CANCEL, res)
                     elif res.type == TickType.CHANGE:
                         self.callback(TickType.CHANGE, res)
                     elif res.type == TickType.HEARTBEAT:
@@ -100,7 +100,6 @@ class GeminiExchange(Exchange):
     def tickToData(self, jsn: dict) -> MarketData:
         time = datetime.now()
         price = float(jsn.get('price', 'nan'))
-        reason = jsn.get('reason', '')
         volume = float(jsn.get('amount', 0.0))
         typ = self.strToTradeType(jsn.get('type'))
         delta = float(jsn.get('delta', 0.0))
@@ -112,14 +111,6 @@ class GeminiExchange(Exchange):
 
         side = str_to_side(jsn.get('side', ''))
         remaining_volume = float(jsn.get('remaining', 'nan'))
-
-        if reason == 'canceled':
-            reason = ChangeReason.CANCELLED
-        elif reason == 'place' or reason == 'initial':
-            reason = ChangeReason.OPENED
-        else:
-            reason = ChangeReason.NONE
-
         sequence = -1
 
         if 'symbol' not in jsn:
@@ -134,7 +125,7 @@ class GeminiExchange(Exchange):
                          type=typ,
                          instrument=instrument,
                          remaining=remaining_volume,
-                         reason=reason,
+
                          side=side,
                          exchange=self.exchange(),
                          sequence=sequence)
@@ -146,7 +137,7 @@ class GeminiExchange(Exchange):
     def reasonToTradeType(self, s: str) -> TickType:
         s = s.upper()
         if 'CANCEL' in s:
-            return TickType.DONE
+            return TickType.CANCEL
         if 'PLACE' in s:
             return TickType.OPEN
         if 'INITIAL' in s:

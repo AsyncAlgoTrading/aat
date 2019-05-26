@@ -16,6 +16,7 @@ from ..market_data import *
 from ..order_book import *
 from ..order_entry import *
 from ..parser import *
+from ..query import *
 from ..risk import *
 from ..strategies.test_strat import *
 from ..strategies.sma_crosses_strategy import *
@@ -27,6 +28,6 @@ from ..ui.server import *
 from ..ui.handlers.accounts import *
 from ..ui.handlers.base import *
 from ..ui.handlers.html import *
-from ..ui.handlers.messages import *
-from ..ui.handlers.orders import *
+from ..ui.handlers.instruments import *
+from ..ui.handlers.trades import *
 from ..utils import *

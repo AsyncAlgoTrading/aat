@@ -33,7 +33,8 @@ class TestExchange:
                 for i, val in enumerate([TickType.TRADE,
                                          TickType.RECEIVED,
                                          TickType.OPEN,
-                                         TickType.DONE,
+                                         TickType.FILL,
+                                         TickType.CANCEL,
                                          TickType.CHANGE,
                                          TickType.ERROR]):
                     m1.return_value = {'events': [{"type": "accepted",
@@ -93,7 +94,7 @@ class TestExchange:
         ec.exchange_type = ExchangeType.GEMINI
         e = GeminiExchange(ExchangeType.GEMINI, ec)
 
-        assert e.reasonToTradeType('CANCEL') == TickType.DONE
+        assert e.reasonToTradeType('CANCEL') == TickType.CANCEL
         assert e.reasonToTradeType('PLACE') == TickType.OPEN
         assert e.reasonToTradeType('INITIAL') == TickType.OPEN
 

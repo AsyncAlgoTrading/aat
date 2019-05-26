@@ -1,6 +1,6 @@
 import tornado.web
 import os.path
-from ....ui.handlers.messages import ServerMessagesMixin, ServerMessagesHandler, ServerMessagesWSHandler
+from ....ui.handlers.trades import ServerTradesHandler, ServerTradesMixin
 from mock import MagicMock
 import tornado.websocket
 
@@ -18,7 +18,7 @@ class TestMessages:
         req = MagicMock()
         req.body = ''
 
-        x = ServerMessagesMixin()
+        x = ServerTradesMixin()
         x._transforms = []
 
         x.te = MagicMock()
@@ -30,22 +30,21 @@ class TestMessages:
 
         x.get_data()
         x.get_data('test')
-        x.get_data(None, None, 0, 'BTCUSD')
+        x.get_data(None, 'BTCUSD')
 
         x.te._ex.messages.return_value = {'TRADE': [MagicMock()]}
         x.te._ex.messages.return_value['TRADE'][0].to_dict = MagicMock()
         x.te._ex.messages.return_value['TRADE'][0].to_dict.return_value = {'test': 1}
 
-        x.get_data(type='TRADE')
-        x.get_data(type='TRADE', page=0, pairtype='test')
-        x.get_data(type='TRADE', page=0, pairtype='BTCUSD')
-        x.get_data(type='TRADE', page=0, pairtype='BTCUSD')
+        x.get_data()
+        x.get_data(pair='test')
+        x.get_data(pair='BTCUSD')
 
     def test_ServerMessages(self):
         req = MagicMock()
         req.body = ''
 
-        x = ServerMessagesHandler(self.app, req, trading_engine=MagicMock(), psp_kwargs={})
+        x = ServerTradesHandler(self.app, req, trading_engine=MagicMock(), psp_kwargs={})
         x._transforms = []
 
         x.te._ex.messages = MagicMock()

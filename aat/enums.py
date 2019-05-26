@@ -10,13 +10,14 @@ class BaseEnum(Enum):
 class TickType(BaseEnum):
     # Messages
     TRADE = 'TRADE'  # Match
-    RECEIVED = 'RECEIVED'  # Order received
     OPEN = 'OPEN'  # New Order
-    DONE = 'DONE'  # Order completed, either filled or cancelled
+    FILL = 'FILL'  # Order completed - filled
+    CANCEL = 'CANCEL'  # Order completed - cancelled
     CHANGE = 'CHANGE'  # Order modified
 
     ERROR = 'ERROR'  # Internal error
     ANALYZE = 'ANALYZE'  # Internal
+
     HALT = 'HALT'  # Trading halt
     CONTINUE = 'CONTINUE'  # Trading continue
     EXIT = 'EXIT'  # System exit
@@ -134,13 +135,6 @@ class OrderSubType(BaseEnum):
     POST_ONLY = 'POST_ONLY'
     FILL_OR_KILL = 'FILL_OR_KILL'
     # ALL_OR_NOTHING = 3
-
-
-class ChangeReason(BaseEnum):
-    NONE = 'NONE'
-    OPENED = 'OPENED'
-    CANCELLED = 'CANCELLED'
-    FILLED = 'FILLED'
 
 
 class TradeResult(BaseEnum):

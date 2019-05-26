@@ -28,7 +28,8 @@ class TestBacktest:
                 self._onTrade = False
                 self._onReceived = False
                 self._onOpen = False
-                self._onDone = False
+                self._onFill = False
+                self._onCancel = False
                 self._onChange = False
                 self._onError = False
                 self._onAnalyze = False
@@ -44,8 +45,11 @@ class TestBacktest:
             def onOpen(self, data):
                 self._onOpen = True
 
-            def onDone(self, data):
-                self._onDone = True
+            def onFill(self, data):
+                self._onFill = True
+
+            def onCancel(self, data):
+                self._onCancel = True
 
             def onChange(self, data):
                 self._onChange = True

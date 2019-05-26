@@ -8,13 +8,14 @@ from .market_data import MarketData
 
 
 class Exchange(MarketData, OrderEntry):
-    def __init__(self, exchange_type: ExchangeType, options: ExchangeConfig) -> None:
+    def __init__(self,
+                 exchange_type: ExchangeType,
+                 options: ExchangeConfig,
+                 query_engine=None) -> None:
         super(Exchange, self).__init__()
         self._options = options
         self._exchange = exchange_type
-        self._pending_orders = {}
-        self._messages = {}
-        self._messages_all = []
+        self._query_engine = query_engine
 
     @lru_cache(None)
     def options(self) -> ExchangeConfig:
@@ -33,6 +34,8 @@ class Exchange(MarketData, OrderEntry):
 
     def callback_data(self, data) -> None:
         res = self.tickToData(data)
+        if res is None:
+            return
 
         if self._seqnum_enabled and res.type != TickType.HEARTBEAT:
             self.seqnum(res.sequence)
@@ -41,33 +44,6 @@ class Exchange(MarketData, OrderEntry):
             pass
 
         if res.type != TickType.HEARTBEAT:
-            if res.type not in self._messages:
-                self._messages[res.type] = [res]
-            else:
-                self._messages[res.type].append(res)
-            self._messages_all.append(res)
-
-        if res.type == TickType.TRADE:
-            self.callback(TickType.TRADE, res)
-        elif res.type == TickType.RECEIVED:
-            self.callback(TickType.RECEIVED, res)
-        elif res.type == TickType.OPEN:
-            self.callback(TickType.OPEN, res)
-        elif res.type == TickType.DONE:
-            self.callback(TickType.DONE, res)
-        elif res.type == TickType.CHANGE:
-            self.callback(TickType.CHANGE, res)
-        elif res.type == TickType.HEARTBEAT:
-            # TODO anything?
-            pass
-        else:
-            self.callback(TickType.ERROR, res)
-
-    def messages(self, by_type=False, instrument=None) -> list:
-        if by_type:
-            if instrument:
-                return {x: [y for y in self._messages[x] if y.instrument == instrument] for x in self._messages}
-            return self._messages
-        if instrument:
-            return [x for x in self._messages_all if x.instrument == instrument]
-        return self._messages_all
+            if self._query_engine:
+                self._query_engine.push(res)
+            self.callback(res.type, res)

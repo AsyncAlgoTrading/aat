@@ -18,8 +18,12 @@ class Callback(metaclass=ABCMeta):
         '''onOpen'''
 
     @abstractmethod
-    def onDone(self, data: MarketData):
-        '''onDone'''
+    def onFill(self, data: MarketData):
+        '''onFill'''
+
+    @abstractmethod
+    def onCancel(self, data: MarketData):
+        '''onCancel'''
 
     @abstractmethod
     def onChange(self, data: MarketData):
@@ -62,7 +66,10 @@ class NullCallback(Callback):
     def onOpen(self, data: MarketData) -> None:
         pass
 
-    def onDone(self, data: MarketData) -> None:
+    def onFill(self, data: MarketData) -> None:
+        pass
+
+    def onCancel(self, data: MarketData) -> None:
         pass
 
     def onChange(self, data: MarketData) -> None:
@@ -77,7 +84,8 @@ class Print(Callback):
                  onTrade=True,
                  onReceived=True,
                  onOpen=True,
-                 onDone=True,
+                 onFill=True,
+                 onCancel=True,
                  onChange=True,
                  onError=True):
 
@@ -87,8 +95,10 @@ class Print(Callback):
             setattr(self, 'onReceived', False)
         if not onOpen:
             setattr(self, 'onOpen', False)
-        if not onDone:
-            setattr(self, 'onDone', False)
+        if not onFill:
+            setattr(self, 'onFilled', False)
+        if not onCancel:
+            setattr(self, 'onCancelled', False)
         if not onChange:
             setattr(self, 'onChange', False)
         if not onError:
@@ -103,7 +113,10 @@ class Print(Callback):
     def onOpen(self, data: MarketData) -> None:
         dlog.info(str(data))
 
-    def onDone(self, data: MarketData) -> None:
+    def onFill(self, data: MarketData) -> None:
+        dlog.info(str(data))
+
+    def onCancel(self, data: MarketData) -> None:
         dlog.info(str(data))
 
     def onChange(self, data: MarketData) -> None:

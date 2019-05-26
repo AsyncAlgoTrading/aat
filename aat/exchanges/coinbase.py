@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from functools import lru_cache
-from ..enums import OrderType, OrderSubType, PairType, TickType, ChangeReason
+from ..enums import OrderType, OrderSubType, PairType, TickType
 from ..exchange import Exchange
 from ..structs import MarketData, Instrument
 from ..utils import parse_date, str_to_currency_pair_type, str_to_side, str_to_order_type
@@ -17,8 +17,9 @@ class CoinbaseExchange(Exchange):
         return json.dumps({"type": "heartbeat", "on": True})
 
     def tickToData(self, jsn: dict) -> MarketData:
-        typ = self.strToTradeType(jsn.get('type'))
-        reason = jsn.get('reason', '')
+        if jsn.get('type') == 'received':
+            return
+        typ = self.strToTradeType(jsn.get('type'), jsn.get('reason', ''))
         time = parse_date(jsn.get('time')) if jsn.get('time') else datetime.now()
         price = float(jsn.get('price', 'nan'))
         volume = float(jsn.get('size', 'nan'))
@@ -30,17 +31,6 @@ class CoinbaseExchange(Exchange):
         side = str_to_side(jsn.get('side', ''))
         remaining_volume = float(jsn.get('remaining_size', 0.0))
 
-        if reason == 'canceled':
-            reason = ChangeReason.CANCELLED
-        elif reason == '':
-            reason = ChangeReason.NONE
-        elif reason == 'filled':
-            # FIXME
-            reason = ChangeReason.NONE
-            # reason = ChangeReason.FILLED
-        else:
-            reason = ChangeReason.NONE
-
         sequence = int(jsn.get('sequence', -1))
         ret = MarketData(time=time,
                          volume=volume,
@@ -48,17 +38,20 @@ class CoinbaseExchange(Exchange):
                          type=typ,
                          instrument=instrument,
                          remaining=remaining_volume,
-                         reason=reason,
                          side=side,
                          exchange=self.exchange(),
                          order_type=order_type,
                          sequence=sequence)
         return ret
 
-    def strToTradeType(self, s: str) -> TickType:
+    def strToTradeType(self, s: str, reason: str = '') -> TickType:
         if s == 'match':
             return TickType.TRADE
-        elif s in ('received', 'open', 'done', 'change', 'heartbeat'):
+        elif s in ('open', 'done', 'change', 'heartbeat'):
+            if reason == 'canceled':
+                return TickType.CANCEL
+            elif reason == 'filled':
+                return TickType.FILL
             return TickType(s.upper())
         else:
             return TickType.ERROR

@@ -31,7 +31,8 @@ class TestExchange:
                 for i, val in enumerate([TickType.TRADE,
                                          TickType.RECEIVED,
                                          TickType.OPEN,
-                                         TickType.DONE,
+                                         TickType.FILL,
+                                         TickType.CANCEL,
                                          TickType.CHANGE,
                                          TickType.ERROR]):
                     m1.return_value = {'type': val,
@@ -116,7 +117,8 @@ class TestExchange:
         assert e.strToTradeType('match') == TickType.TRADE
         assert e.strToTradeType('received') == TickType.RECEIVED
         assert e.strToTradeType('open') == TickType.OPEN
-        assert e.strToTradeType('done') == TickType.DONE
+        assert e.strToTradeType('change', 'canceled') == TickType.CANCEL
+        assert e.strToTradeType('change', 'filled') == TickType.FILL
         assert e.strToTradeType('change') == TickType.CHANGE
         assert e.strToTradeType('heartbeat') == TickType.HEARTBEAT
         assert e.strToTradeType('flarg') == TickType.ERROR

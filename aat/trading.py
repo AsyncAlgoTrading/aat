@@ -9,6 +9,7 @@ from .callback import Print
 from .config import TradingEngineConfig
 from .enums import TradingType, Side, CurrencyType, TradeResult, OrderType
 from .execution import Execution
+from .query import QueryEngine
 from .risk import Risk
 from .strategy import TradingStrategy
 from .structs import TradeRequest, TradeResponse
@@ -42,8 +43,13 @@ class TradingEngine(object):
         # instantiate riskengine
         self._rk = Risk(options.risk_options)
 
+        # instantiate query engine
+        self._qy = QueryEngine(exchanges=options.exchange_options.exchange_types,
+                               pairs=options.exchange_options.currency_pairs,
+                               instruments=options.exchange_options.instruments)
+
         # instantiate exchange instance
-        self._exchanges = {o: ex_type_to_ex(o)(o, options.exchange_options) for o in options.exchange_options.exchange_types}
+        self._exchanges = {o: ex_type_to_ex(o)(o, options.exchange_options, self._qy) for o in options.exchange_options.exchange_types}
 
         # if live or sandbox, get account information and balances
         if self._live or self._simulation or self._sandbox:
@@ -71,7 +77,7 @@ class TradingEngine(object):
             if self._live or self._simulation or self._sandbox:
                 for ex in self._exchanges:
                     ex.registerCallback(
-                        Print(onTrade=True, onReceived=True, onOpen=True, onDone=True, onChange=True, onError=False))
+                        Print(onTrade=True, onReceived=True, onOpen=True, onFill=True, onCancel=True, onChange=True, onError=False))
             if self._backtest:
                 self._bt.registerCallback(Print())
 
@@ -101,6 +107,9 @@ class TradingEngine(object):
 
     def execution(self):
         return self._ec
+
+    def query(self):
+        return self._qy
 
     def haltTrading(self):
         self._trading = False
