@@ -1,14 +1,15 @@
 #include <iostream>
-#include <boost/python/module.hpp>
-#include <boost/python/def.hpp>
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
 
 #ifndef __AAT_TEST_HPP__
 #define __AAT_TEST_HPP__
 void say_hello(const char* name);
 
 
-BOOST_PYTHON_MODULE(test)
+PYBIND11_MODULE(test, m)
 {
-    boost::python::def("say_hello", say_hello);
+    m.doc() = "A Test";
+    m.def("say_hello", &say_hello, "A test function");
 }
 #endif

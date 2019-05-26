@@ -116,13 +116,14 @@ set(CMAKE_CXX_FLAGS " \
     ")
 
 
-find_package(Boost)
-if(NOT Boost_FOUND)
-    message("${Red}Boost could not be located${ColorReset}")
+find_package(pybind11)
+if(NOT pybind11_FOUND)
+    message("${Red}PyBind11 could not be located${ColorReset}")
+    build_dep("pybind11", "cmake/Pybind.txt.in")
 else()
-    message("${Cyan}Found boost in ${Boost_INCLUDE_DIRS} ${Boost_LIBRARY_DIRS} ${ColorReset}")
+    message("${Cyan}Found PyBind11 in ${pybind11_INCLUDE_DIRS}${ColorReset}")
 endif()
-include_directories( ${Boost_INCLUDE_DIRS} )
+include_directories( ${pybind11_INCLUDE_DIRS} )
 
 if(WIN32)
     foreach(warning 4244 4251 4267 4275 4290 4786 4305 4996)
@@ -137,16 +138,10 @@ endif()
 # PYTHON BINDINGS BUILD #
 #########################
 include_directories("/usr/local/include/python3.7m")  # FIXME
+link_directories("/usr/local/lib")  # FIXME
 find_package( PythonInterp 3.7 REQUIRED )
-find_package( PythonLibs 3.7 REQUIRED )
 include_directories( ${PYTHON_INCLUDE_DIRS} )
 find_package(NumPy)
-
-find_package( Boost COMPONENTS python REQUIRED )
-find_library( BOOST_PYTHON boost_python)
-find_library( BOOST_NUMPY boost_numpy)
-include_directories( ${Boost_INCLUDE_DIR} )
-
 include_directories( ${PYTHON_NUMPY_INCLUDE_DIR})
 #####################
 

@@ -1,0 +1,8 @@
+.ipynb_checkpoints
+notebooks
+Dockerfile
+.DS_Store
+keys
+*.csv
+*.sh
+logs

@@ -1,13 +1,14 @@
 #include <iostream>
-#include <boost/python/module.hpp>
-#include <boost/python/def.hpp>
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
 
 #ifndef __AAT_CPP_HELPERS_HPP__
 #define __AAT_CPP_HELPERS_HPP__
 void test();
 
-BOOST_PYTHON_MODULE(_cpp_helpers)
+PYBIND11_MODULE(_cpp_helpers, m)
 {
-    boost::python::def("test", test);
+    m.doc() = "A Test";
+    m.def("test", &test, "A test function");
 }
 #endif

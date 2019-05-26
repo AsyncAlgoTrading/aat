@@ -15,6 +15,10 @@ from .structs import TradeRequest, TradeResponse
 from .ui.server import ServerApplication
 from .utils import ex_type_to_ex
 from .logging import LOG as log, SLIP as sllog, TXNS as tlog
+from .test import say_hello
+from .exchanges._cpp_helpers import test
+test()
+say_hello("test")
 
 
 class TradingEngine(object):
