@@ -33,14 +33,18 @@ class GeminiMixins(object):
                          type=typ,
                          instrument=instrument,
                          remaining=remaining_volume,
-
                          side=side,
                          exchange=self.exchange(),
                          sequence=sequence)
         return ret
 
     def strToTradeType(self, s: str) -> TickType:
-        return TickType(s.upper())
+        s = s.upper()
+        if s in ('BLOCK_TRADE', ):
+            return TickType.TRADE
+        elif s in ('AUCTION_INDICATIVE', 'AUCTION_OPEN'):
+            return TickType.OPEN
+        return TickType(s)
 
     def reasonToTradeType(self, s: str) -> TickType:
         s = s.upper()
