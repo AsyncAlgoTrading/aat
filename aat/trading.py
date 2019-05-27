@@ -43,13 +43,17 @@ class TradingEngine(object):
         # instantiate riskengine
         self._rk = Risk(options.risk_options)
 
+        # instantiate exchange instance
+        self._exchanges = {o: ex_type_to_ex(o)(o, options.exchange_options) for o in options.exchange_options.exchange_types}
+
         # instantiate query engine
-        self._qy = QueryEngine(exchanges=options.exchange_options.exchange_types,
+        self._qy = QueryEngine(exchanges=self._exchanges,
                                pairs=options.exchange_options.currency_pairs,
                                instruments=options.exchange_options.instruments)
 
-        # instantiate exchange instance
-        self._exchanges = {o: ex_type_to_ex(o)(o, options.exchange_options, self._qy) for o in options.exchange_options.exchange_types}
+        # register query hooks
+        for exc in self._exchanges.values():
+            exc.onTrade(self._qy.push)
 
         # if live or sandbox, get account information and balances
         if self._live or self._simulation or self._sandbox:
@@ -76,8 +80,7 @@ class TradingEngine(object):
             # register a printer callback that prints every message
             if self._live or self._simulation or self._sandbox:
                 for ex in self._exchanges:
-                    ex.registerCallback(
-                        Print(onTrade=True, onReceived=True, onOpen=True, onFill=True, onCancel=True, onChange=True, onError=False))
+                    ex.registerCallback(Print(onTrade=True, onReceived=True, onOpen=True, onFill=True, onCancel=True, onChange=True, onError=False))
             if self._backtest:
                 self._bt.registerCallback(Print())
 
@@ -132,6 +135,9 @@ class TradingEngine(object):
 
         # give self to strat so it can request trading actions
         strat.setEngine(self)
+
+    def strategies(self):
+        return self._strats
 
     def run(self):
         if self._live or self._simulation or self._sandbox:

@@ -58,3 +58,6 @@ class TradingStrategy(Strategy, Callback):
     def transactionCost(self, data: TradeResponse) -> TradeResponse:
         '''txns cost model. default is pass through'''
         return data
+
+    def to_dict(self, *args):
+        return {'name': self.__class__.__name__}

@@ -3,9 +3,10 @@ import os.path
 import logging
 import tornado.ioloop
 import tornado.web
-from .handlers.accounts import ServerAccountsHandler
-from .handlers.instruments import ServerInstrumentsHandler
-from .handlers.trades import ServerTradesHandler
+from .handlers.accounts import AccountsHandler
+from .handlers.instruments import InstrumentsHandler
+from .handlers.strategies import StrategiesHandler
+from .handlers.trades import TradesHandler
 from .handlers.html import HTMLOpenHandler
 
 
@@ -38,10 +39,13 @@ class ServerApplication(tornado.web.Application):
 
         super(ServerApplication, self).__init__(
           extra_handlers + [
-            (r"/api/json/v1/accounts", ServerAccountsHandler, {'trading_engine': trading_engine}),
-            (r"/api/json/v1/instruments", ServerInstrumentsHandler, {'trading_engine': trading_engine}),
-            (r"/api/json/v1/trades", ServerTradesHandler, {'trading_engine': trading_engine,
-                                                           'psp_kwargs': {'view': 'hypergrid', 'limit': 100}}),
+            (r"/api/json/v1/accounts", AccountsHandler, {'trading_engine': trading_engine}),
+            (r"/api/json/v1/instruments", InstrumentsHandler, {'trading_engine': trading_engine,
+                                                               'psp_kwargs': {'view': 'hypergrid'}}),
+            (r"/api/json/v1/strategies", StrategiesHandler, {'trading_engine': trading_engine,
+                                                             'psp_kwargs': {'view': 'hypergrid'}}),
+            (r"/api/json/v1/trades", TradesHandler, {'trading_engine': trading_engine,
+                                                     'psp_kwargs': {'view': 'hypergrid', 'limit': 100}}),
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": static}),
             (r"/(.*)", HTMLOpenHandler, {'template': '404.html'})
           ], **settings)

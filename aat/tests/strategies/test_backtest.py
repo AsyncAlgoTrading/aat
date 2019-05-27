@@ -33,7 +33,6 @@ class TestSMACrossesStrategy:
         s.onCancel(None)
         s.onHalt(None)
         s.onOpen(None)
-        s.onReceived(None)
 
         m = MagicMock()
         m.price = 10000

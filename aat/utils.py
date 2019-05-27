@@ -3,6 +3,7 @@ import os
 import pytz
 from datetime import datetime
 from enum import Enum
+from functools import lru_cache
 from .enums import ExchangeType, CurrencyType, OrderType, Side, PairType
 from .logging import LOG as log, \
                      STRAT as slog, \
@@ -188,6 +189,7 @@ def struct(cls):
     return type(cls)(cls.__name__, cls.__bases__, new_cls_dict)
 
 
+@lru_cache(None)
 def parse_date(indate: str) -> datetime:
     try:
         date = datetime.utcfromtimestamp(float(indate))
@@ -198,6 +200,7 @@ def parse_date(indate: str) -> datetime:
     return date
 
 
+@lru_cache(None)
 def ex_type_to_ex(ex: ExchangeType):
     if ex == ExchangeType.COINBASE:
         from .exchanges.coinbase import CoinbaseExchange
@@ -211,6 +214,7 @@ def ex_type_to_ex(ex: ExchangeType):
     raise Exception('Exchange type not implemented : %s ' % ex)
 
 
+@lru_cache(None)
 def get_keys_from_environment(prefix: str) -> tuple:
     key = os.environ[prefix + '_API_KEY']
     secret = os.environ[prefix + '_API_SECRET']
@@ -218,6 +222,7 @@ def get_keys_from_environment(prefix: str) -> tuple:
     return key, secret, passphrase
 
 
+@lru_cache(None)
 def str_to_currency_type(s: str) -> CurrencyType:
     s = s.upper()
     if s not in CurrencyType.members():
@@ -225,10 +230,17 @@ def str_to_currency_type(s: str) -> CurrencyType:
     return CurrencyType(s)
 
 
+@lru_cache(None)
 def str_to_currency_pair_type(s: str) -> PairType:
     return PairType.from_string(s)
 
 
+@lru_cache(None)
+def str_currency_to_currency_pair_type(s: str, base: str = 'USD') -> PairType:
+    return PairType.from_string(s, base)
+
+
+@lru_cache(None)
 def str_to_side(s: str) -> Side:
     s = s.upper()
     if 'BUY' in s or 'BID' in s:
@@ -238,6 +250,7 @@ def str_to_side(s: str) -> Side:
     return Side.NONE
 
 
+@lru_cache(None)
 def str_to_order_type(s: str) -> OrderType:
     s = s.upper()
     if 'MARKET' in s:
@@ -247,6 +260,7 @@ def str_to_order_type(s: str) -> OrderType:
     return OrderType.NONE
 
 
+@lru_cache(None)
 def str_to_exchange(exchange: str) -> ExchangeType:
     if exchange.upper() not in ExchangeType.members():
         raise Exception(f'Exchange not recognized: {exchange}')

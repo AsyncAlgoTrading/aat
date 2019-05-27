@@ -1,11 +1,14 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+from concurrent.futures import ThreadPoolExecutor
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 
 class HTTPHandler(tornado.web.RequestHandler):
     '''Just a default handler'''
+    executor = ThreadPoolExecutor(16)
+
     def initialize(self, *args, **kwargs):
         '''Initialize the server competition registry handler
 

@@ -1,21 +1,26 @@
-import tornado.web
+import tornado.gen
+from .base import HTTPHandler
+from tornado.concurrent import run_on_executor
 from perspective import PerspectiveHTTPMixin
 
 
-class ServerAccountsHandler(PerspectiveHTTPMixin, tornado.web.RequestHandler):
+class AccountsHandler(PerspectiveHTTPMixin, HTTPHandler):
     '''Server Handler
     Extends:
         tornado.web.RequestHandler
     '''
-
     def initialize(self, trading_engine, **psp_kwargs):
         self.te = trading_engine
         self.psp_kwargs = psp_kwargs
 
+    @run_on_executor
+    def get_data(self, **psp_kwargs):
+        dat = [a.to_dict(True) for ex in self.te.exchanges().values() for a in ex.accounts()]
+        super(AccountsHandler, self).loadData(data=dat, **psp_kwargs)
+        self.psp.schema['asOf'] = 'datetime'
+        return super(AccountsHandler, self).getData()
+
+    @tornado.gen.coroutine
     def get(self):
-        try:
-            self.psp_kwargs['data'] = [a.to_dict(True) for ex in self.te.exchanges().values() for a in ex.accounts()]
-            self.loadData(**self.psp_kwargs)
-            self.write(self.getData())
-        except Exception as e:
-            self.write(e)
+        dat = yield self.get_data(**self.psp_kwargs)
+        self.write(dat)

@@ -31,7 +31,6 @@ class TestExchange:
 
             with patch('json.loads') as m1:
                 for i, val in enumerate([TickType.TRADE,
-                                         TickType.RECEIVED,
                                          TickType.OPEN,
                                          TickType.FILL,
                                          TickType.CANCEL,

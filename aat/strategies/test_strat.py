@@ -90,9 +90,6 @@ class TestStrategy(TradingStrategy):
     def onOpen(self, data: MarketData) -> None:
         slog.info(data)
 
-    def onReceived(self, data: MarketData) -> None:
-        slog.info(data)
-
     def slippage(self, resp: TradeResponse) -> TradeResponse:
         return resp
 

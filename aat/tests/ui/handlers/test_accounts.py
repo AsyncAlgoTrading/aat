@@ -1,6 +1,6 @@
 import tornado.web
 import os.path
-from ....ui.handlers.accounts import ServerAccountsHandler
+from ....ui.handlers.accounts import AccountsHandler
 from mock import MagicMock
 
 
@@ -17,13 +17,12 @@ class TestAccounts:
     def test_AccountsHandler(self):
         req = MagicMock()
         req.body = ''
-        x = ServerAccountsHandler(self.app, req, trading_engine=MagicMock(), psp_kwargs={})
-        x.te._ex.accounts = MagicMock()
-        x.te._ex.accounts.return_value = [MagicMock()]
-        x.te._ex.accounts.return_value[0].to_dict = MagicMock()
-        x.te._ex.accounts.return_value[0].to_dict.return_value = {'test': 1}
+        x = AccountsHandler(self.app, req, trading_engine=MagicMock(), psp_kwargs={})
+
+        x.te.exchanges = MagicMock()
+        x.te.exchanges.return_value.values.return_value = [MagicMock()]
+        x.te.exchanges.return_value.values.return_value[0].accounts.return_value = [MagicMock()]
+        x.te.exchanges.return_value.values.return_value[0].accounts.return_value[0].to_dict.return_value = {'test': 1}
 
         x._transforms = []
         x.get()
-
-        assert len(x._write_buffer) > 0

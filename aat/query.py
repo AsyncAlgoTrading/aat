@@ -1,4 +1,5 @@
 from typing import List
+from concurrent.futures import ThreadPoolExecutor
 from .enums import TickType, Side, ExchangeType, CurrencyType, PairType  # noqa: F401
 from .structs import Instrument, MarketData
 
@@ -8,6 +9,7 @@ class QueryEngine(object):
                  exchanges: List[ExchangeType] = None,
                  pairs: List[PairType] = None,
                  instruments: List[Instrument] = None):
+        self.executor = ThreadPoolExecutor(16)
         self._all = []
 
         self._trades = []
@@ -16,9 +18,7 @@ class QueryEngine(object):
         self._pairs = pairs
         self._instruments = instruments
 
-        self._orders_by_currency = {}
-        self._orders_by_exchange = {}
-        self._orders_by_exchange_and_currency = {}
+        self._last_price_by_exchange = {}
 
     def query_instruments(self) -> List[PairType]:
         return self._instruments
@@ -45,3 +45,6 @@ class QueryEngine(object):
             if data.instrument not in self._trades_by_instrument:
                 self._trades_by_instrument[data.instrument] = []
             self._trades_by_instrument[data.instrument].append(data)
+            if data.exchange not in self._last_price_by_exchange:
+                self._last_price_by_exchange[data.exchange] = []
+            self._last_price_by_exchange[data.exchange].append(data)

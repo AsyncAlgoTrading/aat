@@ -1,11 +1,21 @@
-import tornado.web
-import tornado.websocket
+import tornado.gen
+from .base import HTTPHandler
+from tornado.concurrent import run_on_executor
 from perspective import PerspectiveHTTPMixin
 from aat.enums import PairType
 from aat.structs import Instrument
 
 
-class ServerTradesMixin(PerspectiveHTTPMixin):
+class TradesHandler(PerspectiveHTTPMixin, HTTPHandler):
+    '''Server Handler
+    Extends:
+        tornado.web.RequestHandler
+    '''
+    def initialize(self, trading_engine, psp_kwargs):
+        self.te = trading_engine
+        self.psp_kwargs = psp_kwargs
+
+    @run_on_executor
     def get_data(self, exchange=None, pair=None, **psp_kwargs):
         try:
             if pair is not None:
@@ -22,20 +32,11 @@ class ServerTradesMixin(PerspectiveHTTPMixin):
                 msg['underlying'] = msg['instrument']['underlying']
                 msg['instrument'] = msg['instrument']['underlying'] + ',' + msg['instrument']['type']
 
-        psp_kwargs['data'] = msgs
-        super(ServerTradesMixin, self).loadData(**psp_kwargs)
-        return super(ServerTradesMixin, self).getData()
+        super(TradesHandler, self).loadData(data=msgs, **psp_kwargs)
+        return super(TradesHandler, self).getData()
 
-
-class ServerTradesHandler(ServerTradesMixin, tornado.web.RequestHandler):
-    '''Server Handler
-    Extends:
-        tornado.web.RequestHandler
-    '''
-    def initialize(self, trading_engine, psp_kwargs):
-        self.te = trading_engine
-        self.psp_kwargs = psp_kwargs
-
+    @tornado.gen.coroutine
     def get(self):
         pair = self.get_argument('pair', '')
-        self.write(self.get_data(pair=pair, **self.psp_kwargs))
+        dat = yield self.get_data(pair=pair, **self.psp_kwargs)
+        self.write(dat)

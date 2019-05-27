@@ -1,6 +1,6 @@
 import tornado.web
 import os.path
-from ....ui.handlers.trades import ServerTradesHandler, ServerTradesMixin
+from ....ui.handlers.trades import TradesHandler
 from mock import MagicMock
 import tornado.websocket
 
@@ -18,7 +18,7 @@ class TestMessages:
         req = MagicMock()
         req.body = ''
 
-        x = ServerTradesMixin()
+        x = TradesHandler(self.app, req, trading_engine=MagicMock(), psp_kwargs={})
         x._transforms = []
 
         x.te = MagicMock()
@@ -44,7 +44,7 @@ class TestMessages:
         req = MagicMock()
         req.body = ''
 
-        x = ServerTradesHandler(self.app, req, trading_engine=MagicMock(), psp_kwargs={})
+        x = TradesHandler(self.app, req, trading_engine=MagicMock(), psp_kwargs={})
         x._transforms = []
 
         x.te._ex.messages = MagicMock()

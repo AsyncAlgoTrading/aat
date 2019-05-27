@@ -45,9 +45,6 @@ class TestDataSource:
             def onTrade(self):
                 pass
 
-            def onReceived(self):
-                pass
-
             def onOpen(self):
                 pass
 
@@ -77,7 +74,7 @@ class TestDataSource:
 
             t.registerCallback(TestCB())
             assert t._callbacks
-            assert len(t._callbacks) == 10
+            assert len(t._callbacks) == 9
             assert len(t._callbacks[TickType.ERROR]) == 1
 
         except Exception as e:

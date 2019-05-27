@@ -29,7 +29,6 @@ class TestExchange:
 
             with patch('json.loads') as m1:
                 for i, val in enumerate([TickType.TRADE,
-                                         TickType.RECEIVED,
                                          TickType.OPEN,
                                          TickType.FILL,
                                          TickType.CANCEL,
@@ -115,7 +114,6 @@ class TestExchange:
         e = CoinbaseExchange(ExchangeType.COINBASE, ec)
 
         assert e.strToTradeType('match') == TickType.TRADE
-        assert e.strToTradeType('received') == TickType.RECEIVED
         assert e.strToTradeType('open') == TickType.OPEN
         assert e.strToTradeType('change', 'canceled') == TickType.CANCEL
         assert e.strToTradeType('change', 'filled') == TickType.FILL

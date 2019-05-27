@@ -1,12 +1,13 @@
 import json
 from functools import lru_cache
+from .utils.kraken import KrakenMixins
 from ..config import ExchangeConfig
 from ..enums import ExchangeType, OrderType, PairType, TickType
 from ..exchange import Exchange
 from ..structs import MarketData
 
 
-class KrakenExchange(Exchange):
+class KrakenExchange(KrakenMixins, Exchange):
     def __init__(self, exchange_type: ExchangeType, options: ExchangeConfig) -> None:
         super(KrakenExchange, self).__init__(exchange_type, options)
         self._last = None

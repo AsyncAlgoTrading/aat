@@ -44,6 +44,4 @@ class Exchange(MarketData, OrderEntry):
             pass
 
         if res.type != TickType.HEARTBEAT:
-            if self._query_engine:
-                self._query_engine.push(res)
             self.callback(res.type, res)

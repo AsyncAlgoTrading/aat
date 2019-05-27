@@ -4,20 +4,20 @@ from tornado.concurrent import run_on_executor
 from perspective import PerspectiveHTTPMixin
 
 
-class InstrumentsHandler(PerspectiveHTTPMixin, HTTPHandler):
+class StrategiesHandler(PerspectiveHTTPMixin, HTTPHandler):
     '''Server Handler
     Extends:
         tornado.web.RequestHandler
     '''
-    def initialize(self, trading_engine, psp_kwargs):
+    def initialize(self, trading_engine, **psp_kwargs):
         self.te = trading_engine
         self.psp_kwargs = psp_kwargs
 
     @run_on_executor
     def get_data(self, **psp_kwargs):
-        msgs = [x.to_dict(True, True) for x in self.te.query().query_instruments()]
-        super(InstrumentsHandler, self).loadData(data=msgs, **psp_kwargs)
-        return super(InstrumentsHandler, self).getData()
+        dat = [s.to_dict() for s in self.te.strategies()]
+        super(StrategiesHandler, self).loadData(data=dat, **psp_kwargs)
+        return super(StrategiesHandler, self).getData()
 
     @tornado.gen.coroutine
     def get(self):

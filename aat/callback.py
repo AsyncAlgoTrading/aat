@@ -10,10 +10,6 @@ class Callback(metaclass=ABCMeta):
         '''onTrade'''
 
     @abstractmethod
-    def onReceived(self, data: MarketData):
-        '''onReceived'''
-
-    @abstractmethod
     def onOpen(self, data: MarketData):
         '''onOpen'''
 
@@ -88,7 +84,6 @@ class Print(Callback):
                  onCancel=True,
                  onChange=True,
                  onError=True):
-
         if not onTrade:
             setattr(self, 'onTrade', False)
         if not onReceived:

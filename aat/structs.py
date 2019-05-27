@@ -15,8 +15,8 @@ from .utils import struct, NOPRINT
 
 @struct
 class Instrument:
-    type = InstrumentType, InstrumentType.PAIR
     underlying = PairType
+    type = InstrumentType, InstrumentType.PAIR
 
     @property
     def instrument(self):
@@ -38,8 +38,8 @@ class Instrument:
 
 @struct
 class Option(Instrument):
-    type = InstrumentType, InstrumentType.OPTION
     underlying = Instrument
+    type = InstrumentType, InstrumentType.OPTION
     expiration = datetime.datetime
     strike = float
     size = float
@@ -71,8 +71,8 @@ class Option(Instrument):
 
 @struct
 class Future(Instrument):
-    type = InstrumentType, InstrumentType.FUTURE
     underlying = Instrument
+    type = InstrumentType, InstrumentType.FUTURE
     expiration = datetime.datetime
     size = float
 
@@ -161,6 +161,8 @@ class Account:
     currency = CurrencyType
     balance = float
     exchange = ExchangeType
+    value = float
+    asOf = datetime.datetime
 
     def __repr__(self) -> str:
-        return "<" + self.id + " - " + str(self.currency) + " - " + str(self.balance) + ">"
+        return "<" + self.id + " - " + str(self.currency) + " - " + str(self.balance) + " - " + str(self.value) + ">"

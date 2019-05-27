@@ -1,5 +1,6 @@
 import ccxt
 import pandas as pd
+from datetime import datetime
 from functools import lru_cache
 from .data_source import RestAPIDataSource
 from .enums import PairType, TradingType, ExchangeType
@@ -12,6 +13,8 @@ def exchange_type_to_ccxt_client(exchange_type):
         return ccxt.coinbasepro
     elif exchange_type == ExchangeType.GEMINI:
         return ccxt.gemini
+    elif exchange_type == ExchangeType.KRAKEN:
+        return ccxt.kraken
     elif exchange_type == ExchangeType.POLONIEX:
         return ccxt.poloniex
 
@@ -28,7 +31,8 @@ class OrderEntry(RestAPIDataSource):
         return exchange_type_to_ccxt_client(self.exchange())({
             'apiKey': key,
             'secret': secret,
-            'password': passphrase
+            'password': passphrase,
+            'enableRateLimit': True,
             })
 
     def accounts(self):
@@ -47,11 +51,27 @@ class OrderEntry(RestAPIDataSource):
                 balance = float(jsn['amount'])
 
             id = jsn.get('id', jsn['currency'])
-
-            account = Account(id=id, currency=currency, balance=balance, exchange=self.exchange())
+            # FIXME
+            value = balance
+            # value = balance if currency == CurrencyType.USD else balance*self.lastPrice(str_currency_to_currency_pair_type(currency))['last']
+            account = Account(id=id,
+                              currency=currency,
+                              balance=balance,
+                              exchange=self.exchange(),
+                              value=value,
+                              asOf=datetime.now())
             accounts.append(account)
+        # cache
+        self._accounts = accounts
         return accounts
 
+    def lastPrice(self, cur: PairType):
+        try:
+            return self.oe_client().fetchTicker(self.currencyPairToStringCCXT(cur))
+        except (ccxt.ExchangeError, ValueError):
+            return {'last': -1.0}
+
+    @lru_cache(None)
     def currencyPairToStringCCXT(self, cur: PairType) -> str:
         return cur.value[0].value + '/' + cur.value[1].value
 
@@ -83,4 +103,4 @@ class OrderEntry(RestAPIDataSource):
         raise NotImplementedError()
 
     def cancelAll(self, resp: TradeResponse):
-        raise NotImplementedError()
+        return self.oe_client().cancel_all_orders()

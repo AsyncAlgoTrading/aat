@@ -141,6 +141,7 @@ def _parse_options(argv, config: TradingEngineConfig) -> None:
         config.exchange_options.instruments = \
             [Instrument(type=InstrumentType.PAIR, underlying=p) for p in config.exchange_options.currency_pairs]
 
+
 def _parse_live_options(argv, config: TradingEngineConfig) -> None:
     log.critical("\n\nWARNING: Live trading. money will be lost ;^)\n\n")
     _parse_options(argv, config)

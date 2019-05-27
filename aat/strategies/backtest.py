@@ -161,9 +161,6 @@ class CustomStrategy(TradingStrategy):
     def onOpen(self, data: MarketData) -> None:
         pass
 
-    def onReceived(self, data: MarketData) -> None:
-        pass
-
     def slippage(self, resp: TradeResponse) -> TradeResponse:
         slippage = resp.price * .0001  # .01% price impact
         if resp.side == Side.BUY:
