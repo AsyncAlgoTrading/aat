@@ -17,11 +17,15 @@ class QueryEngine(object):
 
         self._pairs = pairs
         self._instruments = instruments
+        self._exchanges = exchanges
 
         self._last_price_by_exchange = {}
 
     def query_instruments(self) -> List[PairType]:
         return self._instruments
+
+    def query_exchanges(self) -> List[ExchangeType]:
+        return self._exchanges
 
     def query_trades(self,
                      instrument: Instrument = None,

@@ -1,3 +1,4 @@
+from typing import List
 from .config import ExecutionConfig
 from .exchange import Exchange
 from .enums import Side
@@ -6,18 +7,17 @@ from .logging import EXEC as exlog
 
 
 class Execution(object):
-    def __init__(self, options: ExecutionConfig, exchange: Exchange) -> None:
+    def __init__(self, options: ExecutionConfig, exchanges: List[Exchange]) -> None:
         self.trading_type = options.trading_type
-        self._ex = exchange
-        self._exs = []
+        self._exs = exchanges
 
     def requestBuy(self, req: TradeRequest) -> TradeResponse:
-        resp = self._ex.buy(req)
+        resp = self._exs[req.exchange].buy(req)
         exlog.info('Order info: %s' % resp)
         return resp
 
     def requestSell(self, req: TradeRequest) -> TradeResponse:
-        resp = self._ex.sell(req)
+        resp = self._exs[req.exchange].sell(req)
         exlog.info('Order info: %s' % resp)
         return resp
 
@@ -27,7 +27,8 @@ class Execution(object):
         return self.requestSell(req)
 
     def cancel(self, resp: TradeResponse):  # TODO
-        return self._ex.cancel(resp)
+        return self._exs[resp.exchange].cancel(resp)
 
     def cancelAll(self):
-        return self._ex.cancelAll()
+        for ex in self._exs.values():
+            ex.cancelAll()

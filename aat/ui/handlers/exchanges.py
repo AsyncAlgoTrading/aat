@@ -4,7 +4,7 @@ from tornado.concurrent import run_on_executor
 from perspective import PerspectiveHTTPMixin
 
 
-class InstrumentsHandler(PerspectiveHTTPMixin, HTTPHandler):
+class ExchangesHandler(PerspectiveHTTPMixin, HTTPHandler):
     '''Server Handler
     Extends:
         HTTPHandler
@@ -15,9 +15,9 @@ class InstrumentsHandler(PerspectiveHTTPMixin, HTTPHandler):
 
     @run_on_executor
     def get_data(self, **psp_kwargs):
-        msgs = [x.to_dict(True, True) for x in self.te.query().query_instruments()]
-        super(InstrumentsHandler, self).loadData(data=msgs, **psp_kwargs)
-        return super(InstrumentsHandler, self).getData()
+        msgs = [{'name': x.value} for x in self.te.query().query_exchanges()]
+        super(ExchangesHandler, self).loadData(data=msgs, **psp_kwargs)
+        return super(ExchangesHandler, self).getData()
 
     @tornado.gen.coroutine
     def get(self):

@@ -9,7 +9,7 @@ from aat.structs import Instrument
 class TradesHandler(PerspectiveHTTPMixin, HTTPHandler):
     '''Server Handler
     Extends:
-        tornado.web.RequestHandler
+        HTTPHandler
     '''
     def initialize(self, trading_engine, psp_kwargs):
         self.te = trading_engine

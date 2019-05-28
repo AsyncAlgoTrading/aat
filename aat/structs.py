@@ -123,6 +123,7 @@ class MarketData:
 @struct
 class TradeRequest:
     side = Side
+    exchange = ExchangeType
 
     volume = float
     price = float
@@ -141,6 +142,7 @@ class TradeRequest:
 class TradeResponse:
     request = TradeRequest
     side = Side
+    exchange = ExchangeType
 
     volume = float
     price = float

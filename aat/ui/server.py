@@ -4,6 +4,7 @@ import logging
 import tornado.ioloop
 import tornado.web
 from .handlers.accounts import AccountsHandler
+from .handlers.exchanges import ExchangesHandler
 from .handlers.instruments import InstrumentsHandler
 from .handlers.strategies import StrategiesHandler
 from .handlers.trades import TradesHandler
@@ -40,8 +41,8 @@ class ServerApplication(tornado.web.Application):
         super(ServerApplication, self).__init__(
           extra_handlers + [
             (r"/api/json/v1/accounts", AccountsHandler, {'trading_engine': trading_engine}),
-            (r"/api/json/v1/instruments", InstrumentsHandler, {'trading_engine': trading_engine,
-                                                               'psp_kwargs': {'view': 'hypergrid'}}),
+            (r"/api/json/v1/exchanges", ExchangesHandler, {'trading_engine': trading_engine}),
+            (r"/api/json/v1/instruments", InstrumentsHandler, {'trading_engine': trading_engine}),
             (r"/api/json/v1/strategies", StrategiesHandler, {'trading_engine': trading_engine,
                                                              'psp_kwargs': {'view': 'hypergrid'}}),
             (r"/api/json/v1/trades", TradesHandler, {'trading_engine': trading_engine,

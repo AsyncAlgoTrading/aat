@@ -7,7 +7,7 @@ from perspective import PerspectiveHTTPMixin
 class StrategiesHandler(PerspectiveHTTPMixin, HTTPHandler):
     '''Server Handler
     Extends:
-        tornado.web.RequestHandler
+        HTTPHandler
     '''
     def initialize(self, trading_engine, **psp_kwargs):
         self.te = trading_engine

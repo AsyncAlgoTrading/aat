@@ -182,6 +182,7 @@ class TradingEngine(object):
             log.info('Trading not allowed')
             resp = TradeResponse(request=req,
                                  side=req.side,
+                                 exchange=req.exchange,
                                  volume=0.0,
                                  price=0.0,
                                  instrument=req.instrument,
@@ -211,6 +212,7 @@ class TradingEngine(object):
                         log.info('Trade rejected')
                         resp = TradeResponse(request=resp,
                                              side=resp.side,
+                                             exchange=req.exchange,
                                              volume=0.0,
                                              price=0.0,
                                              instrument=req.instrument,
@@ -227,6 +229,7 @@ class TradingEngine(object):
                     # backtesting or simulation
                     resp = TradeResponse(request=req,
                                          side=req.side,
+                                         exchange=req.exchange,
                                          volume=req.volume,
                                          price=req.price,
                                          instrument=req.instrument,
@@ -249,6 +252,7 @@ class TradingEngine(object):
             else:
                 log.info('Risk check failed')
                 resp = TradeResponse(request=resp,
+                                     exchange=req.exchange,
                                      side=resp.side,
                                      volume=0.0,
                                      price=0.0,
@@ -259,7 +263,11 @@ class TradingEngine(object):
         callback_failure(resp) if callback_failure and not resp.success else callback(resp)
 
     def requestBuy(self, callback: Callable, req: TradeRequest, callback_failure=None, strat=None):
-        self._request(Side.BUY, callback, req, callback_failure, strat)
+        self._request(side=Side.BUY,
+                      callback=callback,
+                      req=req,
+                      callback_failure=callback_failure,
+                      strat=strat)
 
     def requestSell(self, callback: Callable, req: TradeRequest, callback_failure=None, strat=None):
         self._request(Side.SELL, callback, req, callback_failure, strat)
