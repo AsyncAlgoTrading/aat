@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from typing import Set
 from .callback import Callback
 from .structs import TradeRequest, TradeResponse
 from .enums import TickType
