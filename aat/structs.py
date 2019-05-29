@@ -92,7 +92,7 @@ class Future(Instrument):
 
     def __str__(self):
         # 180803C00187500-AAPL-CALL
-        return self.expiration.strftime('%y%m%d') + '-' + str(self.underlying) + '-' + '{0:8.2f}'.format(self.size).replace(' ', '0')
+        return f'<{self.expiration.strftime("%y%m%d")} - {self.underlying} -  ' + '{0:8.2f}'.format(self.size).replace(' ', '0') + '>'
 
 
 @struct
@@ -116,6 +116,9 @@ class MarketData:
                (self.instrument == other.instrument) and \
                (self.side == other.side)
 
+    def __str__(self):
+        return f'<{self.instrument}-{self.volume}@{self.price}-{self.type}-{self.exchange}>'
+
     def __lt__(self, other):
         return self.price < other.price
 
@@ -131,11 +134,13 @@ class TradeRequest:
 
     order_type = OrderType
     order_sub_type = OrderSubType, OrderSubType.NONE
-    # exchange = ExchangeType
 
     time = datetime.datetime, datetime.datetime.now()  # FIXME
     risk_check = bool, False
     risk_reason = RiskReason, RiskReason.NONE
+
+    def __str__(self) -> str:
+        return f'<{self.instrument}-{self.side}:{self.volume}@{self.price}-{self.order_type}-{self.exchange}>'
 
 
 @struct
@@ -156,6 +161,9 @@ class TradeResponse:
     order_id = str
     remaining = float, 0.0
 
+    def __str__(self) -> str:
+        return f'<{self.instrument}-{self.side}:{self.volume}@{self.price}-{self.status}-{self.exchange}>'
+
 
 @struct
 class Account:
@@ -167,4 +175,4 @@ class Account:
     asOf = datetime.datetime
 
     def __repr__(self) -> str:
-        return "<" + self.id + " - " + str(self.currency) + " - " + str(self.balance) + " - " + str(self.value) + ">"
+        return f'<{self.id} - {self.currency} - {self.balance} - {self.value}>'

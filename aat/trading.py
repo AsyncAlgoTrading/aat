@@ -177,6 +177,7 @@ class TradingEngine(object):
                  req: TradeRequest,
                  callback_failure=None,
                  strat=None):
+        self.query().push_tradereq(req)
         if not self._trading:
             # not allowed to trade right now
             log.info('Trading not allowed')
@@ -259,7 +260,7 @@ class TradingEngine(object):
                                      instrument=req.instrument,
                                      status=TradeResult.REJECTED,
                                      order_id='')
-
+        self.query().push_traderesp(resp)
         callback_failure(resp) if callback_failure and not resp.success else callback(resp)
 
     def requestBuy(self, callback: Callable, req: TradeRequest, callback_failure=None, strat=None):

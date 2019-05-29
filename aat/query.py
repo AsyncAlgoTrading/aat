@@ -1,7 +1,7 @@
 from typing import List
 from concurrent.futures import ThreadPoolExecutor
 from .enums import TickType, Side, ExchangeType, CurrencyType, PairType  # noqa: F401
-from .structs import Instrument, MarketData
+from .structs import Instrument, MarketData, TradeRequest, TradeResponse
 
 
 class QueryEngine(object):
@@ -21,25 +21,50 @@ class QueryEngine(object):
 
         self._last_price_by_exchange = {}
 
+        self._trade_reqs = []
+        self._trade_resps = []
+        self._trade_reqs_by_instrument = {}
+        self._trade_resps_by_instrument = {}
+
     def query_instruments(self) -> List[PairType]:
         return self._instruments
 
     def query_exchanges(self) -> List[ExchangeType]:
         return self._exchanges
 
-    def query_trades(self,
-                     instrument: Instrument = None,
-                     page: int = 1) -> List[MarketData]:
+    def _paginate(self, instrument: Instrument, lst: list, lst_sub: list, page: int = 1)-> list:
         from_ = -1*page*100
         to_ = -1*(page-1)*100
 
         if instrument:
-            return self._trades_by_instrument[instrument][from_:to_] \
-                if page > 1 else \
-                self._trades_by_instrument[instrument][from_:]
-        return self._trades[from_:to_] \
-            if page > 1 else \
-            self._trades[from_:]
+            return lst_sub[instrument][from_:to_] \
+                if page > 1 else lst_sub[instrument][from_:]
+        return lst[from_:to_] \
+            if page > 1 else lst[from_:]
+
+    def query_trades(self,
+                     instrument: Instrument = None,
+                     page: int = 1) -> List[MarketData]:
+        return self._paginate(instrument,
+                              self._trades,
+                              self._trades_by_instrument,
+                              page)
+
+    def query_tradereqs(self,
+                        instrument: Instrument = None,
+                        page: int = 1) -> List[TradeRequest]:
+        return self._paginate(instrument,
+                              self._trade_reqs,
+                              self._trade_reqs_by_instrument,
+                              page)
+
+    def query_traderesps(self,
+                         instrument: Instrument = None,
+                         page: int = 1) -> List[TradeResponse]:
+        return self._paginate(instrument,
+                              self._trade_resps,
+                              self._trade_resps_by_instrument,
+                              page)
 
     def push(self, data: MarketData) -> None:
         self._all.append(data)
@@ -52,3 +77,15 @@ class QueryEngine(object):
             if data.exchange not in self._last_price_by_exchange:
                 self._last_price_by_exchange[data.exchange] = []
             self._last_price_by_exchange[data.exchange].append(data)
+
+    def push_tradereq(self, req: TradeRequest) -> None:
+        self._trade_reqs.append(req)
+        if req.instrument not in self._trade_reqs_by_instrument:
+            self._trade_reqs_by_instrument[req.instrument] = []
+        self._trade_reqs_by_instrument[req.instrument].append(req)
+
+    def push_traderesp(self, resp: TradeResponse) -> None:
+        self._trade_resps.append(resp)
+        if resp.instrument not in self._trade_resps_by_instrument:
+            self._trade_resps_by_instrument[resp.instrument] = []
+        self._trade_resps_by_instrument[resp.instrument].append(resp)

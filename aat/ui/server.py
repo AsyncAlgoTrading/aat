@@ -7,6 +7,8 @@ from .handlers.accounts import AccountsHandler
 from .handlers.exchanges import ExchangesHandler
 from .handlers.instruments import InstrumentsHandler
 from .handlers.strategies import StrategiesHandler
+from .handlers.strategy_trade_request import StrategyTradeRequestHandler
+from .handlers.strategy_trade_response import StrategyTradeResponseHandler
 from .handlers.trades import TradesHandler
 from .handlers.html import HTMLOpenHandler
 
@@ -40,12 +42,16 @@ class ServerApplication(tornado.web.Application):
 
         super(ServerApplication, self).__init__(
           extra_handlers + [
-            (r"/api/json/v1/accounts", AccountsHandler, {'trading_engine': trading_engine}),
-            (r"/api/json/v1/exchanges", ExchangesHandler, {'trading_engine': trading_engine}),
-            (r"/api/json/v1/instruments", InstrumentsHandler, {'trading_engine': trading_engine}),
-            (r"/api/json/v1/strategies", StrategiesHandler, {'trading_engine': trading_engine,
+            (r"/api/v1/json/accounts", AccountsHandler, {'trading_engine': trading_engine}),
+            (r"/api/v1/json/exchanges", ExchangesHandler, {'trading_engine': trading_engine}),
+            (r"/api/v1/json/instruments", InstrumentsHandler, {'trading_engine': trading_engine}),
+            (r"/api/v1/json/strategies", StrategiesHandler, {'trading_engine': trading_engine,
                                                              'psp_kwargs': {'view': 'hypergrid'}}),
-            (r"/api/json/v1/trades", TradesHandler, {'trading_engine': trading_engine,
+            (r"/api/v1/json/strategy-trade-requests", StrategyTradeRequestHandler, {'trading_engine': trading_engine,
+                                                                                    'psp_kwargs': {'view': 'hypergrid'}}),
+            (r"/api/v1/json/strategy-trade-responses", StrategyTradeResponseHandler, {'trading_engine': trading_engine,
+                                                                                      'psp_kwargs': {'view': 'hypergrid'}}),
+            (r"/api/v1/json/trades", TradesHandler, {'trading_engine': trading_engine,
                                                      'psp_kwargs': {'view': 'hypergrid', 'limit': 100}}),
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": static}),
             (r"/(.*)", HTMLOpenHandler, {'template': '404.html'})

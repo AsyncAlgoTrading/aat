@@ -81,16 +81,16 @@ class TestStrategy(TradingStrategy):
         self.cancelAll(lambda *args: True)
 
     def onChange(self, data: MarketData) -> None:
-        slog.info(data)
+        pass
 
     def onFill(self, data: MarketData) -> None:
-        slog.info(data)
+        pass
 
     def onCancel(self, data: MarketData) -> None:
-        slog.info(data)
+        pass
 
     def onOpen(self, data: MarketData) -> None:
-        slog.info(data)
+        pass
 
     def slippage(self, resp: TradeResponse) -> TradeResponse:
         return resp
