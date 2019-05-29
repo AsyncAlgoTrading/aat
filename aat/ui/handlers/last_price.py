@@ -21,7 +21,11 @@ class LastPriceHandler(PerspectiveHTTPMixin, HTTPHandler):
                 msg['underlying'] = msg['instrument']['underlying']
                 msg['instrument'] = msg['instrument']['underlying'] + ',' + msg['instrument']['type']
 
-        super(LastPriceHandler, self).loadData(data=msgs, **psp_kwargs)
+        dat = {}
+        for msg in msgs:
+            if msg['instrument'] not in dat:
+                dat[msg['instrument']] = msg
+        super(LastPriceHandler, self).loadData(data=list(dat.values()), **psp_kwargs)
         return super(LastPriceHandler, self).getData()
 
     @tornado.gen.coroutine
