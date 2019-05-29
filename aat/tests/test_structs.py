@@ -29,10 +29,10 @@ class TestStructs:
         assert x == {'type': InstrumentType.PAIR, 'underlying': PairType.BTCUSD}
 
         x = i.to_dict(True)
-        assert x == {'type': 'InstrumentType.PAIR', 'underlying': 'BTCUSD'}
+        assert x == {'type': 'InstrumentType.PAIR', 'underlying': 'BTC/USD'}
 
         x = i.to_dict(True, True)
-        assert x == {'type': 'InstrumentType.PAIR', 'underlying': 'BTCUSD'}
+        assert x == {'type': 'InstrumentType.PAIR', 'underlying': 'BTC/USD'}
 
     def test_MarketData(self):
         from ..structs import MarketData, Instrument
@@ -49,11 +49,12 @@ class TestStructs:
 
     def test_TradeRequest(self):
         from ..structs import TradeRequest, Instrument
-        from ..enums import Side, OrderType, PairType
+        from ..enums import Side, OrderType, PairType, ExchangeType
         t = TradeRequest(side=Side.BUY,
                          instrument=Instrument(underlying=PairType.BTCUSD),
                          order_type=OrderType.MARKET,
                          volume=1.0,
+                         exchange=ExchangeType.COINBASE,
                          price=1.0)
         assert t
         # side = Side
@@ -66,9 +67,10 @@ class TestStructs:
 
     def test_TradeResponse(self):
         from ..structs import TradeRequest, TradeResponse, TradeResult, Instrument
-        from ..enums import Side, OrderType, PairType
+        from ..enums import Side, OrderType, PairType, ExchangeType
         req = TradeRequest(side=Side.BUY,
                            order_type=OrderType.MARKET,
+                           exchange=ExchangeType.COINBASE,
                            instrument=Instrument(underlying=PairType.BTCUSD),
                            volume=1.0,
                            price=1.0)
@@ -78,6 +80,7 @@ class TestStructs:
                           volume=0.0,
                           price=0.0,
                           status=TradeResult.FILLED,
+                          exchange=ExchangeType.COINBASE,
                           order_id='1')
         assert t
         # side = Side

@@ -85,6 +85,7 @@ class TestSMACrossesStrategy:
         def ret(callback, req, callback_failure=None, strat=None):
             res = TradeResponse(request=req,
                                 side=req.side,
+                                exchange=ExchangeType.COINBASE,
                                 instrument=Instrument(underlying=PairType.BTCUSD),
                                 price=req.price,
                                 volume=req.volume,

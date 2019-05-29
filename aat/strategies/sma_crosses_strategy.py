@@ -97,6 +97,7 @@ class SMACrossesStrategy(TradingStrategy):
                                volume=max(min(1.0, data.volume), .2),
                                instrument=data.instrument,
                                order_type=OrderType.MARKET,
+                               exchange=data.exchange,
                                price=data.price)
             # slog.info("requesting buy : %s", req)
             self.requestBuy(self.onBuy, req)
@@ -108,6 +109,7 @@ class SMACrossesStrategy(TradingStrategy):
                                volume=self.bought_qty,
                                instrument=data.instrument,
                                order_type=OrderType.MARKET,
+                               exchange=data.exchange,
                                price=data.price)
             # slog.info("requesting sell : %s", req)
             self.requestSell(self.onSell, req)

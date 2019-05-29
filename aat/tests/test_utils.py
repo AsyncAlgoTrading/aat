@@ -165,18 +165,19 @@ class TestUtils:
 
     def test_trade_req_to_params(self):
         from ..utils import trade_req_to_params
-        from ..structs import TradeRequest, Instrument
+        from ..structs import TradeRequest, Instrument, ExchangeType
         from ..enums import Side, OrderType, PairType
 
         t = TradeRequest(side=Side.BUY,
                          volume=1.0,
                          price=1.0,
                          instrument=Instrument(underlying=PairType.BTCUSD),
+                         exchange=ExchangeType.COINBASE,
                          order_type=OrderType.LIMIT)
 
         ret = trade_req_to_params(t)
 
-        assert ret['symbol'] == 'BTCUSD'
+        assert ret['symbol'] == 'BTC/USD'
         assert ret['side'] == 'buy'
         assert ret['type'] == 'limit'
         assert ret['amount'] == 1.0

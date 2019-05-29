@@ -33,7 +33,7 @@ class TestExecution:
 
     def test_request(self):
         from ..execution import Execution
-        from ..enums import Side, PairType, OrderType
+        from ..enums import Side, PairType, OrderType, ExchangeType
         from ..config import ExecutionConfig
         from ..structs import TradeRequest, Instrument
 
@@ -44,6 +44,7 @@ class TestExecution:
         req = TradeRequest(side=Side.BUY,
                            instrument=Instrument(underlying=PairType.BTCUSD),
                            order_type=OrderType.MARKET,
+                           exchange=ExchangeType.COINBASE,
                            volume=1.0,
                            price=1.0)
 
@@ -52,6 +53,7 @@ class TestExecution:
         req = TradeRequest(side=Side.SELL,
                            instrument=Instrument(underlying=PairType.BTCUSD),
                            order_type=OrderType.MARKET,
+                           exchange=ExchangeType.COINBASE,
                            volume=1.0,
                            price=1.0)
 
@@ -60,6 +62,7 @@ class TestExecution:
         req = TradeRequest(side=Side.BUY,
                            instrument=Instrument(underlying=PairType.BTCUSD),
                            order_type=OrderType.MARKET,
+                           exchange=ExchangeType.COINBASE,
                            volume=1.0,
                            price=1.0)
 
