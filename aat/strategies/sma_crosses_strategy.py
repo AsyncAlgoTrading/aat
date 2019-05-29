@@ -22,18 +22,10 @@ class SMACrossesStrategy(TradingStrategy):
         self.bought_qty = 0.0
         self.profits = 0.0
 
-        self._intitialvalue = None
-        self._portfolio_value = []
-
     def onBuy(self, res: TradeResponse) -> None:
         if not res.status == TradeResult.FILLED:
             slog.info('order failure: %s' % res)
             return
-
-        if self._intitialvalue is None:
-            date = res.time
-            self._intitialvalue = (date, res.volume*res.price)
-            self._portfolio_value.append(self._intitialvalue)
 
         self.bought = res.volume*res.price
         self.bought_qty = res.volume
@@ -50,11 +42,6 @@ class SMACrossesStrategy(TradingStrategy):
         slog.info('g->d:sold %.2f @ %.2f for %.2f - %.2f - %.2f ---- %.2f %.2f' % (res.volume, res.price, sold, profit, self.profits, self.short_av, self.long_av))
         self.bought = 0.0
         self.bought_qty = 0.0
-
-        date = res.time
-        self._portfolio_value.append((
-                date,
-                self._portfolio_value[-1][1] + profit))
 
     def onTrade(self, data: MarketData) -> bool:
         # add data to arrays
@@ -120,25 +107,15 @@ class SMACrossesStrategy(TradingStrategy):
     def onError(self, e) -> None:
         elog.critical(e)
 
-    def onAnalyze(self, _) -> None:
+    def onAnalyze(self, portfolio_value, requests, responses) -> None:
         import pandas
         import matplotlib.pyplot as plt
         import seaborn as sns
 
-        # pd = pandas.DataFrame(self._actions,
-        #                       columns=['time', 'action', 'price'])
-
-        pd = pandas.DataFrame(self._portfolio_value, columns=['time', 'value'])
+        pd = pandas.DataFrame(portfolio_value, columns=['time', 'value'])
         pd.set_index(['time'], inplace=True)
 
         print(self.short, self.long, pd.iloc[1].value, pd.iloc[-1].value)
-        # sp500 = pandas.DataFrame()
-        # tmp = pandas.read_csv('./data/sp/sp500_v_kraken.csv')
-        # sp500['Date'] = pandas.to_datetime(tmp['Date'])
-        # sp500['Close'] = tmp['Close']
-        # sp500.set_index(['Date'], inplace=True)
-        # print(sp500)
-
         sns.set_style('darkgrid')
         fig, ax1 = plt.subplots()
 
@@ -147,14 +124,11 @@ class SMACrossesStrategy(TradingStrategy):
 
         ax1.set_ylabel('Portfolio value($)')
         ax1.set_xlabel('Date')
-        for xy in [self._portfolio_value[0]] + [self._portfolio_value[-1]]:
+        for xy in [portfolio_value[0]] + [portfolio_value[-1]]:
             ax1.annotate('$%s' % xy[1], xy=xy, textcoords='data')
-
-        # ax2 = ax1.twinx()
-        # ax2.plot(sp500, 'r')
-        # ax2.set_ylabel('S&P500 ($)')
-
         plt.show()
+        print(requests)
+        print(responses)
 
     def onChange(self, data: MarketData) -> None:
         pass

@@ -19,7 +19,7 @@ class QueryEngine(object):
         self._instruments = instruments
         self._exchanges = exchanges
 
-        self._last_price_by_exchange = {}
+        self._last_price_by_asset_and_exchange = {}
 
         self._trade_reqs = []
         self._trade_resps = []
@@ -41,6 +41,19 @@ class QueryEngine(object):
                 if page > 1 else lst_sub[instrument][from_:]
         return lst[from_:to_] \
             if page > 1 else lst[from_:]
+
+    def query_lastprice(self,
+                        instrument: Instrument,
+                        exchange: ExchangeType = None) -> MarketData:
+        if instrument not in self._last_price_by_asset_and_exchange:
+            raise Exception('Not found!')
+        if exchange:
+            if exchange not in self._last_price_by_asset_and_exchange[instrument]:
+                raise Exception('Not found!')
+            return self._last_price_by_asset_and_exchange[instrument][exchange]
+        if "ANY" not in self._last_price_by_asset_and_exchange[instrument]:
+            raise Exception('Not found!')
+        return self._last_price_by_asset_and_exchange[instrument]["ANY"]
 
     def query_trades(self,
                      instrument: Instrument = None,
@@ -74,9 +87,11 @@ class QueryEngine(object):
             if data.instrument not in self._trades_by_instrument:
                 self._trades_by_instrument[data.instrument] = []
             self._trades_by_instrument[data.instrument].append(data)
-            if data.exchange not in self._last_price_by_exchange:
-                self._last_price_by_exchange[data.exchange] = []
-            self._last_price_by_exchange[data.exchange].append(data)
+            if data.instrument not in self._last_price_by_asset_and_exchange:
+                self._last_price_by_asset_and_exchange[data.instrument] = {}
+            self._last_price_by_asset_and_exchange[data.instrument][data.exchange] = data
+            self._last_price_by_asset_and_exchange[data.instrument]['ANY'] = data
+            print("here", self._last_price_by_asset_and_exchange[data.instrument][data.exchange])
 
     def push_tradereq(self, req: TradeRequest) -> None:
         self._trade_reqs.append(req)

@@ -2,6 +2,7 @@ import asyncio
 import threading
 import tornado
 import operator
+from datetime import datetime
 from functools import reduce
 from typing import Callable
 from .backtest import Backtest
@@ -12,7 +13,7 @@ from .execution import Execution
 from .query import QueryEngine
 from .risk import Risk
 from .strategy import TradingStrategy
-from .structs import TradeRequest, TradeResponse
+from .structs import TradeRequest, TradeResponse, MarketData
 from .ui.server import ServerApplication
 from .utils import ex_type_to_ex
 from .logging import LOG as log, SLIP as sllog, TXNS as tlog
@@ -52,8 +53,13 @@ class TradingEngine(object):
                                instruments=options.exchange_options.instruments)
 
         # register query hooks
-        for exc in self._exchanges.values():
-            exc.onTrade(self._qy.push)
+        if self._live or self._simulation or self._sandbox:
+            for exc in self._exchanges.values():
+                exc.onTrade(self._qy.push)
+                exc.onTrade(self.recalculate_value)
+        if self._backtest:
+            self._bt.onTrade(self._qy.push)
+            self._bt.onTrade(self.recalculate_value)
 
         # if live or sandbox, get account information and balances
         if self._live or self._simulation or self._sandbox:
@@ -66,6 +72,12 @@ class TradingEngine(object):
 
             log.info(accounts)
             log.info("Running with %.2f USD" % options.risk_options.total_funds)
+
+        if self._backtest:
+            self._portfolio_value = []
+        else:
+            self._portfolio_value = [[datetime.now(), options.risk_options.total_funds]]
+        self._holdings = {}
 
         # instantiate execution engine
         self._ec = Execution(options.execution_options, self._exchanges)
@@ -139,6 +151,36 @@ class TradingEngine(object):
     def strategies(self):
         return self._strats
 
+    def recalculate_value(self, data: MarketData) -> None:
+        # TODO move to risk
+        if data.instrument not in self._holdings:
+            # nothing to do
+            return
+        volume = self._holdings[data.instrument][2]
+        if self._portfolio_value == []:
+            # start from first tick of data
+            # TODO risk boungs?
+            # self._portfolio_value = [[data.time, self._rk.total_funds]]
+            self._portfolio_value = [[data.time, volume*data.price]]
+        self._portfolio_value.append([data.time, volume*data.price])
+        print(f'\n{volume} {data.price} {volume*data.price} {data.time}\n')
+
+    def update_holdings(self, resp: TradeResponse) -> None:
+        # TODO move to risk
+        if resp.status in (TradeResult.REJECTED, TradeResult.PENDING, TradeResult.NONE):
+            return
+        if resp.instrument not in self._holdings:
+            notional = resp.price * resp.volume*(1 if resp.side == Side.BUY else -1)
+            self._holdings[resp.instrument] = \
+                [notional, resp.price, resp.volume*(1 if resp.side == Side.BUY else -1)]
+        else:
+            notional = resp.price * resp.volume*(1 if resp.side == Side.BUY else -1)
+            self._holdings[resp.instrument] = \
+                [self._holdings[resp.instrument][0] + notional, resp.price, resp.volume*(1 if resp.side == Side.BUY else -1)]
+
+    def portfolio_value(self) -> list:
+        return self._portfolio_value
+
     def run(self):
         if self._live or self._simulation or self._sandbox:
             port = 8081
@@ -177,6 +219,7 @@ class TradingEngine(object):
                  req: TradeRequest,
                  callback_failure=None,
                  strat=None):
+        print('requesting!')
         self.query().push_tradereq(req)
         if not self._trading:
             # not allowed to trade right now
@@ -206,7 +249,7 @@ class TradingEngine(object):
                         # listen for later
                         # TODO
                         log.info('Order pending')
-                        self._pending[req.order_type].append(resp)  # TODO or req?
+                        self._pending[req.order_type].append(resp)
 
                     elif resp.status == TradeResult.REJECTED:
                         # send response
@@ -261,6 +304,7 @@ class TradingEngine(object):
                                      status=TradeResult.REJECTED,
                                      order_id='')
         self.query().push_traderesp(resp)
+        self.update_holdings(resp)
         callback_failure(resp) if callback_failure and not resp.success else callback(resp)
 
     def requestBuy(self, callback: Callable, req: TradeRequest, callback_failure=None, strat=None):

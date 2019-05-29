@@ -67,9 +67,9 @@ class StreamingDataSource(DataSource):
     def receive(self):
         '''receive data and call callbacks'''
 
-    def callback(self, field: str, data) -> None:
+    def callback(self, field: str, data, *args, **kwargs) -> None:
         for cb in self._callbacks[field]:
-            cb(data)
+            cb(data, *args, **kwargs)
 
     # Data functions
     @abstractmethod

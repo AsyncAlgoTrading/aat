@@ -5,18 +5,9 @@ from functools import lru_cache
 from .data_source import RestAPIDataSource
 from .enums import PairType, TradingType, ExchangeType
 from .structs import TradeRequest, TradeResponse, Account
-from .utils import get_keys_from_environment, str_to_currency_type
-
-
-def exchange_type_to_ccxt_client(exchange_type):
-    if exchange_type == ExchangeType.COINBASE:
-        return ccxt.coinbasepro
-    elif exchange_type == ExchangeType.GEMINI:
-        return ccxt.gemini
-    elif exchange_type == ExchangeType.KRAKEN:
-        return ccxt.kraken
-    elif exchange_type == ExchangeType.POLONIEX:
-        return ccxt.poloniex
+from .utils import (get_keys_from_environment, str_to_currency_type,
+                    exchange_type_to_ccxt_client, tradereq_to_ccxt_order)
+from .utils import elog as log
 
 
 class OrderEntry(RestAPIDataSource):
@@ -93,14 +84,20 @@ class OrderEntry(RestAPIDataSource):
 
     def buy(self, req: TradeRequest) -> TradeResponse:
         '''execute a buy order'''
+        params = tradereq_to_ccxt_order(req)
         raise NotImplementedError()
+        self.oe_client().create_order(**params)
 
     def sell(self, req: TradeRequest) -> TradeResponse:
         '''execute a sell order'''
+        params = tradereq_to_ccxt_order(req)
         raise NotImplementedError()
+        self.oe_client().create_order(**params)
 
     def cancel(self, resp: TradeResponse):
+        params = tradereq_to_ccxt_order(req)
         raise NotImplementedError()
+        self.oe_client().create_order(**params)
 
     def cancelAll(self, resp: TradeResponse):
         return self.oe_client().cancel_all_orders()

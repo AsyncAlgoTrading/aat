@@ -19,9 +19,6 @@ class CustomStrategy(TradingStrategy):
         self.bought_qty = 0.0
         self.profits = 0.0
 
-        self._intitialvalue = None
-        self._portfolio_value = []
-
     def onBuy(self, res: TradeResponse) -> None:
         if self._intitialvalue is None:
             date = res.time

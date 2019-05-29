@@ -1,3 +1,4 @@
+import ccxt
 import logging
 import os
 import pytz
@@ -311,3 +312,24 @@ def trade_req_to_params(req) -> dict:
         ret['price'] = req.price
 
     return ret
+
+
+def exchange_type_to_ccxt_client(exchange_type):
+    if exchange_type == ExchangeType.COINBASE:
+        return ccxt.coinbasepro
+    elif exchange_type == ExchangeType.GEMINI:
+        return ccxt.gemini
+    elif exchange_type == ExchangeType.KRAKEN:
+        return ccxt.kraken
+    elif exchange_type == ExchangeType.POLONIEX:
+        return ccxt.poloniex
+
+def tradereq_to_ccxt_order(req) -> dict:
+    # TODO order_sub_type
+    return dict(
+        symbol=str(req.instrument.underlying),
+        type=req.order_type.value.lower(),
+        side=req.side.value.lower(),
+        price=req.price,
+        amount=req.volume,
+        params={})
