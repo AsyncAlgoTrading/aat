@@ -42,6 +42,10 @@ class QueryEngine(object):
         return lst[from_:to_] \
             if page > 1 else lst[from_:]
 
+    def query_lastpriceall(self) -> List[MarketData]:
+        return [m for exs in self._last_price_by_asset_and_exchange.values()
+                for m in exs.values()]
+
     def query_lastprice(self,
                         instrument: Instrument,
                         exchange: ExchangeType = None) -> MarketData:

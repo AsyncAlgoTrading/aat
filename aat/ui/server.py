@@ -6,6 +6,7 @@ import tornado.web
 from .handlers.accounts import AccountsHandler
 from .handlers.exchanges import ExchangesHandler
 from .handlers.instruments import InstrumentsHandler
+from .handlers.last_price import LastPriceHandler
 from .handlers.strategies import StrategiesHandler
 from .handlers.strategy_trade_request import StrategyTradeRequestHandler
 from .handlers.strategy_trade_response import StrategyTradeResponseHandler
@@ -51,6 +52,9 @@ class ServerApplication(tornado.web.Application):
                                                                                     'psp_kwargs': {'view': 'hypergrid'}}),
             (r"/api/v1/json/strategy-trade-responses", StrategyTradeResponseHandler, {'trading_engine': trading_engine,
                                                                                       'psp_kwargs': {'view': 'hypergrid'}}),
+            (r"/api/v1/json/last-price-all", LastPriceHandler, {'trading_engine': trading_engine,
+                                                                'psp_kwargs': {'view': 'hypergrid'}}),
+
             (r"/api/v1/json/trades", TradesHandler, {'trading_engine': trading_engine,
                                                      'psp_kwargs': {'view': 'hypergrid', 'limit': 100}}),
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": static}),
