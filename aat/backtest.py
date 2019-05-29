@@ -32,7 +32,7 @@ class Backtest(StreamingDataSource):
             self.receive(line_to_data(row))
         log.info('Backtest done, running analysis.')
 
-        self.callback(TickType.ANALYZE, engine.portfolio_value(), engine.query().query_tradereqs(), engine.query().query_traderesps())
+        self.callback(TickType.ANALYZE, engine)
         log.info('Analysis completed.')
 
     def receive(self, data: MarketData) -> None:

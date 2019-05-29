@@ -1,3 +1,4 @@
+from datetime import datetime
 from .config import RiskConfig
 from .structs import TradeRequest, TradeResponse, Instrument
 from .enums import Side, TradeResult, OrderType, RiskReason, ExchangeType
@@ -28,9 +29,19 @@ class Risk(object):
                        order_type: OrderType,
                        vol: float,
                        price: float,
+                       time: datetime,
                        status: bool,
                        reason: RiskReason) -> TradeRequest:
-        resp = TradeRequest(side=side, exchange=exchange, instrument=instrument, order_type=order_type, volume=vol, price=price, risk_check=status, risk_reason=reason)
+        resp = TradeRequest(side=side,
+                            exchange=exchange,
+                            instrument=instrument,
+                            order_type=order_type,
+                            volume=vol,
+                            price=price,
+                            time=time,
+                            risk_check=status,
+                            risk_reason=reason,
+                            )
 
         if status == TradeResult.FILLED:  # FIXME
             self.outstanding += abs(vol * price) * (1 if side == Side.BUY else -1)
@@ -59,6 +70,7 @@ class Risk(object):
                                        order_type=req.order_type,
                                        vol=req.volume,
                                        price=req.price,
+                                       time=req.time,
                                        status=True,
                                        reason=RiskReason.NONE)
 
@@ -72,6 +84,7 @@ class Risk(object):
                                        order_type=req.order_type,
                                        vol=volume,
                                        price=req.price,
+                                       time=req.time,
                                        status=True,
                                        reason=RiskReason.PARTIAL)
 
@@ -83,6 +96,7 @@ class Risk(object):
                                    order_type=req.order_type,
                                    vol=volume,
                                    price=req.price,
+                                   time=req.time,
                                    status=False,
                                    reason=RiskReason.FULL)
 

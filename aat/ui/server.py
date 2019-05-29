@@ -39,7 +39,6 @@ class ServerApplication(tornado.web.Application):
         for route, handler, h_kwargs in extra_handlers:
             if 'trading_engine' in h_kwargs:
                 h_kwargs['trading_engine'] = trading_engine
-        print(extra_handlers)
 
         super(ServerApplication, self).__init__(
           extra_handlers + [

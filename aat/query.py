@@ -33,8 +33,14 @@ class QueryEngine(object):
         return self._exchanges
 
     def _paginate(self, instrument: Instrument, lst: list, lst_sub: list, page: int = 1)-> list:
-        from_ = -1*page*100
-        to_ = -1*(page-1)*100
+        if page is not None:
+            from_ = -1*page*100
+            to_ = -1*(page-1)*100
+        else:
+            # all results
+            page = 0
+            from_ = 0
+            to_ = -1
 
         if instrument:
             return lst_sub[instrument][from_:to_] \
@@ -95,7 +101,6 @@ class QueryEngine(object):
                 self._last_price_by_asset_and_exchange[data.instrument] = {}
             self._last_price_by_asset_and_exchange[data.instrument][data.exchange] = data
             self._last_price_by_asset_and_exchange[data.instrument]['ANY'] = data
-            print("here", self._last_price_by_asset_and_exchange[data.instrument][data.exchange])
 
     def push_tradereq(self, req: TradeRequest) -> None:
         self._trade_reqs.append(req)

@@ -24,7 +24,8 @@ class BuyAndHoldStrategy(TradingStrategy):
                                instrument=data.instrument,
                                order_type=OrderType.MARKET,
                                exchange=data.exchange,
-                               price=data.price)
+                               price=data.price,
+                               time=data.time)
             slog.info("requesting buy : %s", req)
             self.requestBuy(self.onBuy, req)
             return True
@@ -33,25 +34,59 @@ class BuyAndHoldStrategy(TradingStrategy):
     def onError(self, e) -> None:
         elog.critical(e)
 
-    def onAnalyze(self, portfolio_value, requests, responses) -> None:
+    def onAnalyze(self, engine) -> None:
         import pandas
         import matplotlib.pyplot as plt
         import seaborn as sns
+
+        portfolio_value = engine.portfolio_value()
+        requests = engine.query().query_tradereqs()
+        responses = engine.query().query_traderesps()
+        trades = pandas.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query().query_trades(instrument=requests[0].instrument, page=None)])
+        trades.set_index(['time'], inplace=True)
 
         pd = pandas.DataFrame(portfolio_value, columns=['time', 'value'])
         pd.set_index(['time'], inplace=True)
 
         sns.set_style('darkgrid')
-        fig, ax1 = plt.subplots()
+        fig = plt.figure(figsize=(5, 8))
+        ax1 = fig.add_subplot(211)
+        ax2 = fig.add_subplot(212)
 
         plt.title('BTC algo 1 performance')
         ax1.plot(pd)
 
+        ax1.set_title('Performance')
         ax1.set_ylabel('Portfolio value($)')
-        ax1.set_xlabel('Date')
         for xy in [portfolio_value[0]] + [portfolio_value[-1]]:
             ax1.annotate('$%s' % xy[1], xy=xy, textcoords='data')
+            ax2.annotate('$%s' % xy[1], xy=xy, textcoords='data')
+
+        ax2.set_title('Trades')
+        ax2.set_ylabel('Intent/Action')
+        ax2.set_xlabel('Date')
+
+        ax2.plot([x.time for x in requests if x.side == Side.BUY],
+                 [x.price for x in requests if x.side == Side.BUY],
+                 '2', color='y')
+        ax2.plot([x.time for x in requests if x.side == Side.SELL],
+                 [x.price for x in requests if x.side == Side.SELL],
+                 '1', color='y')
+        ax2.plot([x.time for x in responses if x.side == Side.BUY],  # FIXME
+                 [x.price for x in responses if x.side == Side.BUY],
+                 '^', color='g')
+        ax2.plot([x.time for x in responses if x.side == Side.SELL],  # FIXME
+                 [x.price for x in responses if x.side == Side.SELL],
+                 'v', color='r')
+        ax2.plot(trades)
+
+        y_bot, y_top = ax1.get_ylim()
+        x_bot, x_top = ax1.get_xlim()
+        ax2.set_ylim(y_bot, y_top)
+        ax2.set_xlim(x_bot, x_top)
+
         plt.show()
+
         print(requests)
         print(responses)
 

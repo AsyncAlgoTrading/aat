@@ -135,7 +135,7 @@ class TradeRequest:
     order_type = OrderType
     order_sub_type = OrderSubType, OrderSubType.NONE
 
-    time = datetime.datetime, datetime.datetime.now()  # FIXME
+    time = datetime.datetime
     risk_check = bool, False
     risk_reason = RiskReason, RiskReason.NONE
 
@@ -156,7 +156,7 @@ class TradeResponse:
     slippage = float, 0.0
     transaction_cost = float, 0.0
 
-    time = datetime.datetime, datetime.datetime.now()  # FIXME
+    time = datetime.datetime
     status = TradeResult
     order_id = str
     remaining = float, 0.0

@@ -77,7 +77,7 @@ class CustomStrategy(TradingStrategy):
             self.state = ''
 
         if self.state == 'buy' and self.prev_state != 'buy' and \
-                self.bought == 0.0:  # watch for floating point error
+                self.bought == 0.0:  # watch for floating point  error
             req = TradeRequest(side=Side.BUY,
                                # buy between .2 and 1 BTC
                                volume=max(min(1.0, data.volume), .2),
@@ -104,24 +104,15 @@ class CustomStrategy(TradingStrategy):
     def onError(self, e: MarketData):
         elog.critical(e)
 
-    def onAnalyze(self, _):
+    def onAnalyze(self, portfolio_value, requests, responses) -> None:
         import pandas
         import matplotlib.pyplot as plt
         import seaborn as sns
 
-        # pd = pandas.DataFrame(self._actions,
-        #                       columns=['time', 'action', 'price'])
-
-        pd = pandas.DataFrame(self._portfolio_value, columns=['time', 'value'])
+        pd = pandas.DataFrame(portfolio_value, columns=['time', 'value'])
         pd.set_index(['time'], inplace=True)
 
         print(self.size, pd.iloc[1].value, pd.iloc[-1].value)
-        # sp500 = pandas.DataFrame()
-        # tmp = pandas.read_csv('./data/sp/sp500_v_kraken.csv')
-        # sp500['Date'] = pandas.to_datetime(tmp['Date'])
-        # sp500['Close'] = tmp['Close']
-        # sp500.set_index(['Date'], inplace=True)
-        # print(sp500)
 
         sns.set_style('darkgrid')
         fig, ax1 = plt.subplots()
@@ -131,12 +122,8 @@ class CustomStrategy(TradingStrategy):
 
         ax1.set_ylabel('Portfolio value($)')
         ax1.set_xlabel('Date')
-        for xy in [self._portfolio_value[0]] + [self._portfolio_value[-1]]:
+        for xy in [portfolio_value[0]] + [portfolio_value[-1]]:
             ax1.annotate('$%s' % xy[1], xy=xy, textcoords='data')
-
-        # ax2 = ax1.twinx()
-        # ax2.plot(sp500, 'r')
-        # ax2.set_ylabel('S&P500 ($)')
 
         plt.show()
 

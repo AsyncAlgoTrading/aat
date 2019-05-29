@@ -163,7 +163,6 @@ class TradingEngine(object):
             # self._portfolio_value = [[data.time, self._rk.total_funds]]
             self._portfolio_value = [[data.time, volume*data.price]]
         self._portfolio_value.append([data.time, volume*data.price])
-        print(f'\n{volume} {data.price} {volume*data.price} {data.time}\n')
 
     def update_holdings(self, resp: TradeResponse) -> None:
         # TODO move to risk
@@ -219,7 +218,6 @@ class TradingEngine(object):
                  req: TradeRequest,
                  callback_failure=None,
                  strat=None):
-        print('requesting!')
         self.query().push_tradereq(req)
         if not self._trading:
             # not allowed to trade right now
