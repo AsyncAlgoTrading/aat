@@ -157,7 +157,8 @@ Trading strategies have a number of required methods for handling messages:
 - onSell
 - onTrade 
 - onChange
-- onDone
+- onFill
+- onCancel
 - onError
 - onOpen
 - onReceived
