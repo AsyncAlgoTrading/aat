@@ -162,12 +162,14 @@ class TradingEngine(object):
             # nothing to do
             return
         volume = self._holdings[data.instrument][2]
+        purchase_price = self._holdings[data.instrument][1]  # takes into account slippage/txn cost
+
         if self._portfolio_value == []:
             # start from first tick of data
-            # TODO risk boungs?
+            # TODO risk bounds?
             # self._portfolio_value = [[data.time, self._rk.total_funds]]
-            self._portfolio_value = [[data.time, volume*data.price]]
-        self._portfolio_value.append([data.time, volume*data.price])
+            self._portfolio_value = [[data.time, volume*data.price, volume*(data.price-purchase_price)]]
+        self._portfolio_value.append([data.time, volume*data.price, volume*(data.price-purchase_price)])
 
     def update_holdings(self, resp: TradeResponse) -> None:
         # TODO move to risk

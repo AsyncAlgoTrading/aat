@@ -104,7 +104,7 @@ class CustomStrategy(TradingStrategy):
         trades = pandas.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query().query_trades(instrument=requests[0].instrument, page=None)])
         trades.set_index(['time'], inplace=True)
 
-        pd = pandas.DataFrame(portfolio_value, columns=['time', 'value'])
+        pd = pandas.DataFrame(portfolio_value, columns=['time', 'value', 'pnl'])
         pd.set_index(['time'], inplace=True)
 
         print(self.size, pd.iloc[1].value, pd.iloc[-1].value)
@@ -113,7 +113,7 @@ class CustomStrategy(TradingStrategy):
         fig, ax1 = plt.subplots()
 
         # plt.title('BTC algo 1 performance - %d-%d Momentum ' % (self.short, self.long))
-        ax1.plot(pd)
+        ax1.plot(pd, secondary_y=['pnl'])
 
         ax1.set_ylabel('Portfolio value($)')
         ax1.set_xlabel('Date')
