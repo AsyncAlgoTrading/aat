@@ -82,7 +82,7 @@ class CMakeBuild(build_ext):
 setup(
     name='aat',
     version='0.0.2',
-    description='Analytics library',
+    description='Algorithmic trading library',
     long_description=long_description,
     url='https://github.com/timkpaine/aat',
     download_url='https://github.com/timkpaine/aat/archive/v0.0.2.tar.gz',
@@ -113,8 +113,6 @@ setup(
             'aat=aat:main',
         ],
     },
-    ext_modules=[
-        CMakeExtension('aat'),
-    ],
+    ext_modules=[CMakeExtension('aat')],
     cmdclass=dict(build_ext=CMakeBuild),
 )
