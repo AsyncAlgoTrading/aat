@@ -36,7 +36,7 @@ class BuyAndHoldStrategy(TradingStrategy):
     def onAnalyze(self, engine) -> None:
         import pandas
         import numpy as np
-        import matplotlib, matplotlib.pyplot as plt
+        import matplotlib, matplotlib.pyplot as plt  # noqa: E401
         import seaborn as sns
         matplotlib.rc('font', **{'size': 5})
 
