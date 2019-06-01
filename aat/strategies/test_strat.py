@@ -100,10 +100,15 @@ class TestStrategy(TradingStrategy):
     def transactionCost(self, resp: TradeResponse) -> TradeResponse:
         return resp
 
-    def onAnalyze(self, portfolio_value, requests, responses) -> None:
+    def onAnalyze(self, engine) -> None:
         import pandas
         import matplotlib.pyplot as plt
         import seaborn as sns
+
+        portfolio_value = engine.portfolio_value()
+        requests = engine.query().query_tradereqs()
+        trades = pandas.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query().query_trades(instrument=requests[0].instrument, page=None)])
+        trades.set_index(['time'], inplace=True)
 
         pd = pandas.DataFrame(portfolio_value, columns=['time', 'value'])
         pd.set_index(['time'], inplace=True)

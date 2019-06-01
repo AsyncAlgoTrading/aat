@@ -20,11 +20,6 @@ class CustomStrategy(TradingStrategy):
         self.profits = 0.0
 
     def onBuy(self, res: TradeResponse) -> None:
-        if self._intitialvalue is None:
-            date = res.time
-            self._intitialvalue = (date, res.volume*res.price)
-            self._portfolio_value.append(self._intitialvalue)
-
         self.bought = res.volume*res.price
         self.bought_qty = res.volume
         slog.info('d->g:bought %.2f @ %.2f for %.2f', res.volume, res.price, self.bought)
@@ -38,11 +33,6 @@ class CustomStrategy(TradingStrategy):
 
         self.bought = 0.0
         self.bought_qty = 0.0
-
-        date = res.time
-        self._portfolio_value.append((
-                date,
-                self._portfolio_value[-1][1] + profit))
 
     def onTrade(self, data: MarketData):
         # add data to arrays
@@ -104,10 +94,15 @@ class CustomStrategy(TradingStrategy):
     def onError(self, e: MarketData):
         elog.critical(e)
 
-    def onAnalyze(self, portfolio_value, requests, responses) -> None:
+    def onAnalyze(self, engine) -> None:
         import pandas
         import matplotlib.pyplot as plt
         import seaborn as sns
+
+        portfolio_value = engine.portfolio_value()
+        requests = engine.query().query_tradereqs()
+        trades = pandas.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query().query_trades(instrument=requests[0].instrument, page=None)])
+        trades.set_index(['time'], inplace=True)
 
         pd = pandas.DataFrame(portfolio_value, columns=['time', 'value'])
         pd.set_index(['time'], inplace=True)

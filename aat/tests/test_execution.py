@@ -46,7 +46,8 @@ class TestExecution:
                            order_type=OrderType.MARKET,
                            exchange=ExchangeType.COINBASE,
                            volume=1.0,
-                           price=1.0)
+                           price=1.0,
+                           time=datetime.now())
 
         resp = e.request(req)
 
@@ -55,7 +56,8 @@ class TestExecution:
                            order_type=OrderType.MARKET,
                            exchange=ExchangeType.COINBASE,
                            volume=1.0,
-                           price=1.0)
+                           price=1.0,
+                           time=datetime.now())
 
         resp = e.request(req)
 
@@ -64,7 +66,8 @@ class TestExecution:
                            order_type=OrderType.MARKET,
                            exchange=ExchangeType.COINBASE,
                            volume=1.0,
-                           price=1.0)
+                           price=1.0,
+                           time=datetime.now())
 
         resp = e.request(req)
 

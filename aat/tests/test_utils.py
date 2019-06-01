@@ -1,34 +1,7 @@
+from datetime import datetime
+
+
 class TestUtils:
-    def test_config(self):
-        from ..utils import config
-
-        @config
-        class Test:
-            a = int
-            b = str, ''
-            c = [str]
-            d = [str], ['']
-
-        t = Test()
-        t.a = 5
-
-        assert t.a == 5
-        assert t.b == ''
-
-        try:
-            t.a = ''
-            assert False
-        except:
-            pass
-
-        t.b = 'test'
-        assert t.b == 'test'
-
-        t.c = ['test']
-        assert t.c == ['test']
-        print(t.d)
-        assert t.d == ['']
-
     def test_struct(self):
         from ..utils import struct
 
@@ -173,7 +146,8 @@ class TestUtils:
                          price=1.0,
                          instrument=Instrument(underlying=PairType.BTCUSD),
                          exchange=ExchangeType.COINBASE,
-                         order_type=OrderType.LIMIT)
+                         order_type=OrderType.LIMIT,
+                         time=datetime.now())
 
         ret = trade_req_to_params(t)
 

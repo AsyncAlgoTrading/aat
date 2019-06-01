@@ -85,6 +85,7 @@ class TestSMACrossesStrategy:
         def ret(callback, req, callback_failure=None, strat=None):
             res = TradeResponse(request=req,
                                 side=req.side,
+                                time=parse_date('1479272400'),
                                 exchange=ExchangeType.COINBASE,
                                 instrument=Instrument(underlying=PairType.BTCUSD),
                                 price=req.price,
@@ -112,7 +113,6 @@ class TestSMACrossesStrategy:
         assert s.short_av == 0
         assert s.long_av == 2
 
-        assert s._portfolio_value == []
         assert s.bought == 0
 
         s.onTrade(data[5])  # short ticks up
@@ -122,7 +122,6 @@ class TestSMACrossesStrategy:
         assert s.short_av == 5
         assert s.long_av == 2.2
 
-        assert s._portfolio_value[0]
         assert s.bought == 5
 
         self.s = s
@@ -166,4 +165,8 @@ class TestSMACrossesStrategy:
             # for coverage
             self.test_sma_buy()
             self.test_sma_sell()
-            self.s.onAnalyze(None)
+            m = MagicMock()
+            m.portfolio_value.return_value = []
+            m.query.return_value.query_tradereqs.return_value = []
+            m.query.return_value.query_trades.return_value = []
+            self.s.onAnalyze(m)

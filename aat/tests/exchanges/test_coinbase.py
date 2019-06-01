@@ -121,20 +121,6 @@ class TestExchange:
         assert e.strToTradeType('heartbeat') == TickType.HEARTBEAT
         assert e.strToTradeType('flarg') == TickType.ERROR
 
-    def test_CoinbaseHelpers_currencyToString(self):
-        from ...exchanges.coinbase import CoinbaseExchange
-        from ...enums import CurrencyType
-        from ...config import ExchangeConfig
-        from ...enums import ExchangeType
-        ec = ExchangeConfig()
-        ec.exchange_type = ExchangeType.COINBASE
-        e = CoinbaseExchange(ExchangeType.COINBASE, ec)
-
-        assert e.currencyToString(CurrencyType.BTC) == 'BTC'
-        assert e.currencyToString(CurrencyType.ETH) == 'ETH'
-        assert e.currencyToString(CurrencyType.LTC) == 'LTC'
-        assert e.currencyToString(CurrencyType.BCH) == 'BCH'
-
     def test_CoinbaseHelpers_currencyPairToString(self):
         from ...exchanges.coinbase import CoinbaseExchange
         from ...enums import PairType

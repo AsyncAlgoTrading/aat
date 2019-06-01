@@ -1,6 +1,7 @@
 from typing import List
 from concurrent.futures import ThreadPoolExecutor
 from .enums import TickType, Side, ExchangeType, CurrencyType, PairType  # noqa: F401
+from .exceptions import QueryException
 from .structs import Instrument, MarketData, TradeRequest, TradeResponse
 
 
@@ -32,7 +33,7 @@ class QueryEngine(object):
     def query_exchanges(self) -> List[ExchangeType]:
         return self._exchanges
 
-    def _paginate(self, instrument: Instrument, lst: list, lst_sub: list, page: int = 1)-> list:
+    def _paginate(self, instrument: Instrument, lst: list, lst_sub: list, page: int = 1) -> list:
         if page is not None:
             from_ = -1*page*100
             to_ = -1*(page-1)*100
@@ -56,13 +57,13 @@ class QueryEngine(object):
                         instrument: Instrument,
                         exchange: ExchangeType = None) -> MarketData:
         if instrument not in self._last_price_by_asset_and_exchange:
-            raise Exception('Not found!')
+            raise QueryException('Not found!')
         if exchange:
             if exchange not in self._last_price_by_asset_and_exchange[instrument]:
-                raise Exception('Not found!')
+                raise QueryException('Not found!')
             return self._last_price_by_asset_and_exchange[instrument][exchange]
         if "ANY" not in self._last_price_by_asset_and_exchange[instrument]:
-            raise Exception('Not found!')
+            raise QueryException('Not found!')
         return self._last_price_by_asset_and_exchange[instrument]["ANY"]
 
     def query_trades(self,

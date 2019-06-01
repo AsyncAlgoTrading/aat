@@ -2,7 +2,7 @@ import aiohttp
 from abc import abstractmethod
 from .data_source import StreamingDataSource
 from .define import EXCHANGE_MARKET_DATA_ENDPOINT
-from .enums import OrderType, PairType, CurrencyType, TickType
+from .enums import OrderType, PairType, TickType
 from .structs import MarketData
 from .logging import LOG as log
 
@@ -85,18 +85,6 @@ class MarketData(StreamingDataSource):
     @abstractmethod
     def tradeReqToParams(self, req) -> dict:
         pass
-
-    def currencyToString(self, cur: CurrencyType) -> str:
-        if cur == CurrencyType.BTC:
-            return 'BTC'
-        if cur == CurrencyType.ETH:
-            return 'ETH'
-        if cur == CurrencyType.LTC:
-            return 'LTC'
-        if cur == CurrencyType.BCH:
-            return 'BCH'
-        else:
-            raise Exception('Pair not recognized: %s' % str(cur))
 
     @abstractmethod
     def currencyPairToString(self, cur: PairType) -> str:

@@ -1,3 +1,4 @@
+from functools import lru_cache
 from enum import Enum
 
 
@@ -53,6 +54,9 @@ class CurrencyType(BaseEnum):
     NONE = 'NONE'  # special, dont use
 
     USD = 'USD'
+    EUR = 'EUR'
+    GBP = 'GBP'
+
     USDC = 'USDC'
     BAT = 'BAT'
     BCH = 'BCH'
@@ -86,7 +90,11 @@ class _PairType(BaseEnum):
     def __str__(self):
         return str(self.value[0].value) + '/' + str(self.value[1].value)
 
+    def __hash__(self):
+        return hash(str(self))
+
     @staticmethod
+    @lru_cache(None)
     def from_string(first, second=''):
         if second:
             c1 = CurrencyType(first)

@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 class TestRisk:
     def setup(self):
         from ..config import RiskConfig
@@ -33,7 +36,7 @@ class TestRisk:
         from ..structs import TradeRequest, Instrument
         from ..enums import Side, PairType, OrderType, ExchangeType
 
-        req = TradeRequest(side=Side.BUY, instrument=Instrument(underlying=PairType.BTCUSD), order_type=OrderType.MARKET, volume=100.0, price=1.0, exchange=ExchangeType.COINBASE)
+        req = TradeRequest(side=Side.BUY, instrument=Instrument(underlying=PairType.BTCUSD), order_type=OrderType.MARKET, volume=100.0, price=1.0, exchange=ExchangeType.COINBASE, time=datetime.now())
         resp = self.risk.request(req)
         resp = self.risk.requestBuy(req)
 
@@ -54,7 +57,7 @@ class TestRisk:
         from ..structs import TradeRequest, Instrument
         from ..enums import Side, PairType, OrderType, ExchangeType
 
-        req = TradeRequest(side=Side.SELL, instrument=Instrument(underlying=PairType.BTCUSD), order_type=OrderType.MARKET, volume=50.0, price=1.0, exchange=ExchangeType.COINBASE)
+        req = TradeRequest(side=Side.SELL, instrument=Instrument(underlying=PairType.BTCUSD), order_type=OrderType.MARKET, volume=50.0, price=1.0, exchange=ExchangeType.COINBASE, time=datetime.now())
         resp = self.risk.request(req)
         resp = self.risk.requestSell(req)
 

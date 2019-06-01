@@ -32,6 +32,9 @@ class Instrument:
     def __str__(self):
         return str(self.underlying)
 
+    def __repr__(self):
+        return str(self.underlying)
+
     def __hash__(self):
         return hash(str(self.underlying))
 

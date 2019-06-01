@@ -1,13 +1,15 @@
-import ccxt
 import pandas as pd
 from datetime import datetime
 from functools import lru_cache
+from typing import List
 from .data_source import RestAPIDataSource
-from .enums import PairType, TradingType, ExchangeType
-from .structs import TradeRequest, TradeResponse, Account
+from .enums import PairType, TradingType, CurrencyType
+from .exceptions import AATException
+from .structs import TradeRequest, TradeResponse, Account, Instrument
 from .utils import (get_keys_from_environment, str_to_currency_type,
-                    exchange_type_to_ccxt_client, tradereq_to_ccxt_order)
-from .utils import elog as log
+                    exchange_type_to_ccxt_client, tradereq_to_ccxt_order,
+                    findpath)
+# from .utils import elog as log
 
 
 class OrderEntry(RestAPIDataSource):
@@ -56,15 +58,50 @@ class OrderEntry(RestAPIDataSource):
         self._accounts = accounts
         return accounts
 
-    def lastPrice(self, cur: PairType):
-        try:
-            return self.oe_client().fetchTicker(self.currencyPairToStringCCXT(cur))
-        except (ccxt.ExchangeError, ValueError):
-            return {'last': -1.0}
+    @lru_cache(None)
+    def currencies(self) -> List[CurrencyType]:
+        return [CurrencyType(x) for x in self.oe_client().fetch_curencies()]
 
     @lru_cache(None)
-    def currencyPairToStringCCXT(self, cur: PairType) -> str:
-        return cur.value[0].value + '/' + cur.value[1].value
+    def markets(self) -> List[Instrument]:
+        # TODO derivatives
+        return [Instrument(underlying=PairType.from_string(m['symbol'])) for m in self.oe_client().fetch_markets()]
+
+    def ticker(self,
+               instrument: Instrument = None,
+               currency: CurrencyType = None):
+        if instrument:
+            return self.oe_client().fetchTicker(str(instrument.underlying))
+        elif currency:
+            inst = Instrument(underlying=PairType.from_string(currency.value + '/USD'))
+
+            if inst in self.markets():
+                return self.oe_client().fetchTicker(str(inst.underlying))
+            else:
+                try:
+                    inst1, inst2, i1_inverted, i2_inverted = findpath(inst, self.markets())
+                except AATException:
+                    try:
+                        inst = Instrument(underlying=PairType.from_string(currency.value + '/USDC'))
+                        inst1, inst2, i1_inverted, i2_inverted = findpath(inst, self.markets())
+                    except AATException:
+                        return {'last': 0.0}
+                inst1_t = self.oe_client().fetchTicker(str(inst1.underlying))
+                inst2_t = self.oe_client().fetchTicker(str(inst2.underlying))
+                if i1_inverted:
+                    inst1_t['last'] = 1.0/inst1_t['last']
+                if i2_inverted:
+                    inst2_t['last'] = 1.0/inst2_t['last']
+                px = inst1_t['last'] * inst2_t['last']
+                ret = inst1_t
+                for key in ret:
+                    if key == 'info':
+                        ret[key] = {}
+                    elif key == 'last':
+                        ret[key] = px
+                    else:
+                        ret[key] = None
+                return ret
 
     def historical(self, timeframe='1m', since=None, limit=None):
         '''get historical data (for backtesting)'''
@@ -95,9 +132,9 @@ class OrderEntry(RestAPIDataSource):
         self.oe_client().create_order(**params)
 
     def cancel(self, resp: TradeResponse):
-        params = tradereq_to_ccxt_order(req)
+        params = tradereq_to_ccxt_order(resp)
         raise NotImplementedError()
-        self.oe_client().create_order(**params)
+        self.oe_client().cancel_order(**params)
 
     def cancelAll(self, resp: TradeResponse):
         return self.oe_client().cancel_all_orders()

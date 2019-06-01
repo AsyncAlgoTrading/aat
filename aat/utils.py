@@ -6,6 +6,7 @@ from datetime import datetime
 from enum import Enum
 from functools import lru_cache
 from .enums import ExchangeType, CurrencyType, OrderType, Side, PairType
+from .exceptions import AATException
 from .logging import LOG as log, \
                      STRAT as slog, \
                      DATA as dlog, \
@@ -28,8 +29,7 @@ def create_pair(key: str, typ: type, default=None, container=None) -> property:
                 if container == list:
                     return default
                 else:
-                    raise TypeError('Unrecognized container: %s',
-                                    str(container))
+                    raise TypeError(f'Unrecognized container: {container}')
             return default
         raise TypeError("%s is unset" % key)
 
@@ -38,8 +38,8 @@ def create_pair(key: str, typ: type, default=None, container=None) -> property:
             if container == list:
                 if not isinstance(val, list) or not all(map(
                         lambda x: isinstance(x, typ), val)):
-                    raise TypeError("%s attribute must be set to an "
-                                    "instance of %s" % (key, typ))
+                    raise TypeError(f"{key} attribute must be set to an "
+                                    "instance of {typ}")
             else:
                 raise TypeError('Unrecognized container: %s',
                                 str(container))
@@ -63,7 +63,7 @@ def __init__struct(self, **kwargs) -> None:
 
     for k, v in kwargs.items():
         if k not in self._vars:
-            raise Exception('Attribute not found! %s' % k)
+            raise AATException('Attribute not found! %s' % k)
 
 
 def to_dict(self, serializable=False, str_timestamp=False, **kwargs) -> dict:
@@ -77,9 +77,7 @@ def to_dict(self, serializable=False, str_timestamp=False, **kwargs) -> dict:
                     ret[item] = ret[item].strftime('%y-%m-%d %H:%M:%S')
                 else:
                     ret[item] = round(ret[item].timestamp())
-            elif isinstance(ret[item], Instrument) or \
-                 isinstance(ret[item], TradeRequest) or \
-                 isinstance(ret[item], TradeResponse):
+            elif isinstance(ret[item], Instrument) or isinstance(ret[item], TradeRequest) or isinstance(ret[item], TradeResponse):
                 ret[item] = ret[item].to_dict(serializable, str_timestamp, **kwargs)
             elif isinstance(ret[item], Enum):
                 ret[item] = str(ret[item])
@@ -107,7 +105,7 @@ def struct(cls):
     excludes = []
 
     if len(cls.__bases__) > 1:
-        raise Exception("Structs only support single inheritance")
+        raise AATException("Structs only support single inheritance")
     for k, v in cls.__dict__.items():
         if isinstance(v, type):
             v = create_pair(k, v)
@@ -162,7 +160,7 @@ def ex_type_to_ex(ex: ExchangeType):
     elif ex == ExchangeType.KRAKEN:
         from .exchanges.kraken import KrakenExchange
         return KrakenExchange
-    raise Exception('Exchange type not implemented : %s ' % ex)
+    raise NotImplementedError(f'Exchange type not implemented : {ex} ')
 
 
 @lru_cache(None)
@@ -177,7 +175,7 @@ def get_keys_from_environment(prefix: str) -> tuple:
 def str_to_currency_type(s: str) -> CurrencyType:
     s = s.upper()
     if s not in CurrencyType.members():
-        raise Exception(f'CurrencyType not recognized {s}')
+        raise AATException(f'CurrencyType not recognized {s}')
     return CurrencyType(s)
 
 
@@ -214,7 +212,7 @@ def str_to_order_type(s: str) -> OrderType:
 @lru_cache(None)
 def str_to_exchange(exchange: str) -> ExchangeType:
     if exchange.upper() not in ExchangeType.members():
-        raise Exception(f'Exchange not recognized: {exchange}')
+        raise AATException(f'Exchange not recognized: {exchange}')
     return ExchangeType(exchange.upper())
 
 
@@ -272,6 +270,7 @@ def exchange_type_to_ccxt_client(exchange_type):
     elif exchange_type == ExchangeType.POLONIEX:
         return ccxt.poloniex
 
+
 def tradereq_to_ccxt_order(req) -> dict:
     # TODO order_sub_type
     return dict(
@@ -281,3 +280,35 @@ def tradereq_to_ccxt_order(req) -> dict:
         price=req.price,
         amount=req.volume,
         params={})
+
+
+def findpath(inst, markets):
+    '''find a path from left side of instrument to right side of instrument
+    given the available markets
+
+    Args:
+        inst: Instrument with an underlying pairtype
+        markets: List of Instruments
+    Returns:
+        tuple:
+            instrument1, instrument2, invert pair1, invert pair2
+    '''
+    from .structs import Instrument
+    # should do dijkstras to get cheapest path but im lazy
+    currency_from = inst.underlying.value[0]
+    currency_to = inst.underlying.value[1]
+    c1_btc = Instrument(underlying=PairType((currency_from, CurrencyType.BTC)))
+    c1_btc_inv = Instrument(underlying=PairType((CurrencyType.BTC, currency_from)))
+    c2_btc = Instrument(underlying=PairType((CurrencyType.BTC, currency_to)))
+    c2_btc_inv = Instrument(underlying=PairType((currency_to, CurrencyType.BTC)))
+    if currency_from == CurrencyType.BTC or \
+       currency_to == CurrencyType.BTC or \
+       (c1_btc not in markets and c1_btc_inv not in markets) or \
+       (c2_btc not in markets and c2_btc_inv not in markets):
+        raise AATException(f'Need BTC for intermediary: {inst}')
+
+    return {(True, True):   (c1_btc_inv, c2_btc_inv, True, True),
+            (True, False):  (c1_btc_inv, c2_btc, True, False),
+            (False, True):  (c1_btc, c2_btc_inv, False, True),
+            (False, False): (c1_btc, c2_btc, False, False)}.get((c1_btc not in markets,
+                                                                 c2_btc not in markets))

@@ -1,6 +1,6 @@
 from ..strategy import TradingStrategy
 from ..structs import MarketData, TradeRequest, TradeResponse
-from ..enums import Side, TradeResult, OrderType
+from ..enums import Side, OrderType
 from ..logging import STRAT as slog, ERROR as elog
 
 

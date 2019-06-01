@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from .callback import Callback
 from .structs import TradeRequest, TradeResponse
 from .enums import TickType
+from .exceptions import CallbackException
 
 
 class DataSource(metaclass=ABCMeta):
@@ -108,8 +109,7 @@ class StreamingDataSource(DataSource):
 
     def registerCallback(self, callback: Callback) -> None:
         if not isinstance(callback, Callback):
-            raise Exception('%s is not an instance of class '
-                            'Callback' % callback)
+            raise CallbackException(f'{callback} is not an instance of class Callback')
         for att in ['onTrade',
                     'onOpen',
                     'onFill',

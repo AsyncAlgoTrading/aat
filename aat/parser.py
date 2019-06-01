@@ -72,7 +72,7 @@ def _parse_exchange(exchange, config) -> None:
 def _parse_strategy(strategy, config) -> None:
     strat_configs = []
     if 'strategies' not in strategy:
-        raise Exception('No Strategies specified')
+        raise ConfigException('No Strategies specified')
 
     for strat in strategy['strategies'].split('\n'):
         if strat == '':
@@ -134,7 +134,7 @@ def _parse_options(argv, config: TradingEngineConfig) -> None:
     if argv.get('exchanges'):
         config.exchange_options.exchange_types = [str_to_exchange(x) for x in argv['exchanges'].split() if x]
     else:
-        raise Exception('No exchange set!')
+        raise ConfigException('No exchange set!')
 
     if argv.get('currency_pairs'):
         config.exchange_options.currency_pairs = _parse_currencies(argv.get('currency_pairs'))
@@ -170,7 +170,7 @@ def _parse_backtest_options(argv, config) -> None:
     if argv.get('exchanges'):
         config.exchange_options.exchange_types = [str_to_exchange(x) for x in argv['exchanges'].split() if x]
     else:
-        raise Exception('No exchange set!')
+        raise ConfigException('No exchange set!')
 
     if argv.get('currency_pairs'):
         config.exchange_options.currency_pairs = _parse_currencies(argv.get('currency_pairs'))

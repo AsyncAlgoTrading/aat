@@ -41,5 +41,5 @@ class DataCaptureStrategy(TradingStrategy):
     def transactionCost(self, resp: TradeResponse) -> TradeResponse:
         return resp
 
-    def onAnalyze(self, _) -> None:
+    def onAnalyze(self, engine) -> None:
         pass

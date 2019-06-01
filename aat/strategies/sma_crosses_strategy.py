@@ -85,7 +85,8 @@ class SMACrossesStrategy(TradingStrategy):
                                instrument=data.instrument,
                                order_type=OrderType.MARKET,
                                exchange=data.exchange,
-                               price=data.price)
+                               price=data.price,
+                               time=data.time)
             # slog.info("requesting buy : %s", req)
             self.requestBuy(self.onBuy, req)
             return True
@@ -97,7 +98,8 @@ class SMACrossesStrategy(TradingStrategy):
                                instrument=data.instrument,
                                order_type=OrderType.MARKET,
                                exchange=data.exchange,
-                               price=data.price)
+                               price=data.price,
+                               time=data.time)
             # slog.info("requesting sell : %s", req)
             self.requestSell(self.onSell, req)
             return True
@@ -107,28 +109,36 @@ class SMACrossesStrategy(TradingStrategy):
     def onError(self, e) -> None:
         elog.critical(e)
 
-    def onAnalyze(self, portfolio_value, requests, responses) -> None:
+    def onAnalyze(self, engine) -> None:
         import pandas
         import matplotlib.pyplot as plt
         import seaborn as sns
+        portfolio_value = engine.portfolio_value()
+        requests = engine.query().query_tradereqs()
+        responses = engine.query().query_traderesps()
 
         pd = pandas.DataFrame(portfolio_value, columns=['time', 'value'])
         pd.set_index(['time'], inplace=True)
 
-        print(self.short, self.long, pd.iloc[1].value, pd.iloc[-1].value)
-        sns.set_style('darkgrid')
-        fig, ax1 = plt.subplots()
+        if len(requests) > 0:
+            trades = pandas.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query().query_trades(instrument=requests[0].instrument, page=None)])
+            trades.set_index(['time'], inplace=True)
 
-        plt.title('BTC algo 1 performance - %d-%d Momentum ' % (self.short, self.long))
-        ax1.plot(pd)
+        if pd.size > 0:
+            print(self.short, self.long, pd.iloc[1].value, pd.iloc[-1].value)
+            sns.set_style('darkgrid')
+            fig, ax1 = plt.subplots()
 
-        ax1.set_ylabel('Portfolio value($)')
-        ax1.set_xlabel('Date')
-        for xy in [portfolio_value[0]] + [portfolio_value[-1]]:
-            ax1.annotate('$%s' % xy[1], xy=xy, textcoords='data')
-        plt.show()
-        print(requests)
-        print(responses)
+            plt.title('BTC algo 1 performance - %d-%d Momentum ' % (self.short, self.long))
+            ax1.plot(pd)
+
+            ax1.set_ylabel('Portfolio value($)')
+            ax1.set_xlabel('Date')
+            for xy in [portfolio_value[0]] + [portfolio_value[-1]]:
+                ax1.annotate('$%s' % xy[1], xy=xy, textcoords='data')
+            plt.show()
+            print(requests)
+            print(responses)
 
     def onChange(self, data: MarketData) -> None:
         pass

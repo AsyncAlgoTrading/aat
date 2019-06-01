@@ -9,6 +9,7 @@ from .backtest import Backtest
 from .callback import Print
 from .config import TradingEngineConfig
 from .enums import TradingType, Side, CurrencyType, TradeResult, OrderType
+from .exceptions import ConfigException
 from .execution import Execution
 from .query import QueryEngine
 from .risk import Risk
@@ -64,13 +65,17 @@ class TradingEngine(object):
         # if live or sandbox, get account information and balances
         if self._live or self._simulation or self._sandbox:
             accounts = reduce(operator.concat, [ex.accounts() for ex in self._exchanges.values()])
-            # extract max funds info
-            for account in accounts:
-                if account.currency == CurrencyType.USD:
-                    # TODO multiple USD accounts?
-                    options.risk_options.total_funds += account.balance
-
             log.info(accounts)
+
+            for ex in self._exchanges.values():
+                for account in ex.accounts():
+                    if account.currency == CurrencyType.USD:
+                        options.risk_options.total_funds += account.balance
+                    else:
+                        # calculate USD value
+                        spot = ex.ticker(currency=account.currency)['last']
+                        options.risk_options.total_funds += account.balance*spot
+
             log.info("Running with %.2f USD" % options.risk_options.total_funds)
 
         if self._backtest:
@@ -206,7 +211,7 @@ class TradingEngine(object):
             self._bt.run(self)
 
         else:
-            raise Exception('Invalid configuration')
+            raise ConfigException('Invalid configuration')
 
     def terminate(self):
         for strat in self._strats:
