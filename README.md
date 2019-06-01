@@ -83,7 +83,7 @@ class Callback(metaclass=ABCMeta):
         pass
 ```
 
-# Strategy
+## Strategy
 ```python3
 class Strategy(metaclass=ABCMeta):
     @abstractmethod
