@@ -340,7 +340,13 @@ This will call our `onAnalyze` function, which in this case is implemented to pl
         y_bot, y_top = ax1.get_ylim()
         x_bot, x_top = ax1.get_xlim()
         ax3.set_ylim(y_bot, y_top)
+        ax1.set_xlim(x_bot, x_top)
+        ax2.set_xlim(x_bot, x_top)
         ax3.set_xlim(x_bot, x_top)
+        dif = (x_top-x_bot)*.01
+        ax1.set_xlim(x_bot-dif, x_top+dif)
+        ax2.set_xlim(x_bot-dif, x_top+dif)
+        ax3.set_xlim(x_bot-dif, x_top+dif)
         plt.show()
 ```
 
