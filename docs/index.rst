@@ -16,6 +16,7 @@ Lightweight, extensible program for algorithmically trading.
 
    installation
    quickstart
+   api
 
 Introduction
 ==================
