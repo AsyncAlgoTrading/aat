@@ -12,5 +12,6 @@ sphinx>=1.7.5
 six>=1.10.0
 requests>=2.13.0
 tornado>=5.1
+traitlets>=4.3.2
 ujson>=1.35
 websocket-client>=0.40.0

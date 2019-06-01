@@ -1,47 +1,41 @@
-from .utils import config
+from traitlets import HasTraits, List, Instance, Float, Type, Tuple, Dict, Bool
 from .enums import TradingType, ExchangeType, PairType, InstrumentType
 from .structs import Instrument
 
 
-@config
-class ExchangeConfig:
-    exchange_types = [ExchangeType], []
-    trading_type = TradingType, TradingType.NONE
-    currency_pairs = [PairType], [PairType.BTCUSD]
-    instruments = [Instrument], [Instrument(type=InstrumentType.PAIR, underlying=PairType.BTCUSD)]
+class ExchangeConfig(HasTraits):
+    exchange_types = List(trait=Instance(ExchangeType), default_value=[])
+    trading_type = Instance(klass=TradingType, args=('NONE',), kwargs={})
+    currency_pairs = List(trait=Instance(PairType), default_value=[PairType.BTCUSD])
+    instruments = List(trait=Instance(Instrument), default_value=[Instrument(type=InstrumentType.PAIR, underlying=PairType.BTCUSD)])
 
 
-@config
-class BacktestConfig:
+class BacktestConfig(HasTraits):
     pass
 
 
-@config
-class RiskConfig:
-    max_drawdown = float, 100.0  # % Max strat drawdown before liquidation
-    max_risk = float, 100.0  # % Max to risk on any trade
-    total_funds = float, 0.0  # % Of total funds to use
-    trading_type = TradingType, TradingType.NONE
+class RiskConfig(HasTraits):
+    max_drawdown = Float(default_value=100.0)  # % Max strat drawdown before liquidation
+    max_risk = Float(default_value=100.0)  # % Max to risk on any trade
+    total_funds = Float(default_value=0.0)  # % Of total funds to use
+    trading_type = Instance(klass=TradingType, args=('NONE',), kwargs={})
 
 
-@config
-class ExecutionConfig:
-    trading_type = TradingType, TradingType.NONE
+class ExecutionConfig(HasTraits):
+    trading_type = Instance(klass=TradingType, args=('NONE',), kwargs={})
 
 
-@config
-class StrategyConfig:
-    clazz = type
-    args = tuple, ()
-    kwargs = dict, {}
+class StrategyConfig(HasTraits):
+    clazz = Type()
+    args = Tuple(default_value=())
+    kwargs = Dict(default_value={})
 
 
-@config
-class TradingEngineConfig:
-    type = TradingType, TradingType.NONE
-    print = bool, False
-    exchange_options = ExchangeConfig, ExchangeConfig()
-    backtest_options = BacktestConfig, BacktestConfig()
-    risk_options = RiskConfig, RiskConfig()
-    execution_options = ExecutionConfig, ExecutionConfig()
-    strategy_options = [StrategyConfig], []  # List of strategy options
+class TradingEngineConfig(HasTraits):
+    type = Instance(klass=TradingType, args=('NONE',), kwargs={})
+    print = Bool(default_value=False)
+    exchange_options = Instance(klass=ExchangeConfig, args=(), kwargs={})
+    backtest_options = Instance(klass=BacktestConfig, args=(), kwargs={})
+    risk_options = Instance(klass=RiskConfig, args=(), kwargs={})
+    execution_options = Instance(klass=ExecutionConfig, args=(), kwargs={})
+    strategy_options = List(trait=Instance(StrategyConfig), default_value=[])  # List of strategy options

@@ -53,7 +53,8 @@ class TestStrategy(TradingStrategy):
                                instrument=data.instrument,
                                order_type=OrderType.MARKET,
                                exchange=data.exchange,
-                               price=data.price)
+                               price=data.price,
+                               time=data.time)
             slog.info("requesting buy : %s", req)
             self.requestBuy(self.onBuy, req)
             self.active = True
@@ -65,7 +66,8 @@ class TestStrategy(TradingStrategy):
                                    instrument=data.instrument,
                                    exchange=data.exchange,
                                    order_type=OrderType.MARKET,
-                                   price=data.price)
+                                   price=data.price,
+                                   time=data.time)
                 slog.info("requesting sell : %s", req)
                 self.requestSell(self.onSell, req)
                 self.active = False

@@ -51,58 +51,6 @@ def create_pair(key: str, typ: type, default=None, container=None) -> property:
     return property(get, set)
 
 
-def config(cls):
-    new_cls_dict = {}
-    vars = []
-    for k, v in cls.__dict__.items():
-        if isinstance(v, type):
-            # V is a type, no default value
-            v = create_pair(k, v)
-            vars.append(k)
-        elif isinstance(v, tuple) and \
-                isinstance(v[0], type) and \
-                isinstance(v[1], v[0]):
-            # v is a pair, (type, instance)
-            v = create_pair(k, v[0], v[1])
-            vars.append(k)
-        elif isinstance(v, list) and \
-                isinstance(v[0], type):
-            # v is a list [type]
-            v = create_pair(k, v[0], container=list)
-            vars.append(k)
-        elif isinstance(v, tuple) and \
-                isinstance(v[0], list) and \
-                isinstance(v[0][0], type) and \
-                isinstance(v[1], list):
-            # v is a pair,  ([type], [instance?])
-            if len(v[1]) > 0 and isinstance(v[1][0], v[0][0]):  # TODO check all
-                v = create_pair(k, v[0][0], v[1], container=list)
-                vars.append(k)
-            elif v[1] == []:
-                v = create_pair(k, v[0][0], v[1], container=list)
-                vars.append(k)
-            else:
-                raise Exception('Unexpected list instance: %s' % v[1][0])
-
-        new_cls_dict[k] = v
-    new_cls_dict['__init__'] = __init__config
-    new_cls_dict['__repr__'] = __repr__
-    new_cls_dict['_vars'] = vars
-    new_cls_dict['_excludes'] = []
-    return type(cls)(cls.__name__, cls.__bases__, new_cls_dict)
-
-
-def __init__config(self, **kwargs) -> None:
-    for k, v in kwargs.items():
-        if k not in self._vars:
-            raise Exception('Attribute not found! %s' % k)
-    for item in self._vars:
-        if item not in kwargs:
-            log.debug('WARNING %s unset!', item)
-        else:
-            setattr(self, item, kwargs.get(item))
-
-
 def __init__struct(self, **kwargs) -> None:
     for item in self._vars:
         if item not in kwargs:
