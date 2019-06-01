@@ -190,6 +190,11 @@ def parse_command_line_config(argv: list) -> TradingEngineConfig:
             set_all_trading_types(TradingType.LIVE, config)
             _parse_live_options(argv, config)
 
+        elif 'simulation' == argv.get('ttype'):
+            # Trade against sandbox
+            _parse_simulation_options(argv, config)
+            set_all_trading_types(TradingType.SIMULATION, config)
+
         elif 'sandbox' == argv.get('ttype'):
             # Trade against sandbox
             _parse_sandbox_options(argv, config)

@@ -17,7 +17,6 @@ class BuyAndHoldStrategy(TradingStrategy):
         pass
 
     def onTrade(self, data: MarketData) -> bool:
-        # add data to arrays
         if self.bought is None:
             req = TradeRequest(side=Side.BUY,
                                volume=1.0,

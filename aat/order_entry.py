@@ -106,7 +106,7 @@ class OrderEntry(RestAPIDataSource):
     def historical(self, timeframe='1m', since=None, limit=None):
         '''get historical data (for backtesting)'''
         client = self.oe_client()
-        dfs = [{'pair': str(symbol), 'exchange': self.exchange().value, 'data': client.fetch_ohlcv(symbol=self.currencyPairToStringCCXT(symbol), timeframe=timeframe, since=since, limit=limit)}
+        dfs = [{'pair': str(symbol), 'exchange': self.exchange().value, 'data': client.fetch_ohlcv(symbol=str(symbol), timeframe=timeframe, since=since, limit=limit)}
                for symbol in self.options().currency_pairs]
         df = pd.io.json.json_normalize(dfs, 'data', ['pair', 'exchange'])
         df.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume', 'pair', 'exchange']
