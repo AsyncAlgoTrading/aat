@@ -1,5 +1,7 @@
-from typing import List
+import operator
 from concurrent.futures import ThreadPoolExecutor
+from functools import reduce
+from typing import List
 from .enums import TickType, Side, ExchangeType, CurrencyType, PairType  # noqa: F401
 from .exceptions import QueryException
 from .structs import Instrument, MarketData, TradeRequest, TradeResponse
@@ -27,8 +29,11 @@ class QueryEngine(object):
         self._trade_reqs_by_instrument = {}
         self._trade_resps_by_instrument = {}
 
-    def query_instruments(self) -> List[PairType]:
-        return self._instruments
+    def query_instruments(self, exchange=None) -> List[PairType]:
+        if exchange:
+            return self._instruments[exchange]
+        else:
+            return reduce(operator.concat, self._instruments.values())
 
     def query_exchanges(self) -> List[ExchangeType]:
         return self._exchanges

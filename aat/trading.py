@@ -51,7 +51,9 @@ class TradingEngine(object):
         # instantiate query engine
         self._qy = QueryEngine(exchanges=self._exchanges,
                                pairs=options.exchange_options.currency_pairs,
-                               instruments=options.exchange_options.instruments)
+                               instruments={name:
+                                            list(set(options.exchange_options.instruments).intersection(
+                                                ex.markets())) for name, ex in self._exchanges.items()})
 
         # register query hooks
         if self._live or self._simulation or self._sandbox:
