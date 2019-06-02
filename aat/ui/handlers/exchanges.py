@@ -15,7 +15,9 @@ class ExchangesHandler(PerspectiveHTTPMixin, HTTPHandler):
 
     @run_on_executor
     def get_data(self, **psp_kwargs):
-        msgs = [{'name': x.value} for x in self.te.query().query_exchanges()]
+        msgs = [{'exchange': x['exchange'].value,
+                 'instruments': ','.join(y.to_dict(True, True)['underlying'] for y in x['instruments'])}
+                for x in self.te.query().query_exchanges()]
         super(ExchangesHandler, self).loadData(data=msgs, **psp_kwargs)
         return super(ExchangesHandler, self).getData()
 

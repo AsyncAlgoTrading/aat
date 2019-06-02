@@ -1,7 +1,7 @@
 import operator
 from concurrent.futures import ThreadPoolExecutor
 from functools import reduce
-from typing import List
+from typing import List, Dict
 from .enums import TickType, Side, ExchangeType, CurrencyType, PairType  # noqa: F401
 from .exceptions import QueryException
 from .structs import Instrument, MarketData, TradeRequest, TradeResponse
@@ -35,8 +35,9 @@ class QueryEngine(object):
         else:
             return reduce(operator.concat, self._instruments.values())
 
-    def query_exchanges(self) -> List[ExchangeType]:
-        return self._exchanges
+    def query_exchanges(self) -> List[Dict]:
+        return [{'exchange': name, 'instruments': self.query_instruments(name)}
+                for name, ex in self._exchanges.items()]
 
     def _paginate(self, instrument: Instrument, lst: list, lst_sub: list, page: int = 1) -> list:
         if page is not None:
