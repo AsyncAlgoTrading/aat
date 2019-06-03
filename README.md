@@ -132,8 +132,6 @@ class BuyAndHoldStrategy(TradingStrategy):
                                time=data.time)
             slog.info("requesting buy : %s", req)
             self.requestBuy(self.onBuy, req)
-            return True
-        return False
 
     def onError(self, e) -> None:
         elog.critical(e)
