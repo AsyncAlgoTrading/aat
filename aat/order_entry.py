@@ -28,6 +28,7 @@ class OrderEntry(RestAPIDataSource):
             'enableRateLimit': True,
             })
 
+    @lru_cache(None)
     def accounts(self):
         client = self.oe_client()
         if not client:
@@ -44,18 +45,13 @@ class OrderEntry(RestAPIDataSource):
                 balance = float(jsn['amount'])
 
             id = jsn.get('id', jsn['currency'])
-            # FIXME
-            value = balance
-            # value = balance if currency == CurrencyType.USD else balance*self.lastPrice(str_currency_to_currency_pair_type(currency))['last']
             account = Account(id=id,
                               currency=currency,
                               balance=balance,
                               exchange=self.exchange(),
-                              value=value,
+                              value=-1,
                               asOf=datetime.now())
             accounts.append(account)
-        # cache
-        self._accounts = accounts
         return accounts
 
     @lru_cache(None)

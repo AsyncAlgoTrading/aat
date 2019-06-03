@@ -1,4 +1,6 @@
-import datetime
+from datetime import datetime
+from dataclasses import dataclass, field, fields, asdict
+from enum import Enum
 from .enums import Side, \
                    ExchangeType, \
                    OptionSide, \
@@ -10,13 +12,43 @@ from .enums import Side, \
                    TradeResult, \
                    InstrumentType, \
                    RiskReason
-from .utils import struct, NOPRINT
 
 
-@struct
-class Instrument:
-    underlying = PairType
-    type = InstrumentType, InstrumentType.PAIR
+@dataclass(init=False)
+class Struct:
+    def to_dict(self, serializable=False, str_timestamp=False, **kwargs) -> dict:
+        ret = asdict(self)
+        if serializable:
+            for item in ret:
+                if isinstance(ret[item], datetime):
+                    if str_timestamp:
+                        ret[item] = ret[item].strftime('%y-%m-%d %H:%M:%S')
+                    else:
+                        ret[item] = round(ret[item].timestamp())
+                elif isinstance(ret[item], Struct) or \
+                     isinstance(getattr(self, item), Struct):
+                    ret[item] = getattr(self, item).to_dict(serializable, str_timestamp, **kwargs)
+                elif isinstance(ret[item], Enum) or \
+                     isinstance(getattr(self, item), Enum):
+                    ret[item] = str(getattr(self, item))
+                elif isinstance(ret[item], float):
+                    if ((ret[item] >= float('inf')) is False) and \
+                       ((ret[item] <= float('inf')) is False):
+                        ret[item] = None
+        return ret
+
+
+@dataclass(init=False)
+class Instrument(Struct):
+    underlying: PairType
+    type: InstrumentType = InstrumentType.PAIR
+
+    def __init__(self,
+                 underlying: PairType,
+                 type: InstrumentType = InstrumentType.PAIR,
+                 *args, **kwargs):
+        self.underlying = underlying
+        self.type = type
 
     @property
     def instrument(self):
@@ -39,14 +71,34 @@ class Instrument:
         return hash(str(self.underlying))
 
 
-@struct
+@dataclass(init=False)
 class Option(Instrument):
-    underlying = Instrument
-    type = InstrumentType, InstrumentType.OPTION
-    expiration = datetime.datetime
-    strike = float
-    size = float
-    side = OptionSide
+    underlying: Instrument
+    expiration: datetime
+    strike: float
+    size: float
+    side: OptionSide
+
+    def __init__(self,
+                 underlying: PairType,
+                 expiration: datetime,
+                 strike: float,
+                 size: float,
+                 side: OptionSide,
+                 type: InstrumentType = InstrumentType.OPTION,
+                 *args, **kwargs):
+        self.underlying = underlying
+        self.expiration = expiration
+        self.strike = strike
+        self.size = size
+        self.side = side
+        self.type = type
+        super(Option, self).__init__(underlying=underlying,
+                                     type=type,
+                                     expiration=expiration,
+                                     strike=strike,
+                                     size=size,
+                                     side=side)
 
     @property
     def instrument(self):
@@ -72,12 +124,26 @@ class Option(Instrument):
                '{0:8.2f}'.format(self.size).replace(' ', '0')
 
 
-@struct
+@dataclass(init=False)
 class Future(Instrument):
-    underlying = Instrument
-    type = InstrumentType, InstrumentType.FUTURE
-    expiration = datetime.datetime
-    size = float
+    underlying: Instrument
+    expiration: datetime
+    size: float
+
+    def __init__(self,
+                 underlying: PairType,
+                 expiration: datetime,
+                 size: float,
+                 type: InstrumentType = InstrumentType.FUTURE,
+                 *args, **kwargs):
+        self.underlying = underlying
+        self.expiration = expiration
+        self.size = size
+        self.type = type
+        super(Future, self).__init__(underlying=underlying,
+                                     type=type,
+                                     expiration=expiration,
+                                     size=size)
 
     @property
     def instrument(self):
@@ -98,21 +164,21 @@ class Future(Instrument):
         return f'<{self.expiration.strftime("%y%m%d")} - {self.underlying} -  ' + '{0:8.2f}'.format(self.size).replace(' ', '0') + '>'
 
 
-@struct
-class MarketData:
+@dataclass
+class MarketData(Struct):
     # common
-    time = datetime.datetime, NOPRINT
-    volume = float
-    price = float
-    type = TickType
-    instrument = Instrument
-    side = Side
+    time: datetime
+    volume: float
+    price: float
+    type: TickType
+    instrument: Instrument
+    side: Side
 
     # maybe specific
-    remaining = float, 0.0
-    sequence = int, -1
-    exchange = ExchangeType
-    order_type = OrderType, OrderType.NONE
+    exchange: ExchangeType
+    remaining: float = 0.0
+    sequence: int = -1
+    order_type: OrderType = OrderType.NONE
 
     def __eq__(self, other):
         return (self.price == other.price) and \
@@ -125,57 +191,56 @@ class MarketData:
     def __lt__(self, other):
         return self.price < other.price
 
+@dataclass
+class TradeRequest(Struct):
+    side: Side
+    exchange: ExchangeType
 
-@struct
-class TradeRequest:
-    side = Side
-    exchange = ExchangeType
+    volume: float
+    price: float
+    instrument: Instrument
 
-    volume = float
-    price = float
-    instrument = Instrument
+    time: datetime
 
-    order_type = OrderType
-    order_sub_type = OrderSubType, OrderSubType.NONE
-
-    time = datetime.datetime
-    risk_check = bool, False
-    risk_reason = RiskReason, RiskReason.NONE
+    order_type: OrderType
+    order_sub_type: OrderSubType = OrderSubType.NONE
+    risk_check: bool = False
+    risk_reason: RiskReason = RiskReason.NONE
 
     def __str__(self) -> str:
         return f'<{self.instrument}-{self.side}:{self.volume}@{self.price}-{self.order_type}-{self.exchange}>'
 
 
-@struct
-class TradeResponse:
-    request = TradeRequest
-    side = Side
-    exchange = ExchangeType
+@dataclass
+class TradeResponse(Struct):
+    request: TradeRequest
+    side: Side
+    exchange: ExchangeType
 
-    volume = float
-    price = float
-    instrument = Instrument
+    volume: float
+    price: float
+    instrument: Instrument
 
-    slippage = float, 0.0
-    transaction_cost = float, 0.0
+    time: datetime
+    status: TradeResult
+    order_id: str
 
-    time = datetime.datetime
-    status = TradeResult
-    order_id = str
-    remaining = float, 0.0
+    slippage: float = 0.0
+    transaction_cost: float = 0.0
+    remaining: float = 0.0
 
     def __str__(self) -> str:
         return f'<{self.instrument}-{self.side}:{self.volume}@{self.price}-{self.status}-{self.exchange}>'
 
 
-@struct
-class Account:
-    id = str
-    currency = CurrencyType
-    balance = float
-    exchange = ExchangeType
-    value = float
-    asOf = datetime.datetime
+@dataclass
+class Account(Struct):
+    id: str
+    currency: CurrencyType
+    balance: float
+    exchange: ExchangeType
+    value: float
+    asOf: datetime
 
     def __repr__(self) -> str:
         return f'<{self.id} - {self.currency} - {self.balance} - {self.value}>'

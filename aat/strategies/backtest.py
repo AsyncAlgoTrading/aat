@@ -44,7 +44,7 @@ class CustomStrategy(TradingStrategy):
 
         # ready?
         if len(self.ticks) < self.size:
-            return False
+            return
 
         y = numpy.array(self.ticks)
         z = numpy.polyfit(self.x, y, 1)  # linreg
@@ -76,7 +76,6 @@ class CustomStrategy(TradingStrategy):
                                order_type=OrderType.MARKET,
                                time=data.time)
             self.requestBuy(self.onBuy, req)
-            return True
 
         elif self.state == 'sell' and self.prev_state != 'sell' and \
                 self.bought > 0.0:
@@ -87,9 +86,6 @@ class CustomStrategy(TradingStrategy):
                                order_type=OrderType.MARKET,
                                time=data.time)
             self.requestSell(self.onSell, req)
-            return True
-
-        return False
 
     def onError(self, e: MarketData):
         elog.critical(e)

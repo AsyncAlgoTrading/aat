@@ -75,7 +75,7 @@ class SMACrossesStrategy(TradingStrategy):
             self.state = ''
 
         if len(self.longs) < self.long or len(self.shorts) < self.short:
-            return False
+            return
 
         if self.state == 'golden' and self.prev_state != 'golden' and \
                 self.bought == 0.0:  # watch for floating point error
@@ -89,7 +89,6 @@ class SMACrossesStrategy(TradingStrategy):
                                time=data.time)
             # slog.info("requesting buy : %s", req)
             self.requestBuy(self.onBuy, req)
-            return True
 
         elif self.state == 'death' and self.prev_state != 'death' and \
                 self.bought > 0.0:
@@ -102,9 +101,6 @@ class SMACrossesStrategy(TradingStrategy):
                                time=data.time)
             # slog.info("requesting sell : %s", req)
             self.requestSell(self.onSell, req)
-            return True
-
-        return False
 
     def onError(self, e) -> None:
         elog.critical(e)

@@ -58,7 +58,6 @@ class TestStrategy(TradingStrategy):
             slog.info("requesting buy : %s", req)
             self.requestBuy(self.onBuy, req)
             self.active = True
-            return True
         else:
             if self.bought_qty:
                 req = TradeRequest(side=Side.SELL,
@@ -71,10 +70,8 @@ class TestStrategy(TradingStrategy):
                 slog.info("requesting sell : %s", req)
                 self.requestSell(self.onSell, req)
                 self.active = False
-                return True
             else:
                 slog.info('None bought yet!')
-        return False
 
     def onError(self, e) -> None:
         elog.critical(e, type(e))

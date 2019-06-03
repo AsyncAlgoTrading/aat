@@ -2,19 +2,6 @@ from datetime import datetime
 
 
 class TestUtils:
-    def test_struct(self):
-        from ..utils import struct
-
-        @struct
-        class Test:
-            a = int
-            b = str
-
-        t = Test(a=5, b='')
-
-        assert t.a == 5
-        assert t.b == ''
-
     def test_parse_date(self):
         from datetime import datetime
         from ..utils import parse_date
@@ -26,23 +13,6 @@ class TestUtils:
         print(date2)
 
         assert gold == date1 == date2
-
-    def test_struct_warnings(self):
-        from ..utils import struct
-
-        @struct
-        class Test:
-            a = int, 5
-
-        t = Test()
-
-        try:
-            print(t.a)
-            assert False
-        except:
-            pass
-        t.a = 5
-        assert t.a == 5
 
     def test_ex_type_to_ex(self):
         from ..utils import ex_type_to_ex

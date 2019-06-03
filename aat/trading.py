@@ -77,6 +77,7 @@ class TradingEngine(object):
                         # calculate USD value
                         spot = ex.ticker(currency=account.currency)['last']
                         options.risk_options.total_funds += account.balance*spot
+                        account.value = account.balance*spot
 
             log.info("Running with %.2f USD" % options.risk_options.total_funds)
 
