@@ -65,22 +65,6 @@ class Callback(metaclass=ABCMeta):
     @abstractmethod
     def onError(self, data: MarketData):
         '''onError'''
-
-    def onExit(self):
-        '''onExit'''
-        pass
-
-    def onAnalyze(self, data):
-        '''onAnalyze'''
-        pass
-
-    def onHalt(self, data):
-        '''onHalt'''
-        pass
-
-    def onContinue(self, data):
-        '''onContinue'''
-        pass
 ```
 
 ## Strategy
@@ -97,7 +81,6 @@ class Strategy(metaclass=ABCMeta):
                     callback: Callback,
                     data: MarketData):
         '''requestSell'''
-        self._requests.append((time, actionType, data))
 ```
 
 ## Example Strategy
