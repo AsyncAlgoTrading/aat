@@ -1,29 +1,12 @@
 from functools import lru_cache
 from enum import Enum
+from ._enums import TickType, to_string as TickType_to_string, from_string as TickType_from_string  # noqa: F401
 
 
 class BaseEnum(Enum):
     @classmethod
     def members(cls):
         return cls.__members__.keys()
-
-
-class TickType(BaseEnum):
-    # Messages
-    TRADE = 'TRADE'  # Match
-    OPEN = 'OPEN'  # New Order
-    FILL = 'FILL'  # Order completed - filled
-    CANCEL = 'CANCEL'  # Order completed - cancelled
-    CHANGE = 'CHANGE'  # Order modified
-
-    ERROR = 'ERROR'  # Internal error
-    ANALYZE = 'ANALYZE'  # Internal
-
-    HALT = 'HALT'  # Trading halt
-    CONTINUE = 'CONTINUE'  # Trading continue
-    EXIT = 'EXIT'  # System exit
-
-    HEARTBEAT = 'HEARTBEAT'  # Exchange heartbeat
 
 
 class TradingType(BaseEnum):

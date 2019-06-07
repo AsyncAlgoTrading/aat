@@ -1,5 +1,5 @@
 from datetime import datetime
-from ...enums import OrderType, OrderSubType, PairType, TickType
+from ...enums import OrderType, OrderSubType, PairType, TickType, TickType_from_string
 from ...structs import MarketData, Instrument
 from ...utils import parse_date, str_to_currency_pair_type, str_to_side, str_to_order_type
 
@@ -41,7 +41,7 @@ class CoinbaseMixins(object):
                 return TickType.CANCEL
             elif reason == 'filled':
                 return TickType.FILL
-            return TickType(s.upper())
+            return TickType_from_string(s.upper())
         else:
             return TickType.ERROR
 

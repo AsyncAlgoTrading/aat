@@ -9,6 +9,7 @@ from .enums import Side, \
                    OrderType, \
                    OrderSubType, \
                    TickType, \
+                   TickType_to_string, \
                    TradeResult, \
                    InstrumentType, \
                    RiskReason
@@ -29,6 +30,8 @@ class Struct:
                     ret[item] = getattr(self, item).to_dict(serializable, str_timestamp, **kwargs)
                 elif isinstance(ret[item], Enum) or isinstance(getattr(self, item), Enum):
                     ret[item] = str(getattr(self, item))
+                elif isinstance(ret[item], TickType):
+                    ret[item] = TickType_to_string(ret[item])
                 elif isinstance(ret[item], float):
                     if ((ret[item] >= float('inf')) is False) and \
                        ((ret[item] <= float('inf')) is False):

@@ -1,5 +1,5 @@
 from datetime import datetime
-from ...enums import Side, OrderType, OrderSubType, PairType, TickType
+from ...enums import Side, OrderType, OrderSubType, PairType, TickType, TickType_from_string
 from ...structs import MarketData, Instrument
 from ...utils import str_to_currency_pair_type, str_to_side
 
@@ -44,7 +44,7 @@ class GeminiMixins(object):
             return TickType.TRADE
         elif s in ('AUCTION_INDICATIVE', 'AUCTION_OPEN'):
             return TickType.OPEN
-        return TickType(s)
+        return TickType_from_string(s)
 
     def reasonToTradeType(self, s: str) -> TickType:
         s = s.upper()

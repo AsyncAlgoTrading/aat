@@ -11,17 +11,17 @@ namespace aat {
 namespace enums {
 
     enum class TickType {
-        TRADE,
-        OPEN,
-        FILL,
-        CANCEL,
-        CHANGE,
-        ERROR,
-        ANALYZE,
-        HALT,
-        CONTINUE,
-        EXIT,
-        HEARTBEAT,
+        TRADE = 0,
+        OPEN = 1,
+        FILL = 2,
+        CANCEL = 3,
+        CHANGE = 4,
+        ERROR = 5,
+        ANALYZE = 6,
+        HALT = 7,
+        CONTINUE = 8,
+        EXIT = 9,
+        HEARTBEAT = 10
     };
 
     static const char *TickTypeNames[] = {
@@ -43,21 +43,24 @@ namespace enums {
       return TickTypeNames[static_cast<int>(type)];
     }
 
-    static std::unordered_map<const char *, TickType> _mapping = {
-            {(const char *)"TRADE", TickType::TRADE},
-            {(const char *)"OPEN", TickType::OPEN},
-            {(const char *)"FILL", TickType::FILL},
-            {(const char *)"CANCEL", TickType::CANCEL},
-            {(const char *)"CHANGE", TickType::CHANGE},
-            {(const char *)"ERROR", TickType::ERROR},
-            {(const char *)"ANALYZE", TickType::ANALYZE},
-            {(const char *)"HALT", TickType::HALT},
-            {(const char *)"CONTINUE", TickType::CONTINUE},
-            {(const char *)"EXIT", TickType::EXIT},
-            {(const char *)"HEARTBEAT", TickType::HEARTBEAT},
+    static std::unordered_map<std::string, TickType> _mapping = {
+            {"TRADE", TickType::TRADE},
+            {"OPEN", TickType::OPEN},
+            {"FILL", TickType::FILL},
+            {"CANCEL", TickType::CANCEL},
+            {"CHANGE", TickType::CHANGE},
+            {"ERROR", TickType::ERROR},
+            {"ANALYZE", TickType::ANALYZE},
+            {"HALT", TickType::HALT},
+            {"CONTINUE", TickType::CONTINUE},
+            {"EXIT", TickType::EXIT},
+            {"HEARTBEAT", TickType::HEARTBEAT},
     };
 
-    TickType from_string(char *s){ return _mapping[s]; }
+    TickType from_string(char *s)
+    { 
+        return _mapping[s];
+    }
 }
 }
 
@@ -77,7 +80,7 @@ PYBIND11_MODULE(_enums, m)
         .value("HALT", TickType::HALT)
         .value("CONTINUE", TickType::CONTINUE)
         .value("EXIT", TickType::EXIT)
-        .value("HEARTBEAT)", TickType::HEARTBEAT);
+        .value("HEARTBEAT", TickType::HEARTBEAT);
 
     m.def("to_string", &to_string, "TickType enum to string");
     m.def("from_string", &from_string, "string to TickType enum");
