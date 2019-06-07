@@ -21,14 +21,6 @@ class TestDefine:
         from ..define import EXCHANGE_MARKET_DATA_ENDPOINT
         from ..enums import ExchangeType, TradingType
 
-        assert EXCHANGE_MARKET_DATA_ENDPOINT(ExchangeType.BITSTAMP, TradingType.SANDBOX) \
-            == ''
-        assert EXCHANGE_MARKET_DATA_ENDPOINT(ExchangeType.BITSTAMP, TradingType.LIVE) \
-            == 'wss://ws.bitstamp.net'
-        assert EXCHANGE_MARKET_DATA_ENDPOINT(ExchangeType.BITFINEX, TradingType.SANDBOX) \
-            == ''
-        assert EXCHANGE_MARKET_DATA_ENDPOINT(ExchangeType.BITFINEX, TradingType.LIVE) \
-            == ''
         assert EXCHANGE_MARKET_DATA_ENDPOINT(ExchangeType.COINBASE, TradingType.SANDBOX) \
             == 'wss://ws-feed-public.sandbox.pro.coinbase.com'
         assert EXCHANGE_MARKET_DATA_ENDPOINT(ExchangeType.COINBASE, TradingType.LIVE) \

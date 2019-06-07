@@ -3,7 +3,7 @@ from .config import BacktestConfig
 from .data_source import StreamingDataSource
 from .logging import LOG as log, DATA as dlog
 from .structs import MarketData, Instrument
-from .enums import PairType, TickType, ExchangeType, Side
+from .enums import PairType, TickType, ExchangeType_from_string, Side
 
 
 def line_to_data(record):
@@ -12,7 +12,7 @@ def line_to_data(record):
                       price=record.close,
                       type=TickType.TRADE,
                       instrument=Instrument(underlying=PairType.from_string(record.name[1])),
-                      exchange=ExchangeType(record.exchange),
+                      exchange=ExchangeType_from_string(record.exchange),
                       side=Side.NONE)
     return data
 

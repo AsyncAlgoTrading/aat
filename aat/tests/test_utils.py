@@ -81,14 +81,10 @@ class TestUtils:
     def test_str_to_exchange(self):
         from ..utils import str_to_exchange
         from ..enums import ExchangeType
-        assert(str_to_exchange('bitfinex') == ExchangeType.BITFINEX)
-        assert(str_to_exchange('bitstamp') == ExchangeType.BITSTAMP)
-        assert(str_to_exchange('gemini') == ExchangeType.GEMINI)
-        assert(str_to_exchange('hitbtc') == ExchangeType.HITBTC)
-        assert(str_to_exchange('itbit') == ExchangeType.ITBIT)
-        assert(str_to_exchange('kraken') == ExchangeType.KRAKEN)
-        assert(str_to_exchange('lake') == ExchangeType.LAKE)
         assert(str_to_exchange('coinbase') == ExchangeType.COINBASE)
+        assert(str_to_exchange('gemini') == ExchangeType.GEMINI)
+        assert(str_to_exchange('kraken') == ExchangeType.KRAKEN)
+        assert(str_to_exchange('poloniex') == ExchangeType.POLONIEX)
 
     def test_str_to_currency_pair_type(self):
         from ..utils import str_to_currency_pair_type

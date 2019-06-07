@@ -3,6 +3,7 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 from .enums import Side, \
                    ExchangeType, \
+                   ExchangeType_to_string, \
                    OptionSide, \
                    CurrencyType, \
                    PairType, \
@@ -32,6 +33,8 @@ class Struct:
                     ret[item] = str(getattr(self, item))
                 elif isinstance(ret[item], TickType):
                     ret[item] = TickType_to_string(ret[item])
+                elif isinstance(ret[item], ExchangeType):
+                    ret[item] = ExchangeType_to_string(ret[item])
                 elif isinstance(ret[item], float):
                     if ((ret[item] >= float('inf')) is False) and \
                        ((ret[item] <= float('inf')) is False):

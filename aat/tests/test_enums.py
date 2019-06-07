@@ -33,43 +33,22 @@ class TestEnums:
         assert t3 == TradingType('BACKTEST')
 
     def test_exchange_type(self):
-        from ..enums import ExchangeType
+        from ..enums import ExchangeType, ExchangeType_from_string
         t0 = ExchangeType.NONE
-        t1 = ExchangeType.BITSTAMP
-        t2 = ExchangeType.BITFINEX
-        t3 = ExchangeType.CEX
-        t4 = ExchangeType.COINBASE
-        t5 = ExchangeType.GEMINI
-        t6 = ExchangeType.HITBTC
-        t7 = ExchangeType.ITBIT
-        t8 = ExchangeType.KRAKEN
-        t9 = ExchangeType.LAKE
-        t10 = ExchangeType.POLONIEX
-        t11 = ExchangeType.COINBASE
+        t1 = ExchangeType.COINBASE
+        t2 = ExchangeType.GEMINI
+        t3 = ExchangeType.KRAKEN
+        t4 = ExchangeType.POLONIEX
         assert t0 == ExchangeType.NONE
-        assert t1 == ExchangeType.BITSTAMP
-        assert t2 == ExchangeType.BITFINEX
-        assert t3 == ExchangeType.CEX
-        assert t4 == ExchangeType.COINBASE
-        assert t5 == ExchangeType.GEMINI
-        assert t6 == ExchangeType.HITBTC
-        assert t7 == ExchangeType.ITBIT
-        assert t8 == ExchangeType.KRAKEN
-        assert t9 == ExchangeType.LAKE
-        assert t10 == ExchangeType.POLONIEX
-        assert t11 == ExchangeType.COINBASE
-        assert t0 == ExchangeType('NONE')
-        assert t1 == ExchangeType('BITSTAMP')
-        assert t2 == ExchangeType('BITFINEX')
-        assert t3 == ExchangeType('CEX')
-        assert t4 == ExchangeType('COINBASE')
-        assert t5 == ExchangeType('GEMINI')
-        assert t6 == ExchangeType('HITBTC')
-        assert t7 == ExchangeType('ITBIT')
-        assert t8 == ExchangeType('KRAKEN')
-        assert t9 == ExchangeType('LAKE')
-        assert t10 == ExchangeType('POLONIEX')
-        assert t11 == ExchangeType('COINBASE')
+        assert t1 == ExchangeType.COINBASE
+        assert t2 == ExchangeType.GEMINI
+        assert t3 == ExchangeType.KRAKEN
+        assert t4 == ExchangeType.POLONIEX
+        assert t0 == ExchangeType_from_string('NONE')
+        assert t1 == ExchangeType_from_string('COINBASE')
+        assert t2 == ExchangeType_from_string('GEMINI')
+        assert t3 == ExchangeType_from_string('KRAKEN')
+        assert t4 == ExchangeType_from_string('POLONIEX')
 
     def test_currency_type(self):
         from ..enums import CurrencyType

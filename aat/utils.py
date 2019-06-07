@@ -4,7 +4,7 @@ import os
 import pytz
 from datetime import datetime
 from functools import lru_cache
-from .enums import ExchangeType, CurrencyType, OrderType, Side, PairType
+from .enums import ExchangeType, ExchangeType_from_string, ExchangeTypes, CurrencyType, OrderType, Side, PairType
 from .exceptions import AATException
 from .logging import LOG as log, \
                      STRAT as slog, \
@@ -90,9 +90,9 @@ def str_to_order_type(s: str) -> OrderType:
 
 @lru_cache(None)
 def str_to_exchange(exchange: str) -> ExchangeType:
-    if exchange.upper() not in ExchangeType.members():
+    if exchange.upper() not in ExchangeTypes:
         raise AATException(f'Exchange not recognized: {exchange}')
-    return ExchangeType(exchange.upper())
+    return ExchangeType_from_string(exchange.upper())
 
 
 def set_verbose(level):

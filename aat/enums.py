@@ -1,6 +1,15 @@
 from functools import lru_cache
 from enum import Enum
-from ._enums import TickType, to_string as TickType_to_string, from_string as TickType_from_string  # noqa: F401
+from ._enums import (  # noqa: F401
+    TickType,
+    TickTypes,
+    TickType_to_string,
+    TickType_from_string,
+    ExchangeType,
+    ExchangeTypes,
+    ExchangeType_to_string,
+    ExchangeType_from_string,
+    )
 
 
 class BaseEnum(Enum):
@@ -15,22 +24,6 @@ class TradingType(BaseEnum):
     LIVE = 'LIVE'
     BACKTEST = 'BACKTEST'
     SIMULATION = 'SIMULATION'
-
-
-class ExchangeType(BaseEnum):
-    NONE = 'NONE'
-    BITSTAMP = 'BITSTAMP'
-    BITFINEX = 'BITFINEX'
-    CEX = 'CEX'
-    COINBASE = 'COINBASE'
-    GEMINI = 'GEMINI'
-    HITBTC = 'HITBTC'
-    ITBIT = 'ITBIT'
-    KRAKEN = 'KRAKEN'
-    LAKE = 'LAKE'
-    POLONIEX = 'POLONIEX'
-    DERIBIT = 'DERIBIT'
-    BITMEX = 'BITMEX'
 
 
 class CurrencyType(BaseEnum):

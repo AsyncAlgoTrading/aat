@@ -2,10 +2,13 @@
 
 #include <iostream>
 #include <unordered_map>
+#include <vector>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl_bind.h>
 #include "common.h"
 
 namespace py = pybind11;
+PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
 
 namespace aat {
 namespace enums {
@@ -24,7 +27,7 @@ namespace enums {
         HEARTBEAT = 10
     };
 
-    static const char *TickTypeNames[] = {
+    static const std::vector<std::string> TickType_names = {
         "TRADE",
         "OPEN",
         "FILL",
@@ -38,12 +41,7 @@ namespace enums {
         "HEARTBEAT",
     };
 
-    const char *to_string(TickType type)
-    {
-      return TickTypeNames[static_cast<int>(type)];
-    }
-
-    static std::unordered_map<std::string, TickType> _mapping = {
+    static std::unordered_map<std::string, TickType> _TickType_mapping = {
             {"TRADE", TickType::TRADE},
             {"OPEN", TickType::OPEN},
             {"FILL", TickType::FILL},
@@ -57,12 +55,40 @@ namespace enums {
             {"HEARTBEAT", TickType::HEARTBEAT},
     };
 
-    TickType from_string(char *s)
-    { 
-        return _mapping[s];
-    }
+    ENUM_TO_STRING(TickType)
+    ENUM_FROM_STRING(TickType)
+
+    enum class ExchangeType {
+        NONE = 0,
+        COINBASE = 1,
+        GEMINI = 2,
+        KRAKEN = 3,
+        POLONIEX = 4
+    };
+
+    static const std::vector<std::string> ExchangeType_names = {
+        "NONE",
+        "COINBASE",
+        "GEMINI",
+        "KRAKEN",
+        "POLONIEX"
+    };
+
+    static std::unordered_map<std::string, ExchangeType> _ExchangeType_mapping = {
+        {"NONE", ExchangeType::NONE},
+        {"COINBASE", ExchangeType::COINBASE},
+        {"GEMINI", ExchangeType::GEMINI},
+        {"KRAKEN", ExchangeType::KRAKEN},
+        {"POLONIEX", ExchangeType::POLONIEX},
+    };
+
+
+    ENUM_TO_STRING(ExchangeType)
+    ENUM_FROM_STRING(ExchangeType)
+
 }
 }
+
 
 
 PYBIND11_MODULE(_enums, m)
@@ -82,7 +108,21 @@ PYBIND11_MODULE(_enums, m)
         .value("EXIT", TickType::EXIT)
         .value("HEARTBEAT", TickType::HEARTBEAT);
 
-    m.def("to_string", &to_string, "TickType enum to string");
-    m.def("from_string", &from_string, "string to TickType enum");
+    py::bind_vector<std::vector<std::string>>(m, "StringVec");
+    m.attr("TickTypes") = TickType_names;
+
+    m.def("TickType_to_string", &TickType_to_string, "TickType enum to string");
+    m.def("TickType_from_string", &TickType_from_string, "string to TickType enum");
+
+    py::enum_<ExchangeType>(m, "ExchangeType", py::arithmetic())
+        .value("NONE", ExchangeType::NONE)
+        .value("COINBASE", ExchangeType::COINBASE)
+        .value("GEMINI", ExchangeType::GEMINI)
+        .value("KRAKEN", ExchangeType::KRAKEN)
+        .value("POLONIEX", ExchangeType::POLONIEX);
+
+    m.attr("ExchangeTypes") = ExchangeType_names;
+    m.def("ExchangeType_to_string", &ExchangeType_to_string, "ExchangeType enum to string");
+    m.def("ExchangeType_from_string", &ExchangeType_from_string, "string to ExchangeType enum");
 
 }
