@@ -1,5 +1,5 @@
 from datetime import datetime
-from dataclasses import dataclass, field, fields, asdict
+from dataclasses import dataclass, asdict
 from enum import Enum
 from .enums import Side, \
                    ExchangeType, \
@@ -25,11 +25,9 @@ class Struct:
                         ret[item] = ret[item].strftime('%y-%m-%d %H:%M:%S')
                     else:
                         ret[item] = round(ret[item].timestamp())
-                elif isinstance(ret[item], Struct) or \
-                     isinstance(getattr(self, item), Struct):
+                elif isinstance(ret[item], Struct) or isinstance(getattr(self, item), Struct):
                     ret[item] = getattr(self, item).to_dict(serializable, str_timestamp, **kwargs)
-                elif isinstance(ret[item], Enum) or \
-                     isinstance(getattr(self, item), Enum):
+                elif isinstance(ret[item], Enum) or isinstance(getattr(self, item), Enum):
                     ret[item] = str(getattr(self, item))
                 elif isinstance(ret[item], float):
                     if ((ret[item] >= float('inf')) is False) and \
@@ -190,6 +188,7 @@ class MarketData(Struct):
 
     def __lt__(self, other):
         return self.price < other.price
+
 
 @dataclass
 class TradeRequest(Struct):

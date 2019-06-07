@@ -168,25 +168,21 @@ add_library(binding SHARED
     ${HEADER_FILES})
 set_target_properties(binding PROPERTIES
          LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat)
-target_link_libraries(binding ${BOOST_PYTHON})
-target_link_libraries(binding ${BOOST_NUMPY})
-target_link_libraries(binding ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+target_link_libraries(binding ${PYTHON_LIBRARIES})
 
-add_library(_cpp_helpers SHARED
-    ${CMAKE_SOURCE_DIR}/cpp/src/_cpp_helpers.cpp)
-set_target_properties(_cpp_helpers PROPERTIES
+add_library(_enums SHARED
+    ${CMAKE_SOURCE_DIR}/cpp/src/enums.cpp)
+set_target_properties(_enums PROPERTIES
          LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat)
-target_link_libraries(_cpp_helpers binding)
-target_link_libraries(_cpp_helpers ${BOOST_PYTHON})
-target_link_libraries(_cpp_helpers ${BOOST_NUMPY})
-target_link_libraries(_cpp_helpers ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+# target_link_libraries(_enums binding)
+target_link_libraries(_enums ${PYTHON_LIBRARIES})
 ########################
 
 if(CPP_BUILD_STRICT AND NOT WIN32)
     target_compile_options(binding PRIVATE -Wall -Werror)
     target_compile_options(binding PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
-    target_compile_options(_cpp_helpers PRIVATE -Wall -Werror)
-    target_compile_options(_cpp_helpers PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
+    target_compile_options(_enums PRIVATE -Wall -Werror)
+    target_compile_options(_enums PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
 endif()
 
 

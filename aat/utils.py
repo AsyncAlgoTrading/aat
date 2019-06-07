@@ -3,7 +3,6 @@ import logging
 import os
 import pytz
 from datetime import datetime
-from enum import Enum
 from functools import lru_cache
 from .enums import ExchangeType, CurrencyType, OrderType, Side, PairType
 from .exceptions import AATException
@@ -16,6 +15,7 @@ from .logging import LOG as log, \
                      TXNS as tlog, \
                      MANUAL as mlog, \
                      ERROR as elog
+
 
 @lru_cache(None)
 def parse_date(indate: str) -> datetime:
