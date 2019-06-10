@@ -39,6 +39,9 @@ def ex_type_to_ex(ex: ExchangeType):
     elif ex == ExchangeType.KRAKEN:
         from .exchanges.kraken import KrakenExchange
         return KrakenExchange
+    elif ex == ExchangeType.SYNTHETIC:
+        from .exchanges.synthetic import SyntheticExchange
+        return SyntheticExchange
     raise NotImplementedError(f'Exchange type not implemented : {ex} ')
 
 
@@ -180,6 +183,7 @@ def findpath(inst, markets):
     c1_btc_inv = Instrument(underlying=PairType((CurrencyType.BTC, currency_from)))
     c2_btc = Instrument(underlying=PairType((CurrencyType.BTC, currency_to)))
     c2_btc_inv = Instrument(underlying=PairType((currency_to, CurrencyType.BTC)))
+
     if currency_from == CurrencyType.BTC or \
        currency_to == CurrencyType.BTC or \
        (c1_btc not in markets and c1_btc_inv not in markets) or \

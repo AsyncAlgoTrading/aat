@@ -18,12 +18,13 @@ from .structs import TradeRequest, TradeResponse, MarketData
 from .ui.server import ServerApplication
 from .utils import ex_type_to_ex
 from .logging import LOG as log, SLIP as sllog, TXNS as tlog
-from .binding import say_hello
-say_hello("test")
 
 
 class TradingEngine(object):
-    def __init__(self, options: TradingEngineConfig, ui_handlers: list, ui_settings: dict) -> None:
+    def __init__(self, options: TradingEngineConfig, ui_handlers: list = None, ui_settings: dict = None) -> None:
+        ui_handlers = ui_handlers or []
+        ui_settings = ui_settings or {}
+
         # running live?
         self._live = options.type == TradingType.LIVE
 
@@ -67,8 +68,6 @@ class TradingEngine(object):
         # if live or sandbox, get account information and balances
         if self._live or self._simulation or self._sandbox:
             accounts = reduce(operator.concat, [ex.accounts() for ex in self._exchanges.values()])
-            log.info(accounts)
-
             for ex in self._exchanges.values():
                 for account in ex.accounts():
                     if account.currency == CurrencyType.USD:
@@ -79,6 +78,7 @@ class TradingEngine(object):
                         options.risk_options.total_funds += account.balance*spot
                         account.value = account.balance*spot
 
+            log.info(accounts)
             log.info("Running with %.2f USD" % options.risk_options.total_funds)
 
         if self._backtest:

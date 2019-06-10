@@ -3,12 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-aat
-===================================
-Lightweight, extensible program for algorithmically trading.
+AAT
+===
 
-|build-status| |codecov| |bch| |pypiv| |pypil| |docs| |site|
+AsyncAlgoTrading
 
+|Build Status| |Coverage| |BCH compliance| |License| |PyPI| |Docs|
 
 .. toctree::
    :maxdepth: 2
@@ -18,36 +18,15 @@ Lightweight, extensible program for algorithmically trading.
    quickstart
    api
 
-Introduction
-==================
-
-
-.. |build-status| image:: https://travis-ci.org/timkpaine/aat.svg?branch=master
-    :alt: Build Status
-    :scale: 100%
-    :target: https://travis-ci.org/timkpaine/aat
-
-.. |codecov| image:: https://codecov.io/gh/timkpaine/aat/branch/master/graph/badge.svg
-    :alt: Codecov
-    :scale: 100%
-    :target: https://codecov.io/gh/timkpaine/aat
-
-.. |bch| image:: https://bettercodehub.com/edge/badge/timkpaine/aat?branch=master
-    :alt: BCH
-    :scale: 100%
-    :target: https://bettercodehub.com/
-
-.. |pypiv| image:: https://img.shields.io/pypi/v/aat.svg
-    :alt: Version
-    :scale: 100%
-    :target: https://pypi.python.org/pypi/aat
-
-.. |pypil| image:: https://img.shields.io/pypi/l/aat.svg
-    :alt: License
-    :scale: 100%
-    :target: https://pypi.python.org/pypi/aat
-
-.. |docs| image:: https://img.shields.io/readthedocs/aat.svg
-    :alt: Docs
-    :scale: 100%
-    :target: https://img.shields.io/readthedocs/aat.svg
+.. |Build Status| image:: https://travis-ci.org/timkpaine/aat.svg?branch=master
+   :target: https://travis-ci.org/timkpaine/aat
+.. |Coverage| image:: https://codecov.io/gh/timkpaine/aat/coverage.svg?branch=master&token=JGqz8ChQxd
+   :target: https://codecov.io/gh/timkpaine/aat
+.. |BCH compliance| image:: https://bettercodehub.com/edge/badge/timkpaine/aat?branch=master
+   :target: https://bettercodehub.com/
+.. |License| image:: https://img.shields.io/github/license/timkpaine/aat.svg
+   :target: https://pypi.python.org/pypi/aat
+.. |PyPI| image:: https://img.shields.io/pypi/v/aat.svg
+   :target: https://pypi.python.org/pypi/aat
+.. |Docs| image:: https://img.shields.io/readthedocs/aat.svg
+   :target: http://aat.readthedocs.io/en/latest/

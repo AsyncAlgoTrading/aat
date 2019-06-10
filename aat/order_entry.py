@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import lru_cache
 from typing import List
 from .data_source import RestAPIDataSource
-from .enums import PairType, TradingType, CurrencyType
+from .enums import PairType, TradingType, CurrencyType, ExchangeType_to_string
 from .exceptions import AATException
 from .structs import TradeRequest, TradeResponse, Account, Instrument
 from .utils import (get_keys_from_environment, str_to_currency_type,
@@ -17,9 +17,9 @@ class OrderEntry(RestAPIDataSource):
     def oe_client(self):
         options = self.options()
         if options.trading_type == TradingType.SANDBOX:
-            key, secret, passphrase = get_keys_from_environment(self.exchange().value + '_SANDBOX')
+            key, secret, passphrase = get_keys_from_environment(ExchangeType_to_string(self.exchange()) + '_SANDBOX')
         else:
-            key, secret, passphrase = get_keys_from_environment(self.exchange().value)
+            key, secret, passphrase = get_keys_from_environment(ExchangeType_to_string(self.exchange()))
 
         return exchange_type_to_ccxt_client(self.exchange())({
             'apiKey': key,

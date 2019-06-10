@@ -10,6 +10,11 @@ class ExchangeConfig(HasTraits):
     instruments = List(trait=Instance(Instrument), default_value=[Instrument(type=InstrumentType.PAIR, underlying=PairType.BTCUSD)])
 
 
+class SyntheticExchangeConfig(ExchangeConfig):
+    exchange_type = Instance(ExchangeType)
+    adversaries = List(default_value=[])
+
+
 class BacktestConfig(HasTraits):
     pass
 

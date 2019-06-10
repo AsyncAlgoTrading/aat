@@ -2,8 +2,8 @@ from .trading import TradingEngine
 from .parser import parse_command_line_config
 
 
-def main(argv: list) -> None:
-    config = parse_command_line_config(argv)
+def generateApplication():
+    config = parse_command_line_config(['--config=./config/sythetic.cfg'])
 
     # Instantiate trading engine
     #
@@ -12,5 +12,6 @@ def main(argv: list) -> None:
     # exchange/backtest engine.
 
     te = TradingEngine(config)
+
     # Run the live trading engine
     te.run()

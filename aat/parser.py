@@ -1,7 +1,9 @@
+import os
+import os.path
 from configparser import ConfigParser
 from pydoc import locate
 from .config import TradingEngineConfig, BacktestConfig, StrategyConfig
-from .enums import TradingType, InstrumentType
+from .enums import TradingType, InstrumentType, ExchangeType
 from .exceptions import ConfigException
 from .structs import Instrument
 from .utils import str_to_exchange, set_verbose, str_to_currency_pair_type
@@ -9,6 +11,8 @@ from .logging import LOG as log
 
 
 def parse_file_config(filename: str) -> TradingEngineConfig:
+    if not os.path.exists(filename):
+        raise ConfigException(f'File does not exist {filename}')
     config = TradingEngineConfig()
     c = ConfigParser()
     c.read(filename)
@@ -133,6 +137,11 @@ def _parse_currencies(currencies):
 def _parse_options(argv, config: TradingEngineConfig) -> None:
     if argv.get('exchanges'):
         config.exchange_options.exchange_types = [str_to_exchange(x) for x in argv['exchanges'].split() if x]
+        for exchange in config.exchange_options.exchange_types:
+            if config.type == TradingType.LIVE and exchange == ExchangeType.SYNTHETIC:
+                raise ConfigException('Cannot run synthetic exchange in live mode!')
+            elif exchange == ExchangeType.SYNTHETIC:
+                config.exchange_options.exchange_type = ExchangeType.COINBASE
     else:
         raise ConfigException('No exchange set!')
 

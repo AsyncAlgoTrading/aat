@@ -8,5 +8,5 @@
 
 TEST(TABLE, simplest_test)
 {
-    say_hello("test");
+
 }

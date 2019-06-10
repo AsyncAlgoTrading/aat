@@ -60,14 +60,16 @@ namespace enums {
 
     enum class ExchangeType {
         NONE = 0,
-        COINBASE = 1,
-        GEMINI = 2,
-        KRAKEN = 3,
-        POLONIEX = 4
+        SYNTHETIC = 1,
+        COINBASE = 2,
+        GEMINI = 3,
+        KRAKEN = 4,
+        POLONIEX = 5
     };
 
     static const std::vector<std::string> ExchangeType_names = {
         "NONE",
+        "SYNTHETIC",
         "COINBASE",
         "GEMINI",
         "KRAKEN",
@@ -76,6 +78,7 @@ namespace enums {
 
     static std::unordered_map<std::string, ExchangeType> _ExchangeType_mapping = {
         {"NONE", ExchangeType::NONE},
+        {"SYNTHETIC", ExchangeType::SYNTHETIC},
         {"COINBASE", ExchangeType::COINBASE},
         {"GEMINI", ExchangeType::GEMINI},
         {"KRAKEN", ExchangeType::KRAKEN},
@@ -116,6 +119,7 @@ PYBIND11_MODULE(_enums, m)
 
     py::enum_<ExchangeType>(m, "ExchangeType", py::arithmetic())
         .value("NONE", ExchangeType::NONE)
+        .value("SYNTHETIC", ExchangeType::SYNTHETIC)
         .value("COINBASE", ExchangeType::COINBASE)
         .value("GEMINI", ExchangeType::GEMINI)
         .value("KRAKEN", ExchangeType::KRAKEN)
