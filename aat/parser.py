@@ -2,7 +2,7 @@ import os
 import os.path
 from configparser import ConfigParser
 from pydoc import locate
-from .config import TradingEngineConfig, BacktestConfig, StrategyConfig
+from .config import TradingEngineConfig, BacktestConfig, StrategyConfig, SyntheticExchangeConfig
 from .enums import TradingType, InstrumentType, ExchangeType
 from .exceptions import ConfigException
 from .structs import Instrument
@@ -141,6 +141,17 @@ def _parse_options(argv, config: TradingEngineConfig) -> None:
             if config.type == TradingType.LIVE and exchange == ExchangeType.SYNTHETIC:
                 raise ConfigException('Cannot run synthetic exchange in live mode!')
             elif exchange == ExchangeType.SYNTHETIC:
+                new_config =  SyntheticExchangeConfig()
+                new_config.exchange_types = config.exchange_options.exchange_types
+                new_config.trading_type = config.exchange_options.trading_type
+                new_config.currency_pairs = config.exchange_options.currency_pairs
+                new_config.instruments = config.exchange_options.instruments
+
+                if argv.get('direction'):
+                    new_config.direction = argv.get('direction')
+                if argv.get('volatility'):
+                    new_config.volatility = argv.get('volatility')
+                config.exchange_options = new_config
                 config.exchange_options.exchange_type = ExchangeType.COINBASE
     else:
         raise ConfigException('No exchange set!')
@@ -178,6 +189,20 @@ def _parse_backtest_options(argv, config) -> None:
 
     if argv.get('exchanges'):
         config.exchange_options.exchange_types = [str_to_exchange(x) for x in argv['exchanges'].split() if x]
+        for exchange in config.exchange_options.exchange_types:
+            if exchange == ExchangeType.SYNTHETIC:
+                new_config =  SyntheticExchangeConfig()
+                new_config.exchange_types = config.exchange_options.exchange_types
+                new_config.trading_type = config.exchange_options.trading_type
+                new_config.currency_pairs = config.exchange_options.currency_pairs
+                new_config.instruments = config.exchange_options.instruments
+
+                if argv.get('direction'):
+                    new_config.direction = argv.get('direction')
+                if argv.get('volatility'):
+                    new_config.volatility = argv.get('volatility')
+                config.exchange_options = new_config
+                config.exchange_options.exchange_type = ExchangeType.COINBASE
     else:
         raise ConfigException('No exchange set!')
 

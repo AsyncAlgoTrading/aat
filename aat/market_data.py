@@ -77,23 +77,3 @@ class MarketData(StreamingDataSource):
     @abstractmethod
     def tickToData(self, jsn: dict) -> MarketData:
         pass
-
-    @abstractmethod
-    def strToTradeType(self, s: str) -> TickType:
-        pass
-
-    @abstractmethod
-    def tradeReqToParams(self, req) -> dict:
-        pass
-
-    @abstractmethod
-    def currencyPairToString(self, cur: PairType) -> str:
-        pass
-
-    @abstractmethod
-    def orderTypeToString(self, typ: OrderType) -> str:
-        pass
-
-    @abstractmethod
-    def reasonToTradeType(self, s: str) -> TickType:
-        pass

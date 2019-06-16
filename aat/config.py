@@ -14,6 +14,9 @@ class SyntheticExchangeConfig(ExchangeConfig):
     exchange_type = Instance(ExchangeType)
     adversaries = List(default_value=[])
 
+    direction = Float(default_value=2.0)
+    volatility = Float(default_value=50)
+
 
 class BacktestConfig(HasTraits):
     pass
