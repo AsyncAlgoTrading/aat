@@ -1,12 +1,10 @@
-import asyncio
 import ccxt
-import json
 import pandas as pd
 import time
 from datetime import datetime
 from functools import lru_cache
-from numpy.random import normal, laplace
-from random import randint, random, choice
+from numpy.random import normal
+from random import randint, random, choice  # noqa: F401
 from typing import List
 from ..config import SyntheticExchangeConfig
 from ..enums import ExchangeType, TickType, Side, PairType, OrderType, CurrencyType, TradingType, ExchangeType_to_string
@@ -67,7 +65,7 @@ class SyntheticExchange(Exchange):
             if self._trading_type != TradingType.BACKTEST:
                 time.sleep(random()*3)
             else:
-                time.sleep(random()/100)
+                time.sleep(random()/500)
             yield data
 
     async def run(self, trading) -> None:
@@ -173,16 +171,14 @@ class SyntheticExchange(Exchange):
                  'close': d.price,
                  'volume': d.volume} for d in data]
 
-        dfs = [{'pair': str(symbol),
+        dfs = [{'pair': str(self._instruments[0].currency_pair),
                 'exchange': ExchangeType_to_string(self._underlying_exchange),
-                'data': data}
-               for symbol in self.options().currency_pairs]
+                'data': data}]
         df = pd.io.json.json_normalize(dfs, 'data', ['pair', 'exchange'])
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
         df.set_index(['timestamp', 'pair'], inplace=True)
         df.sort_index(inplace=True)
         return df
-
 
 
 class Adversary(object):
