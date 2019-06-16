@@ -141,7 +141,7 @@ def _parse_options(argv, config: TradingEngineConfig) -> None:
             if config.type == TradingType.LIVE and exchange == ExchangeType.SYNTHETIC:
                 raise ConfigException('Cannot run synthetic exchange in live mode!')
             elif exchange == ExchangeType.SYNTHETIC:
-                new_config =  SyntheticExchangeConfig()
+                new_config = SyntheticExchangeConfig()
                 new_config.exchange_types = config.exchange_options.exchange_types
                 new_config.trading_type = config.exchange_options.trading_type
                 new_config.currency_pairs = config.exchange_options.currency_pairs
@@ -191,7 +191,7 @@ def _parse_backtest_options(argv, config) -> None:
         config.exchange_options.exchange_types = [str_to_exchange(x) for x in argv['exchanges'].split() if x]
         for exchange in config.exchange_options.exchange_types:
             if exchange == ExchangeType.SYNTHETIC:
-                new_config =  SyntheticExchangeConfig()
+                new_config = SyntheticExchangeConfig()
                 new_config.exchange_types = config.exchange_options.exchange_types
                 new_config.trading_type = config.exchange_options.trading_type
                 new_config.currency_pairs = config.exchange_options.currency_pairs
