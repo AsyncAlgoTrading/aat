@@ -26,6 +26,7 @@ class OrderEntry(RestAPIDataSource):
             'secret': secret,
             'password': passphrase,
             'enableRateLimit': True,
+            'rateLimit': 250
             })
 
     @lru_cache(None)

@@ -1,7 +1,8 @@
 import tornado.gen
-from .base import HTTPHandler
 from tornado.concurrent import run_on_executor
 from perspective import PerspectiveHTTPMixin
+from .base import HTTPHandler
+from aat.enums import ExchangeType_to_string
 
 
 class ExchangesHandler(PerspectiveHTTPMixin, HTTPHandler):
@@ -15,9 +16,13 @@ class ExchangesHandler(PerspectiveHTTPMixin, HTTPHandler):
 
     @run_on_executor
     def get_data(self, **psp_kwargs):
-        msgs = [{'name': x['exchange'].value,
-                 'instruments': ','.join(y.to_dict(True, True)['underlying'] for y in x['instruments'])}
-                for x in self.te.query().query_exchanges()]
+        exchanges = self.te.query().query_exchanges()
+        msgs = [{'id': j + i*len(exchanges),
+                 'name': ExchangeType_to_string(x['exchange']),
+                 'instrument': y.to_dict(True, True)['underlying']}
+                for i, x in enumerate(exchanges)
+                for j, y in enumerate(x['instruments'])
+                ]
         super(ExchangesHandler, self).loadData(data=msgs, **psp_kwargs)
         return super(ExchangesHandler, self).getData()
 
