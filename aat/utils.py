@@ -2,6 +2,7 @@ import ccxt
 import logging
 import os
 import pytz
+import udatetime
 from datetime import datetime
 from functools import lru_cache
 from .enums import ExchangeType, ExchangeType_from_string, ExchangeTypes, CurrencyType, OrderType, Side, PairType
@@ -17,12 +18,11 @@ from .logging import LOG as log, \
                      ERROR as elog
 
 
-@lru_cache(None)
+@lru_cache(100)
 def parse_date(indate: str) -> datetime:
     try:
-        date = datetime.utcfromtimestamp(float(indate))
-        date = pytz.utc.localize(date).astimezone(
-            pytz.timezone('EST')).replace(tzinfo=None)
+        date = udatetime.utcfromtimestamp(float(indate))
+        date = pytz.utc.localize(date).astimezone(pytz.timezone('EST')).replace(tzinfo=None)
     except ValueError:
         date = datetime.strptime(indate, "%Y-%m-%dT%H:%M:%S.%fZ")
     return date

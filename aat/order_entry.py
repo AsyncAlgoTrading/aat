@@ -1,5 +1,5 @@
 import pandas as pd
-from datetime import datetime
+import udatetime
 from functools import lru_cache
 from typing import List
 from .data_source import RestAPIDataSource
@@ -51,7 +51,7 @@ class OrderEntry(RestAPIDataSource):
                               balance=balance,
                               exchange=self.exchange(),
                               value=-1,
-                              asOf=datetime.now())
+                              asOf=udatetime.now())
             accounts.append(account)
         return accounts
 

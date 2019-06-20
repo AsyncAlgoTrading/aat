@@ -1,7 +1,7 @@
 import ccxt
 import pandas as pd
 import time
-from datetime import datetime
+import udatetime
 from functools import lru_cache
 from numpy.random import normal
 from random import randint, random, choice  # noqa: F401
@@ -52,7 +52,7 @@ class SyntheticExchange(Exchange):
             #     price += step
             #     price = abs(price)
             price = abs(price + next_)
-            data = MarketData(time=datetime.now(),
+            data = MarketData(time=udatetime.now(),
                               volume=random()*10,
                               price=price,
                               type=TickType.TRADE,
@@ -96,7 +96,7 @@ class SyntheticExchange(Exchange):
                         balance=100,
                         exchange=self.exchange(),
                         value=-1,
-                        asOf=datetime.now()) for cur in all_curs]
+                        asOf=udatetime.now()) for cur in all_curs]
 
     @lru_cache(None)
     def currencies(self) -> List[CurrencyType]:
