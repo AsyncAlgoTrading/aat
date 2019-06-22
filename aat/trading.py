@@ -2,7 +2,7 @@ import asyncio
 import threading
 import tornado
 import operator
-import udatetime
+from datetime import datetime
 from functools import reduce
 from typing import Callable
 from .backtest import Backtest
@@ -84,7 +84,7 @@ class TradingEngine(object):
         if self._backtest:
             self._portfolio_value = []
         else:
-            self._portfolio_value = [[udatetime.now(), options.risk_options.total_funds]]
+            self._portfolio_value = [[datetime.now(), options.risk_options.total_funds]]
         self._holdings = {}
 
         # instantiate execution engine

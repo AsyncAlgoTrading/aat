@@ -1,4 +1,4 @@
-import udatetime
+from datetime import datetime
 from ...enums import OrderType, OrderSubType, PairType, TickType, TickType_from_string
 from ...structs import MarketData, Instrument
 from ...utils import parse_date, str_to_currency_pair_type, str_to_side, str_to_order_type
@@ -9,7 +9,7 @@ class CoinbaseMixins(object):
         if jsn.get('type') == 'received':
             return
         typ = self.strToTradeType(jsn.get('type'), jsn.get('reason', ''))
-        time = parse_date(jsn.get('time')) if jsn.get('time') else udatetime.now()
+        time = parse_date(jsn.get('time')) if jsn.get('time') else datetime.now()
         price = float(jsn.get('price', 'nan'))
         volume = float(jsn.get('size', 'nan'))
         currency_pair = str_to_currency_pair_type(jsn.get('product_id')) if typ != TickType.ERROR else PairType.NONE

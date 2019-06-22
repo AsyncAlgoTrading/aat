@@ -2,7 +2,6 @@ import ccxt
 import logging
 import os
 import pytz
-import udatetime
 from datetime import datetime
 from functools import lru_cache
 from .enums import ExchangeType, ExchangeType_from_string, ExchangeTypes, CurrencyType, OrderType, Side, PairType
@@ -21,7 +20,7 @@ from .logging import LOG as log, \
 @lru_cache(100)
 def parse_date(indate: str) -> datetime:
     try:
-        date = udatetime.utcfromtimestamp(float(indate))
+        date = datetime.utcfromtimestamp(float(indate))
         date = pytz.utc.localize(date).astimezone(pytz.timezone('EST')).replace(tzinfo=None)
     except ValueError:
         date = datetime.strptime(indate, "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -176,22 +175,27 @@ def findpath(inst, markets):
             instrument1, instrument2, invert pair1, invert pair2
     '''
     from .structs import Instrument
+
     # should do dijkstras to get cheapest path but im lazy
-    currency_from = inst.underlying.value[0]
-    currency_to = inst.underlying.value[1]
-    c1_btc = Instrument(underlying=PairType((currency_from, CurrencyType.BTC)))
-    c1_btc_inv = Instrument(underlying=PairType((CurrencyType.BTC, currency_from)))
-    c2_btc = Instrument(underlying=PairType((CurrencyType.BTC, currency_to)))
-    c2_btc_inv = Instrument(underlying=PairType((currency_to, CurrencyType.BTC)))
+    to_try = (CurrencyType.BTC, CurrencyType.ETH)
 
-    if currency_from == CurrencyType.BTC or \
-       currency_to == CurrencyType.BTC or \
-       (c1_btc not in markets and c1_btc_inv not in markets) or \
-       (c2_btc not in markets and c2_btc_inv not in markets):
-        raise AATException(f'Need BTC for intermediary: {inst}')
+    for base in to_try:
+        currency_from = inst.underlying.value[0]
+        currency_to = inst.underlying.value[1]
+        c1_btc = Instrument(underlying=PairType((currency_from, base)))
+        c1_btc_inv = Instrument(underlying=PairType((base, currency_from)))
+        c2_btc = Instrument(underlying=PairType((base, currency_to)))
+        c2_btc_inv = Instrument(underlying=PairType((currency_to, base)))
 
-    return {(True, True):   (c1_btc_inv, c2_btc_inv, True, True),
-            (True, False):  (c1_btc_inv, c2_btc, True, False),
-            (False, True):  (c1_btc, c2_btc_inv, False, True),
-            (False, False): (c1_btc, c2_btc, False, False)}.get((c1_btc not in markets,
-                                                                 c2_btc not in markets))
+        if currency_from == base or \
+           currency_to == base or \
+           (c1_btc not in markets and c1_btc_inv not in markets) or \
+           (c2_btc not in markets and c2_btc_inv not in markets):
+            continue
+
+        return {(True, True):   (c1_btc_inv, c2_btc_inv, True, True),
+                (True, False):  (c1_btc_inv, c2_btc, True, False),
+                (False, True):  (c1_btc, c2_btc_inv, False, True),
+                (False, False): (c1_btc, c2_btc, False, False)}.get((c1_btc not in markets,
+                                                                     c2_btc not in markets))
+    raise AATException(f'Need {"/".join(c.value for c in to_try)} for intermediary: {inst}')

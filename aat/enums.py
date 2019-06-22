@@ -34,6 +34,8 @@ class CurrencyType(BaseEnum):
     GBP = 'GBP'
 
     USDC = 'USDC'
+    USDT = 'USDT'
+
     BAT = 'BAT'
     BCH = 'BCH'
     BTC = 'BTC'

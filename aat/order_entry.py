@@ -1,5 +1,5 @@
 import pandas as pd
-import udatetime
+from datetime import datetime
 from functools import lru_cache
 from typing import List
 from .data_source import RestAPIDataSource
@@ -39,11 +39,21 @@ class OrderEntry(RestAPIDataSource):
         accounts = []
 
         for jsn in balances['info']:
-            currency = str_to_currency_type(jsn['currency'])
+            if isinstance(jsn, str):
+                currency = jsn
+                jsn = balances['info'][jsn]
+            else:
+                currency = jsn['currency']
+
+            currency = str_to_currency_type(currency)
             if 'balance' in jsn:
                 balance = float(jsn['balance'])
             elif 'amount' in jsn:
                 balance = float(jsn['amount'])
+            elif 'available' in jsn:
+                balance = jsn['available']
+            else:
+                raise AATException('Cant read!')
 
             id = jsn.get('id', jsn['currency'])
             account = Account(id=id,
@@ -51,7 +61,7 @@ class OrderEntry(RestAPIDataSource):
                               balance=balance,
                               exchange=self.exchange(),
                               value=-1,
-                              asOf=udatetime.now())
+                              asOf=datetime.now())
             accounts.append(account)
         return accounts
 
@@ -75,14 +85,15 @@ class OrderEntry(RestAPIDataSource):
             if inst in self.markets():
                 return self.oe_client().fetchTicker(str(inst.underlying))
             else:
-                try:
-                    inst1, inst2, i1_inverted, i2_inverted = findpath(inst, self.markets())
-                except AATException:
+                for stable in ('USD', 'USDC', 'USDT'):
                     try:
-                        inst = Instrument(underlying=PairType.from_string(currency.value + '/USDC'))
+                        inst = Instrument(underlying=PairType.from_string(currency.value + '/' + stable))
                         inst1, inst2, i1_inverted, i2_inverted = findpath(inst, self.markets())
-                    except AATException:
-                        return {'last': 0.0}
+                        broken = False
+                    except (AATException, ValueError):
+                        broken = True
+                if broken:
+                    return {'last': 0.0}
                 inst1_t = self.oe_client().fetchTicker(str(inst1.underlying))
                 inst2_t = self.oe_client().fetchTicker(str(inst2.underlying))
                 if i1_inverted:

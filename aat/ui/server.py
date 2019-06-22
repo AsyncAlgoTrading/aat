@@ -42,7 +42,8 @@ class ServerApplication(tornado.web.Application):
 
         super(ServerApplication, self).__init__(
           extra_handlers + [
-            (r"/api/v1/json/accounts", AccountsHandler, {'trading_engine': trading_engine, 'psp_kwargs': {'transfer_as_arrow': True}}),
+            (r"/api/v1/json/accounts", AccountsHandler, {'trading_engine': trading_engine, 'psp_kwargs': {'transfer_as_arrow': False}}),
+            (r"/api/v1/arrow/accounts", AccountsHandler, {'trading_engine': trading_engine, 'psp_kwargs': {'transfer_as_arrow': True}}),
             (r"/api/v1/json/exchanges", ExchangesHandler, {'trading_engine': trading_engine}),
             (r"/api/v1/json/instruments", InstrumentsHandler, {'trading_engine': trading_engine}),
             (r"/api/v1/json/strategies", StrategiesHandler, {'trading_engine': trading_engine,

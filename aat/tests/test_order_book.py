@@ -1,7 +1,6 @@
 import pytest
 import random
-import udatetime
-
+from datetime import datetime
 from aat.order_book import OrderBook
 from aat.structs import MarketData, Instrument
 from aat.enums import Side, \
@@ -40,7 +39,7 @@ def initialMarketData(count, instruments=None):
         sequence = -1
         order_type = OrderType.NONE
 
-        m = MarketData(time=udatetime.now(),
+        m = MarketData(time=datetime.now(),
                        volume=volume,
                        price=price,
                        type=tick,
@@ -79,7 +78,7 @@ def generateMarketData(count, instruments=None):
         sequence = -1
         order_type = OrderType.NONE
 
-        m = MarketData(time=udatetime.now(),
+        m = MarketData(time=datetime.now(),
                        volume=volume,
                        price=price,
                        type=tick,
@@ -115,7 +114,7 @@ class TestDataSource:
 
         p = 0.0
         while p < 2.1:
-            m = MarketData(time=udatetime.now(),
+            m = MarketData(time=datetime.now(),
                            volume=1.0,
                            price=p,
                            type=TickType.OPEN,
@@ -135,7 +134,7 @@ class TestDataSource:
         p = 0.0
         while p < 2.1:
             if round(p * 10) % 2 < 1:
-                m = MarketData(time=udatetime.now(),
+                m = MarketData(time=datetime.now(),
                                volume=1.0,
                                price=p,
                                type=TickType.OPEN,
@@ -154,7 +153,7 @@ class TestDataSource:
 
         p = 0.0
         while p < 2.1:
-            m = MarketData(time=udatetime.now(),
+            m = MarketData(time=datetime.now(),
                            volume=1.0,
                            price=p,
                            type=TickType.CANCELLED,

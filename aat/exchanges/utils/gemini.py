@@ -1,4 +1,4 @@
-import udatetime
+from datetime import datetime
 from ...enums import Side, OrderType, OrderSubType, PairType, TickType, TickType_from_string
 from ...structs import MarketData, Instrument
 from ...utils import str_to_currency_pair_type, str_to_side
@@ -6,7 +6,7 @@ from ...utils import str_to_currency_pair_type, str_to_side
 
 class GeminiMixins(object):
     def tickToData(self, jsn: dict) -> MarketData:
-        time = udatetime.now()
+        time = datetime.now()
         price = float(jsn.get('price', 'nan'))
         volume = float(jsn.get('amount', 0.0))
         typ = self.strToTradeType(jsn.get('type'))

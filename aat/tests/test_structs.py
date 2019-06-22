@@ -1,4 +1,4 @@
-import udatetime
+from datetime import datetime
 
 
 class TestStructs:
@@ -37,7 +37,7 @@ class TestStructs:
     def test_MarketData(self):
         from ..structs import MarketData, Instrument
         from ..enums import TickType, Side, PairType, ExchangeType
-        m = MarketData(time=udatetime.now(),
+        m = MarketData(time=datetime.now(),
                        volume=1.0,
                        price=1.0,
                        instrument=Instrument(underlying=PairType.BTCUSD),
@@ -56,7 +56,7 @@ class TestStructs:
                          volume=1.0,
                          exchange=ExchangeType.COINBASE,
                          price=1.0,
-                         time=udatetime.now())
+                         time=datetime.now())
         assert t
         # side = Side
         # volume = float
@@ -75,7 +75,7 @@ class TestStructs:
                            instrument=Instrument(underlying=PairType.BTCUSD),
                            volume=1.0,
                            price=1.0,
-                           time=udatetime.now())
+                           time=datetime.now())
         t = TradeResponse(request=req,
                           side=Side.BUY,
                           instrument=Instrument(underlying=PairType.BTCUSD),
@@ -83,7 +83,7 @@ class TestStructs:
                           price=0.0,
                           status=TradeResult.FILLED,
                           exchange=ExchangeType.COINBASE,
-                          time=udatetime.now(),
+                          time=datetime.now(),
                           order_id='1')
         assert t
         # side = Side

@@ -1,5 +1,5 @@
 from mock import patch, MagicMock
-import udatetime
+from datetime import datetime
 
 
 class TestExecution:
@@ -47,7 +47,7 @@ class TestExecution:
                            exchange=ExchangeType.COINBASE,
                            volume=1.0,
                            price=1.0,
-                           time=udatetime.now())
+                           time=datetime.now())
 
         resp = e.request(req)
 
@@ -57,7 +57,7 @@ class TestExecution:
                            exchange=ExchangeType.COINBASE,
                            volume=1.0,
                            price=1.0,
-                           time=udatetime.now())
+                           time=datetime.now())
 
         resp = e.request(req)
 
@@ -67,7 +67,7 @@ class TestExecution:
                            exchange=ExchangeType.COINBASE,
                            volume=1.0,
                            price=1.0,
-                           time=udatetime.now())
+                           time=datetime.now())
 
         resp = e.request(req)
 
