@@ -10,9 +10,9 @@ class InstrumentsHandler(PerspectiveHTTPMixin, HTTPHandler):
     Extends:
         HTTPHandler
     '''
-    def initialize(self, trading_engine, **psp_kwargs):
+    def initialize(self, trading_engine, psp_kwargs=None):
         self.te = trading_engine
-        self.psp_kwargs = psp_kwargs
+        self.psp_kwargs = psp_kwargs or {}
 
     @run_on_executor
     def get_data(self, exchange, **psp_kwargs):

@@ -6,6 +6,7 @@ matplotlib>=2.2.2
 numpy>=1.14.5
 pandas>=0.23.3
 perspective-python>=0.1.6
+pyarrow>=0.11.1
 scipy>=1.1.0
 seaborn>=0.8.1
 sphinx>=1.7.5
