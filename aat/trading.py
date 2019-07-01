@@ -17,7 +17,7 @@ from .strategy import TradingStrategy
 from .structs import TradeRequest, TradeResponse, MarketData
 from .ui.server import ServerApplication
 from .utils import ex_type_to_ex
-from .logging import LOG as log, SLIP as sllog, TXNS as tlog
+from .logging import log
 
 
 class TradingEngine(object):
@@ -273,8 +273,8 @@ class TradingEngine(object):
 
                     elif resp.status == TradeResult.FILLED:
                         log.info('Trade filled')
-                        sllog.info("Slippage - %s" % resp)
-                        tlog.info("TXN cost - %s" % resp)
+                        log.info("Slippage - %s" % resp)
+                        log.info("TXN cost - %s" % resp)
                         # let risk update according to execution details
                         self._rk.update(resp)
                 else:
@@ -294,10 +294,10 @@ class TradingEngine(object):
 
                     # adjust response with slippage and transaction cost modeling
                     resp = strat.slippage(resp)
-                    sllog.info("Slippage BT- %s" % resp)
+                    log.info("Slippage BT- %s" % resp)
 
                     resp = strat.transactionCost(resp)
-                    tlog.info("TXN cost BT- %s" % resp)
+                    log.info("TXN cost BT- %s" % resp)
 
                     # register the response
                     strat.registerAction(resp.time, resp.side, resp.price)

@@ -2,7 +2,7 @@ from datetime import datetime
 from .config import RiskConfig
 from .structs import TradeRequest, TradeResponse, Instrument
 from .enums import Side, TradeResult, OrderType, RiskReason, ExchangeType
-from .logging import RISK as rlog
+from .logging import log
 
 
 class Risk(object):
@@ -56,14 +56,14 @@ class Risk(object):
         return resp
 
     def request(self, req: TradeRequest) -> TradeRequest:
-        rlog.info('Requesting %f @ %f', req.volume, req.price)
+        log.info('Requesting %f @ %f', req.volume, req.price)
         total = req.volume * req.price
         total = total * -1 if req.side == Side.SELL else total
         max = self.max_risk/100.0 * self.total_funds
 
         if (total + self.outstanding) <= max:
             # room for full volume
-            rlog.info('Risk check passed for order: %s' % req)
+            log.info('Risk check passed for order: %s' % req)
             return self._constructResp(side=req.side,
                                        exchange=req.exchange,
                                        instrument=req.instrument,
@@ -77,7 +77,7 @@ class Risk(object):
         elif self.outstanding < max:
             # room for some volume
             volume = (max - self.outstanding) / req.price
-            rlog.info('Risk check passed for partial order: %s' % req)
+            log.info('Risk check passed for partial order: %s' % req)
             return self._constructResp(side=req.side,
                                        exchange=req.exchange,
                                        instrument=req.instrument,
@@ -89,7 +89,7 @@ class Risk(object):
                                        reason=RiskReason.PARTIAL)
 
         # no room for volume
-        rlog.info('Risk check failed for order: %s' % req)
+        log.info('Risk check failed for order: %s' % req)
         return self._constructResp(side=req.side,
                                    exchange=req.exchange,
                                    instrument=req.instrument,

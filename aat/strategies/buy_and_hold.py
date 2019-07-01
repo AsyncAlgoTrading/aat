@@ -1,7 +1,7 @@
 from ..strategy import TradingStrategy
 from ..structs import MarketData, TradeRequest, TradeResponse
 from ..enums import Side, OrderType
-from ..logging import STRAT as slog, ERROR as elog
+from ..logging import log
 
 
 class BuyAndHoldStrategy(TradingStrategy):
@@ -11,7 +11,7 @@ class BuyAndHoldStrategy(TradingStrategy):
 
     def onBuy(self, res: TradeResponse) -> None:
         self.bought = res
-        slog.info('d->g:bought %.2f @ %.2f' % (res.volume, res.price))
+        log.info('d->g:bought %.2f @ %.2f' % (res.volume, res.price))
 
     def onSell(self, res: TradeResponse) -> None:
         pass
@@ -25,11 +25,11 @@ class BuyAndHoldStrategy(TradingStrategy):
                                exchange=data.exchange,
                                price=data.price,
                                time=data.time)
-            slog.info("requesting buy : %s", req)
+            log.info("requesting buy : %s", req)
             self.requestBuy(self.onBuy, req)
 
     def onError(self, e) -> None:
-        elog.critical(e)
+        log.critical(e)
 
     def onAnalyze(self, engine) -> None:
         import pandas

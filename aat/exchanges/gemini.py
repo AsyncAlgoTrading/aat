@@ -6,7 +6,7 @@ from .utils.gemini import GeminiMixins
 from ..define import EXCHANGE_MARKET_DATA_ENDPOINT
 from ..enums import TickType
 from ..exchange import Exchange
-from ..logging import LOG as log
+from ..logging import log
 
 
 class GeminiExchange(GeminiMixins, Exchange):

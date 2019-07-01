@@ -1,7 +1,7 @@
 from ..strategy import TradingStrategy
 from ..structs import MarketData, TradeRequest, TradeResponse
 from ..enums import Side, TradeResult, OrderType
-from ..logging import STRAT as slog, ERROR as elog
+from ..logging import log
 
 
 class TestStrategy(TradingStrategy):
@@ -17,32 +17,32 @@ class TestStrategy(TradingStrategy):
 
     def onBuy(self, res: TradeResponse) -> None:
         if res.status not in (TradeResult.FILLED, TradeResult.PARTIAL):
-            slog.info('order failure: %s' % res)
+            log.info('order failure: %s' % res)
             return
 
         if res.status == TradeResult.PARTIAL:
-            slog.info('waiting to buy: %.2f @ %.2f' % (res.request.volume, res.request.price))
+            log.info('waiting to buy: %.2f @ %.2f' % (res.request.volume, res.request.price))
 
         else:
             self.active = True
             self.bought = res.volume*res.price
             self.bought_qty = res.volume
-            slog.info('bought: %.2f @ %.2f for %.2f' % (res.volume, res.price, self.bought))
+            log.info('bought: %.2f @ %.2f for %.2f' % (res.volume, res.price, self.bought))
 
     def onSell(self, res: TradeResponse) -> None:
         if res.status not in (TradeResult.FILLED, TradeResult.PARTIAL):
-            slog.info('order failure: %s' % res)
+            log.info('order failure: %s' % res)
             return
 
         if res.status == TradeResult.PARTIAL:
-            slog.info('waiting to sell: %.2f @ %.2f' % (res.request.volume, res.request.price))
+            log.info('waiting to sell: %.2f @ %.2f' % (res.request.volume, res.request.price))
 
         else:
             self.active = False
             sold = res.volume*res.price
             profit = sold - self.bought
             self.profits += profit
-            slog.info('sold: %.2f @ %.2f for %.2f - %.2f - %.2f' % (res.volume, res.price, sold, profit, self.profits))
+            log.info('sold: %.2f @ %.2f for %.2f - %.2f - %.2f' % (res.volume, res.price, sold, profit, self.profits))
             self.bought = 0.0
             self.bought_qty = 0.0
 
@@ -55,7 +55,7 @@ class TestStrategy(TradingStrategy):
                                exchange=data.exchange,
                                price=data.price,
                                time=data.time)
-            slog.info("requesting buy : %s", req)
+            log.info("requesting buy : %s", req)
             self.requestBuy(self.onBuy, req)
             self.active = True
         else:
@@ -67,14 +67,14 @@ class TestStrategy(TradingStrategy):
                                    order_type=OrderType.MARKET,
                                    price=data.price,
                                    time=data.time)
-                slog.info("requesting sell : %s", req)
+                log.info("requesting sell : %s", req)
                 self.requestSell(self.onSell, req)
                 self.active = False
             else:
-                slog.info('None bought yet!')
+                log.info('None bought yet!')
 
     def onError(self, e) -> None:
-        elog.critical(e, type(e))
+        log.critical(e, type(e))
 
     def onExit(self) -> None:
         self.cancelAll(lambda *args: True)

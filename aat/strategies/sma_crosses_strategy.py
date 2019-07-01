@@ -1,7 +1,7 @@
 from ..strategy import TradingStrategy
 from ..structs import MarketData, TradeRequest, TradeResponse
 from ..enums import Side, TradeResult, OrderType
-from ..logging import STRAT as slog, ERROR as elog
+from ..logging import log
 
 
 class SMACrossesStrategy(TradingStrategy):
@@ -24,22 +24,22 @@ class SMACrossesStrategy(TradingStrategy):
 
     def onBuy(self, res: TradeResponse) -> None:
         if not res.status == TradeResult.FILLED:
-            slog.info('order failure: %s' % res)
+            log.info('order failure: %s' % res)
             return
 
         self.bought = res.volume*res.price
         self.bought_qty = res.volume
-        slog.info('d->g:bought %.2f @ %.2f for %.2f ---- %.2f %.2f' % (res.volume, res.price, self.bought, self.short_av, self.long_av))
+        log.info('d->g:bought %.2f @ %.2f for %.2f ---- %.2f %.2f' % (res.volume, res.price, self.bought, self.short_av, self.long_av))
 
     def onSell(self, res: TradeResponse) -> None:
         if not res.status == TradeResult.FILLED:
-            slog.info('order failure: %s' % res)
+            log.info('order failure: %s' % res)
             return
 
         sold = res.volume*res.price
         profit = sold - self.bought
         self.profits += profit
-        slog.info('g->d:sold %.2f @ %.2f for %.2f - %.2f - %.2f ---- %.2f %.2f' % (res.volume, res.price, sold, profit, self.profits, self.short_av, self.long_av))
+        log.info('g->d:sold %.2f @ %.2f for %.2f - %.2f - %.2f ---- %.2f %.2f' % (res.volume, res.price, sold, profit, self.profits, self.short_av, self.long_av))
         self.bought = 0.0
         self.bought_qty = 0.0
 
@@ -59,7 +59,7 @@ class SMACrossesStrategy(TradingStrategy):
         self.short_av = float(sum(self.shorts)) / max(len(self.shorts), 1)
         self.long_av = float(sum(self.longs)) / max(len(self.longs), 1)
 
-        slog.info('%.2f %.2f', self.short_av, self.long_av)
+        log.info('%.2f %.2f', self.short_av, self.long_av)
         # sell out if losing too much
         stoploss = (self.bought - data.price*self.bought_qty) > 5
         # stoploss = False
@@ -87,7 +87,7 @@ class SMACrossesStrategy(TradingStrategy):
                                exchange=data.exchange,
                                price=data.price,
                                time=data.time)
-            # slog.info("requesting buy : %s", req)
+            # log.info("requesting buy : %s", req)
             self.requestBuy(self.onBuy, req)
 
         elif self.state == 'death' and self.prev_state != 'death' and \
@@ -99,11 +99,11 @@ class SMACrossesStrategy(TradingStrategy):
                                exchange=data.exchange,
                                price=data.price,
                                time=data.time)
-            # slog.info("requesting sell : %s", req)
+            # log.info("requesting sell : %s", req)
             self.requestSell(self.onSell, req)
 
     def onError(self, e) -> None:
-        elog.critical(e)
+        log.critical(e)
 
     def onAnalyze(self, engine) -> None:
         import pandas

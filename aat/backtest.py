@@ -1,7 +1,7 @@
 import pandas as pd
 from .config import BacktestConfig
 from .data_source import StreamingDataSource
-from .logging import LOG as log, DATA as dlog
+from .logging import log
 from .structs import MarketData, Instrument
 from .enums import PairType, TickType, ExchangeType_from_string, Side
 
@@ -39,7 +39,7 @@ class Backtest(StreamingDataSource):
         # TODO allow if market data for bid/ask
         if data.type == TickType.TRADE:
             self.callback(TickType.TRADE, data)
-            dlog.info(data)
+            log.info(data)
         else:
             self.callback(TickType.ERROR, data)
 

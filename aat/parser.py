@@ -7,7 +7,7 @@ from .enums import TradingType, InstrumentType, ExchangeType
 from .exceptions import ConfigException
 from .structs import Instrument
 from .utils import str_to_exchange, set_verbose, str_to_currency_pair_type
-from .logging import LOG as log
+from .logging import log
 
 
 def parse_file_config(filename: str) -> TradingEngineConfig:

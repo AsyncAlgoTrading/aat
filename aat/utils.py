@@ -6,15 +6,7 @@ from datetime import datetime
 from functools import lru_cache
 from .enums import ExchangeType, ExchangeType_from_string, ExchangeTypes, CurrencyType, OrderType, Side, PairType
 from .exceptions import AATException
-from .logging import LOG as log, \
-                     STRAT as slog, \
-                     DATA as dlog, \
-                     RISK as rlog, \
-                     EXEC as exlog, \
-                     SLIP as sllog, \
-                     TXNS as tlog, \
-                     MANUAL as mlog, \
-                     ERROR as elog
+from .logging import log
 
 
 @lru_cache(100)
@@ -99,32 +91,10 @@ def str_to_exchange(exchange: str) -> ExchangeType:
 
 def set_verbose(level):
     # Print/log extra info
-    # olog.propagate = True
-    # slog.propagate = True
-    # elog.propagate = True
-    # dlog.propagate = False  # too much
-    # tlog.propagate = True
-    # mlog.propagate = True
     if level >= 2:
         log.setLevel(logging.DEBUG)
-        slog.setLevel(logging.DEBUG)
-        dlog.setLevel(logging.DEBUG)
-        rlog.setLevel(logging.DEBUG)
-        exlog.setLevel(logging.DEBUG)
-        sllog.setLevel(logging.DEBUG)
-        tlog.setLevel(logging.DEBUG)
-        mlog.setLevel(logging.DEBUG)
-        elog.setLevel(logging.DEBUG)
     elif level == 1:
         log.setLevel(logging.INFO)
-        slog.setLevel(logging.INFO)
-        dlog.setLevel(logging.INFO)
-        rlog.setLevel(logging.INFO)
-        exlog.setLevel(logging.INFO)
-        sllog.setLevel(logging.INFO)
-        tlog.setLevel(logging.INFO)
-        mlog.setLevel(logging.INFO)
-        elog.setLevel(logging.INFO)
     log.info('running in verbose mode!')
 
 

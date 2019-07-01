@@ -3,7 +3,7 @@ from abc import abstractmethod
 from .data_source import StreamingDataSource
 from .define import EXCHANGE_MARKET_DATA_ENDPOINT
 from .structs import MarketData
-from .logging import LOG as log
+from .logging import log
 
 
 class MarketData(StreamingDataSource):

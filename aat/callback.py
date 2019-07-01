@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from .structs import MarketData
-from .logging import LOG as log, DATA as dlog
+from .logging import log
 
 
 class Callback(metaclass=ABCMeta):
@@ -100,25 +100,25 @@ class Print(Callback):
             setattr(self, 'onError', False)
 
     def onTrade(self, data: MarketData) -> None:
-        dlog.info(str(data))
+        log.info(str(data))
 
     def onReceived(self, data: MarketData) -> None:
-        dlog.info(str(data))
+        log.info(str(data))
 
     def onOpen(self, data: MarketData) -> None:
-        dlog.info(str(data))
+        log.info(str(data))
 
     def onFill(self, data: MarketData) -> None:
-        dlog.info(str(data))
+        log.info(str(data))
 
     def onCancel(self, data: MarketData) -> None:
-        dlog.info(str(data))
+        log.info(str(data))
 
     def onChange(self, data: MarketData) -> None:
-        dlog.info(str(data))
+        log.info(str(data))
 
     def onError(self, data: MarketData) -> None:
-        dlog.info(str(data))
+        log.info(str(data))
 
     def onAnalyze(self, data) -> None:
         log.info('Analysis')

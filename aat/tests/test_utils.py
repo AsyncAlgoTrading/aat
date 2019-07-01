@@ -23,26 +23,10 @@ class TestUtils:
     def test_set_verbose(self):
         import logging
         from ..utils import set_verbose
-        from ..logging import LOG as log, \
-            STRAT as slog, \
-            DATA as dlog, \
-            RISK as rlog, \
-            EXEC as exlog, \
-            SLIP as sllog, \
-            TXNS as tlog, \
-            MANUAL as mlog, \
-            ERROR as elog
+        from ..logging import log
         set_verbose(2)
 
         assert(log.level == logging.DEBUG)
-        assert(slog.level == logging.DEBUG)
-        assert(dlog.level == logging.DEBUG)
-        assert(rlog.level == logging.DEBUG)
-        assert(exlog.level == logging.DEBUG)
-        assert(sllog.level == logging.DEBUG)
-        assert(tlog.level == logging.DEBUG)
-        assert(mlog.level == logging.DEBUG)
-        assert(elog.level == logging.DEBUG)
 
     def test_get_keys_from_environment(self):
         from ..utils import get_keys_from_environment

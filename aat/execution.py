@@ -3,7 +3,7 @@ from .config import ExecutionConfig
 from .exchange import Exchange
 from .enums import Side
 from .structs import TradeRequest, TradeResponse
-from .logging import EXEC as exlog
+from .logging import log
 
 
 class Execution(object):
@@ -13,12 +13,12 @@ class Execution(object):
 
     def requestBuy(self, req: TradeRequest) -> TradeResponse:
         resp = self._exs[req.exchange].buy(req)
-        exlog.info('Order info: %s' % resp)
+        log.info('Order info: %s' % resp)
         return resp
 
     def requestSell(self, req: TradeRequest) -> TradeResponse:
         resp = self._exs[req.exchange].sell(req)
-        exlog.info('Order info: %s' % resp)
+        log.info('Order info: %s' % resp)
         return resp
 
     def request(self, req: TradeRequest) -> TradeResponse:

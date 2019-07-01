@@ -2,7 +2,7 @@ import numpy
 from ..strategy import TradingStrategy
 from ..structs import MarketData, TradeRequest, TradeResponse
 from ..enums import Side, OrderType
-from ..logging import STRAT as slog, ERROR as elog
+from ..logging import log
 
 
 class CustomStrategy(TradingStrategy):
@@ -22,14 +22,14 @@ class CustomStrategy(TradingStrategy):
     def onBuy(self, res: TradeResponse) -> None:
         self.bought = res.volume*res.price
         self.bought_qty = res.volume
-        slog.info('d->g:bought %.2f @ %.2f for %.2f', res.volume, res.price, self.bought)
+        log.info('d->g:bought %.2f @ %.2f for %.2f', res.volume, res.price, self.bought)
 
     def onSell(self, res: TradeResponse) -> None:
         sold = res.volume*res.price
         profit = sold - self.bought
         self.profits += profit
 
-        slog.info('g->d:sold %.2f @ %.2f for %.2f - %.2f - %.2f', res.volume, res.price, sold, profit, self.profits)
+        log.info('g->d:sold %.2f @ %.2f for %.2f - %.2f - %.2f', res.volume, res.price, sold, profit, self.profits)
 
         self.bought = 0.0
         self.bought_qty = 0.0
@@ -88,7 +88,7 @@ class CustomStrategy(TradingStrategy):
             self.requestSell(self.onSell, req)
 
     def onError(self, e: MarketData):
-        elog.critical(e)
+        log.critical(e)
 
     def onAnalyze(self, engine) -> None:
         import pandas
