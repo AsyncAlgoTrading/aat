@@ -1,3 +1,4 @@
+from mock import MagicMock
 from datetime import datetime
 
 
@@ -5,29 +6,32 @@ class TestRisk:
     def setup(self):
         from ..config import RiskConfig
         from ..risk import Risk
+        from ..enums import ExchangeType, CurrencyType
+        from ..structs import Account
 
         rc = RiskConfig()
         rc.max_risk = 100.0
         rc.max_drawdown = 100.0
         rc.total_funds = 100.0
 
-        self.risk = Risk(rc)
+        ex = {ExchangeType.COINBASE: MagicMock()}
+        accounts = {CurrencyType.BTC: Account(id='1',
+                                              currency=CurrencyType.BTC,
+                                              balance=1.0,
+                                              exchange=MagicMock(),
+                                              value=-1,
+                                              asOf=datetime.now()),
+                    CurrencyType.USD: Account(id='2',
+                                              currency=CurrencyType.USD,
+                                              balance=1.0,
+                                              exchange=MagicMock(),
+                                              value=-1,
+                                              asOf=datetime.now())}
+        ex[ExchangeType.COINBASE].accounts.return_value = accounts
+
+        self.risk = Risk(rc, ex, accounts)
 
         # setup() before each test method
-
-    def teardown(self):
-        pass
-        # teardown() after each test method
-
-    @classmethod
-    def setup_class(cls):
-        pass
-        # setup_class() before any methods in this class
-
-    @classmethod
-    def teardown_class(cls):
-        pass
-        # teardown_class() after any methods in this class
 
     def test_construct_reponse(self):
         pass

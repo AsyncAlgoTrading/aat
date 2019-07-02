@@ -28,18 +28,32 @@ class TestExecution:
         ex = MagicMock()
 
         ec = ExecutionConfig()
-        e = Execution(ec, ex)
+        e = Execution(ec, ex, MagicMock())
         assert e
 
     def test_request(self):
         from ..execution import Execution
-        from ..enums import Side, PairType, OrderType, ExchangeType
+        from ..enums import Side, PairType, OrderType, ExchangeType, CurrencyType
         from ..config import ExecutionConfig
-        from ..structs import TradeRequest, Instrument
+        from ..structs import TradeRequest, Instrument, Account
 
-        ex = MagicMock()
+        ex = {ExchangeType.COINBASE: MagicMock()}
+        accounts = {CurrencyType.BTC: Account(id='1',
+                                              currency=CurrencyType.BTC,
+                                              balance=1.0,
+                                              exchange=MagicMock(),
+                                              value=-1,
+                                              asOf=datetime.now()),
+                    CurrencyType.USD: Account(id='2',
+                                              currency=CurrencyType.USD,
+                                              balance=1.0,
+                                              exchange=MagicMock(),
+                                              value=-1,
+                                              asOf=datetime.now())}
+        ex[ExchangeType.COINBASE].accounts.return_value = accounts
+        ex[ExchangeType.COINBASE].buy.return_value.exchange = ExchangeType.COINBASE
         ec = ExecutionConfig()
-        e = Execution(ec, ex)
+        e = Execution(ec, ex, accounts)
 
         req = TradeRequest(side=Side.BUY,
                            instrument=Instrument(underlying=PairType.BTCUSD),
@@ -70,6 +84,5 @@ class TestExecution:
                            time=datetime.now())
 
         resp = e.request(req)
-
         e.cancel(resp)
         e.cancelAll()

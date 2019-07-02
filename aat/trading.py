@@ -1,9 +1,6 @@
 import asyncio
 import tornado
-import operator
 import uvloop
-from datetime import datetime
-from functools import reduce
 from .backtest import Backtest
 from .callback import Print
 from .config import TradingEngineConfig
@@ -12,7 +9,7 @@ from .execution import Execution
 from .query import QueryEngine
 from .risk import Risk
 from .strategy import TradingStrategy
-from .structs import TradeRequest, TradeResponse, Account
+from .structs import TradeRequest, TradeResponse
 from .ui.server import ServerApplication
 from .utils import ex_type_to_ex
 from .logging import log
@@ -135,6 +132,10 @@ class TradingEngine(object):
 
     def portfolio_value(self) -> list:
         return self.query._portfolio_value
+
+    def update_account_values(self) -> None:
+        # get account information and balances
+        raise NotImplementedError()
 
     def run(self):
         if self.trading_type in (TradingType.LIVE, TradingType.SIMULATION, TradingType.SANDBOX):

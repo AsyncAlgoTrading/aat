@@ -1,5 +1,6 @@
 import os
 import os.path
+from mock import MagicMock
 
 
 class TestRisk:
@@ -12,7 +13,7 @@ class TestRisk:
         rc.max_drawdown = 100.0
         rc.total_funds = 100.0
 
-        self.risk = Risk(rc)
+        self.risk = Risk(rc, MagicMock(), MagicMock())
 
     def test_config_file(self):
 
