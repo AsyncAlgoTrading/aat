@@ -74,32 +74,3 @@ class TestExchange:
     #                     assert e._missingseqnum
     #                 e.receive()
     #             assert e._missingseqnum == set()
-
-    def test_trade_req_to_params_coinbase(self):
-        from ...config import ExchangeConfig
-        from ...exchanges.coinbase import CoinbaseExchange
-        from ...enums import PairType, OrderType, OrderSubType, ExchangeType
-        from ...structs import Instrument
-
-        ec = ExchangeConfig()
-        ec.exchange_type = ExchangeType.COINBASE
-        e = CoinbaseExchange(ExchangeType.COINBASE, ec)
-
-        class tmp:
-            def __init__(self, a=True):
-                self.price = 'test'
-                self.volume = 'test'
-                self.instrument = Instrument(underlying=PairType.BTCUSD)
-                self.order_type = OrderType.LIMIT
-                self.order_sub_type = OrderSubType.POST_ONLY if a \
-                    else OrderSubType.FILL_OR_KILL
-
-        res1 = e.tradeReqToParams(tmp())
-        res2 = e.tradeReqToParams(tmp(False))
-
-        assert(res1['price'] == 'test')
-        assert(res1['size'] == 'test')
-        assert(res1['product_id'] == 'BTC-USD')
-        assert(res1['type'] == 'limit')
-        assert(res1['post_only'] == '1')
-        assert(res2['time_in_force'] == 'FOK')

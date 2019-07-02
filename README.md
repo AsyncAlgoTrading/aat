@@ -363,23 +363,43 @@ Apart from writing new strategies, this library can be extended by adding new ex
 Here is the coinbase exchange. Most of the code is to manage different websocket subscription options, and to convert between `aat`, `ccxt` and exchange-specific formatting of things like symbols, order types, etc. 
 
 ```python3
-class CoinbaseExchange(CoinbaseMixins, Exchange):
+class CoinbaseExchange(Exchange):
     @lru_cache(None)
     def subscription(self):
-        return [json.dumps({"type": "subscribe", "product_id": self.currencyPairToString(x)}) for x in self.options().currency_pairs]
+        return [json.dumps({"type": "subscribe", "product_id": x.value[0].value + '-' + x.value[1].value}) for x in self.options().currency_pairs]
 
     @lru_cache(None)
     def heartbeat(self):
         return json.dumps({"type": "heartbeat", "on": True})
 
-class CoinbaseMixins(object):
     def tickToData(self, jsn: dict) -> MarketData:
+        '''convert a jsn tick off the websocket to a MarketData struct'''
         if jsn.get('type') == 'received':
             return
-        typ = self.strToTradeType(jsn.get('type'), jsn.get('reason', ''))
+
+        s = jsn.get('type').upper()
+        reason = jsn.get('reason', '').upper()
+        if s == 'MATCH' or (s == 'DONE' and reason == 'FILLED'):
+            typ = TickType.TRADE
+        elif s in ('OPEN', 'DONE', 'CHANGE', 'HEARTBEAT'):
+            if reason == 'CANCELED':
+                typ = TickType.CANCEL
+            elif s == 'DONE':
+                typ = TickType.FILL
+            else:
+                typ = TickType_from_string(s.upper())
+        else:
+            typ = TickType.ERROR
+
+        order_id = jsn.get('order_id', jsn.get('maker_order_id', ''))
         time = parse_date(jsn.get('time')) if jsn.get('time') else datetime.now()
+
+        if typ in (TickType.CANCEL, TickType.OPEN):
+            volume = float(jsn.get('remaining_size', 'nan'))
+        else:
+            volume = float(jsn.get('size', 'nan'))
         price = float(jsn.get('price', 'nan'))
-        volume = float(jsn.get('size', 'nan'))
+
         currency_pair = str_to_currency_pair_type(jsn.get('product_id')) if typ != TickType.ERROR else PairType.NONE
 
         instrument = Instrument(underlying=currency_pair)
@@ -389,7 +409,8 @@ class CoinbaseMixins(object):
         remaining_volume = float(jsn.get('remaining_size', 0.0))
 
         sequence = int(jsn.get('sequence', -1))
-        ret = MarketData(time=time,
+        ret = MarketData(order_id=order_id,
+                         time=time,
                          volume=volume,
                          price=price,
                          type=typ,
@@ -400,38 +421,4 @@ class CoinbaseMixins(object):
                          order_type=order_type,
                          sequence=sequence)
         return ret
-
-    def strToTradeType(self, s: str, reason: str = '') -> TickType:
-        if s == 'match':
-            return TickType.TRADE
-        elif s in ('open', 'done', 'change', 'heartbeat'):
-            if reason == 'canceled':
-                return TickType.CANCEL
-            elif reason == 'filled':
-                return TickType.FILL
-            return TickType(s.upper())
-        else:
-            return TickType.ERROR
-
-    def tradeReqToParams(self, req) -> dict:
-        p = {}
-        p['price'] = str(req.price)
-        p['size'] = str(req.volume)
-        p['product_id'] = self.currencyPairToString(req.instrument.currency_pair)
-        p['type'] = self.orderTypeToString(req.order_type)
-
-        if req.order_sub_type == OrderSubType.FILL_OR_KILL:
-            p['time_in_force'] = 'FOK'
-        elif req.order_sub_type == OrderSubType.POST_ONLY:
-            p['post_only'] = '1'
-        return p
-
-    def currencyPairToString(self, cur: PairType) -> str:
-        return cur.value[0].value + '-' + cur.value[1].value
-
-    def orderTypeToString(self, typ: OrderType) -> str:
-        return typ.value.lower()
-
-    def reasonToTradeType(self, s: str) -> TickType:
-        pass
 ```

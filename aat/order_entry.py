@@ -129,7 +129,7 @@ class OrderEntry(RestAPIDataSource):
 
     def _extract_fields(self, order, exchange):
         side = order.get('side', order.get('info', {}).get('side'))
-        filled = float(order.get('filled') or order.get('info', {}).get('executed_amount') or order.get('info', {}).get('executed_amount'))
+        filled = float(order.get('filled') or order.get('info', {}).get('filled_size') or order.get('info', {}).get('executed_amount'))
         price = order.get('price') or order.get('info', {}).get('price')
         datetime = order.get('datetime') or order.get('info', {}).get('timestamp')
         status = order.get('status')

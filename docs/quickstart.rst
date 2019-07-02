@@ -456,77 +456,64 @@ etc.
 
 .. code:: python3
 
-   class CoinbaseExchange(CoinbaseMixins, Exchange):
-       @lru_cache(None)
-       def subscription(self):
-           return [json.dumps({"type": "subscribe", "product_id": self.currencyPairToString(x)}) for x in self.options().currency_pairs]
+    class CoinbaseExchange(Exchange):
+        @lru_cache(None)
+        def subscription(self):
+            return [json.dumps({"type": "subscribe", "product_id": x.value[0].value + '-' + x.value[1].value}) for x in self.options().currency_pairs]
 
-       @lru_cache(None)
-       def heartbeat(self):
-           return json.dumps({"type": "heartbeat", "on": True})
+        @lru_cache(None)
+        def heartbeat(self):
+            return json.dumps({"type": "heartbeat", "on": True})
 
-   class CoinbaseMixins(object):
-       def tickToData(self, jsn: dict) -> MarketData:
-           if jsn.get('type') == 'received':
-               return
-           typ = self.strToTradeType(jsn.get('type'), jsn.get('reason', ''))
-           time = parse_date(jsn.get('time')) if jsn.get('time') else datetime.now()
-           price = float(jsn.get('price', 'nan'))
-           volume = float(jsn.get('size', 'nan'))
-           currency_pair = str_to_currency_pair_type(jsn.get('product_id')) if typ != TickType.ERROR else PairType.NONE
+        def tickToData(self, jsn: dict) -> MarketData:
+            '''convert a jsn tick off the websocket to a MarketData struct'''
+            if jsn.get('type') == 'received':
+                return
 
-           instrument = Instrument(underlying=currency_pair)
+            s = jsn.get('type').upper()
+            reason = jsn.get('reason', '').upper()
+            if s == 'MATCH' or (s == 'DONE' and reason == 'FILLED'):
+                typ = TickType.TRADE
+            elif s in ('OPEN', 'DONE', 'CHANGE', 'HEARTBEAT'):
+                if reason == 'CANCELED':
+                    typ = TickType.CANCEL
+                elif s == 'DONE':
+                    typ = TickType.FILL
+                else:
+                    typ = TickType_from_string(s.upper())
+            else:
+                typ = TickType.ERROR
 
-           order_type = str_to_order_type(jsn.get('order_type', ''))
-           side = str_to_side(jsn.get('side', ''))
-           remaining_volume = float(jsn.get('remaining_size', 0.0))
+            order_id = jsn.get('order_id', jsn.get('maker_order_id', ''))
+            time = parse_date(jsn.get('time')) if jsn.get('time') else datetime.now()
 
-           sequence = int(jsn.get('sequence', -1))
-           ret = MarketData(time=time,
-                            volume=volume,
-                            price=price,
-                            type=typ,
-                            instrument=instrument,
-                            remaining=remaining_volume,
-                            side=side,
-                            exchange=self.exchange(),
-                            order_type=order_type,
-                            sequence=sequence)
-           return ret
+            if typ in (TickType.CANCEL, TickType.OPEN):
+                volume = float(jsn.get('remaining_size', 'nan'))
+            else:
+                volume = float(jsn.get('size', 'nan'))
+            price = float(jsn.get('price', 'nan'))
 
-       def strToTradeType(self, s: str, reason: str = '') -> TickType:
-           if s == 'match':
-               return TickType.TRADE
-           elif s in ('open', 'done', 'change', 'heartbeat'):
-               if reason == 'canceled':
-                   return TickType.CANCEL
-               elif reason == 'filled':
-                   return TickType.FILL
-               return TickType(s.upper())
-           else:
-               return TickType.ERROR
+            currency_pair = str_to_currency_pair_type(jsn.get('product_id')) if typ != TickType.ERROR else PairType.NONE
 
-       def tradeReqToParams(self, req) -> dict:
-           p = {}
-           p['price'] = str(req.price)
-           p['size'] = str(req.volume)
-           p['product_id'] = self.currencyPairToString(req.instrument.currency_pair)
-           p['type'] = self.orderTypeToString(req.order_type)
+            instrument = Instrument(underlying=currency_pair)
 
-           if req.order_sub_type == OrderSubType.FILL_OR_KILL:
-               p['time_in_force'] = 'FOK'
-           elif req.order_sub_type == OrderSubType.POST_ONLY:
-               p['post_only'] = '1'
-           return p
+            order_type = str_to_order_type(jsn.get('order_type', ''))
+            side = str_to_side(jsn.get('side', ''))
+            remaining_volume = float(jsn.get('remaining_size', 0.0))
 
-       def currencyPairToString(self, cur: PairType) -> str:
-           return cur.value[0].value + '-' + cur.value[1].value
-
-       def orderTypeToString(self, typ: OrderType) -> str:
-           return typ.value.lower()
-
-       def reasonToTradeType(self, s: str) -> TickType:
-           pass
+            sequence = int(jsn.get('sequence', -1))
+            ret = MarketData(order_id=order_id,
+                             time=time,
+                             volume=volume,
+                             price=price,
+                             type=typ,
+                             instrument=instrument,
+                             remaining=remaining_volume,
+                             side=side,
+                             exchange=self.exchange(),
+                             order_type=order_type,
+                             sequence=sequence)
+            return ret
 
 
 .. |image6| image:: docs/img/bt.png

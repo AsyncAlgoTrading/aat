@@ -30,6 +30,3 @@ class KrakenExchange(Exchange):
 
     def tickToData(self, jsn: dict) -> MarketData:
         raise NotImplementedError()
-
-    def tradeReqToParams(self, req) -> dict:
-        raise NotImplementedError()

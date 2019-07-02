@@ -1,7 +1,7 @@
 import json
 from functools import lru_cache
 from datetime import datetime
-from ..enums import OrderSubType, PairType, TickType, TickType_from_string
+from ..enums import PairType, TickType, TickType_from_string
 from ..exchange import Exchange
 from ..structs import MarketData, Instrument
 from ..utils import parse_date, str_to_currency_pair_type, str_to_side, str_to_order_type
@@ -10,31 +10,40 @@ from ..utils import parse_date, str_to_currency_pair_type, str_to_side, str_to_o
 class CoinbaseExchange(Exchange):
     @lru_cache(None)
     def subscription(self):
-        return [json.dumps({"type": "subscribe", "product_id": self.currencyPairToString(x)}) for x in self.options().currency_pairs]
+        return [json.dumps({"type": "subscribe", "product_id": x.value[0].value + '-' + x.value[1].value}) for x in self.options().currency_pairs]
 
     @lru_cache(None)
     def heartbeat(self):
         return json.dumps({"type": "heartbeat", "on": True})
 
     def tickToData(self, jsn: dict) -> MarketData:
+        '''convert a jsn tick off the websocket to a MarketData struct'''
         if jsn.get('type') == 'received':
             return
 
-        s = jsn.get('type')
-        reason = jsn.get('reason')
-        if s == 'match' or (s == 'done' and reason == 'filled'):
+        s = jsn.get('type').upper()
+        reason = jsn.get('reason', '').upper()
+        if s == 'MATCH' or (s == 'DONE' and reason == 'FILLED'):
             typ = TickType.TRADE
-        elif s in ('open', 'done', 'change', 'heartbeat'):
-            if reason == 'canceled':
+        elif s in ('OPEN', 'DONE', 'CHANGE', 'HEARTBEAT'):
+            if reason == 'CANCELED':
                 typ = TickType.CANCEL
-            typ = TickType_from_string(s.upper())
+            elif s == 'DONE':
+                typ = TickType.FILL
+            else:
+                typ = TickType_from_string(s.upper())
         else:
             typ = TickType.ERROR
 
         order_id = jsn.get('order_id', jsn.get('maker_order_id', ''))
         time = parse_date(jsn.get('time')) if jsn.get('time') else datetime.now()
+
+        if typ in (TickType.CANCEL, TickType.OPEN):
+            volume = float(jsn.get('remaining_size', 'nan'))
+        else:
+            volume = float(jsn.get('size', 'nan'))
         price = float(jsn.get('price', 'nan'))
-        volume = float(jsn.get('size', 'nan'))
+
         currency_pair = str_to_currency_pair_type(jsn.get('product_id')) if typ != TickType.ERROR else PairType.NONE
 
         instrument = Instrument(underlying=currency_pair)
@@ -56,16 +65,3 @@ class CoinbaseExchange(Exchange):
                          order_type=order_type,
                          sequence=sequence)
         return ret
-
-    def tradeReqToParams(self, req) -> dict:
-        p = {}
-        p['price'] = str(req.price)
-        p['size'] = str(req.volume)
-        p['product_id'] = req.instrument.currency_pair.value[0].value + '-' + req.instrument.currency_pair.value[1].value
-        p['type'] = req.order_type.value.lower()
-
-        if req.order_sub_type == OrderSubType.FILL_OR_KILL:
-            p['time_in_force'] = 'FOK'
-        elif req.order_sub_type == OrderSubType.POST_ONLY:
-            p['post_only'] = '1'
-        return p

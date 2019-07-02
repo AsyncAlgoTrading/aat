@@ -5,18 +5,20 @@ import hashlib
 import hmac
 import time
 from aiostream import stream
+from datetime import datetime
 from functools import lru_cache
 from ..define import EXCHANGE_MARKET_DATA_ENDPOINT
-from ..enums import TickType, OrderType, OrderSubType
-from ..structs import MarketData
+from ..enums import TickType, TickType_from_string, OrderType, OrderSubType
 from ..exchange import Exchange
 from ..logging import log
+from ..structs import MarketData, Instrument
+from ..utils import str_to_side, str_to_currency_pair_type
 
 
 class GeminiExchange(Exchange):
     @lru_cache(None)
     def subscription(self):
-        return [json.dumps({"type": "subscribe", "product_id": self.currencyPairToString(x)}) for x in self.options().currency_pairs]
+        return [json.dumps({"type": "subscribe", "product_id": x.value[0].value + x.value[1].value}) for x in self.options().currency_pairs]
 
     @lru_cache(None)
     def heartbeat(self):
@@ -88,14 +90,19 @@ class GeminiExchange(Exchange):
 
             for item in events:
                 if item.get('type', 'subscription_ack') in ('subscription_ack', 'heartbeat'):
+                    # can skip these
                     continue
                 if item.get('type') == 'accepted':
-                    # can ignore these as well
+                    # can ignore these as well, will have a fill and/or booked
+                    # https://docs.gemini.com/websocket-api/#workflow
+                    continue
+                if item.get('type') == 'closed':
+                    # can ignore these as well, will have a fill or cancelled
+                    # https://docs.gemini.com/websocket-api/#workflow
                     continue
 
                 if pair is None:
                     # private events
-                    import ipdb; ipdb.set_trace()
                     pair = item['symbol']
 
                 item['symbol'] = pair
@@ -113,10 +120,10 @@ class GeminiExchange(Exchange):
         price = float(jsn.get('price', 'nan'))
         volume = float(jsn.get('amount', 0.0))
 
-        s = jsn.get('type')
-        if s in ('BLOCK_TRADE', ):
+        s = jsn.get('type').upper()
+        if s in ('BLOCK_TRADE', 'FILL'): # Market data can't trigger fill event
             typ = TickType.TRADE
-        elif s in ('AUCTION_INDICATIVE', 'AUCTION_OPEN'):
+        elif s in ('AUCTION_INDICATIVE', 'AUCTION_OPEN', 'BOOKED', 'INITIAL'):
             typ = TickType.OPEN
         else:
             typ = TickType_from_string(s)
@@ -128,7 +135,7 @@ class GeminiExchange(Exchange):
             # typ = self.reasonToTradeType(reason)
 
         side = str_to_side(jsn.get('side', ''))
-        remaining_volume = float(jsn.get('remaining', 'nan'))
+        remaining_volume = float(jsn.get('remaining', jsn.get('remaining_amount', 'nan')))
         sequence = -1
 
         if 'symbol' not in jsn:
@@ -148,22 +155,3 @@ class GeminiExchange(Exchange):
                          exchange=self.exchange(),
                          sequence=sequence)
         return ret
-
-    def tradeReqToParams(self, req) -> dict:
-        p = {}
-        p['price'] = str(req.price)
-        p['size'] = str(req.volume)
-        p['product_id'] = req.instrument.currency_pair.value[0].value + req.instrument.currency_pair.value[1].value
-        p['type'] = req.order_type.value.lower()
-
-        if p['type'] == OrderType.MARKET:
-            if req.side == Side.BUY:
-                p['price'] = 100000000.0
-            else:
-                p['price'] = .00000001
-
-        if req.order_sub_type == OrderSubType.FILL_OR_KILL:
-            p['time_in_force'] = 'FOK'
-        elif req.order_sub_type == OrderSubType.POST_ONLY:
-            p['post_only'] = '1'
-        return p

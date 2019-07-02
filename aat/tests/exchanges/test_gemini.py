@@ -54,32 +54,3 @@ class TestExchange:
                                                    "price": "1059.54"
                                                    }]}
                     e.receive()
-
-    def test_trade_req_to_params_gemini(self):
-        from ...exchanges.gemini import GeminiExchange
-        from ...enums import PairType, OrderType, OrderSubType
-        from ...structs import Instrument
-        from ...config import ExchangeConfig
-        from ...enums import ExchangeType
-        ec = ExchangeConfig()
-        ec.exchange_type = ExchangeType.GEMINI
-        e = GeminiExchange(ExchangeType.GEMINI, ec)
-
-        class tmp:
-            def __init__(self, a=True):
-                self.price = 'test'
-                self.volume = 'test'
-                self.instrument = Instrument(underlying=PairType.BTCUSD)
-                self.order_type = OrderType.LIMIT
-                self.order_sub_type = OrderSubType.POST_ONLY if a \
-                    else OrderSubType.FILL_OR_KILL
-
-        res1 = e.tradeReqToParams(tmp())
-        res2 = e.tradeReqToParams(tmp(False))
-
-        assert(res1['price'] == 'test')
-        assert(res1['size'] == 'test')
-        assert(res1['product_id'] == 'BTCUSD')
-        assert(res1['type'] == 'limit')
-        assert(res1['post_only'] == '1')
-        assert(res2['time_in_force'] == 'FOK')
