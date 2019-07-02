@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import lru_cache
 from typing import List
 from .data_source import RestAPIDataSource
-from .enums import PairType, TradingType, CurrencyType, ExchangeType_to_string
+from .enums import PairType, TradingType, CurrencyType, ExchangeType, ExchangeType_to_string
 from .exceptions import AATException
 from .structs import TradeRequest, TradeResponse, Account, Instrument
 from .utils import (get_keys_from_environment, str_to_currency_type, str_to_side,
@@ -127,40 +127,67 @@ class OrderEntry(RestAPIDataSource):
         '''get order book'''
         return self.oe_client().getProductOrderBook(level=level)
 
+    def _extract_fields(self, order, exchange):
+        side = order.get('side', order.get('info', {}).get('side'))
+        filled = float(order.get('filled') or order.get('info', {}).get('executed_amount') or order.get('info', {}).get('executed_amount'))
+        price = order.get('price') or order.get('info', {}).get('price')
+        datetime = order.get('datetime') or order.get('info', {}).get('timestamp')
+        status = order.get('status')
+        remaining = float(order.get('remaining') or order.get('info', {}).get('remaining') or order.get('info', {}).get('remaining_amount'))
+        cost = order.get('fee', {}).get('cost', 0.0)
+
+        # FIXME handle rejected orders
+        if status is None and exchange == ExchangeType.GEMINI:
+            # gemini
+            original = float(order.get('info', {}).get('original_amount', 0.0))
+            is_cancelled = order.get('info', {}).get('is_cancelled', False)
+            if is_cancelled:
+                status = 'REJECTED'
+
+            if filled == original or remaining <= 0:
+                status = 'FILLED'
+            elif remaining < original and remaining > 0:
+                status = 'PARTIAL'
+            elif remaining == original:
+                status = 'PENDING'
+        return side, filled, price, datetime, status, cost, remaining
+
     def buy(self, req: TradeRequest) -> TradeResponse:
         '''execute a buy order'''
         params = tradereq_to_ccxt_order(req)
         order = self.oe_client().create_order(**params)
+        side, filled, price, datetime, status, cost, remaining = self._extract_fields(order, req.exchange)
         resp = TradeResponse(request=req,
-                             side=str_to_side(order['side']),
+                             side=str_to_side(side),
                              exchange=req.exchange,
-                             volume=float(order['filled']),
-                             price=float(order['price']),
+                             volume=float(filled),
+                             price=float(price),
                              instrument=req.instrument,
-                             time=parse_date(order['datetime']),
-                             status=str_to_trade_result(order['status']),
+                             time=parse_date(datetime),
+                             status=str_to_trade_result(status),
                              order_id=order['id'],
-                             slippage=float(order['price']) - req.price,
-                             transaction_cost=order['fee']['cost'],
-                             remaining=order['remaining'])
+                             slippage=float(price) - req.price,
+                             transaction_cost=cost,
+                             remaining=float(remaining))
         return resp
 
     def sell(self, req: TradeRequest) -> TradeResponse:
         '''execute a sell order'''
         params = tradereq_to_ccxt_order(req)
         order = self.oe_client().create_order(**params)
+        side, filled, price, datetime, status, cost, remaining = self._extract_fields(order, req.exchange)
         resp = TradeResponse(request=req,
-                             side=str_to_side(order['side']),
+                             side=str_to_side(side),
                              exchange=req.exchange,
-                             volume=float(order['filled']),
-                             price=float(order['price']),
+                             volume=float(filled),
+                             price=float(price),
                              instrument=req.instrument,
-                             time=parse_date(order['datetime']),
-                             status=str_to_trade_result(order['status']),
+                             time=parse_date(datetime),
+                             status=str_to_trade_result(status),
                              order_id=order['id'],
-                             slippage=float(order['price']) - req.price,
-                             transaction_cost=order['fee']['cost'],
-                             remaining=order['remaining'])
+                             slippage=float(price) - req.price,
+                             transaction_cost=cost,
+                             remaining=float(remaining))
         return resp
 
     def cancel(self, resp: TradeResponse):

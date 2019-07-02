@@ -1,13 +1,12 @@
 import json
 from functools import lru_cache
-from .utils.kraken import KrakenMixins
 from ..config import ExchangeConfig
-from ..enums import ExchangeType, OrderType, PairType, TickType
+from ..enums import ExchangeType
 from ..exchange import Exchange
 from ..structs import MarketData
 
 
-class KrakenExchange(KrakenMixins, Exchange):
+class KrakenExchange(Exchange):
     def __init__(self, exchange_type: ExchangeType, options: ExchangeConfig) -> None:
         super(KrakenExchange, self).__init__(exchange_type, options)
         self._last = None
@@ -32,14 +31,5 @@ class KrakenExchange(KrakenMixins, Exchange):
     def tickToData(self, jsn: dict) -> MarketData:
         raise NotImplementedError()
 
-    def strToTradeType(self, s: str) -> TickType:
-        raise NotImplementedError()
-
     def tradeReqToParams(self, req) -> dict:
-        raise NotImplementedError()
-
-    def currencyPairToString(self, cur: PairType) -> str:
-        return cur.value[0].value + '/' + cur.value[1].value
-
-    def orderTypeToString(self, typ: OrderType) -> str:
         raise NotImplementedError()

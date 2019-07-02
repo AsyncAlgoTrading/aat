@@ -64,8 +64,8 @@ class BuyAndHoldStrategy(TradingStrategy):
 
 
 class BuyAndHoldStrategy2(TradingStrategy):
-    def __init__(self) -> None:
-        super(BuyAndHoldStrategy2, self).__init__()
+    def __init__(self, *args, **kwargs) -> None:
+        super(BuyAndHoldStrategy2, self).__init__(*args, **kwargs)
         self.sold = None
 
     def onFill(self, res: TradeResponse) -> None:

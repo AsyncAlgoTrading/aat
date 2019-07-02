@@ -50,6 +50,14 @@ class TestEnums:
         assert t3 == ExchangeType_from_string('KRAKEN')
         assert t4 == ExchangeType_from_string('POLONIEX')
 
+    def test_tick_type(self):
+        from ..enums import TickType, TickType_from_string
+        try:
+            t0 = TickType_from_string('test')
+            assert False
+        except ValueError:
+            pass
+
     def test_currency_type(self):
         from ..enums import CurrencyType
         t0 = CurrencyType.USD

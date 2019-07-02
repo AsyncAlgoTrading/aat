@@ -73,17 +73,22 @@ class TradingEngine(object):
                                instruments={name:
                                             list(set(options.exchange_options.instruments).intersection(
                                                 ex.markets())) for name, ex in self._exchanges.items()},
+                               risk=self._rk,
+                               execution=self._ec,
                                total_funds=options.risk_options.total_funds)
 
         # register query hooks
         if self._live or self._simulation or self._sandbox:
             for exc in self._exchanges.values():
+                # Track my trades and cancels
                 exc.onTrade(self._qy.onTrade)
+                exc.onCancel(self._qy.onCancel)
 
                 if options.print:
                     exc.registerCallback(Print(onTrade=True, onReceived=True, onOpen=True, onFill=True, onCancel=True, onChange=True, onError=False))
         elif self._backtest:
             self._bt.onTrade(self._qy.onTrade)
+            self._bt.onCancel(self._qy.onCancel)
             self._bt.registerCallback(Print())
 
         # sanity check
@@ -234,8 +239,8 @@ class TradingEngine(object):
 
                     elif resp.status == TradeResult.FILLED:
                         log.info('Trade filled')
-                        log.info("Slippage - %s" % resp)
-                        log.info("TXN cost - %s" % resp)
+                        log.info("Slippage - %s" % resp.slippage)
+                        log.info("TXN cost - %s" % resp.transaction_cost)
                         # let risk update according to execution details
                         self._rk.update(resp)
                 else:
@@ -252,10 +257,10 @@ class TradingEngine(object):
 
                     # adjust response with slippage and transaction cost modeling
                     resp = strat.slippage(resp)
-                    log.info("Slippage BT- %s" % resp)
+                    log.info("Slippage BT- %s" % resp.slippage)
 
                     resp = strat.transactionCost(resp)
-                    log.info("TXN cost BT- %s" % resp)
+                    log.info("TXN cost BT- %s" % resp.transaction_cost)
             else:
                 log.info('Risk check failed')
                 resp = TradeResponse(request=resp,

@@ -111,3 +111,7 @@ class Risk(object):
     def update(self, resp: TradeResponse):
         '''update risk after execution'''
         log.critical('NOT IMPLEMENTED')
+
+    def cancel(self, resp: TradeResponse):
+        '''update risk after cancelling order'''
+        log.critical('NOT IMPLEMENTED')

@@ -141,6 +141,12 @@ class QueryEngine(object):
         if data.order_id in self._pending.keys() and data.remaining <= 0:
             del self._pending[data.order_id]
 
+    def onCancel(self, data: MarketData) -> None:
+        if data.order_id in self._pending.keys():
+            resp = self._pending[data.order_id]
+            del self._pending[data.order_id]
+            self._risk.cancel(resp)
+
     def strategies(self):
         return self._strats
 

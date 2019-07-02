@@ -6,14 +6,14 @@ import hmac
 import time
 from aiostream import stream
 from functools import lru_cache
-from .utils.gemini import GeminiMixins
 from ..define import EXCHANGE_MARKET_DATA_ENDPOINT
-from ..enums import TickType
+from ..enums import TickType, OrderType, OrderSubType
+from ..structs import MarketData
 from ..exchange import Exchange
 from ..logging import log
 
 
-class GeminiExchange(GeminiMixins, Exchange):
+class GeminiExchange(Exchange):
     @lru_cache(None)
     def subscription(self):
         return [json.dumps({"type": "subscribe", "product_id": self.currencyPairToString(x)}) for x in self.options().currency_pairs]
@@ -42,7 +42,7 @@ class GeminiExchange(GeminiMixins, Exchange):
         # startup and redundancy
         log.info('Starting....')
         self.ws = [await session.ws_connect(EXCHANGE_MARKET_DATA_ENDPOINT(self.exchange(), options.trading_type) % x) for x in self.subscription()]
-        private_events = await session.ws_connect("wss://api.gemini.com/v1/order/events?eventTypeFilter=fill&eventTypeFilter=closed&apiSessionFilter=UI")
+        private_events = await session.ws_connect("wss://api.gemini.com/v1/order/events")
         self.ws.append(private_events)
 
         # set subscription for each ws
@@ -70,24 +70,100 @@ class GeminiExchange(GeminiMixins, Exchange):
 
         # add one for private stream
         async for val in stream.merge(*[get_data_sub_pair(self.ws[i], sub) for i, sub in enumerate(self.subscription() + [None])]):
+            jsn = json.loads(val[0].data)
+
+            if isinstance(jsn, dict) and 'events' in jsn:
+                events = jsn.get('events', [])
+            elif not isinstance(jsn, list):
+                events = [jsn]
+            else:
+                events = jsn
+
             if val[1]:
                 # data stream
                 pair = json.loads(val[1]).get('product_id')
-                jsn = json.loads(val[0].data)
-                if jsn.get('type') == 'heartbeat':
-                    pass
-                else:
-                    for item in jsn.get('events'):
-                        item['symbol'] = pair
-                        res = self.tickToData(item)
-
-                        if not self._running:
-                            pass
-
-                        if res.type != TickType.HEARTBEAT:
-                            self.callback(res.type, res)
             else:
-                event = json.loads(val[0].data)
-                print(event)
-                if event.get('type', 'subscription_ack') in ('subscription_ack', 'heartbeat'):
+                # private events
+                pair = None
+
+            for item in events:
+                if item.get('type', 'subscription_ack') in ('subscription_ack', 'heartbeat'):
                     continue
+                if item.get('type') == 'accepted':
+                    # can ignore these as well
+                    continue
+
+                if pair is None:
+                    # private events
+                    import ipdb; ipdb.set_trace()
+                    pair = item['symbol']
+
+                item['symbol'] = pair
+                res = self.tickToData(item)
+
+                if not self._running:
+                    pass
+
+                if res.type != TickType.HEARTBEAT:
+                    self.callback(res.type, res)
+
+    def tickToData(self, jsn: dict) -> MarketData:
+        order_id = jsn.get('order_id', '') or str(jsn.get('tid', ''))
+        time = datetime.now()
+        price = float(jsn.get('price', 'nan'))
+        volume = float(jsn.get('amount', 0.0))
+
+        s = jsn.get('type')
+        if s in ('BLOCK_TRADE', ):
+            typ = TickType.TRADE
+        elif s in ('AUCTION_INDICATIVE', 'AUCTION_OPEN'):
+            typ = TickType.OPEN
+        else:
+            typ = TickType_from_string(s)
+        delta = float(jsn.get('delta', 0.0))
+
+        if typ == TickType.CHANGE and not volume:
+            delta = float(jsn.get('delta', 'nan'))
+            volume = delta
+            # typ = self.reasonToTradeType(reason)
+
+        side = str_to_side(jsn.get('side', ''))
+        remaining_volume = float(jsn.get('remaining', 'nan'))
+        sequence = -1
+
+        if 'symbol' not in jsn:
+            return
+
+        currency_pair = str_to_currency_pair_type(jsn.get('symbol'))
+        instrument = Instrument(underlying=currency_pair)
+
+        ret = MarketData(order_id=order_id,
+                         time=time,
+                         volume=volume,
+                         price=price,
+                         type=typ,
+                         instrument=instrument,
+                         remaining=remaining_volume,
+                         side=side,
+                         exchange=self.exchange(),
+                         sequence=sequence)
+        return ret
+
+    def tradeReqToParams(self, req) -> dict:
+        p = {}
+        p['price'] = str(req.price)
+        p['size'] = str(req.volume)
+        p['product_id'] = req.instrument.currency_pair.value[0].value + req.instrument.currency_pair.value[1].value
+        p['type'] = req.order_type.value.lower()
+
+        if p['type'] == OrderType.MARKET:
+            if req.side == Side.BUY:
+                p['price'] = 100000000.0
+            else:
+                p['price'] = .00000001
+
+        if req.order_sub_type == OrderSubType.FILL_OR_KILL:
+            p['time_in_force'] = 'FOK'
+        elif req.order_sub_type == OrderSubType.POST_ONLY:
+            p['post_only'] = '1'
+        return p

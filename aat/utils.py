@@ -11,6 +11,8 @@ from .logging import log
 
 @lru_cache(100)
 def parse_date(indate: str) -> datetime:
+    if isinstance(indate, datetime):
+        return indate
     try:
         date = datetime.utcfromtimestamp(float(indate))
         date = pytz.utc.localize(date).astimezone(pytz.timezone('EST')).replace(tzinfo=None)
