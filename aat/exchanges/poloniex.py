@@ -24,6 +24,7 @@ class PoloniexExchange(Exchange):
     def tickToData(self, jsn: dict) -> MarketData:
         raise NotImplementedError()
 
+
 POLONIEX_CURRENCY_ID = {
     '1CR': '1',
     'ABY': '2',

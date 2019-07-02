@@ -8,7 +8,7 @@ from aiostream import stream
 from datetime import datetime
 from functools import lru_cache
 from ..define import EXCHANGE_MARKET_DATA_ENDPOINT
-from ..enums import TickType, TickType_from_string, OrderType, OrderSubType
+from ..enums import TickType, TickType_from_string, PairType
 from ..exchange import Exchange
 from ..logging import log
 from ..structs import MarketData, Instrument
@@ -121,7 +121,7 @@ class GeminiExchange(Exchange):
         volume = float(jsn.get('amount', 0.0))
 
         s = jsn.get('type').upper()
-        if s in ('BLOCK_TRADE', 'FILL'): # Market data can't trigger fill event
+        if s in ('BLOCK_TRADE', 'FILL'):  # Market data can't trigger fill event
             typ = TickType.TRADE
         elif s in ('AUCTION_INDICATIVE', 'AUCTION_OPEN', 'BOOKED', 'INITIAL'):
             typ = TickType.OPEN

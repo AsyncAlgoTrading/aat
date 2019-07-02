@@ -4,7 +4,7 @@ import os
 import pytz
 from datetime import datetime
 from functools import lru_cache
-from .enums import ExchangeType, ExchangeType_from_string, ExchangeTypes, CurrencyType, OrderType, Side, PairType, TradeResult
+from .enums import ExchangeType, ExchangeType_from_string, ExchangeTypes, CurrencyType, OrderType, Side, PairType
 from .exceptions import AATException
 from .logging import log
 
@@ -12,7 +12,7 @@ from .logging import log
 @lru_cache(100)
 def parse_date(indate: str) -> datetime:
     '''parse date
-    
+
     Args:
         indate (string, int, or datetime): input to convert to datetime
     Returns:
