@@ -4,8 +4,8 @@ from ..logging import log
 
 
 class DataCaptureStrategy(TradingStrategy):
-    def __init__(self, filename) -> None:
-        super(DataCaptureStrategy, self).__init__()
+    def __init__(self, filename, *args, **kwargs) -> None:
+        super(DataCaptureStrategy, self).__init__(*args, **kwargs)
         self.filename = filename
 
     def onTrade(self, data: MarketData) -> bool:

@@ -169,7 +169,8 @@ class QueryEngine(object):
             # start from first tick of data
             # TODO risk bounds?
             self._portfolio_value = [[data.time, volume*data.price, volume*(data.price-purchase_price)]]
-        self._portfolio_value.append([data.time, volume*data.price, volume*(data.price-purchase_price)])
+        else:
+            self._portfolio_value.append([data.time, volume*data.price, volume*(data.price-purchase_price)])
 
     def update_holdings(self, resp: TradeResponse) -> None:
         # TODO move to risk

@@ -92,6 +92,8 @@ class TradingEngine(object):
         # register strategies from config
         for x in options.strategy_options:
             log.critical('Registering strategy: %s', str(x.clazz))
+            x.kwargs['query'] = self.query()
+            x.kwargs['exchanges'] = self.exchanges()
             self.registerStrategy(x.clazz(*x.args, **x.kwargs))
 
         # actively trading or halted?
@@ -171,7 +173,7 @@ class TradingEngine(object):
 
         elif self._backtest:
             # trigger starts
-            for strat in self._strats:
+            for strat in self.query().strategies():
                 strat.onStart()
 
             # let backtester run
@@ -268,15 +270,10 @@ class TradingEngine(object):
         self.query().update_holdings(resp)
         return resp
 
-    def requestBuy(self, req: TradeRequest, strat=None):
-        self._request(side=Side.BUY,
-                      req=req,
-                      strat=strat)
-
-    def requestSell(self, req: TradeRequest, strat=None):
-        self._request(side=Side.SELL,
-                      req=req,
-                      strat=strat)
+    def request(self, req: TradeRequest, strat=None):
+        return self._request(side=req.side,
+                             req=req,
+                             strat=strat)
 
     def cancel(self, resp: TradeResponse, strat=None):
         resp = self._ec.cancel(resp)

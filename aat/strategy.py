@@ -5,29 +5,22 @@ from .structs import TradeRequest, TradeResponse
 
 class Strategy(metaclass=ABCMeta):
     '''Strategy interface'''
-    def __init__(self, *args, **kwargs) -> None:
-        pass
+    def __init__(self, query=None, exchanges=None, *args, **kwargs) -> None:
+        self.query = query
+        self.exchanges = exchanges
 
     def setEngine(self, engine) -> None:
         self._te = engine
 
     @abstractmethod
-    def requestBuy(self, req: TradeRequest):
-        '''requestBuy'''
-
-    @abstractmethod
-    def requestSell(self, req: TradeRequest):
-        '''requestSell'''
+    def request(self, req: TradeRequest):
+        '''request'''
 
 
 class TradingStrategy(Strategy, Callback):
-    def requestBuy(self, req: TradeRequest) -> None:
-        '''attempt to buy'''
-        return self._te.requestBuy(req, self)
-
-    def requestSell(self, req: TradeRequest) -> None:
-        '''attempt to sell'''
-        return self._te.requestSell(req, self)
+    def request(self, req: TradeRequest) -> None:
+        '''attempt to buy/sell'''
+        return self._te.request(req, self)
 
     def cancel(self, resp: TradeResponse) -> None:
         '''cancel order'''
