@@ -3,7 +3,6 @@ import threading
 import tornado
 import operator
 from functools import reduce
-from typing import Callable
 from .backtest import Backtest
 from .callback import Print
 from .config import TradingEngineConfig

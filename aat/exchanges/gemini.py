@@ -90,4 +90,3 @@ class GeminiExchange(GeminiMixins, Exchange):
                 event = json.loads(val[0].data)
                 if event.get('type', 'subscription_ack') in ('subscription_ack', 'heartbeat'):
                     continue
-                import ipdb; ipdb.set_trace()

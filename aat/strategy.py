@@ -1,7 +1,6 @@
-from typing import Callable
 from abc import ABCMeta, abstractmethod
 from .callback import Callback
-from .structs import MarketData, TradeRequest, TradeResponse
+from .structs import TradeRequest, TradeResponse
 
 
 class Strategy(metaclass=ABCMeta):
