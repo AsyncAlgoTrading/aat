@@ -1,7 +1,7 @@
 import asyncio
-import threading
 import tornado
 import operator
+import uvloop
 from functools import reduce
 from .backtest import Backtest
 from .callback import Print
@@ -153,17 +153,14 @@ class TradingEngine(object):
 
     def run(self):
         if self._live or self._simulation or self._sandbox:
+            asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
+            loop = tornado.platform.asyncio.AsyncIOMainLoop().install()
+
             port = 8081
             self.application = ServerApplication(self,
                                                  extra_handlers=self._ui_handlers,
                                                  custom_settings=self._ui_settings)
-            log.critical('')
-            log.critical('Server listening on port: %s', port)
-            log.critical('')
-            self.application.listen(port)
-            self._t = threading.Thread(target=tornado.ioloop.IOLoop.current().start)
-            self._t.daemon = True  # So it terminates on exit
-            self._t.start()
 
             # trigger starts
             for strat in self.query().strategies():
@@ -172,9 +169,19 @@ class TradingEngine(object):
             # run on exchange
             async def _run():
                 await asyncio.wait([ex.run(self) for ex in self._exchanges.values()])
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(_run())
+
+            # get event loop
+            loop = asyncio.get_event_loop()
+
+            # hook in tornado to asyncio
+            log.critical('')
+            log.critical('Server listening on port: %s', port)
+            log.critical('')
+            self.application.listen(port)
+
+            # run asyncio loop
+            loop.create_task(_run())
+            loop.run_forever()
 
         elif self._backtest:
             # trigger starts

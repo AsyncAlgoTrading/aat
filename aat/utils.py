@@ -11,6 +11,13 @@ from .logging import log
 
 @lru_cache(100)
 def parse_date(indate: str) -> datetime:
+    '''parse date
+    
+    Args:
+        indate (string, int, or datetime): input to convert to datetime
+    Returns:
+        datetime
+    '''
     if isinstance(indate, datetime):
         return indate
     try:
@@ -23,6 +30,13 @@ def parse_date(indate: str) -> datetime:
 
 @lru_cache(None)
 def ex_type_to_ex(ex: ExchangeType):
+    '''Convert Exchange type to Exchange class
+
+    Args:
+        ex (ExchangeType): exchange type
+    Returns:
+        Exchange
+    '''
     if ex == ExchangeType.COINBASE:
         from .exchanges.coinbase import CoinbaseExchange
         return CoinbaseExchange
