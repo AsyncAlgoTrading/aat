@@ -9,6 +9,7 @@ class CoinbaseMixins(object):
         if jsn.get('type') == 'received':
             return
         typ = self.strToTradeType(jsn.get('type'), jsn.get('reason', ''))
+        order_id = jsn.get('order_id', jsn.get('maker_order_id', ''))
         time = parse_date(jsn.get('time')) if jsn.get('time') else datetime.now()
         price = float(jsn.get('price', 'nan'))
         volume = float(jsn.get('size', 'nan'))
@@ -21,7 +22,8 @@ class CoinbaseMixins(object):
         remaining_volume = float(jsn.get('remaining_size', 0.0))
 
         sequence = int(jsn.get('sequence', -1))
-        ret = MarketData(time=time,
+        ret = MarketData(order_id=order_id,
+                         time=time,
                          volume=volume,
                          price=price,
                          type=typ,
@@ -34,13 +36,11 @@ class CoinbaseMixins(object):
         return ret
 
     def strToTradeType(self, s: str, reason: str = '') -> TickType:
-        if s == 'match':
+        if s == 'match' or (s == 'done' and reason == 'filled'):
             return TickType.TRADE
         elif s in ('open', 'done', 'change', 'heartbeat'):
             if reason == 'canceled':
                 return TickType.CANCEL
-            elif reason == 'filled':
-                return TickType.FILL
             return TickType_from_string(s.upper())
         else:
             return TickType.ERROR

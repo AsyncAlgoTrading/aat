@@ -51,7 +51,7 @@ class Callback(metaclass=ABCMeta):
         '''onOpen'''
 
     @abstractmethod
-    def onFill(self, data: MarketData):
+    def onFill(self, resp: TradeResponse):
         '''onFill'''
 
     @abstractmethod
@@ -97,32 +97,26 @@ class BuyAndHoldStrategy(TradingStrategy):
         super(BuyAndHoldStrategy, self).__init__()
         self.bought = None
 
-    def onBuy(self, res: TradeResponse) -> None:
+    def onFill(self, res: TradeResponse) -> None:
         self.bought = res
-        slog.info('d->g:bought %.2f @ %.2f' % (res.volume, res.price))
-
-    def onSell(self, res: TradeResponse) -> None:
-        pass
+        log.info('d->g:bought %.2f @ %.2f' % (res.volume, res.price))
 
     def onTrade(self, data: MarketData) -> bool:
         if self.bought is None:
             req = TradeRequest(side=Side.BUY,
-                               volume=1.0,
+                               volume=1,
                                instrument=data.instrument,
                                order_type=OrderType.MARKET,
                                exchange=data.exchange,
                                price=data.price,
                                time=data.time)
-            slog.info("requesting buy : %s", req)
-            self.requestBuy(self.onBuy, req)
-
+            log.info("requesting buy : %s", req)
+            self.requestBuy(req)
+            self.bought = 'pending'
     def onError(self, e) -> None:
         elog.critical(e)
 
     def onChange(self, data: MarketData) -> None:
-        pass
-
-    def onFill(self, data: MarketData) -> None:
         pass
 
     def onCancel(self, data: MarketData) -> None:
@@ -134,19 +128,18 @@ class BuyAndHoldStrategy(TradingStrategy):
 
 Trading strategies have a number of required methods for handling messages:
 
-- onBuy
-- onSell
-- onTrade 
-- onChange
-- onFill
-- onCancel
-- onError
-- onOpen
-- onReceived
+- onTrade: Called when a trade occurs
+- onChange: Called when an order is modified
+- onFill: Called when a strategy's trade executes
+- onCancel: Called when an order is cancelled
+- onError: Called when an error occurs
+- onOpen: Called when a new order occurs
 
 There are other optional callbacks for more granular processing:
-- onHalt
-- onContinue
+- onStart: Called when the program starts
+- onHalt: Called when trading is halted
+- onContinue: Called when trading continues
+- onExit: Called when the program shuts down
 
 There are also several optional callbacks for backtesting:
 

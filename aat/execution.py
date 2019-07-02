@@ -10,6 +10,7 @@ class Execution(object):
     def __init__(self, options: ExecutionConfig, exchanges: List[Exchange]) -> None:
         self.trading_type = options.trading_type
         self._exs = exchanges
+        self._pending = []
 
     def requestBuy(self, req: TradeRequest) -> TradeResponse:
         resp = self._exs[req.exchange].buy(req)

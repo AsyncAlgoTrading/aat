@@ -2,19 +2,18 @@ import asyncio
 import threading
 import tornado
 import operator
-from datetime import datetime
 from functools import reduce
 from typing import Callable
 from .backtest import Backtest
 from .callback import Print
 from .config import TradingEngineConfig
-from .enums import TradingType, Side, CurrencyType, TradeResult, OrderType
+from .enums import TradingType, Side, CurrencyType, TradeResult
 from .exceptions import ConfigException
 from .execution import Execution
 from .query import QueryEngine
 from .risk import Risk
 from .strategy import TradingStrategy
-from .structs import TradeRequest, TradeResponse, MarketData
+from .structs import TradeRequest, TradeResponse
 from .ui.server import ServerApplication
 from .utils import ex_type_to_ex
 from .logging import log
@@ -22,8 +21,11 @@ from .logging import log
 
 class TradingEngine(object):
     def __init__(self, options: TradingEngineConfig, ui_handlers: list = None, ui_settings: dict = None) -> None:
+        # save UI class for later
         ui_handlers = ui_handlers or []
         ui_settings = ui_settings or {}
+        self._ui_handlers = ui_handlers
+        self._ui_settings = ui_settings
 
         # running live?
         self._live = options.type == TradingType.LIVE
@@ -37,9 +39,6 @@ class TradingEngine(object):
         # running backtest?
         self._backtest = options.type == TradingType.BACKTEST
 
-        # the strategies to run
-        self._strats = []
-
         # instantiate backtest engine
         self._bt = Backtest(options.backtest_options) if self._backtest else None
 
@@ -49,21 +48,8 @@ class TradingEngine(object):
         # instantiate exchange instance
         self._exchanges = {o: ex_type_to_ex(o)(o, options.exchange_options) for o in options.exchange_options.exchange_types}
 
-        # instantiate query engine
-        self._qy = QueryEngine(exchanges=self._exchanges,
-                               pairs=options.exchange_options.currency_pairs,
-                               instruments={name:
-                                            list(set(options.exchange_options.instruments).intersection(
-                                                ex.markets())) for name, ex in self._exchanges.items()})
-
-        # register query hooks
-        if self._live or self._simulation or self._sandbox:
-            for exc in self._exchanges.values():
-                exc.onTrade(self._qy.push)
-                exc.onTrade(self.recalculate_value)
-        if self._backtest:
-            self._bt.onTrade(self._qy.push)
-            self._bt.onTrade(self.recalculate_value)
+        # instantiate execution engine
+        self._ec = Execution(options.execution_options, self._exchanges)
 
         # if live or sandbox, get account information and balances
         if self._live or self._simulation or self._sandbox:
@@ -81,28 +67,28 @@ class TradingEngine(object):
             log.info(accounts)
             log.info("Running with %.2f USD" % options.risk_options.total_funds)
 
-        if self._backtest:
-            self._portfolio_value = []
-        else:
-            self._portfolio_value = [[datetime.now(), options.risk_options.total_funds]]
-        self._holdings = {}
+        # instantiate query engine
+        self._qy = QueryEngine(backtest=self._backtest,
+                               exchanges=self._exchanges,
+                               pairs=options.exchange_options.currency_pairs,
+                               instruments={name:
+                                            list(set(options.exchange_options.instruments).intersection(
+                                                ex.markets())) for name, ex in self._exchanges.items()},
+                               total_funds=options.risk_options.total_funds)
 
-        # instantiate execution engine
-        self._ec = Execution(options.execution_options, self._exchanges)
+        # register query hooks
+        if self._live or self._simulation or self._sandbox:
+            for exc in self._exchanges.values():
+                exc.onTrade(self._qy.onTrade)
+
+                if options.print:
+                    exc.registerCallback(Print(onTrade=True, onReceived=True, onOpen=True, onFill=True, onCancel=True, onChange=True, onError=False))
+        elif self._backtest:
+            self._bt.onTrade(self._qy.onTrade)
+            self._bt.registerCallback(Print())
 
         # sanity check
         assert not (self._live and self._simulation and self._sandbox and self._backtest)
-
-        # running print callback for debug?
-        if options.print:
-            log.warn('WARNING: Running in print mode')
-
-            # register a printer callback that prints every message
-            if self._live or self._simulation or self._sandbox:
-                for ex in self._exchanges:
-                    ex.registerCallback(Print(onTrade=True, onReceived=True, onOpen=True, onFill=True, onCancel=True, onChange=True, onError=False))
-            if self._backtest:
-                self._bt.registerCallback(Print())
 
         # register strategies from config
         for x in options.strategy_options:
@@ -111,13 +97,6 @@ class TradingEngine(object):
 
         # actively trading or halted?
         self._trading = True  # type: bool
-
-        # pending orders to process (partial fills)
-        self._pending = {OrderType.MARKET: [], OrderType.LIMIT: []}  # TODO in progress
-
-        # save UI class for later
-        self._ui_handlers = ui_handlers
-        self._ui_settings = ui_settings
 
     def exchanges(self):
         return self._exchanges
@@ -136,9 +115,13 @@ class TradingEngine(object):
 
     def haltTrading(self):
         self._trading = False
+        for strat in self.query().strategies():
+            strat.onHalt()
 
     def continueTrading(self):
         self._trading = True
+        for strat in self.query().strategies():
+            strat.onContinue()
 
     def registerStrategy(self, strat: TradingStrategy):
         if self._live or self._simulation or self._sandbox:
@@ -151,44 +134,16 @@ class TradingEngine(object):
             self._bt.registerCallback(strat.callback())
 
         # add to tickables
-        self._strats.append(strat)  # add to tickables
+        self.query().registerStrategy(strat)
 
         # give self to strat so it can request trading actions
         strat.setEngine(self)
 
     def strategies(self):
-        return self._strats
-
-    def recalculate_value(self, data: MarketData) -> None:
-        # TODO move to risk
-        if data.instrument not in self._holdings:
-            # nothing to do
-            return
-        volume = self._holdings[data.instrument][2]
-        purchase_price = self._holdings[data.instrument][1]  # takes into account slippage/txn cost
-
-        if self._portfolio_value == []:
-            # start from first tick of data
-            # TODO risk bounds?
-            # self._portfolio_value = [[data.time, self._rk.total_funds]]
-            self._portfolio_value = [[data.time, volume*data.price, volume*(data.price-purchase_price)]]
-        self._portfolio_value.append([data.time, volume*data.price, volume*(data.price-purchase_price)])
-
-    def update_holdings(self, resp: TradeResponse) -> None:
-        # TODO move to risk
-        if resp.status in (TradeResult.REJECTED, TradeResult.PENDING, TradeResult.NONE):
-            return
-        if resp.instrument not in self._holdings:
-            notional = resp.price * resp.volume*(1 if resp.side == Side.BUY else -1)
-            self._holdings[resp.instrument] = \
-                [notional, resp.price, resp.volume*(1 if resp.side == Side.BUY else -1)]
-        else:
-            notional = resp.price * resp.volume*(1 if resp.side == Side.BUY else -1)
-            self._holdings[resp.instrument] = \
-                [self._holdings[resp.instrument][0] + notional, resp.price, resp.volume*(1 if resp.side == Side.BUY else -1)]
+        return self.query().strategies()
 
     def portfolio_value(self) -> list:
-        return self._portfolio_value
+        return self.query()._portfolio_value
 
     def run(self):
         if self._live or self._simulation or self._sandbox:
@@ -204,6 +159,10 @@ class TradingEngine(object):
             self._t.daemon = True  # So it terminates on exit
             self._t.start()
 
+            # trigger starts
+            for strat in self.query().strategies():
+                strat.onStart()
+
             # run on exchange
             async def _run():
                 await asyncio.wait([ex.run(self) for ex in self._exchanges.values()])
@@ -212,6 +171,10 @@ class TradingEngine(object):
             loop.run_until_complete(_run())
 
         elif self._backtest:
+            # trigger starts
+            for strat in self._strats:
+                strat.onStart()
+
             # let backtester run
             self._bt.run(self)
 
@@ -224,11 +187,10 @@ class TradingEngine(object):
 
     def _request(self,
                  side: Side,
-                 callback: Callable,
                  req: TradeRequest,
-                 callback_failure=None,
                  strat=None):
         self.query().push_tradereq(req)
+
         if not self._trading:
             # not allowed to trade right now
             log.info('Trading not allowed')
@@ -240,7 +202,6 @@ class TradingEngine(object):
                                  instrument=req.instrument,
                                  success=False,
                                  order_id='')
-
         else:
             # get risk report
             resp = self._rk.request(req)
@@ -255,9 +216,8 @@ class TradingEngine(object):
                     # TODO
                     if resp.status == TradeResult.PENDING:
                         # listen for later
-                        # TODO
                         log.info('Order pending')
-                        self._pending[req.order_type].append(resp)
+                        self.query().newPending(resp)
 
                     elif resp.status == TradeResult.REJECTED:
                         # send response
@@ -289,18 +249,12 @@ class TradingEngine(object):
                                          time=req.time,
                                          order_id='')
 
-                    # register the initial request
-                    strat.registerDesire(resp.time, resp.side, resp.price)
-
                     # adjust response with slippage and transaction cost modeling
                     resp = strat.slippage(resp)
                     log.info("Slippage BT- %s" % resp)
 
                     resp = strat.transactionCost(resp)
                     log.info("TXN cost BT- %s" % resp)
-
-                    # register the response
-                    strat.registerAction(resp.time, resp.side, resp.price)
             else:
                 log.info('Risk check failed')
                 resp = TradeResponse(request=resp,
@@ -312,24 +266,23 @@ class TradingEngine(object):
                                      status=TradeResult.REJECTED,
                                      order_id='')
         self.query().push_traderesp(resp)
-        self.update_holdings(resp)
-        callback_failure(resp) if callback_failure and not resp.success else callback(resp)
+        self.query().update_holdings(resp)
+        return resp
 
-    def requestBuy(self, callback: Callable, req: TradeRequest, callback_failure=None, strat=None):
+    def requestBuy(self, req: TradeRequest, strat=None):
         self._request(side=Side.BUY,
-                      callback=callback,
                       req=req,
-                      callback_failure=callback_failure,
                       strat=strat)
 
-    def requestSell(self, callback: Callable, req: TradeRequest, callback_failure=None, strat=None):
-        self._request(Side.SELL, callback, req, callback_failure, strat)
+    def requestSell(self, req: TradeRequest, strat=None):
+        self._request(side=Side.SELL,
+                      req=req,
+                      strat=strat)
 
-    def cancel(self, callback: Callable, resp: TradeResponse, callback_failure=None, strat=None):
+    def cancel(self, resp: TradeResponse, strat=None):
         resp = self._ec.cancel(resp)
-        callback_failure(resp) if callback_failure and not resp.success else callback(resp)
+        return resp
 
-    def cancelAll(self, callback: Callable, callback_failure=None, strat=None):
-        # FIXME iterate through open in order
-        resp = self._ec.cancelAll()
-        callback_failure(resp) if callback_failure and not resp.success else callback(resp)
+    def cancelAll(self, strat=None):
+        resp = self._ec.cancelAll(self._pending)
+        return resp

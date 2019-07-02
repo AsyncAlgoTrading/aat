@@ -1,5 +1,9 @@
 import aiohttp
+import base64
 import json
+import hashlib
+import hmac
+import time
 from aiostream import stream
 from functools import lru_cache
 from .utils.gemini import GeminiMixins
@@ -20,11 +24,26 @@ class GeminiExchange(GeminiMixins, Exchange):
 
     async def run(self, engine) -> None:
         options = self.options()
-        session = aiohttp.ClientSession()
+        # private events
+        gemini_api_key = self.oe_client().apiKey
+        gemini_api_secret = self.oe_client().secret.encode()
+
+        payload = {"request": "/v1/order/events", "nonce": int(time.time() * 1000)}
+        encoded_payload = json.dumps(payload).encode()
+        b64 = base64.b64encode(encoded_payload)
+        signature = hmac.new(gemini_api_secret, b64, hashlib.sha384).hexdigest()
+
+        session = aiohttp.ClientSession(headers={
+                                'X-GEMINI-PAYLOAD': b64.decode(),
+                                'X-GEMINI-APIKEY': gemini_api_key,
+                                'X-GEMINI-SIGNATURE': signature
+                            })
 
         # startup and redundancy
         log.info('Starting....')
         self.ws = [await session.ws_connect(EXCHANGE_MARKET_DATA_ENDPOINT(self.exchange(), options.trading_type) % x) for x in self.subscription()]
+        private_events = await session.ws_connect("wss://api.gemini.com/v1/order/events?eventTypeFilter=fill&eventTypeFilter=closed&apiSessionFilter=UI")
+        self.ws.append(private_events)
 
         # set subscription for each ws
         for i, sub in enumerate(self.subscription()):
@@ -49,18 +68,26 @@ class GeminiExchange(GeminiMixins, Exchange):
             async for ret in ws:
                 yield ret, sub
 
-        async for val in stream.merge(*[get_data_sub_pair(self.ws[i], sub) for i, sub in enumerate(self.subscription())]):
-            pair = json.loads(val[1]).get('product_id')
-            jsn = json.loads(val[0].data)
-            if jsn.get('type') == 'heartbeat':
-                pass
+        # add one for private stream
+        async for val in stream.merge(*[get_data_sub_pair(self.ws[i], sub) for i, sub in enumerate(self.subscription() + [None])]):
+            if val[1]:
+                # data stream
+                pair = json.loads(val[1]).get('product_id')
+                jsn = json.loads(val[0].data)
+                if jsn.get('type') == 'heartbeat':
+                    pass
+                else:
+                    for item in jsn.get('events'):
+                        item['symbol'] = pair
+                        res = self.tickToData(item)
+
+                        if not self._running:
+                            pass
+
+                        if res.type != TickType.HEARTBEAT:
+                            self.callback(res.type, res)
             else:
-                for item in jsn.get('events'):
-                    item['symbol'] = pair
-                    res = self.tickToData(item)
-
-                    if not self._running:
-                        pass
-
-                    if res.type != TickType.HEARTBEAT:
-                        self.callback(res.type, res)
+                event = json.loads(val[0].data)
+                if event.get('type', 'subscription_ack') in ('subscription_ack', 'heartbeat'):
+                    continue
+                import ipdb; ipdb.set_trace()

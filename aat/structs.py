@@ -183,6 +183,7 @@ class MarketData(Struct):
     remaining: float = 0.0
     sequence: int = -1
     order_type: OrderType = OrderType.NONE
+    order_id: str = ''
 
     def __eq__(self, other):
         return (self.price == other.price) and \
@@ -190,7 +191,7 @@ class MarketData(Struct):
                (self.side == other.side)
 
     def __str__(self):
-        return f'<{self.instrument}-{self.volume}@{self.price}-{self.type}-{self.exchange}>'
+        return f'<{self.instrument}-{self.volume}@{self.price}-{self.type}-{self.exchange}-{self.order_id}>'
 
     def __lt__(self, other):
         return self.price < other.price
@@ -235,7 +236,7 @@ class TradeResponse(Struct):
     remaining: float = 0.0
 
     def __str__(self) -> str:
-        return f'<{self.instrument}-{self.side}:{self.volume}@{self.price}-{self.status}-{self.exchange}>'
+        return f'<{self.order_id}-{self.instrument}-{self.side}:{self.volume}@{self.price}-{self.status}-{self.exchange}>'
 
 
 @dataclass

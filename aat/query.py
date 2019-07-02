@@ -1,19 +1,31 @@
 import operator
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from functools import reduce
 from typing import List, Dict
-from .enums import TickType, Side, ExchangeType, CurrencyType, PairType  # noqa: F401
+from .enums import TickType, TradeResult, Side, ExchangeType, PairType  # noqa: F401
 from .exceptions import QueryException
+from .execution import Execution
+from .risk import Risk
+from .strategy import TradingStrategy
 from .structs import Instrument, MarketData, TradeRequest, TradeResponse
 
 
 class QueryEngine(object):
     def __init__(self,
+                 backtest: bool = False,
                  exchanges: List[ExchangeType] = None,
                  pairs: List[PairType] = None,
-                 instruments: List[Instrument] = None):
+                 instruments: List[Instrument] = None,
+                 risk: Risk = None,
+                 execution: Execution = None,
+                 total_funds: float = 0.0):
         self.executor = ThreadPoolExecutor(16)
         self._all = []
+
+        self._portfolio_value = [] if backtest else [[datetime.now(), total_funds]]
+        self._holdings = {}
+        self._pending = {}
 
         self._trades = []
         self._trades_by_instrument = {}
@@ -28,6 +40,11 @@ class QueryEngine(object):
         self._trade_resps = []
         self._trade_reqs_by_instrument = {}
         self._trade_resps_by_instrument = {}
+
+        self._strats = []
+
+    def registerStrategy(self, strat: TradingStrategy):
+        self._strats.append(strat)  # add to tickables
 
     def query_instruments(self, exchange=None) -> List[PairType]:
         if exchange:
@@ -96,7 +113,7 @@ class QueryEngine(object):
                               self._trade_resps_by_instrument,
                               page)
 
-    def push(self, data: MarketData) -> None:
+    def onTrade(self, data: MarketData) -> None:
         self._all.append(data)
 
         if data.type == TickType.TRADE:
@@ -109,6 +126,25 @@ class QueryEngine(object):
             self._last_price_by_asset_and_exchange[data.instrument][data.exchange] = data
             self._last_price_by_asset_and_exchange[data.instrument]['ANY'] = data
 
+        self._recalculate_value(data)
+
+        if data.order_id in self._pending.keys():
+            resp = self._pending[data.order_id]
+            resp.volume = resp.remaining - data.remaining
+            resp.remaining = data.remaining
+            for strat in self._strats:
+                strat.onFill(resp)
+
+        if data.order_id in self._pending.keys() and data.remaining <= 0:
+            del self._pending[data.order_id]
+
+    def strategies(self):
+        return self._strats
+
+    def newPending(self, resp: TradeResponse) -> None:
+        if resp.status == TradeResult.PENDING:
+            self._pending[resp.order_id] = resp
+
     def push_tradereq(self, req: TradeRequest) -> None:
         self._trade_reqs.append(req)
         if req.instrument not in self._trade_reqs_by_instrument:
@@ -120,3 +156,30 @@ class QueryEngine(object):
         if resp.instrument not in self._trade_resps_by_instrument:
             self._trade_resps_by_instrument[resp.instrument] = []
         self._trade_resps_by_instrument[resp.instrument].append(resp)
+
+    def _recalculate_value(self, data: MarketData) -> None:
+        # TODO move to risk
+        if data.instrument not in self._holdings:
+            # nothing to do
+            return
+        volume = self._holdings[data.instrument][2]
+        purchase_price = self._holdings[data.instrument][1]  # takes into account slippage/txn cost
+
+        if self._portfolio_value == []:
+            # start from first tick of data
+            # TODO risk bounds?
+            self._portfolio_value = [[data.time, volume*data.price, volume*(data.price-purchase_price)]]
+        self._portfolio_value.append([data.time, volume*data.price, volume*(data.price-purchase_price)])
+
+    def update_holdings(self, resp: TradeResponse) -> None:
+        # TODO move to risk
+        if resp.status in (TradeResult.REJECTED, TradeResult.PENDING, TradeResult.NONE):
+            return
+        if resp.instrument not in self._holdings:
+            notional = resp.price * resp.volume*(1 if resp.side == Side.BUY else -1)
+            self._holdings[resp.instrument] = \
+                [notional, resp.price, resp.volume*(1 if resp.side == Side.BUY else -1)]
+        else:
+            notional = resp.price * resp.volume*(1 if resp.side == Side.BUY else -1)
+            self._holdings[resp.instrument] = \
+                [self._holdings[resp.instrument][0] + notional, resp.price, resp.volume*(1 if resp.side == Side.BUY else -1)]

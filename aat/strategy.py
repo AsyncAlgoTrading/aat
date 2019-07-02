@@ -7,49 +7,36 @@ from .structs import MarketData, TradeRequest, TradeResponse
 class Strategy(metaclass=ABCMeta):
     '''Strategy interface'''
     def __init__(self, *args, **kwargs) -> None:
-        self._actions = []
-        self._requests = []
+        pass
 
     def setEngine(self, engine) -> None:
         self._te = engine
 
     @abstractmethod
-    def requestBuy(self,
-                   callback: Callback,
-                   data: MarketData):
+    def requestBuy(self, req: TradeRequest):
         '''requestBuy'''
 
     @abstractmethod
-    def requestSell(self,
-                    callback: Callback,
-                    data: MarketData):
+    def requestSell(self, req: TradeRequest):
         '''requestSell'''
-
-    def registerAction(self, time, actionType, data) -> None:
-        '''add action to log'''
-        self._actions.append((time, actionType, data))
-
-    def registerDesire(self, time, actionType, data) -> None:
-        '''add action to log'''
-        self._requests.append((time, actionType, data))
 
 
 class TradingStrategy(Strategy, Callback):
-    def requestBuy(self, callback: Callable, req: TradeRequest, callback_failure=None) -> None:
+    def requestBuy(self, req: TradeRequest) -> None:
         '''attempt to buy'''
-        self._te.requestBuy(callback, req, callback_failure, self)
+        return self._te.requestBuy(req, self)
 
-    def requestSell(self, callback: Callable, req: TradeRequest, callback_failure=None) -> None:
+    def requestSell(self, req: TradeRequest) -> None:
         '''attempt to sell'''
-        self._te.requestSell(callback, req, callback_failure, self)
+        return self._te.requestSell(req, self)
 
-    def cancel(self, callback: Callable, resp: TradeResponse, callback_failure=None) -> None:
+    def cancel(self, resp: TradeResponse) -> None:
         '''cancel order'''
-        self._te.cancel(callback, resp, callback_failure, self)
+        return self._te.cancel(resp, self)
 
-    def cancelAll(self, callback: Callable, callback_failure=None):
+    def cancelAll(self):
         '''cancel all orders'''
-        self._te.cancelAll(callback, callback_failure, self)
+        return self._te.cancelAll(self)
 
     def slippage(self, data: TradeResponse) -> TradeResponse:
         '''slippage model. default is pass through'''

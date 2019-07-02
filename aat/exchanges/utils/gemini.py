@@ -6,6 +6,9 @@ from ...utils import str_to_currency_pair_type, str_to_side
 
 class GeminiMixins(object):
     def tickToData(self, jsn: dict) -> MarketData:
+        order_id = jsn.get('order_id', '')
+        if order_id:
+            import ipdb; ipdb.set_trace()
         time = datetime.now()
         price = float(jsn.get('price', 'nan'))
         volume = float(jsn.get('amount', 0.0))
@@ -27,7 +30,8 @@ class GeminiMixins(object):
         currency_pair = str_to_currency_pair_type(jsn.get('symbol'))
         instrument = Instrument(underlying=currency_pair)
 
-        ret = MarketData(time=time,
+        ret = MarketData(order_id=order_id,
+                         time=time,
                          volume=volume,
                          price=price,
                          type=typ,

@@ -9,24 +9,22 @@ class BuyAndHoldStrategy(TradingStrategy):
         super(BuyAndHoldStrategy, self).__init__()
         self.bought = None
 
-    def onBuy(self, res: TradeResponse) -> None:
+    def onFill(self, res: TradeResponse) -> None:
         self.bought = res
         log.info('d->g:bought %.2f @ %.2f' % (res.volume, res.price))
-
-    def onSell(self, res: TradeResponse) -> None:
-        pass
 
     def onTrade(self, data: MarketData) -> bool:
         if self.bought is None:
             req = TradeRequest(side=Side.BUY,
-                               volume=1.0,
+                               volume=1,
                                instrument=data.instrument,
                                order_type=OrderType.MARKET,
                                exchange=data.exchange,
                                price=data.price,
                                time=data.time)
             log.info("requesting buy : %s", req)
-            self.requestBuy(self.onBuy, req)
+            self.requestBuy(req)
+            self.bought = 'pending'
 
     def onError(self, e) -> None:
         log.critical(e)
@@ -110,9 +108,6 @@ class BuyAndHoldStrategy(TradingStrategy):
     def onContinue(self, data: MarketData) -> None:
         pass
 
-    def onFill(self, data: MarketData) -> None:
-        pass
-
     def onCancel(self, data: MarketData) -> None:
         pass
 
@@ -145,3 +140,38 @@ class BuyAndHoldStrategy(TradingStrategy):
             resp.transaction_cost = -txncost
             resp.price -= txncost
         return resp
+
+
+class BuyAndHoldStrategy2(TradingStrategy):
+    def __init__(self) -> None:
+        super(BuyAndHoldStrategy2, self).__init__()
+        self.sold = None
+
+    def onFill(self, res: TradeResponse) -> None:
+        self.sold = res
+        log.info('d->g:sold %.2f @ %.2f' % (res.volume, res.price))
+
+    def onTrade(self, data: MarketData) -> bool:
+        if self.sold is None:
+            req = TradeRequest(side=Side.SELL,
+                               volume=.1,
+                               instrument=data.instrument,
+                               order_type=OrderType.LIMIT,
+                               exchange=data.exchange,
+                               price=data.price,
+                               time=data.time)
+            log.info("requesting sell : %s", req)
+            self.requestSell(req)
+            self.sold = 'pending'
+
+    def onError(self, e) -> None:
+        log.critical(e)
+
+    def onChange(self, data: MarketData) -> None:
+        pass
+
+    def onCancel(self, data: MarketData) -> None:
+        pass
+
+    def onOpen(self, data: MarketData) -> None:
+        pass

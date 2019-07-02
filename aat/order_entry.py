@@ -6,9 +6,9 @@ from .data_source import RestAPIDataSource
 from .enums import PairType, TradingType, CurrencyType, ExchangeType_to_string
 from .exceptions import AATException
 from .structs import TradeRequest, TradeResponse, Account, Instrument
-from .utils import (get_keys_from_environment, str_to_currency_type,
+from .utils import (get_keys_from_environment, str_to_currency_type, str_to_side,
                     exchange_type_to_ccxt_client, tradereq_to_ccxt_order,
-                    findpath)
+                    str_to_trade_result, parse_date, findpath)
 # from .utils import elog as log
 
 
@@ -130,19 +130,46 @@ class OrderEntry(RestAPIDataSource):
     def buy(self, req: TradeRequest) -> TradeResponse:
         '''execute a buy order'''
         params = tradereq_to_ccxt_order(req)
-        raise NotImplementedError()
-        self.oe_client().create_order(**params)
+        order = self.oe_client().create_order(**params)
+        resp = TradeResponse(request=req,
+                             side=str_to_side(order['side']),
+                             exchange=req.exchange,
+                             volume=float(order['filled']),
+                             price=float(order['price']),
+                             instrument=req.instrument,
+                             time=parse_date(order['datetime']),
+                             status=str_to_trade_result(order['status']),
+                             order_id=order['id'],
+                             slippage=float(order['price']) - req.price,
+                             transaction_cost=order['fee']['cost'],
+                             remaining=order['remaining'])
+        return resp
 
     def sell(self, req: TradeRequest) -> TradeResponse:
         '''execute a sell order'''
         params = tradereq_to_ccxt_order(req)
-        raise NotImplementedError()
-        self.oe_client().create_order(**params)
+        order = self.oe_client().create_order(**params)
+        resp = TradeResponse(request=req,
+                             side=str_to_side(order['side']),
+                             exchange=req.exchange,
+                             volume=float(order['filled']),
+                             price=float(order['price']),
+                             instrument=req.instrument,
+                             time=parse_date(order['datetime']),
+                             status=str_to_trade_result(order['status']),
+                             order_id=order['id'],
+                             slippage=float(order['price']) - req.price,
+                             transaction_cost=order['fee']['cost'],
+                             remaining=order['remaining'])
+        return resp
 
     def cancel(self, resp: TradeResponse):
         params = tradereq_to_ccxt_order(resp)
-        raise NotImplementedError()
         self.oe_client().cancel_order(**params)
 
-    def cancelAll(self, resp: TradeResponse):
-        return self.oe_client().cancel_all_orders()
+    def cancelAll(self, order_ids: List[str] = None):
+        if order_ids:
+            for order_id in order_ids:
+                self.oe_client().cancel_order(order_id)
+        else:
+            self.oe_client().cancel_all_orders()

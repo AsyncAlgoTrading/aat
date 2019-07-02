@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from .structs import MarketData
+from .structs import MarketData, TradeResponse
 from .logging import log
 
 
@@ -14,7 +14,7 @@ class Callback(metaclass=ABCMeta):
         '''onOpen'''
 
     @abstractmethod
-    def onFill(self, data: MarketData):
+    def onFill(self, resp: TradeResponse):
         '''onFill'''
 
     @abstractmethod
@@ -63,7 +63,7 @@ class NullCallback(Callback):
     def onOpen(self, data: MarketData) -> None:
         pass
 
-    def onFill(self, data: MarketData) -> None:
+    def onFill(self, resp: TradeResponse) -> None:
         pass
 
     def onCancel(self, data: MarketData) -> None:
@@ -92,7 +92,7 @@ class Print(Callback):
         if not onOpen:
             setattr(self, 'onOpen', False)
         if not onFill:
-            setattr(self, 'onFilled', False)
+            setattr(self, 'onFill', False)
         if not onCancel:
             setattr(self, 'onCancelled', False)
         if not onChange:
@@ -103,14 +103,11 @@ class Print(Callback):
     def onTrade(self, data: MarketData) -> None:
         log.info(str(data))
 
-    def onReceived(self, data: MarketData) -> None:
-        log.info(str(data))
-
     def onOpen(self, data: MarketData) -> None:
         log.info(str(data))
 
-    def onFill(self, data: MarketData) -> None:
-        log.info(str(data))
+    def onFill(self, resp: TradeResponse) -> None:
+        log.info(str(resp))
 
     def onCancel(self, data: MarketData) -> None:
         log.info(str(data))
