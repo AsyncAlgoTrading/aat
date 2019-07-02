@@ -125,6 +125,8 @@ class GeminiExchange(Exchange):
             typ = TickType.TRADE
         elif s in ('AUCTION_INDICATIVE', 'AUCTION_OPEN', 'BOOKED', 'INITIAL'):
             typ = TickType.OPEN
+        elif s in ('CANCELLED',):
+            typ = TickType.CANCEL
         else:
             typ = TickType_from_string(s)
         delta = float(jsn.get('delta', 0.0))
