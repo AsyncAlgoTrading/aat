@@ -24,29 +24,3 @@ EXCHANGE_MARKET_DATA_ENDPOINT = lru_cache(None)(lambda name, typ: {  # noqa: E73
     # (ExchangeType.DERIBIT, TradingType.SIMULATION): 'wss://www.deribit.com/ws/api/v1/',
 
 }.get((name, typ), None))
-
-EXCHANGE_ORDER_ENDPOINT = lru_cache(None)(lambda name, typ: {  # noqa: E731
-    (ExchangeType.COINBASE, TradingType.SANDBOX): 'https://api-public.sandbox.pro.coinbase.com',
-    (ExchangeType.COINBASE, TradingType.LIVE): 'https://api.pro.coinbase.com',
-    (ExchangeType.COINBASE, TradingType.SIMULATION): 'https://api.pro.coinbase.com',
-
-    (ExchangeType.GEMINI, TradingType.SANDBOX): 'https://api.sandbox.gemini.com/v1/marketdata/btcusd?heartbeat=true',
-    (ExchangeType.GEMINI, TradingType.LIVE): 'https://api.gemini.com/v1/marketdata/btcusd?heartbeat=true',
-    (ExchangeType.GEMINI, TradingType.SIMULATION): 'https://api.gemini.com/v1/marketdata/btcusd?heartbeat=true',
-
-    (ExchangeType.KRAKEN, TradingType.SANDBOX): '',
-    (ExchangeType.KRAKEN, TradingType.LIVE): '',
-
-    (ExchangeType.POLONIEX, TradingType.SANDBOX): '',
-    (ExchangeType.POLONIEX, TradingType.LIVE): '',
-
-    # (ExchangeType.DERIBIT, TradingType.SANDBOX): 'https://test.deribit.com',
-    # (ExchangeType.DERIBIT, TradingType.LIVE): 'https://www.deribit.com',
-    # (ExchangeType.DERIBIT, TradingType.SIMULATION): 'https://www.deribit.com',
-}.get((name, typ), None))
-
-ACCOUNTS = lambda name, typ: {  # noqa: E731
-    # (ExchangeType.DERIBIT, TradingType.SANDBOX): 'https://test.deribit.com',
-    # (ExchangeType.DERIBIT, TradingType.LIVE): 'https://www.deribit.com',
-    # (ExchangeType.DERIBIT, TradingType.SIMULATION): 'https://www.deribit.com',
-}.get((name, typ), None)

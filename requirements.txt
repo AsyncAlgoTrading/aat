@@ -1,3 +1,5 @@
+aiodns>=1.1.1
+aiohttp>=3.5.4
 aiostream>=0.3.1
 ccxt>=1.18.529
 cycler>=0.10.0

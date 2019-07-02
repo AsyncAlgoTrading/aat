@@ -46,6 +46,7 @@ class CurrencyType(BaseEnum):
     ETC = 'ETC'
     ETH = 'ETH'
     GNT = 'GNT'
+    LINK = 'LINK'
     LOOM = 'LOOM'
     LTC = 'LTC'
     MANA = 'MANA'

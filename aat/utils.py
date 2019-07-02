@@ -4,7 +4,7 @@ import os
 import pytz
 from datetime import datetime
 from functools import lru_cache
-from .enums import ExchangeType, ExchangeType_from_string, ExchangeTypes, CurrencyType, OrderType, Side, PairType
+from .enums import ExchangeType, ExchangeType_from_string, ExchangeTypes, CurrencyType, OrderType, Side, PairType, TradeResult
 from .exceptions import AATException
 from .logging import log
 
@@ -38,6 +38,7 @@ def ex_type_to_ex(ex: ExchangeType):
 
 @lru_cache(None)
 def get_keys_from_environment(prefix: str) -> tuple:
+    prefix = prefix.upper()
     key = os.environ[prefix + '_API_KEY']
     secret = os.environ[prefix + '_API_SECRET']
     passphrase = os.environ[prefix + '_API_PASS']
@@ -80,6 +81,14 @@ def str_to_order_type(s: str) -> OrderType:
     if 'LIMIT' in s:
         return OrderType.LIMIT
     return OrderType.NONE
+
+
+@lru_cache(None)
+def str_to_trade_result(s: str) -> TradeResult:
+    s = s.upper()
+    if s in ('OPEN',):
+        s = 'PENDING'
+    return TradeResult(s)
 
 
 @lru_cache(None)

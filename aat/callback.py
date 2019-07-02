@@ -29,6 +29,10 @@ class Callback(metaclass=ABCMeta):
     def onError(self, data: MarketData):
         '''onError'''
 
+    def onStart(self):
+        '''onStart'''
+        pass
+
     def onExit(self):
         '''onExit'''
         pass
@@ -54,9 +58,6 @@ class NullCallback(Callback):
         pass
 
     def onTrade(self, data: MarketData) -> None:
-        pass
-
-    def onReceived(self, data: MarketData) -> None:
         pass
 
     def onOpen(self, data: MarketData) -> None:
