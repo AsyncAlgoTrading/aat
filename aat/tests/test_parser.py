@@ -14,22 +14,6 @@ class TestRisk:
 
         self.risk = Risk(rc)
 
-        # setup() before each test method
-
-    def teardown(self):
-        pass
-        # teardown() after each test method
-
-    @classmethod
-    def setup_class(cls):
-        pass
-        # setup_class() before any methods in this class
-
-    @classmethod
-    def teardown_class(cls):
-        pass
-        # teardown_class() after any methods in this class
-
     def test_config_file(self):
 
         from ..parser import parse_file_config
@@ -47,7 +31,7 @@ currency_pairs=BTCUSD,ETHUSD,LTCUSD,BCHUSD,ETHBTC,LTCBTC,BCHBTC
 
 [strategy]
 strategies =
-    aat.strategies.test_strat.TestStrategy
+    aat.strategies.buy_and_hold.BuyAndHoldStrategy
 
 [risk]
 max_drawdown = 100.0

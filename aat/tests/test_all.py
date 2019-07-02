@@ -18,9 +18,6 @@ from ..order_entry import *
 from ..parser import *
 from ..query import *
 from ..risk import *
-from ..strategies.test_strat import *
-from ..strategies.sma_crosses_strategy import *
-from ..strategies.backtest import *
 from ..strategy import *
 from ..structs import *
 from ..trading import *

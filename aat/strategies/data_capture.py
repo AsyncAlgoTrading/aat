@@ -8,12 +8,6 @@ class DataCaptureStrategy(TradingStrategy):
         super(DataCaptureStrategy, self).__init__()
         self.filename = filename
 
-    def onBuy(self, res: TradeResponse) -> None:
-        log.info(res)
-
-    def onSell(self, res: TradeResponse) -> None:
-        log.info(res)
-
     def onTrade(self, data: MarketData) -> bool:
         log.info(data)
 
@@ -26,8 +20,8 @@ class DataCaptureStrategy(TradingStrategy):
     def onChange(self, data: MarketData) -> None:
         log.info(data)
 
-    def onFill(self, data: MarketData) -> None:
-        log.info(data)
+    def onFill(self, res: TradeResponse) -> None:
+        log.info(res)
 
     def onCancel(self, data: MarketData) -> None:
         log.info(data)

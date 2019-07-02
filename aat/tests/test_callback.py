@@ -22,7 +22,6 @@ class TestCallback:
 
         nc = NullCallback()
         assert nc.onTrade(None) is None
-        assert nc.onReceived(None) is None
         assert nc.onOpen(None) is None
         assert nc.onFill(None) is None
         assert nc.onCancel(None) is None

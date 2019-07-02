@@ -43,5 +43,5 @@ class TestMain:
     def test_main(self):
         from ..main import main
         with patch('aat.main.TradingEngine'), \
-             patch('aat.strategies.test_strat.TestStrategy'):
+             patch('aat.strategies.buy_and_hold.BuyAndHoldStrategy'):
             main(['', '--live', '--exchanges=coinbase'])

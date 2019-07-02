@@ -116,7 +116,7 @@ class TestExchange:
         assert e.strToTradeType('match') == TickType.TRADE
         assert e.strToTradeType('open') == TickType.OPEN
         assert e.strToTradeType('change', 'canceled') == TickType.CANCEL
-        assert e.strToTradeType('change', 'filled') == TickType.FILL
+        assert e.strToTradeType('done', 'filled') == TickType.TRADE
         assert e.strToTradeType('change') == TickType.CHANGE
         assert e.strToTradeType('heartbeat') == TickType.HEARTBEAT
         assert e.strToTradeType('flarg') == TickType.ERROR
