@@ -18,10 +18,11 @@ class InstrumentsHandler(PerspectiveHTTPMixin, HTTPHandler):
     def get_data(self, exchange, **psp_kwargs):
         if exchange:
             exchange = ExchangeType(exchange)
-        msgs = [x.to_dict(True, True) for x in self.te.query().query_instruments(exchange)]
+        msgs = [x.to_dict(True, True) for x in self.te.query.query_instruments(exchange)]
         super(InstrumentsHandler, self).loadData(data=msgs, **psp_kwargs)
         return super(InstrumentsHandler, self).getData()
 
+    @tornado.web.authenticated
     @tornado.gen.coroutine
     def get(self):
         exchange = self.get_argument('exchange', '')

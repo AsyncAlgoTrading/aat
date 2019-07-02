@@ -9,6 +9,9 @@ class HTTPHandler(tornado.web.RequestHandler):
     '''Just a default handler'''
     executor = ThreadPoolExecutor(16)
 
+    def get_current_user(self):
+        return self.get_secure_cookie("token")
+
     def initialize(self, *args, **kwargs):
         '''Initialize the server competition registry handler
 

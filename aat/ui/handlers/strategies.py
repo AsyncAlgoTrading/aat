@@ -19,6 +19,7 @@ class StrategiesHandler(PerspectiveHTTPMixin, HTTPHandler):
         super(StrategiesHandler, self).loadData(data=dat, **psp_kwargs)
         return super(StrategiesHandler, self).getData()
 
+    @tornado.web.authenticated
     @tornado.gen.coroutine
     def get(self):
         dat = yield self.get_data(**self.psp_kwargs)

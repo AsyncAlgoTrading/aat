@@ -26,7 +26,7 @@ class TradesHandler(PerspectiveHTTPMixin, HTTPHandler):
         except (ValueError, TypeError):
             instrument = None
 
-        msgs = [x.to_dict(True, True) for x in self.te.query().query_trades(instrument)]
+        msgs = [x.to_dict(True, True) for x in self.te.query.query_trades(instrument)]
         if len(msgs) > 0:
             for msg in msgs:
                 msg['underlying'] = msg['instrument']['underlying']

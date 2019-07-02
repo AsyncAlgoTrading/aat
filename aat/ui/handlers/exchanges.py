@@ -16,7 +16,7 @@ class ExchangesHandler(PerspectiveHTTPMixin, HTTPHandler):
 
     @run_on_executor
     def get_data(self, **psp_kwargs):
-        exchanges = self.te.query().query_exchanges()
+        exchanges = self.te.query.query_exchanges()
         msgs = [{'id': j + i*len(exchanges),
                  'name': ExchangeType_to_string(x['exchange']),
                  'instrument': y.to_dict(True, True)['underlying']}
@@ -26,6 +26,7 @@ class ExchangesHandler(PerspectiveHTTPMixin, HTTPHandler):
         super(ExchangesHandler, self).loadData(data=msgs, **psp_kwargs)
         return super(ExchangesHandler, self).getData()
 
+    @tornado.web.authenticated
     @tornado.gen.coroutine
     def get(self):
         dat = yield self.get_data(**self.psp_kwargs)

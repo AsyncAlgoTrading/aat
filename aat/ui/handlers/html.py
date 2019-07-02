@@ -13,8 +13,6 @@ class HTMLOpenHandler(HTTPHandler):
         if not self.template:
             self.redirect('/')
         else:
-            if self.request.path == '/logout':
-                self.clear_cookie("user")
             template = self.render_template(self.template, **self.template_kwargs)
             self.write(template)
 

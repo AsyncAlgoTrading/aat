@@ -15,7 +15,7 @@ class StrategyTradeResponseHandler(PerspectiveHTTPMixin, HTTPHandler):
 
     @run_on_executor
     def get_data(self, **psp_kwargs):
-        msgs = [s.to_dict(True, True) for s in self.te.query().query_traderesps()]
+        msgs = [s.to_dict(True, True) for s in self.te.query.query_traderesps()]
         if len(msgs) > 0:
             for msg in msgs:
                 msg.pop('request', None)
@@ -25,6 +25,7 @@ class StrategyTradeResponseHandler(PerspectiveHTTPMixin, HTTPHandler):
         super(StrategyTradeResponseHandler, self).loadData(data=msgs, **psp_kwargs)
         return super(StrategyTradeResponseHandler, self).getData()
 
+    @tornado.web.authenticated
     @tornado.gen.coroutine
     def get(self):
         dat = yield self.get_data(**self.psp_kwargs)

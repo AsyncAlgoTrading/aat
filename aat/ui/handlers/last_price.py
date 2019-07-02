@@ -15,7 +15,7 @@ class LastPriceHandler(PerspectiveHTTPMixin, HTTPHandler):
 
     @run_on_executor
     def get_data(self, **psp_kwargs):
-        msgs = [s.to_dict(True, True) for s in self.te.query().query_lastpriceall()]
+        msgs = [s.to_dict(True, True) for s in self.te.query.query_lastpriceall()]
         if len(msgs) > 0:
             for msg in msgs:
                 msg['underlying'] = msg['instrument']['underlying']
@@ -28,6 +28,7 @@ class LastPriceHandler(PerspectiveHTTPMixin, HTTPHandler):
         super(LastPriceHandler, self).loadData(data=list(dat.values()), **psp_kwargs)
         return super(LastPriceHandler, self).getData()
 
+    @tornado.web.authenticated
     @tornado.gen.coroutine
     def get(self):
         dat = yield self.get_data(**self.psp_kwargs)

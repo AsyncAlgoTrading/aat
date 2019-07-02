@@ -1,17 +1,27 @@
+import base64
+import hashlib
+import hmac
 import os
 import os.path
 import logging
+import secrets
+import string
+import time
 import tornado.ioloop
 import tornado.web
+import ujson
+import uuid
 from .handlers.accounts import AccountsHandler
 from .handlers.exchanges import ExchangesHandler
 from .handlers.instruments import InstrumentsHandler
 from .handlers.last_price import LastPriceHandler
+from .handlers.login import LoginHandler, LogoutHandler
 from .handlers.strategies import StrategiesHandler
 from .handlers.strategy_trade_request import StrategyTradeRequestHandler
 from .handlers.strategy_trade_response import StrategyTradeResponseHandler
 from .handlers.trades import TradesHandler
-from .handlers.html import HTMLOpenHandler
+from .handlers.html import HTMLHandler, HTMLOpenHandler
+from ..utils import log
 
 
 class ServerApplication(tornado.web.Application):
@@ -28,9 +38,19 @@ class ServerApplication(tornado.web.Application):
 
         logging.getLogger('tornado.access').disabled = False
 
+        if not cookie_secret:
+            nonce = int(time.time() * 1000)
+            encoded_payload = ujson.dumps({"nonce": nonce}).encode()
+            b64 = base64.b64encode(encoded_payload)
+            cookie_secret = hmac.new(str(uuid.uuid1()).encode(), b64, hashlib.sha384).hexdigest()
+
+        login_code = ''.join(secrets.choice(string.ascii_letters + string.digits) for i in range(20))
+        log.critical(f'\n**********\nLogin code: {login_code}\n**********')
+
         settings = {
-                "cookie_secret": cookie_secret or "61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",  # TODO
+                "cookie_secret": cookie_secret,
                 "login_url": "/login",
+                "login_code": login_code,
                 "debug": debug,
                 "template_path": os.path.join(root, 'templates'),
                 }
@@ -69,5 +89,9 @@ class ServerApplication(tornado.web.Application):
             (r"/api/v1/arrow/trades", TradesHandler, {'trading_engine': trading_engine,
                                                       'psp_kwargs': {'index': 'time', 'view': 'hypergrid', 'limit': 100, 'transfer_as_arrow': True}}),
             (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": static}),
+            (r"/api/v1/login", LoginHandler, {}),
+            (r"/api/v1/logout", LogoutHandler, {}),
+            (r"/login", HTMLOpenHandler, {'template': '404.html'}),
+            (r"/logout", HTMLHandler, {'template': '404.html'}),
             (r"/(.*)", HTMLOpenHandler, {'template': '404.html'})
           ], **settings)

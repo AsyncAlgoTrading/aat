@@ -11,7 +11,6 @@ class Execution(object):
         self.trading_type = options.trading_type
         self.exchanges = exchanges
         self.accounts = accounts
-
         self._backtest_id = 1
 
     def insufficientFunds(self, req):
