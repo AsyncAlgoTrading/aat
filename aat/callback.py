@@ -40,6 +40,9 @@ class Callback(metaclass=ABCMeta):
 
     def onAnalyze(self, engine):
         '''onAnalyze'''
+        if not engine:
+            return
+
         import pandas
         import numpy as np
         import matplotlib

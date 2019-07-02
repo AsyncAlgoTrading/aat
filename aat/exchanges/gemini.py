@@ -88,5 +88,6 @@ class GeminiExchange(GeminiMixins, Exchange):
                             self.callback(res.type, res)
             else:
                 event = json.loads(val[0].data)
+                print(event)
                 if event.get('type', 'subscription_ack') in ('subscription_ack', 'heartbeat'):
                     continue

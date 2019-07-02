@@ -164,8 +164,7 @@ class OrderEntry(RestAPIDataSource):
         return resp
 
     def cancel(self, resp: TradeResponse):
-        params = tradereq_to_ccxt_order(resp)
-        self.oe_client().cancel_order(**params)
+        self.oe_client().cancel_order(resp.order_id)
 
     def cancelAll(self, order_ids: List[str] = None):
         if order_ids:

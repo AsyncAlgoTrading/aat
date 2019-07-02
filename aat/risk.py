@@ -108,6 +108,6 @@ class Risk(object):
         '''precheck for risk compliance'''
         return self.request(req)
 
-    def update(self, data: TradeResponse):
+    def update(self, resp: TradeResponse):
         '''update risk after execution'''
-        pass
+        log.critical('NOT IMPLEMENTED')

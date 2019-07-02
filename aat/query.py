@@ -42,6 +42,8 @@ class QueryEngine(object):
         self._trade_resps_by_instrument = {}
 
         self._strats = []
+        self._risk = risk
+        self._execution = execution
 
     def registerStrategy(self, strat: TradingStrategy):
         self._strats.append(strat)  # add to tickables
@@ -134,6 +136,7 @@ class QueryEngine(object):
             resp.remaining = data.remaining
             for strat in self._strats:
                 strat.onFill(resp)
+            self._risk.update(resp)
 
         if data.order_id in self._pending.keys() and data.remaining <= 0:
             del self._pending[data.order_id]
