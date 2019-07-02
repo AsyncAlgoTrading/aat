@@ -134,24 +134,33 @@ def _parse_currencies(currencies):
     return ret
 
 
+def _parse_exchanges(argv):
+    return [str_to_exchange(x) for x in argv['exchanges'].split() if x]
+
+
+def _parse_synthetic_config(config, argv):
+    new_config = SyntheticExchangeConfig()
+
+    new_config.exchange_types = config.exchange_options.exchange_types
+    new_config.trading_type = config.exchange_options.trading_type
+    new_config.currency_pairs = config.exchange_options.currency_pairs
+    new_config.instruments = config.exchange_options.instruments
+
+    if argv.get('direction'):
+        new_config.direction = argv.get('direction')
+    if argv.get('volatility'):
+        new_config.volatility = argv.get('volatility')
+    return new_config
+
+
 def _parse_options(argv, config: TradingEngineConfig) -> None:
     if argv.get('exchanges'):
-        config.exchange_options.exchange_types = [str_to_exchange(x) for x in argv['exchanges'].split() if x]
+        config.exchange_options.exchange_types = _parse_exchanges(argv)
         for exchange in config.exchange_options.exchange_types:
             if config.type == TradingType.LIVE and exchange == ExchangeType.SYNTHETIC:
                 raise ConfigException('Cannot run synthetic exchange in live mode!')
             elif exchange == ExchangeType.SYNTHETIC:
-                new_config = SyntheticExchangeConfig()
-                new_config.exchange_types = config.exchange_options.exchange_types
-                new_config.trading_type = config.exchange_options.trading_type
-                new_config.currency_pairs = config.exchange_options.currency_pairs
-                new_config.instruments = config.exchange_options.instruments
-
-                if argv.get('direction'):
-                    new_config.direction = argv.get('direction')
-                if argv.get('volatility'):
-                    new_config.volatility = argv.get('volatility')
-                config.exchange_options = new_config
+                config.exchange_options = _parse_synthetic_config(config, argv)
                 config.exchange_options.exchange_type = ExchangeType.COINBASE
     else:
         raise ConfigException('No exchange set!')
@@ -188,20 +197,10 @@ def _parse_backtest_options(argv, config) -> None:
     config.backtest_options = BacktestConfig()
 
     if argv.get('exchanges'):
-        config.exchange_options.exchange_types = [str_to_exchange(x) for x in argv['exchanges'].split() if x]
+        config.exchange_options.exchange_types = _parse_exchanges(argv)
         for exchange in config.exchange_options.exchange_types:
             if exchange == ExchangeType.SYNTHETIC:
-                new_config = SyntheticExchangeConfig()
-                new_config.exchange_types = config.exchange_options.exchange_types
-                new_config.trading_type = config.exchange_options.trading_type
-                new_config.currency_pairs = config.exchange_options.currency_pairs
-                new_config.instruments = config.exchange_options.instruments
-
-                if argv.get('direction'):
-                    new_config.direction = argv.get('direction')
-                if argv.get('volatility'):
-                    new_config.volatility = argv.get('volatility')
-                config.exchange_options = new_config
+                config.exchange_options = _parse_synthetic_config(config, argv)
                 config.exchange_options.exchange_type = ExchangeType.COINBASE
     else:
         raise ConfigException('No exchange set!')
@@ -254,6 +253,7 @@ def parse_command_line_config(argv: list) -> TradingEngineConfig:
 
 def set_all_trading_types(trading_type: TradingType,
                           config: TradingEngineConfig) -> None:
+    '''Set all trading types to match'''
     config.type = trading_type
     config.exchange_options.trading_type = trading_type
     config.risk_options.trading_type = trading_type

@@ -83,4 +83,17 @@ class TestRisk:
         # assert resp.risk_check == False
 
     def test_update(self):
-        self.risk.update(None)
+        from ..structs import TradeRequest, TradeResponse, Instrument
+        from ..enums import Side, PairType, OrderType, ExchangeType, TradeResult
+        req = TradeRequest(side=Side.SELL, instrument=Instrument(underlying=PairType.BTCUSD), order_type=OrderType.MARKET, volume=50.0, price=1.0, exchange=ExchangeType.COINBASE, time=datetime.now())
+        resp = TradeResponse(side=Side.SELL, instrument=Instrument(underlying=PairType.BTCUSD), request=req, order_id='1', volume=50.0, price=1.0, exchange=ExchangeType.COINBASE, time=datetime.now(), status=TradeResult.FILLED)
+        self.risk.update(resp)
+        assert self.risk.outstanding == -50
+
+    def test_cancel(self):
+        from ..structs import TradeRequest, TradeResponse, Instrument
+        from ..enums import Side, PairType, OrderType, ExchangeType, TradeResult
+        req = TradeRequest(side=Side.SELL, instrument=Instrument(underlying=PairType.BTCUSD), order_type=OrderType.MARKET, volume=50.0, price=1.0, exchange=ExchangeType.COINBASE, time=datetime.now())
+        resp = TradeResponse(side=Side.SELL, instrument=Instrument(underlying=PairType.BTCUSD), request=req, order_id='1', volume=50.0, price=1.0, exchange=ExchangeType.COINBASE, time=datetime.now(), status=TradeResult.FILLED)
+        self.risk.cancel(resp)
+        assert self.risk.outstanding == 50

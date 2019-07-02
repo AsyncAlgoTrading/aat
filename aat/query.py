@@ -46,7 +46,7 @@ class QueryEngine(object):
         self._execution = execution
 
     def registerStrategy(self, strat: TradingStrategy):
-        self._strats.append(strat)  # add to tickables
+        self._strats.append(strat)
 
     def query_instruments(self, exchange=None) -> List[PairType]:
         if exchange:

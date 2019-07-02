@@ -42,20 +42,10 @@ class Risk(object):
                             risk_check=status,
                             risk_reason=reason,
                             )
-
-        if status == TradeResult.FILLED:  # FIXME
-            self.outstanding += abs(vol * price) * (1 if side == Side.BUY else -1)
-
-            self.max_running_outstanding = max(self.max_running_outstanding,
-                                               self.outstanding)
-            self.max_running_outstanding_incr.append(
-                self.max_running_outstanding)
-
-            # TODO self.max_running_risk =
-            # TODO self.max_running_drawdown =
         return resp
 
     def request(self, req: TradeRequest) -> TradeRequest:
+        # update risk as soon as order will go out
         log.info('Requesting %f @ %f', req.volume, req.price)
         total = req.volume * req.price
         total = total * -1 if req.side == Side.SELL else total
@@ -110,8 +100,23 @@ class Risk(object):
 
     def update(self, resp: TradeResponse):
         '''update risk after execution'''
-        log.critical('NOT IMPLEMENTED')
+        log.critical('risk not fully implemented')
+        if resp.status == TradeResult.FILLED:
+            # FIXME
+            self.outstanding += abs(resp.volume * resp.price) * (1 if resp.side == Side.BUY else -1)
+
+            # FIXME
+            # self.max_running_outstanding = max(self.max_running_outstanding,
+            #                                    self.outstanding)
+            # self.max_running_outstanding_incr.append(
+            #     self.max_running_outstanding)
+
+            # TODO self.max_running_risk =
+            # TODO self.max_running_drawdown =
+        elif resp.status == TradeResult.REJECTED:
+            self.outstanding -= abs(resp.volume * resp.price) * (1 if resp.side == Side.BUY else -1)
 
     def cancel(self, resp: TradeResponse):
         '''update risk after cancelling order'''
-        log.critical('NOT IMPLEMENTED')
+        log.critical('risk not fully implemented')
+        self.outstanding -= abs(resp.volume * resp.price) * (1 if resp.side == Side.BUY else -1)
