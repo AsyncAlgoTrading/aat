@@ -24,7 +24,7 @@ class Backtest(StreamingDataSource):
     def run(self, engine) -> None:
         log.info('Starting....')
 
-        datas = [ex.historical() for ex in engine.exchanges().values()]
+        datas = [ex.historical() for ex in engine.exchanges.values()]
         data = pd.concat(datas)
         data.sort_index()
 

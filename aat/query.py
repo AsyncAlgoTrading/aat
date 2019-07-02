@@ -1,9 +1,9 @@
 import operator
-from concurrent.futures import ThreadPoolExecutor
+# from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from functools import reduce
 from typing import List, Dict
-from .enums import TickType, TradeResult, Side, ExchangeType, PairType  # noqa: F401
+from .enums import TickType, TradeResult, Side, ExchangeType, PairType, CurrencyType  # noqa: F401
 from .exceptions import QueryException
 from .execution import Execution
 from .risk import Risk
@@ -13,17 +13,19 @@ from .structs import Instrument, MarketData, TradeRequest, TradeResponse
 
 class QueryEngine(object):
     def __init__(self,
-                 backtest: bool = False,
                  exchanges: List[ExchangeType] = None,
                  pairs: List[PairType] = None,
                  instruments: List[Instrument] = None,
+                 accounts=None,
                  risk: Risk = None,
-                 execution: Execution = None,
-                 total_funds: float = 0.0):
-        self.executor = ThreadPoolExecutor(16)
+                 execution: Execution = None):
+        # self._executor = ThreadPoolExecutor(16)
         self._all = []
 
-        self._portfolio_value = [] if backtest else [[datetime.now(), total_funds]]
+        self._accounts = accounts
+
+        self._portfolio_value_by_instrument = {}
+        self._portfolio_value = [[datetime.now(), risk.total_funds, 0.0]]
         self._holdings = {}
         self._pending = {}
 
@@ -167,29 +169,75 @@ class QueryEngine(object):
         self._trade_resps_by_instrument[resp.instrument].append(resp)
 
     def _recalculate_value(self, data: MarketData) -> None:
-        # TODO move to risk
+        # TODO move to Risk
         if data.instrument not in self._holdings:
             # nothing to do
             return
-        volume = self._holdings[data.instrument][2]
-        purchase_price = self._holdings[data.instrument][1]  # takes into account slippage/txn cost
 
-        if self._portfolio_value == []:
-            # start from first tick of data
-            # TODO risk bounds?
-            self._portfolio_value = [[data.time, volume*data.price, volume*(data.price-purchase_price)]]
-        else:
-            self._portfolio_value.append([data.time, volume*data.price, volume*(data.price-purchase_price)])
+        volume = self._holdings[data.instrument]._volume
+        instrument = str(data.instrument)
+        value = self._holdings[data.instrument]._avg_price * volume
+        pnl = self._holdings[data.instrument]._pnl
+
+        if volume < 0:
+            # sanity check, no shorting for now!
+            raise Exception('Something has gone wrong!')
+
+        if instrument not in self._portfolio_value_by_instrument:
+            self._portfolio_value_by_instrument[instrument] = []
+        self._portfolio_value_by_instrument[instrument].append([data.time, instrument, value + pnl, pnl])
+
+        pnl = sum(x._pnl for x in self._holdings.values())
+        self._portfolio_value.append([data.time, self._portfolio_value[-1][1], pnl])
 
     def update_holdings(self, resp: TradeResponse) -> None:
-        # TODO move to risk
         if resp.status in (TradeResult.REJECTED, TradeResult.PENDING, TradeResult.NONE):
             return
         if resp.instrument not in self._holdings:
-            notional = resp.price * resp.volume*(1 if resp.side == Side.BUY else -1)
-            self._holdings[resp.instrument] = \
-                [notional, resp.price, resp.volume*(1 if resp.side == Side.BUY else -1)]
+            self._holdings[resp.instrument] = pnl_helper()
+        self._holdings[resp.instrument].exec(resp.volume, resp.price)
+
+
+def sign(x): return (1, -1)[x < 0]
+
+
+class pnl_helper(object):
+    def __init__(self):
+        self._records = []
+        self._pnl = 0.0
+        self._px = None
+        self._volume = None
+        self._realized = 0.0
+        self._avg_price = self._px
+
+    def exec(self, amt, px):
+        if self._px is None:
+            self._px = px
+            self._volume = amt
+            self._avg_price = self._px
+            self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl+self._realized, 'unrealized': self._pnl, 'realized': self._realized})
+            return
+        if sign(amt) == sign(self._volume):
+            # increasing position
+            self._avg_price = (self._avg_price*self._volume + px*amt)/(self._volume + amt)
+            self._volume += amt
+            self._pnl = (self._volume * (px-self._avg_price))
         else:
-            notional = resp.price * resp.volume*(1 if resp.side == Side.BUY else -1)
-            self._holdings[resp.instrument] = \
-                [self._holdings[resp.instrument][0] + notional, resp.price, resp.volume*(1 if resp.side == Side.BUY else -1)]
+            if abs(amt) > abs(self._shares):
+                # do both
+                diff = self._volume
+                self._volume = amt + self._volume
+
+                # take profit/loss
+                self._realized += (diff * (px - self._avg_price))
+
+                # increasing position
+                self._avg_price = px
+
+            else:
+                # take profit/loss
+                self._volume += amt
+
+                self._pnl = (self._volume * (px-self._avg_price))
+                self._realized += (amt * (self._avg_price-px))
+        self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl+self._realized, 'unrealized': self._pnl, 'realized': self._realized})

@@ -42,7 +42,6 @@ class Callback(metaclass=ABCMeta):
         '''onAnalyze'''
         if not engine:
             return
-
         import pandas
         import numpy as np
         import matplotlib
@@ -52,15 +51,14 @@ class Callback(metaclass=ABCMeta):
 
         # extract data from trading engine
         portfolio_value = engine.portfolio_value()
-        requests = engine.query().query_tradereqs()
-        responses = engine.query().query_traderesps()
-        trades = pandas.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query().query_trades(instrument=requests[0].instrument, page=None)])
+        requests = engine.query.query_tradereqs()
+        responses = engine.query.query_traderesps()
+        trades = pandas.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query.query_trades(instrument=requests[0].instrument, page=None)])
         trades.set_index(['time'], inplace=True)
 
         # format into pandas
         pd = pandas.DataFrame(portfolio_value, columns=['time', 'value', 'pnl'])
         pd.set_index(['time'], inplace=True)
-
         # setup charting
         sns.set_style('darkgrid')
         fig = plt.figure()
@@ -77,6 +75,7 @@ class Callback(metaclass=ABCMeta):
         pd['pos'][pd['pos'] <= 0] = np.nan
         pd['neg'][pd['neg'] > 0] = np.nan
         pd.plot(ax=ax2, y=['pos', 'neg'], kind='area', stacked=False, color=['green', 'red'], legend=False, linewidth=0, fontsize=5, rot=0)
+        ax2.set_ylabel('Realized PnL')
 
         # annotate with key data
         ax1.set_title('Performance')
@@ -106,7 +105,6 @@ class Callback(metaclass=ABCMeta):
         # set same limits
         y_bot, y_top = ax1.get_ylim()
         x_bot, x_top = ax1.get_xlim()
-        ax3.set_ylim(y_bot, y_top)
         ax1.set_xlim(x_bot, x_top)
         ax2.set_xlim(x_bot, x_top)
         ax3.set_xlim(x_bot, x_top)

@@ -2,17 +2,17 @@ import asyncio
 import tornado
 import operator
 import uvloop
+from datetime import datetime
 from functools import reduce
 from .backtest import Backtest
 from .callback import Print
 from .config import TradingEngineConfig
 from .enums import TradingType, Side, CurrencyType, TradeResult
-from .exceptions import ConfigException
 from .execution import Execution
 from .query import QueryEngine
 from .risk import Risk
 from .strategy import TradingStrategy
-from .structs import TradeRequest, TradeResponse
+from .structs import TradeRequest, TradeResponse, Account
 from .ui.server import ServerApplication
 from .utils import ex_type_to_ex
 from .logging import log
@@ -26,133 +26,118 @@ class TradingEngine(object):
         self._ui_handlers = ui_handlers
         self._ui_settings = ui_settings
 
-        # running live?
-        self._live = options.type == TradingType.LIVE
-
-        # running simulation?
-        self._simulation = options.type == TradingType.SIMULATION
-
-        # running sandbox?
-        self._sandbox = options.type == TradingType.SANDBOX
-
-        # running backtest?
-        self._backtest = options.type == TradingType.BACKTEST
-
-        # instantiate backtest engine
-        self._bt = Backtest(options.backtest_options) if self._backtest else None
-
-        # instantiate riskengine
-        self._rk = Risk(options.risk_options)
+        # trading type
+        self.trading_type = options.type
 
         # instantiate exchange instance
-        self._exchanges = {o: ex_type_to_ex(o)(o, options.exchange_options) for o in options.exchange_options.exchange_types}
+        self.exchanges = {o: ex_type_to_ex(o)(o, options.exchange_options) for o in options.exchange_options.exchange_types}
+
+        # get account information and balances
+        for ex in self.exchanges.values():
+            for account in ex.accounts().values():
+                if self.trading_type == TradingType.BACKTEST:
+                    log.info(f'Adjusting account balance to 1,000 {account}')
+                    account.balance = 1000
+
+                if account.currency == CurrencyType.USD:
+                    # if holding USD, add value
+                    options.risk_options.total_funds += account.balance
+                else:
+                    # calculate USD value
+                    spot = ex.ticker(currency=account.currency)['last']
+                    options.risk_options.total_funds += account.balance*spot
+                    account.value = account.balance*spot
+
+        # lookup by exchange or currency
+        self.accounts = {}
+        for ex in self.exchanges.values():
+            self.accounts[ex] = {}
+            for account in ex.accounts().values():
+                self.accounts[ex][account.currency] = account
+                if account.currency not in self.accounts:
+                    self.accounts[account.currency] = {}
+                self.accounts[account.currency][ex] = account
+
+        log.info(self.accounts)
+        log.info("Running with %.2f USD" % options.risk_options.total_funds)
+
+        # instantiate backtest engine
+        self.backtest = Backtest(options.backtest_options) if self.trading_type == TradingType.BACKTEST else None
+
+        # instantiate riskengine
+        self.risk = Risk(options.risk_options, self.exchanges, self.accounts)
 
         # instantiate execution engine
-        self._ec = Execution(options.execution_options, self._exchanges)
-
-        # if live or sandbox, get account information and balances
-        if self._live or self._simulation or self._sandbox:
-            accounts = reduce(operator.concat, [ex.accounts() for ex in self._exchanges.values()])
-            for ex in self._exchanges.values():
-                for account in ex.accounts():
-                    if account.currency == CurrencyType.USD:
-                        options.risk_options.total_funds += account.balance
-                    else:
-                        # calculate USD value
-                        spot = ex.ticker(currency=account.currency)['last']
-                        options.risk_options.total_funds += account.balance*spot
-                        account.value = account.balance*spot
-
-            log.info(accounts)
-            log.info("Running with %.2f USD" % options.risk_options.total_funds)
+        self.execution = Execution(options.execution_options, self.exchanges, self.accounts)
 
         # instantiate query engine
-        self._qy = QueryEngine(backtest=self._backtest,
-                               exchanges=self._exchanges,
-                               pairs=options.exchange_options.currency_pairs,
-                               instruments={name:
-                                            list(set(options.exchange_options.instruments).intersection(
-                                                ex.markets())) for name, ex in self._exchanges.items()},
-                               risk=self._rk,
-                               execution=self._ec,
-                               total_funds=options.risk_options.total_funds)
+        self.query = QueryEngine(exchanges=self.exchanges,
+                                 pairs=options.exchange_options.currency_pairs,
+                                 accounts=self.accounts,
+                                 instruments={name:
+                                              list(set(options.exchange_options.instruments).intersection(
+                                                  ex.markets())) for name, ex in self.exchanges.items()},
+                                 risk=self.risk,
+                                 execution=self.execution)
 
         # register query hooks
-        if self._live or self._simulation or self._sandbox:
-            for exc in self._exchanges.values():
-                # Track my trades and cancels
-                exc.onTrade(self._qy.onTrade)
-                exc.onCancel(self._qy.onCancel)
+        if self.trading_type in (TradingType.LIVE, TradingType.SIMULATION, TradingType.SANDBOX):
+            for exc in self.exchanges.values():
+
+                # Track my trades and cancels for future callbacks
+                exc.onTrade(self.query.onTrade)
+                exc.onCancel(self.query.onCancel)
 
                 if options.print:
                     exc.registerCallback(Print(onTrade=True, onReceived=True, onOpen=True, onFill=True, onCancel=True, onChange=True, onError=False))
-        elif self._backtest:
-            self._bt.onTrade(self._qy.onTrade)
-            self._bt.onCancel(self._qy.onCancel)
-            self._bt.registerCallback(Print())
-
-        # sanity check
-        assert not (self._live and self._simulation and self._sandbox and self._backtest)
+        else:
+            self.backtest.onTrade(self.query.onTrade)
+            self.backtest.onCancel(self.query.onCancel)
+            self.backtest.registerCallback(Print())
 
         # register strategies from config
         for x in options.strategy_options:
             log.critical('Registering strategy: %s', str(x.clazz))
-            x.kwargs['query'] = self.query()
-            x.kwargs['exchanges'] = self.exchanges()
+            x.kwargs['query'] = self.query
+            x.kwargs['exchanges'] = self.exchanges
             self.registerStrategy(x.clazz(*x.args, **x.kwargs))
 
         # actively trading or halted?
         self._trading = True  # type: bool
 
-    def exchanges(self):
-        return self._exchanges
-
-    def backtest(self):
-        return self._bt
-
-    def risk(self):
-        return self._rk
-
-    def execution(self):
-        return self._ec
-
-    def query(self):
-        return self._qy
-
     def haltTrading(self):
         self._trading = False
-        for strat in self.query().strategies():
+        for strat in self.query.strategies():
             strat.onHalt()
 
     def continueTrading(self):
         self._trading = True
-        for strat in self.query().strategies():
+        for strat in self.query.strategies():
             strat.onContinue()
 
     def registerStrategy(self, strat: TradingStrategy):
-        if self._live or self._simulation or self._sandbox:
+        if self.trading_type in (TradingType.LIVE, TradingType.SIMULATION, TradingType.SANDBOX):
             # register for exchange data
-            for ex in self._exchanges.values():
+            for ex in self.exchanges.values():
                 ex.registerCallback(strat.callback())
-
-        elif self._backtest:
+        else:
             # register for backtest data
-            self._bt.registerCallback(strat.callback())
+            self.backtest.registerCallback(strat.callback())
 
         # add to tickables
-        self.query().registerStrategy(strat)
+        self.query.registerStrategy(strat)
 
         # give self to strat so it can request trading actions
         strat.setEngine(self)
 
     def strategies(self):
-        return self.query().strategies()
+        return self.query.strategies()
 
     def portfolio_value(self) -> list:
-        return self.query()._portfolio_value
+        return self.query._portfolio_value
 
     def run(self):
-        if self._live or self._simulation or self._sandbox:
+        if self.trading_type in (TradingType.LIVE, TradingType.SIMULATION, TradingType.SANDBOX):
             asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
             loop = tornado.platform.asyncio.AsyncIOMainLoop().install()
@@ -163,12 +148,12 @@ class TradingEngine(object):
                                                  custom_settings=self._ui_settings)
 
             # trigger starts
-            for strat in self.query().strategies():
+            for strat in self.query.strategies():
                 strat.onStart()
 
             # run on exchange
             async def _run():
-                await asyncio.wait([ex.run(self) for ex in self._exchanges.values()])
+                await asyncio.wait([ex.run(self) for ex in self.exchanges.values()])
 
             # get event loop
             loop = asyncio.get_event_loop()
@@ -183,16 +168,13 @@ class TradingEngine(object):
             loop.create_task(_run())
             loop.run_forever()
 
-        elif self._backtest:
+        else:
             # trigger starts
-            for strat in self.query().strategies():
+            for strat in self.query.strategies():
                 strat.onStart()
 
             # let backtester run
-            self._bt.run(self)
-
-        else:
-            raise ConfigException('Invalid configuration')
+            self.backtest.run(self)
 
     def terminate(self):
         for strat in self._strats:
@@ -202,7 +184,7 @@ class TradingEngine(object):
                  side: Side,
                  req: TradeRequest,
                  strat=None):
-        self.query().push_tradereq(req)
+        self.query.push_tradereq(req)
 
         if not self._trading:
             # not allowed to trade right now
@@ -213,61 +195,48 @@ class TradingEngine(object):
                                  volume=0.0,
                                  price=0.0,
                                  instrument=req.instrument,
-                                 success=False,
                                  order_id='')
         else:
             # get risk report
-            resp = self._rk.request(req)
+            resp = self.risk.request(req)
 
             if resp.risk_check:
                 log.info('Risk check passed')
                 # if risk passes, let execution execute
-                if self._live or self._sandbox:
-                    # Trading
-                    resp = self._ec.request(resp)
+                # Trading
+                resp = self.execution.request(resp)
 
-                    # TODO
-                    if resp.status == TradeResult.PENDING:
-                        # listen for later
-                        log.info('Order pending')
-                        self.query().newPending(resp)
+                # TODO
+                if resp.status == TradeResult.PENDING:
+                    # listen for later
+                    log.info('Order pending')
+                    self.query.newPending(resp)
 
-                    elif resp.status == TradeResult.REJECTED:
-                        # send response
-                        log.info('Trade rejected')
-                        resp = TradeResponse(request=resp,
-                                             side=resp.side,
-                                             exchange=req.exchange,
-                                             volume=0.0,
-                                             price=0.0,
-                                             instrument=req.instrument,
-                                             status=TradeResult.REJECTED,
-                                             order_id='')
-
-                    elif resp.status == TradeResult.FILLED:
-                        log.info('Trade filled')
-                        log.info("Slippage - %s" % resp.slippage)
-                        log.info("TXN cost - %s" % resp.transaction_cost)
-                        # let risk update according to execution details
-                        self._rk.update(resp)
-                else:
-                    # backtesting or simulation
-                    resp = TradeResponse(request=req,
-                                         side=req.side,
+                elif resp.status == TradeResult.REJECTED:
+                    # send response
+                    log.info('Trade rejected')
+                    resp = TradeResponse(request=resp,
+                                         side=resp.side,
                                          exchange=req.exchange,
-                                         volume=req.volume,
-                                         price=req.price,
-                                         instrument=req.instrument,
-                                         status=TradeResult.FILLED,
+                                         volume=0.0,
+                                         price=0.0,
                                          time=req.time,
+                                         instrument=req.instrument,
+                                         status=TradeResult.REJECTED,
                                          order_id='')
+                    self.risk.cancel(resp)
 
-                    # adjust response with slippage and transaction cost modeling
-                    resp = strat.slippage(resp)
-                    log.info("Slippage BT- %s" % resp.slippage)
-
-                    resp = strat.transactionCost(resp)
-                    log.info("TXN cost BT- %s" % resp.transaction_cost)
+                elif resp.status == TradeResult.FILLED:
+                    if self.trading_type in (TradingType.SIMULATION, TradingType.BACKTEST):
+                        # adjust response with slippage and transaction cost modeling
+                        resp = strat.slippage(resp)
+                        # adjust response with slippage and transaction cost modeling
+                        resp = strat.transactionCost(resp)
+                    log.info('Trade filled')
+                    log.info("Slippage - %s" % resp.slippage)
+                    log.info("TXN cost - %s" % resp.transaction_cost)
+                    # let risk update according to execution details
+                    self.risk.update(resp)
             else:
                 log.info('Risk check failed')
                 resp = TradeResponse(request=resp,
@@ -278,8 +247,8 @@ class TradingEngine(object):
                                      instrument=req.instrument,
                                      status=TradeResult.REJECTED,
                                      order_id='')
-        self.query().push_traderesp(resp)
-        self.query().update_holdings(resp)
+        self.query.push_traderesp(resp)
+        self.query.update_holdings(resp)
         return resp
 
     def request(self, req: TradeRequest, strat=None):
@@ -288,9 +257,9 @@ class TradingEngine(object):
                              strat=strat)
 
     def cancel(self, resp: TradeResponse, strat=None):
-        resp = self._ec.cancel(resp)
+        resp = self.execution.cancel(resp)
         return resp
 
     def cancelAll(self, strat=None):
-        resp = self._ec.cancelAll(self._pending)
+        resp = self.execution.cancelAll(self._pending)
         return resp

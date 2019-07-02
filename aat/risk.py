@@ -1,12 +1,14 @@
 from datetime import datetime
+from typing import List
 from .config import RiskConfig
-from .structs import TradeRequest, TradeResponse, Instrument
 from .enums import Side, TradeResult, OrderType, RiskReason, ExchangeType
+from .exchange import Exchange
+from .structs import TradeRequest, TradeResponse, Account, Instrument
 from .logging import log
 
 
 class Risk(object):
-    def __init__(self, options: RiskConfig) -> None:
+    def __init__(self, options: RiskConfig, exchanges: List[Exchange], accounts: List[Account]) -> None:
         self.trading_type = options.trading_type
         self.max_drawdown = options.max_drawdown
         self.max_risk = options.max_risk
@@ -21,6 +23,9 @@ class Risk(object):
 
         self.max_running_risk = 0.0  # type: float
         self.max_running_risk_incr = []  # type: list
+
+        self.exchanges = exchanges
+        self.accounts = accounts
 
     def _constructResp(self,
                        side: Side,
@@ -117,6 +122,6 @@ class Risk(object):
             self.outstanding -= abs(resp.volume * resp.price) * (1 if resp.side == Side.BUY else -1)
 
     def cancel(self, resp: TradeResponse):
-        '''update risk after cancelling order'''
+        '''update risk after cancelling or rejecting order'''
         log.critical('risk not fully implemented')
         self.outstanding -= abs(resp.volume * resp.price) * (1 if resp.side == Side.BUY else -1)
