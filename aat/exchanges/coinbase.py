@@ -4,7 +4,7 @@ from datetime import datetime
 from ..enums import PairType, TickType, TickType_from_string
 from ..exchange import Exchange
 from ..structs import MarketData, Instrument
-from ..utils import parse_date, str_to_currency_pair_type, str_to_side, str_to_order_type
+from ..utils import parse_date, str_to_side, str_to_order_type
 
 
 class CoinbaseExchange(Exchange):
@@ -44,7 +44,7 @@ class CoinbaseExchange(Exchange):
             volume = float(jsn.get('size', 'nan'))
         price = float(jsn.get('price', 'nan'))
 
-        currency_pair = str_to_currency_pair_type(jsn.get('product_id')) if typ != TickType.ERROR else PairType.NONE
+        currency_pair = PairType.from_string(jsn.get('product_id')) if typ != TickType.ERROR else PairType.NONE
 
         instrument = Instrument(underlying=currency_pair)
 

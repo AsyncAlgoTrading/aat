@@ -3,12 +3,12 @@ from datetime import datetime
 from functools import lru_cache
 from typing import List
 from .data_source import RestAPIDataSource
-from .enums import PairType, TradingType, CurrencyType, ExchangeType, ExchangeType_to_string
+from .enums import PairType, TradingType, CurrencyType, ExchangeType, ExchangeType_to_string, TradeResult
 from .exceptions import AATException
 from .structs import TradeRequest, TradeResponse, Account, Instrument
-from .utils import (get_keys_from_environment, str_to_currency_type, str_to_side,
+from .utils import (get_keys_from_environment, str_to_side,
                     exchange_type_to_ccxt_client, tradereq_to_ccxt_order,
-                    str_to_trade_result, parse_date, findpath)
+                    parse_date, findpath)
 # from .utils import elog as log
 
 
@@ -45,7 +45,7 @@ class OrderEntry(RestAPIDataSource):
             else:
                 currency = jsn['currency']
 
-            currency = str_to_currency_type(currency)
+            currency = CurrencyType(currency)
             if 'balance' in jsn:
                 balance = float(jsn['balance'])
             elif 'amount' in jsn:
@@ -142,14 +142,15 @@ class OrderEntry(RestAPIDataSource):
             original = float(order.get('info', {}).get('original_amount', 0.0))
             is_cancelled = order.get('info', {}).get('is_cancelled', False)
             if is_cancelled:
-                status = 'REJECTED'
-
+                status = TradeResult.REJECTED
             if filled == original or remaining <= 0:
-                status = 'FILLED'
+                status = TradeResult.FILLED
             elif remaining < original and remaining > 0:
-                status = 'PARTIAL'
+                status = TradeResult.PARTIAL
             elif remaining == original:
-                status = 'PENDING'
+                status = TradeResult.PENDING
+        elif status in ('OPEN',):
+            status = TradeResult.PENDING
         return side, filled, price, datetime, status, cost, remaining
 
     def buy(self, req: TradeRequest) -> TradeResponse:
@@ -164,7 +165,7 @@ class OrderEntry(RestAPIDataSource):
                              price=float(price),
                              instrument=req.instrument,
                              time=parse_date(datetime),
-                             status=str_to_trade_result(status),
+                             status=status,
                              order_id=order['id'],
                              slippage=float(price) - req.price,
                              transaction_cost=cost,
@@ -183,7 +184,7 @@ class OrderEntry(RestAPIDataSource):
                              price=float(price),
                              instrument=req.instrument,
                              time=parse_date(datetime),
-                             status=str_to_trade_result(status),
+                             status=status,
                              order_id=order['id'],
                              slippage=float(price) - req.price,
                              transaction_cost=cost,

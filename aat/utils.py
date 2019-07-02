@@ -54,29 +54,21 @@ def ex_type_to_ex(ex: ExchangeType):
 
 @lru_cache(None)
 def get_keys_from_environment(prefix: str) -> tuple:
+    '''get exchange keys from environment variables
+
+    Args:
+        prefix (str): exchange name e.g. COINBASE
+    Returns
+        key (str): private key
+        secret (str): private secret
+        passphrase (str): optional passphrase
+    '''
+
     prefix = prefix.upper()
     key = os.environ[prefix + '_API_KEY']
     secret = os.environ[prefix + '_API_SECRET']
     passphrase = os.environ[prefix + '_API_PASS']
     return key, secret, passphrase
-
-
-@lru_cache(None)
-def str_to_currency_type(s: str) -> CurrencyType:
-    s = s.upper()
-    if s not in CurrencyType.members():
-        raise AATException(f'CurrencyType not recognized {s}')
-    return CurrencyType(s)
-
-
-@lru_cache(None)
-def str_to_currency_pair_type(s: str) -> PairType:
-    return PairType.from_string(s)
-
-
-@lru_cache(None)
-def str_currency_to_currency_pair_type(s: str, base: str = 'USD') -> PairType:
-    return PairType.from_string(s, base)
 
 
 @lru_cache(None)
@@ -97,14 +89,6 @@ def str_to_order_type(s: str) -> OrderType:
     if 'LIMIT' in s:
         return OrderType.LIMIT
     return OrderType.NONE
-
-
-@lru_cache(None)
-def str_to_trade_result(s: str) -> TradeResult:
-    s = s.upper()
-    if s in ('OPEN',):
-        s = 'PENDING'
-    return TradeResult(s)
 
 
 @lru_cache(None)
@@ -132,7 +116,6 @@ def trade_req_to_params(req) -> dict:
 
     if ret['type'] == 'limit':
         ret['price'] = req.price
-
     return ret
 
 

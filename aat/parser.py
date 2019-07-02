@@ -3,10 +3,10 @@ import os.path
 from configparser import ConfigParser
 from pydoc import locate
 from .config import TradingEngineConfig, BacktestConfig, StrategyConfig, SyntheticExchangeConfig
-from .enums import TradingType, InstrumentType, ExchangeType
+from .enums import TradingType, InstrumentType, ExchangeType, PairType
 from .exceptions import ConfigException
 from .structs import Instrument
-from .utils import str_to_exchange, set_verbose, str_to_currency_pair_type
+from .utils import str_to_exchange, set_verbose
 from .logging import log
 
 
@@ -130,7 +130,7 @@ def _parse_currencies(currencies):
     splits = [x.strip().upper().replace('-', '') for x in currencies.split(',')]
     ret = []
     for s in splits:
-        ret.append(str_to_currency_pair_type(s))
+        ret.append(PairType.from_string(s))
     return ret
 
 

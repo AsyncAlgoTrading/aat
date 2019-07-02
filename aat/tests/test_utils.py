@@ -39,15 +39,6 @@ class TestUtils:
         assert(two == 'test')
         assert(three == 'test')
 
-    def test_str_to_currency_type(self):
-        from ..utils import str_to_currency_type
-        from ..enums import CurrencyType
-        assert(str_to_currency_type('BTC') == CurrencyType.BTC)
-        assert(str_to_currency_type('ETH') == CurrencyType.ETH)
-        assert(str_to_currency_type('LTC') == CurrencyType.LTC)
-        assert(str_to_currency_type('USD') == CurrencyType.USD)
-        assert(str_to_currency_type('ZRX') == CurrencyType.ZRX)
-
     def test_str_to_side(self):
         from ..utils import str_to_side
         from ..enums import Side
@@ -69,22 +60,6 @@ class TestUtils:
         assert(str_to_exchange('gemini') == ExchangeType.GEMINI)
         assert(str_to_exchange('kraken') == ExchangeType.KRAKEN)
         assert(str_to_exchange('poloniex') == ExchangeType.POLONIEX)
-
-    def test_str_to_currency_pair_type(self):
-        from ..utils import str_to_currency_pair_type
-        from ..enums import PairType, CurrencyType
-
-        for c1, v1 in CurrencyType.__members__.items():
-            for c2, v2 in CurrencyType.__members__.items():
-                if c1 == c2 or \
-                   c1 == 'USD' or \
-                   c2 == 'USD' or \
-                   c1 == 'NONE' or \
-                   c2 == 'NONE':
-                    continue
-                assert str_to_currency_pair_type(c1 + '/' + c2) == PairType.from_string(c1 + '/' + c2)
-                assert str_to_currency_pair_type(c1 + '-' + c2) == PairType.from_string(c1, c2)
-                assert str_to_currency_pair_type(c1 + c2) == PairType.from_string(c1, c2)
 
     def test_trade_req_to_params(self):
         from ..utils import trade_req_to_params

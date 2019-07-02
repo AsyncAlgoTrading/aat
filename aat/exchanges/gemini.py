@@ -12,7 +12,7 @@ from ..enums import TickType, TickType_from_string, OrderType, OrderSubType
 from ..exchange import Exchange
 from ..logging import log
 from ..structs import MarketData, Instrument
-from ..utils import str_to_side, str_to_currency_pair_type
+from ..utils import str_to_side
 
 
 class GeminiExchange(Exchange):
@@ -143,7 +143,7 @@ class GeminiExchange(Exchange):
         if 'symbol' not in jsn:
             return
 
-        currency_pair = str_to_currency_pair_type(jsn.get('symbol'))
+        currency_pair = PairType.from_string(jsn.get('symbol'))
         instrument = Instrument(underlying=currency_pair)
 
         ret = MarketData(order_id=order_id,
