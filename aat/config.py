@@ -23,9 +23,9 @@ class BacktestConfig(HasTraits):
 
 
 class RiskConfig(HasTraits):
-    max_drawdown = Float(default_value=100.0)  # % Max strat drawdown before liquidation
-    max_risk = Float(default_value=100.0)  # % Max to risk on any trade
-    total_funds = Float(default_value=0.0)  # % Of total funds to use
+    max_drawdown = Float(default_value=100.0)  # % Max drawdown before liquidation
+    max_risk = Float(default_value=100.0)  # % Max to risk
+    total_funds = Float(default_value=0.0)  # total funds available
     trading_type = Instance(klass=TradingType, args=('NONE',), kwargs={})
 
 

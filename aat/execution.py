@@ -53,9 +53,9 @@ class Execution(object):
 
     def requestBuy(self, req: TradeRequest) -> TradeResponse:
         # can afford?
-        balance = self.exchanges[req.exchange].accounts()[req.instrument.underlying.value[0]].balance
+        balance = self.exchanges[req.exchange].accounts()[req.instrument.underlying.value[1]].balance
 
-        if balance < req.volume:
+        if balance < req.volume * req.price:
             return self.insufficientFunds(req)
 
         if self.trading_type == TradingType.BACKTEST:
@@ -69,7 +69,7 @@ class Execution(object):
 
     def requestSell(self, req: TradeRequest) -> TradeResponse:
         # can afford?
-        balance = self.exchanges[req.exchange].accounts()[req.instrument.underlying.value[1]].balance
+        balance = self.exchanges[req.exchange].accounts()[req.instrument.underlying.value[0]].balance
 
         if balance < req.volume:
             return self.insufficientFunds(req)

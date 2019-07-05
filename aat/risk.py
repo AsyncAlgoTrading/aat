@@ -3,8 +3,9 @@ from typing import List
 from .config import RiskConfig
 from .enums import Side, TradeResult, OrderType, RiskReason, ExchangeType
 from .exchange import Exchange
-from .structs import TradeRequest, TradeResponse, Account, Instrument
 from .logging import log
+from .structs import TradeRequest, TradeResponse, Account, Instrument
+from .utils import iterate_accounts
 
 
 class Risk(object):
@@ -13,16 +14,10 @@ class Risk(object):
         self.max_drawdown = options.max_drawdown
         self.max_risk = options.max_risk
         self.total_funds = options.total_funds
-        self.outstanding = 0.0  # type: float  # TODO get from open orders
 
-        self.max_running_outstanding = 0.0
-        self.max_running_outstanding_incr = []  # type: list
-
-        self.max_running_drawdown = 0.0  # type: float
-        self.max_running_drawdown_incr = []  # type: list
-
-        self.max_running_risk = 0.0  # type: float
-        self.max_running_risk_incr = []  # type: list
+        self.outstanding = 0.0
+        self.starting_funds = options.total_funds
+        self.drawdown = 0.0
 
         self.exchanges = exchanges
         self.accounts = accounts
@@ -89,7 +84,7 @@ class Risk(object):
                                    exchange=req.exchange,
                                    instrument=req.instrument,
                                    order_type=req.order_type,
-                                   vol=volume,
+                                   vol=0.0,
                                    price=req.price,
                                    time=req.time,
                                    status=False,
@@ -103,25 +98,35 @@ class Risk(object):
         '''precheck for risk compliance'''
         return self.request(req)
 
+    def updateAccounts(self):
+        '''update risk numbers'''
+        log.critical('risk not fully implemented - updateRisk')
+        value = 0.0
+
+        for account in iterate_accounts(self.accounts):
+            value += account.value
+
+        if value < self.total_funds:
+            log.info(f'reducing total funds from {self.total_funds} to {value}')
+
+        self.total_funds = value
+        log.info(f'drawdown: {self.total_funds - self.starting_funds}')
+
     def update(self, resp: TradeResponse):
         '''update risk after execution'''
-        log.critical('risk not fully implemented')
+        log.critical('risk not fully implemented - update')
+        self.updateAccounts()
+
         if resp.status == TradeResult.FILLED:
             # FIXME
             self.outstanding += abs(resp.volume * resp.price) * (1 if resp.side == Side.BUY else -1)
 
-            # FIXME
-            # self.max_running_outstanding = max(self.max_running_outstanding,
-            #                                    self.outstanding)
-            # self.max_running_outstanding_incr.append(
-            #     self.max_running_outstanding)
-
-            # TODO self.max_running_risk =
-            # TODO self.max_running_drawdown =
         elif resp.status == TradeResult.REJECTED:
             self.outstanding -= abs(resp.volume * resp.price) * (1 if resp.side == Side.BUY else -1)
 
     def cancel(self, resp: TradeResponse):
         '''update risk after cancelling or rejecting order'''
-        log.critical('risk not fully implemented')
+        log.critical('risk not fully implemented - cancel')
+        self.updateAccounts()
+
         self.outstanding -= abs(resp.volume * resp.price) * (1 if resp.side == Side.BUY else -1)

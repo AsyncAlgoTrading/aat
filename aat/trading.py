@@ -11,7 +11,7 @@ from .risk import Risk
 from .strategy import TradingStrategy
 from .structs import TradeRequest, TradeResponse
 from .ui.server import ServerApplication
-from .utils import ex_type_to_ex
+from .utils import ex_type_to_ex, iterate_accounts
 from .logging import log
 
 
@@ -29,31 +29,32 @@ class TradingEngine(object):
         # instantiate exchange instance
         self.exchanges = {o: ex_type_to_ex(o)(o, options.exchange_options) for o in options.exchange_options.exchange_types}
 
-        # get account information and balances
-        for ex in self.exchanges.values():
-            for account in ex.accounts().values():
-                if self.trading_type == TradingType.BACKTEST:
-                    log.info(f'Adjusting account balance to 1,000 {account}')
-                    account.balance = 1000
-
-                if account.currency == CurrencyType.USD:
-                    # if holding USD, add value
-                    options.risk_options.total_funds += account.balance
-                else:
-                    # calculate USD value
-                    spot = ex.ticker(currency=account.currency)['last']
-                    options.risk_options.total_funds += account.balance*spot
-                    account.value = account.balance*spot
-
         # lookup by exchange or currency
         self.accounts = {}
         for ex in self.exchanges.values():
-            self.accounts[ex] = {}
+            self.accounts[ex._exchange] = {}
             for account in ex.accounts().values():
-                self.accounts[ex][account.currency] = account
+                self.accounts[ex._exchange][account.currency] = account
                 if account.currency not in self.accounts:
                     self.accounts[account.currency] = {}
-                self.accounts[account.currency][ex] = account
+                self.accounts[account.currency][ex._exchange] = account
+
+        # get account information and balances
+        for account in iterate_accounts(self.accounts):
+            if self.trading_type == TradingType.BACKTEST:
+                log.info(f'Adjusting account balance to 1,000 {account}')
+                account.balance = 1000
+
+            if account.currency == CurrencyType.USD:
+                # if holding USD, add value
+                account.value = account.balance
+                options.risk_options.total_funds += account.balance
+            else:
+                # calculate USD value
+                ex = self.exchanges[account.exchange]
+                spot = ex.ticker(currency=account.currency)['last']
+                options.risk_options.total_funds += account.balance*spot
+                account.value = account.balance * spot
 
         log.info(self.accounts)
         log.info("Running with %.2f USD" % options.risk_options.total_funds)
@@ -68,7 +69,8 @@ class TradingEngine(object):
         self.execution = Execution(options.execution_options, self.exchanges, self.accounts)
 
         # instantiate query engine
-        self.query = QueryEngine(exchanges=self.exchanges,
+        self.query = QueryEngine(trading_type=self.trading_type,
+                                 exchanges=self.exchanges,
                                  pairs=options.exchange_options.currency_pairs,
                                  accounts=self.accounts,
                                  instruments={name:
@@ -202,42 +204,55 @@ class TradingEngine(object):
             resp = self.risk.request(req)
 
             if resp.risk_check:
-                log.info('Risk check passed')
+                log.info(f'Risk check passed: {resp}')
                 # if risk passes, let execution execute
-                # Trading
+                # Note that the Risk+Execution must be atomic
+                # so that the risk module can keep an up-to-date
+                # calculation of outstanding risk
                 resp = self.execution.request(resp)
 
-                # TODO
                 if resp.status == TradeResult.PENDING:
-                    # listen for later
-                    log.info('Order pending')
+                    # listen for later fill/cancel
+                    log.info(f'Order pending: {resp}')
                     self.query.newPending(resp)
 
                 elif resp.status == TradeResult.REJECTED:
                     # send response
-                    log.info('Trade rejected')
+                    log.info(f'Trade rejected: {resp}')
                     resp = TradeResponse(request=resp,
                                          side=resp.side,
                                          exchange=req.exchange,
                                          volume=0.0,
-                                         price=0.0,
+                                         price=req.price,
                                          time=req.time,
                                          instrument=req.instrument,
                                          status=TradeResult.REJECTED,
                                          order_id='')
+
+                    # take the risk off the books
                     self.risk.cancel(resp)
 
                 elif resp.status == TradeResult.FILLED:
                     if self.trading_type in (TradingType.SIMULATION, TradingType.BACKTEST):
                         # adjust response with slippage and transaction cost modeling
                         resp = strat.slippage(resp)
+
                         # adjust response with slippage and transaction cost modeling
                         resp = strat.transactionCost(resp)
-                    log.info('Trade filled')
+
+                        # mark as pending
+                        self.query.newPending(resp)
+
+                        # force run through query engine
+                        self.query.onFill(resp)
+
+                    log.info(f'Trade filled: {resp}')
                     log.info("Slippage - %s" % resp.slippage)
                     log.info("TXN cost - %s" % resp.transaction_cost)
+
                     # let risk update according to execution details
                     self.risk.update(resp)
+
             else:
                 log.info('Risk check failed')
                 resp = TradeResponse(request=resp,
@@ -245,9 +260,11 @@ class TradingEngine(object):
                                      side=resp.side,
                                      volume=0.0,
                                      price=0.0,
+                                     time=req.time,
                                      instrument=req.instrument,
                                      status=TradeResult.REJECTED,
                                      order_id='')
+
         self.query.push_traderesp(resp)
         self.query.update_holdings(resp)
         return resp

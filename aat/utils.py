@@ -177,3 +177,11 @@ def findpath(inst, markets):
                 (False, False): (c1_btc, c2_btc, False, False)}.get((c1_btc not in markets,
                                                                      c2_btc not in markets))
     raise AATException(f'Need {"/".join(c.value for c in to_try)} for intermediary: {inst}')
+
+
+def iterate_accounts(accounts_dict):
+    for currency in accounts_dict:
+        if not isinstance(currency, CurrencyType):
+            continue
+        for account in accounts_dict[currency].values():
+            yield account

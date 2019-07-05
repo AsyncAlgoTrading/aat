@@ -3,16 +3,19 @@ import operator
 from datetime import datetime
 from functools import reduce
 from typing import List, Dict
-from .enums import TickType, TradeResult, Side, ExchangeType, PairType, CurrencyType  # noqa: F401
+from .enums import TradeResult, ExchangeType, PairType, CurrencyType, TradingType, Side
 from .exceptions import QueryException
 from .execution import Execution
+from .logging import log
 from .risk import Risk
 from .strategy import TradingStrategy
 from .structs import Instrument, MarketData, TradeRequest, TradeResponse
+from .utils import iterate_accounts
 
 
 class QueryEngine(object):
     def __init__(self,
+                 trading_type: TradingType = None,
                  exchanges: List[ExchangeType] = None,
                  pairs: List[PairType] = None,
                  instruments: List[Instrument] = None,
@@ -21,6 +24,7 @@ class QueryEngine(object):
                  execution: Execution = None):
         # self._executor = ThreadPoolExecutor(16)
         self._all = []
+        self._trading_type = trading_type
 
         self._accounts = accounts
 
@@ -120,28 +124,43 @@ class QueryEngine(object):
     def onTrade(self, data: MarketData) -> None:
         self._all.append(data)
 
-        if data.type == TickType.TRADE:
-            self._trades.append(data)
-            if data.instrument not in self._trades_by_instrument:
-                self._trades_by_instrument[data.instrument] = []
-            self._trades_by_instrument[data.instrument].append(data)
-            if data.instrument not in self._last_price_by_asset_and_exchange:
-                self._last_price_by_asset_and_exchange[data.instrument] = {}
-            self._last_price_by_asset_and_exchange[data.instrument][data.exchange] = data
-            self._last_price_by_asset_and_exchange[data.instrument]['ANY'] = data
+        self._trades.append(data)
+        if data.instrument not in self._trades_by_instrument:
+            self._trades_by_instrument[data.instrument] = []
+        self._trades_by_instrument[data.instrument].append(data)
+        if data.instrument not in self._last_price_by_asset_and_exchange:
+            self._last_price_by_asset_and_exchange[data.instrument] = {}
+        self._last_price_by_asset_and_exchange[data.instrument][data.exchange] = data
+        self._last_price_by_asset_and_exchange[data.instrument]['ANY'] = data
 
         self._recalculate_value(data)
 
         if data.order_id in self._pending.keys():
             resp = self._pending[data.order_id]
-            resp.volume = resp.remaining - data.remaining
+
+            # if they're equal, ignore remaining
+            resp.volume = resp.remaining - data.remaining if resp != data else resp.volume
             resp.remaining = data.remaining
+
             for strat in self._strats:
                 strat.onFill(resp)
+
+            self.updateAccounts(resp)
             self._risk.update(resp)
 
-        if data.order_id in self._pending.keys() and data.remaining <= 0:
-            del self._pending[data.order_id]
+            if data.remaining <= 0:
+                del self._pending[data.order_id]
+
+    def onFill(self, resp: TradeResponse) -> None:
+        if self._trading_type not in (TradingType.BACKTEST, TradingType.SIMULATION):
+            # only used during offline trading
+            raise QueryException('Must derive fills from market data!')
+
+        if resp.volume <= 0 or resp.status != TradeResult.FILLED:
+            # sckip
+            return
+        resp.remaining = 0.0
+        self.onTrade(resp)
 
     def onCancel(self, data: MarketData) -> None:
         if data.order_id in self._pending.keys():
@@ -152,9 +171,45 @@ class QueryEngine(object):
     def strategies(self):
         return self._strats
 
+    def updateAccounts(self, resp: TradeResponse = None) -> None:
+        '''update the holdings and spot value of accounts'''
+        if resp:
+            account_left = self._accounts[resp.instrument.underlying.value[0]][resp.exchange]
+            account_right = self._accounts[resp.instrument.underlying.value[1]][resp.exchange]
+
+            if resp.side == Side.BUY:
+                # if buy
+                # 5 BTCUSD @ $2 -> from_btc += volume, to_usd -= price*volume
+                account_left.balance += resp.volume
+                account_right.balance -= resp.volume * resp.price
+            else:
+                # if sell
+                # 5 BTCUSD @ $2 -> from_btc -= volume, to_usd += price*volume
+                account_left.balance -= resp.volume
+                account_right.balance += resp.volume * resp.price
+
+            accounts = (account_left, account_right)
+        else:
+            accounts = iterate_accounts(self.accounts)
+
+        # WARNING
+        # don't update value on every tick
+        for account in accounts:
+            log.info(f'Updating value of account {account}')
+            if account.currency == CurrencyType.USD:
+                # if holding USD, add value
+                account.value = account.balance
+            else:
+                # calculate USD value
+                price = self._last_price_by_asset_and_exchange[resp.instrument][resp.exchange].price
+                account.value = account.balance * price
+            log.info(f'New value: {account}')
+
     def newPending(self, resp: TradeResponse) -> None:
-        if resp.status == TradeResult.PENDING:
-            self._pending[resp.order_id] = resp
+        self._pending[resp.order_id] = resp
+
+    def pendingOrders(self) -> List[TradeResponse]:
+        return self._pending.values()
 
     def push_tradereq(self, req: TradeRequest) -> None:
         self._trade_reqs.append(req)
@@ -163,6 +218,8 @@ class QueryEngine(object):
         self._trade_reqs_by_instrument[req.instrument].append(req)
 
     def push_traderesp(self, resp: TradeResponse) -> None:
+        if resp.status in (TradeResult.REJECTED, TradeResult.PENDING, TradeResult.NONE):
+            return
         self._trade_resps.append(resp)
         if resp.instrument not in self._trade_resps_by_instrument:
             self._trade_resps_by_instrument[resp.instrument] = []

@@ -21,7 +21,7 @@ from .handlers.strategy_trade_request import StrategyTradeRequestHandler
 from .handlers.strategy_trade_response import StrategyTradeResponseHandler
 from .handlers.trades import TradesHandler
 from .handlers.html import HTMLHandler, HTMLOpenHandler
-from ..utils import log
+from ..logging import log
 
 
 class ServerApplication(tornado.web.Application):

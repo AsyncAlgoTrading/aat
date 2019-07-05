@@ -1,18 +1,12 @@
-import tornado.web
-import os.path
+from .common import generateTornadoApplication
 from ....ui.handlers.trades import TradesHandler
-from mock import MagicMock
+from mock import MagicMock, patch
 import tornado.websocket
 
 
 class TestMessages:
     def setup(self):
-        settings = {
-                "debug": "True",
-                "template_path": os.path.join(os.path.dirname(__file__), '../', '../', 'ui', 'assets', 'templates'),
-                }
-        self.app = tornado.web.Application(**settings)
-        self.app._transforms = []
+        self.app, self.login_code = generateTornadoApplication()
 
     def test_ServerMessagesMixin(self):
         req = MagicMock()
@@ -51,4 +45,7 @@ class TestMessages:
         x.te._ex.messages.return_value = [MagicMock()]
         x.te._ex.messages.return_value[0].to_dict = MagicMock()
         x.te._ex.messages.return_value[0].to_dict.return_value = {'test': 1, 'instrument': {'underlying': 'test'}}
-        x.get()
+
+        with patch.object(x, 'get_secure_cookie') as mget:
+            mget.return_value = self.login_code
+            x.get()

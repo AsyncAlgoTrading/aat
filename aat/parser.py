@@ -95,8 +95,8 @@ def _parse_strategy(strategy, config) -> None:
 
 def _parse_risk(risk, config) -> None:
     config.risk_options.max_drawdown = float(risk.get('max_drawdown', config.risk_options.max_drawdown))
-    config.risk_options.max_risk = float(risk.get('max_drawdown', config.risk_options.max_risk))
-    config.risk_options.total_funds = float(risk.get('total_funds', config.risk_options.total_funds))
+    config.risk_options.max_risk = float(risk.get('max_risk', config.risk_options.max_risk))
+    config.risk_options.total_funds = 0.0
 
 
 def _parse_default(default, config) -> None:

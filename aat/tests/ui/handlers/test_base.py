@@ -1,17 +1,11 @@
-import tornado.web
-import os.path
+from .common import generateTornadoApplication
 from ....ui.handlers.base import HTTPHandler
 from mock import MagicMock
 
 
 class TestBase:
     def setup(self):
-        settings = {
-                "debug": "True",
-                "template_path": os.path.join(os.path.dirname(__file__), '../', '../', '../', 'ui', 'assets', 'templates'),
-                }
-        self.app = tornado.web.Application(**settings)
-        self.app._transforms = []
+        self.app, self.login_code = generateTornadoApplication()
 
     def test_validate(self):
         req = MagicMock()

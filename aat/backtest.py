@@ -39,7 +39,6 @@ class Backtest(StreamingDataSource):
         # TODO allow if market data for bid/ask
         if data.type == TickType.TRADE:
             self.callback(TickType.TRADE, data)
-            log.info(data)
         else:
             self.callback(TickType.ERROR, data)
 

@@ -7,14 +7,14 @@ from ..logging import log
 class BuyAndHoldStrategy(TradingStrategy):
     def __init__(self, *args, **kwargs) -> None:
         super(BuyAndHoldStrategy, self).__init__(*args, **kwargs)
-        self.bought = None
+        self.bought = {}
 
     def onFill(self, res: TradeResponse) -> None:
-        self.bought = res
+        self.bought[res.instrument] = res
         log.info('bought %.2f @ %.2f' % (res.volume, res.price))
 
     def onTrade(self, data: MarketData) -> bool:
-        if self.bought is None:
+        if data.instrument not in self.bought:
             req = TradeRequest(side=Side.BUY,
                                volume=1,
                                instrument=data.instrument,
@@ -24,7 +24,7 @@ class BuyAndHoldStrategy(TradingStrategy):
                                time=data.time)
             log.info("requesting buy : %s", req)
             self.request(req)
-            self.bought = 'pending'
+            self.bought[data.instrument] = 'pending'
 
     def onError(self, e) -> None:
         log.critical(e)

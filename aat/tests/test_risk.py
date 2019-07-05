@@ -15,18 +15,18 @@ class TestRisk:
         rc.total_funds = 100.0
 
         ex = {ExchangeType.COINBASE: MagicMock()}
-        accounts = {CurrencyType.BTC: Account(id='1',
-                                              currency=CurrencyType.BTC,
-                                              balance=1.0,
-                                              exchange=MagicMock(),
-                                              value=-1,
-                                              asOf=datetime.now()),
-                    CurrencyType.USD: Account(id='2',
-                                              currency=CurrencyType.USD,
-                                              balance=1.0,
-                                              exchange=MagicMock(),
-                                              value=-1,
-                                              asOf=datetime.now())}
+        accounts = {CurrencyType.BTC: {ExchangeType.COINBASE: Account(id='1',
+                                                                      currency=CurrencyType.BTC,
+                                                                      balance=1.0,
+                                                                      exchange=MagicMock(),
+                                                                      value=-1,
+                                                                      asOf=datetime.now())},
+                    CurrencyType.USD: {ExchangeType.COINBASE: Account(id='2',
+                                                                      currency=CurrencyType.USD,
+                                                                      balance=1.0,
+                                                                      exchange=MagicMock(),
+                                                                      value=-1,
+                                                                      asOf=datetime.now())}}
         ex[ExchangeType.COINBASE].accounts.return_value = accounts
 
         self.risk = Risk(rc, ex, accounts)
