@@ -31,6 +31,7 @@ class Risk(object):
                        price: float,
                        time: datetime,
                        status: bool,
+                       strat: object,
                        reason: RiskReason) -> TradeRequest:
         resp = TradeRequest(side=side,
                             exchange=exchange,
@@ -41,6 +42,7 @@ class Risk(object):
                             time=time,
                             risk_check=status,
                             risk_reason=reason,
+                            strategy=strat,
                             )
         return resp
 
@@ -62,6 +64,7 @@ class Risk(object):
                                        price=req.price,
                                        time=req.time,
                                        status=True,
+                                       strat=req.strategy,
                                        reason=RiskReason.NONE)
 
         elif self.outstanding < max:
@@ -76,6 +79,7 @@ class Risk(object):
                                        price=req.price,
                                        time=req.time,
                                        status=True,
+                                       strat=req.strategy,
                                        reason=RiskReason.PARTIAL)
 
         # no room for volume
@@ -88,6 +92,7 @@ class Risk(object):
                                    price=req.price,
                                    time=req.time,
                                    status=False,
+                                   strat=req.strategy,
                                    reason=RiskReason.FULL)
 
     def requestBuy(self, req: TradeRequest):

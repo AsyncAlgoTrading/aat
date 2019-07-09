@@ -22,6 +22,7 @@ class Execution(object):
                              instrument=req.instrument,
                              status=TradeResult.REJECTED,
                              time=req.time,
+                             strategy=req.strategy,
                              order_id='')
         return resp
 
@@ -34,6 +35,7 @@ class Execution(object):
                              instrument=req.instrument,
                              status=TradeResult.FILLED,
                              time=req.time,
+                             strategy=req.strategy,
                              order_id=str(self._backtest_id))
         self._backtest_id += 1
         return resp
@@ -47,6 +49,7 @@ class Execution(object):
                              instrument=req.instrument,
                              status=TradeResult.FILLED,
                              time=req.time,
+                             strategy=req.strategy,
                              order_id=str(self._backtest_id))
         self._backtest_id += 1
         return resp

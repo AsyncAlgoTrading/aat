@@ -55,7 +55,7 @@ class TradingStrategy(Strategy, Callback):
         matplotlib.rc('font', **{'size': 5})
 
         # extract data from trading engine
-        portfolio_value = engine.portfolio_value()
+        portfolio_value = engine.query.portfolio_value
         requests = engine.query.query_tradereqs()
         responses = engine.query.query_traderesps()
         trades = pandas.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query.query_trades(instrument=requests[0].instrument, page=None)])

@@ -212,6 +212,7 @@ class TradeRequest(Struct):
     order_sub_type: OrderSubType = OrderSubType.NONE
     risk_check: bool = False
     risk_reason: RiskReason = RiskReason.NONE
+    strategy: object = None
 
     def __str__(self) -> str:
         return f'<{self.instrument}-{self.side}:{self.volume}@{self.price}-{self.order_type}-{self.exchange}>'
@@ -234,6 +235,7 @@ class TradeResponse(Struct):
     slippage: float = 0.0
     transaction_cost: float = 0.0
     remaining: float = 0.0
+    strategy: object = None
 
     def __str__(self) -> str:
         return f'<{self.order_id}-{self.instrument}-{self.side}:{self.volume}@{self.price}-{self.status}-{self.exchange}>'

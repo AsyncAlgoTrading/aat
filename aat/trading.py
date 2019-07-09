@@ -106,12 +106,12 @@ class TradingEngine(object):
 
     def haltTrading(self):
         self._trading = False
-        for strat in self.query.strategies():
+        for strat in self.query.strategies:
             strat.onHalt()
 
     def continueTrading(self):
         self._trading = True
-        for strat in self.query.strategies():
+        for strat in self.query.strategies:
             strat.onContinue()
 
     def registerStrategy(self, strat: TradingStrategy):
@@ -129,16 +129,6 @@ class TradingEngine(object):
         # give self to strat so it can request trading actions
         strat.setEngine(self)
 
-    def strategies(self):
-        return self.query.strategies()
-
-    def portfolio_value(self) -> list:
-        return self.query._portfolio_value
-
-    def update_account_values(self) -> None:
-        # get account information and balances
-        raise NotImplementedError()
-
     def run(self):
         if self.trading_type in (TradingType.LIVE, TradingType.SIMULATION, TradingType.SANDBOX):
             asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -151,7 +141,7 @@ class TradingEngine(object):
                                                  custom_settings=self._ui_settings)
 
             # trigger starts
-            for strat in self.query.strategies():
+            for strat in self.query.strategies:
                 strat.onStart()
 
             # run on exchange
@@ -173,7 +163,7 @@ class TradingEngine(object):
 
         else:
             # trigger starts
-            for strat in self.query.strategies():
+            for strat in self.query.strategies:
                 strat.onStart()
 
             # let backtester run
@@ -198,6 +188,7 @@ class TradingEngine(object):
                                  volume=0.0,
                                  price=0.0,
                                  instrument=req.instrument,
+                                 strategy=strat,
                                  order_id='')
         else:
             # get risk report
@@ -227,6 +218,7 @@ class TradingEngine(object):
                                          time=req.time,
                                          instrument=req.instrument,
                                          status=TradeResult.REJECTED,
+                                         strategy=strat,
                                          order_id='')
 
                     # take the risk off the books
@@ -263,13 +255,15 @@ class TradingEngine(object):
                                      time=req.time,
                                      instrument=req.instrument,
                                      status=TradeResult.REJECTED,
+                                     strategy=strat,
                                      order_id='')
 
         self.query.push_traderesp(resp)
-        self.query.update_holdings(resp)
+        self.query.update_positions(resp)
         return resp
 
     def request(self, req: TradeRequest, strat=None):
+        req.strategy = strat
         return self._request(side=req.side,
                              req=req,
                              strat=strat)

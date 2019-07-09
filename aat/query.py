@@ -10,7 +10,7 @@ from .logging import log
 from .risk import Risk
 from .strategy import TradingStrategy
 from .structs import Instrument, MarketData, TradeRequest, TradeResponse
-from .utils import iterate_accounts
+from .utils import iterate_accounts, pnl_helper
 
 
 class QueryEngine(object):
@@ -28,17 +28,19 @@ class QueryEngine(object):
 
         self._accounts = accounts
 
-        self._portfolio_value_by_instrument = {}
-        self._portfolio_value = [[datetime.now(), risk.total_funds, 0.0]]
-        self._holdings = {}
-        self._pending = {}
+        # public
+        self.portfolio_value = [[datetime.now(), risk.total_funds, 0.0]]
+        self.positions = {}
+        self.pending = {}
 
         self._trades = []
         self._trades_by_instrument = {}
 
         self._pairs = pairs
-        self._instruments = instruments
-        self._exchanges = exchanges
+
+        # public
+        self.instruments = instruments
+        self.exchanges = exchanges
 
         self._last_price_by_asset_and_exchange = {}
 
@@ -47,46 +49,37 @@ class QueryEngine(object):
         self._trade_reqs_by_instrument = {}
         self._trade_resps_by_instrument = {}
 
-        self._strats = []
+        # public
+        self.strategies = []
+
         self._risk = risk
         self._execution = execution
 
     def registerStrategy(self, strat: TradingStrategy):
-        self._strats.append(strat)
+        self.strategies.append(strat)
 
     def query_instruments(self, exchange=None) -> List[PairType]:
-        if exchange:
-            return self._instruments[exchange]
-        else:
-            return reduce(operator.concat, self._instruments.values())
+        '''get list of all instruments available on all exchanges'''
+        return self._instruments[exchange] if exchange else reduce(operator.concat, self._instruments.values())
 
     def query_exchanges(self) -> List[Dict]:
-        return [{'exchange': name, 'instruments': self.query_instruments(name)}
-                for name, ex in self._exchanges.items()]
+        '''get list of exchanges and their available instruments'''
+        return [{'exchange': name, 'instruments': self.query_instruments(name)} for name, ex in self._exchanges.items()]
 
     def _paginate(self, instrument: Instrument, lst: list, lst_sub: list, page: int = 1) -> list:
-        if page is not None:
-            from_ = -1*page*100
-            to_ = -1*(page-1)*100
-        else:
-            # all results
-            page = 0
-            from_ = 0
-            to_ = -1
+        '''paginate a data request'''
+        page, from_, to_ = (page, -1*page*100, -1*(page-1)*100) if page is not None else (0, 0, -1)
 
         if instrument:
-            return lst_sub[instrument][from_:to_] \
-                if page > 1 else lst_sub[instrument][from_:]
-        return lst[from_:to_] \
-            if page > 1 else lst[from_:]
+            return lst_sub[instrument][from_:to_] if page > 1 else lst_sub[instrument][from_:]
+        return lst[from_:to_] if page > 1 else lst[from_:]
 
     def query_lastpriceall(self) -> List[MarketData]:
-        return [m for exs in self._last_price_by_asset_and_exchange.values()
-                for m in exs.values()]
+        '''get last price of all assets'''
+        return [m for exs in self._last_price_by_asset_and_exchange.values() for m in exs.values()]
 
-    def query_lastprice(self,
-                        instrument: Instrument,
-                        exchange: ExchangeType = None) -> MarketData:
+    def query_lastprice(self, instrument: Instrument, exchange: ExchangeType = None) -> MarketData:
+        '''get last price of asset, potentially on a given exchange'''
         if instrument not in self._last_price_by_asset_and_exchange:
             raise QueryException('Not found!')
         if exchange:
@@ -97,83 +90,123 @@ class QueryEngine(object):
             raise QueryException('Not found!')
         return self._last_price_by_asset_and_exchange[instrument]["ANY"]
 
-    def query_trades(self,
-                     instrument: Instrument = None,
-                     page: int = 1) -> List[MarketData]:
+    def query_trades(self, instrument: Instrument = None, page: int = 1) -> List[MarketData]:
+        '''get trades for instrument'''
         return self._paginate(instrument,
                               self._trades,
                               self._trades_by_instrument,
                               page)
 
-    def query_tradereqs(self,
-                        instrument: Instrument = None,
-                        page: int = 1) -> List[TradeRequest]:
-        return self._paginate(instrument,
-                              self._trade_reqs,
-                              self._trade_reqs_by_instrument,
-                              page)
+    def query_tradereqs(self, instrument: Instrument = None, page: int = 1) -> List[TradeRequest]:
+        '''get trade requests for an instrument'''
+        return self._paginate(instrument, self._trade_reqs, self._trade_reqs_by_instrument, page)
 
-    def query_traderesps(self,
-                         instrument: Instrument = None,
-                         page: int = 1) -> List[TradeResponse]:
-        return self._paginate(instrument,
-                              self._trade_resps,
-                              self._trade_resps_by_instrument,
-                              page)
+    def query_traderesps(self, instrument: Instrument = None, page: int = 1) -> List[TradeResponse]:
+        '''get trade responses for an instrument'''
+        return self._paginate(instrument, self._trade_resps, self._trade_resps_by_instrument, page)
+
+    def newPending(self, resp: TradeResponse) -> None:
+        self.pending[resp.order_id] = resp
+
+    def push_tradereq(self, req: TradeRequest) -> None:
+        '''append trade request to list'''
+        self._trade_reqs.append(req)
+        if req.instrument not in self._trade_reqs_by_instrument:
+            self._trade_reqs_by_instrument[req.instrument] = []
+        self._trade_reqs_by_instrument[req.instrument].append(req)
+
+    def push_traderesp(self, resp: TradeResponse) -> None:
+        '''append trade response to list'''
+        if resp.status in (TradeResult.REJECTED, TradeResult.PENDING, TradeResult.NONE):
+            return
+        self._trade_resps.append(resp)
+        if resp.instrument not in self._trade_resps_by_instrument:
+            self._trade_resps_by_instrument[resp.instrument] = []
+        self._trade_resps_by_instrument[resp.instrument].append(resp)
 
     def onTrade(self, data: MarketData) -> None:
+        '''process market data on trade'''
+
+        # append to list of all data so far
         self._all.append(data)
 
+        # append to list of all trades so far
         self._trades.append(data)
+
+        # if not tracking, initialize list of trades
         if data.instrument not in self._trades_by_instrument:
             self._trades_by_instrument[data.instrument] = []
+        # add data to list
         self._trades_by_instrument[data.instrument].append(data)
+
+        # if not tracking by exchange
         if data.instrument not in self._last_price_by_asset_and_exchange:
             self._last_price_by_asset_and_exchange[data.instrument] = {}
+        # add data to
         self._last_price_by_asset_and_exchange[data.instrument][data.exchange] = data
+
+        # set data to be last on ANY exchange
         self._last_price_by_asset_and_exchange[data.instrument]['ANY'] = data
 
-        self._recalculate_value(data)
-
-        if data.order_id in self._pending.keys():
-            resp = self._pending[data.order_id]
+        # if any pending orders for this trade
+        if data.order_id in self.pending.keys():
+            # grab previous pending response
+            resp = self.pending[data.order_id]
 
             # if they're equal, ignore remaining
             resp.volume = resp.remaining - data.remaining if resp != data else resp.volume
             resp.remaining = data.remaining
 
-            for strat in self._strats:
-                strat.onFill(resp)
+            # call on fill to strat
+            if resp.strategy:
+                resp.strategy.onFill(resp)
+            else:
+                raise Exception('Response has no corresponding strategy!')
 
+            # update account holdings
             self.updateAccounts(resp)
+
+            # update porfolio risk
             self._risk.update(resp)
 
+            # delete pending order if filled
             if data.remaining <= 0:
-                del self._pending[data.order_id]
+                del self.pending[data.order_id]
+
+        # recalculate value of portfolio
+        self._recalculate_positions(data)
 
     def onFill(self, resp: TradeResponse) -> None:
         if self._trading_type not in (TradingType.BACKTEST, TradingType.SIMULATION):
             # only used during offline trading
             raise QueryException('Must derive fills from market data!')
 
+        # ignore different responses
         if resp.volume <= 0 or resp.status != TradeResult.FILLED:
-            # sckip
+            # skip
             return
         resp.remaining = 0.0
         self.onTrade(resp)
 
     def onCancel(self, data: MarketData) -> None:
-        if data.order_id in self._pending.keys():
-            resp = self._pending[data.order_id]
-            del self._pending[data.order_id]
-            self._risk.cancel(resp)
+        # if pending order
+        if data.order_id in self.pending.keys():
+            # grab response
+            resp = self.pending[data.order_id]
 
-    def strategies(self):
-        return self._strats
+            # delete from tracking
+            del self.pending[data.order_id]
+
+            # tell risk
+            self._risk.cancel(resp)
 
     def updateAccounts(self, resp: TradeResponse = None) -> None:
         '''update the holdings and spot value of accounts'''
+
+        # if reacting to a trade response
         if resp:
+
+            # get left and right legs
             account_left = self._accounts[resp.instrument.underlying.value[0]][resp.exchange]
             account_right = self._accounts[resp.instrument.underlying.value[1]][resp.exchange]
 
@@ -187,13 +220,15 @@ class QueryEngine(object):
                 # 5 BTCUSD @ $2 -> from_btc -= volume, to_usd += price*volume
                 account_left.balance -= resp.volume
                 account_right.balance += resp.volume * resp.price
-
+            # iterate through these
             accounts = (account_left, account_right)
         else:
+            # WARNING
+            # don't update value on every tick
+            log.warn('Iterating through ALL accounts')
             accounts = iterate_accounts(self.accounts)
 
-        # WARNING
-        # don't update value on every tick
+        # update account values
         for account in accounts:
             log.info(f'Updating value of account {account}')
             if account.currency == CurrencyType.USD:
@@ -205,100 +240,29 @@ class QueryEngine(object):
                 account.value = account.balance * price
             log.info(f'New value: {account}')
 
-    def newPending(self, resp: TradeResponse) -> None:
-        self._pending[resp.order_id] = resp
-
-    def pendingOrders(self) -> List[TradeResponse]:
-        return self._pending.values()
-
-    def push_tradereq(self, req: TradeRequest) -> None:
-        self._trade_reqs.append(req)
-        if req.instrument not in self._trade_reqs_by_instrument:
-            self._trade_reqs_by_instrument[req.instrument] = []
-        self._trade_reqs_by_instrument[req.instrument].append(req)
-
-    def push_traderesp(self, resp: TradeResponse) -> None:
+    def update_positions(self, resp: TradeResponse) -> None:
+        '''update positions based on a trade'''
         if resp.status in (TradeResult.REJECTED, TradeResult.PENDING, TradeResult.NONE):
-            return
-        self._trade_resps.append(resp)
-        if resp.instrument not in self._trade_resps_by_instrument:
-            self._trade_resps_by_instrument[resp.instrument] = []
-        self._trade_resps_by_instrument[resp.instrument].append(resp)
-
-    def _recalculate_value(self, data: MarketData) -> None:
-        # TODO move to Risk
-        if data.instrument not in self._holdings:
-            # nothing to do
+            '''ignore these as they don't affect what we hold'''
             return
 
-        volume = self._holdings[data.instrument]._volume
+        if resp.instrument not in self.positions:
+            self.positions[resp.instrument] = pnl_helper()
+        self.positions[resp.instrument].exec(resp.volume, resp.price, resp.side)
+
+    def _recalculate_positions(self, data: MarketData) -> None:
+        '''recalculate the market value of active positions'''
+        # ignore if not an active position
+        if data.instrument not in self.positions:
+            return
+
+        volume = self.positions[data.instrument]._volume
         instrument = str(data.instrument)
-        value = self._holdings[data.instrument]._avg_price * volume
-        pnl = self._holdings[data.instrument]._pnl
+        value = self.positions[data.instrument]._avg_price * volume
+        pnl = self.positions[data.instrument]._pnl
 
-        if volume < 0:
-            # sanity check, no shorting for now!
-            raise Exception('Something has gone wrong!')
-
-        if instrument not in self._portfolio_value_by_instrument:
-            self._portfolio_value_by_instrument[instrument] = []
-        self._portfolio_value_by_instrument[instrument].append([data.time, instrument, value + pnl, pnl])
-
-        unrealized = sum(x._pnl for x in self._holdings.values())
-        realized = sum(x._realized for x in self._holdings.values())
-        pnl = sum(x._pnl+x._realized for x in self._holdings.values())
-        self._portfolio_value.append([data.time, self._portfolio_value[-1][1], unrealized, realized, pnl])
-
-    def update_holdings(self, resp: TradeResponse) -> None:
-        if resp.status in (TradeResult.REJECTED, TradeResult.PENDING, TradeResult.NONE):
-            return
-        if resp.instrument not in self._holdings:
-            self._holdings[resp.instrument] = pnl_helper()
-        self._holdings[resp.instrument].exec(resp.volume, resp.price, resp.side)
-
-
-def sign(x): return (1, -1)[x < 0]
-
-
-class pnl_helper(object):
-    def __init__(self):
-        self._records = []
-        self._pnl = 0.0
-        self._px = None
-        self._volume = None
-        self._realized = 0.0
-        self._avg_price = self._px
-
-    def exec(self, amt, px, side):
-        if self._px is None:
-            self._px = px
-            self._volume = amt
-            self._avg_price = self._px
-            self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl+self._realized, 'unrealized': self._pnl, 'realized': self._realized})
-            return
-        amt = amt if side == Side.BUY else -amt
-
-        if sign(amt) == sign(self._volume):
-            # increasing position
-            self._avg_price = (self._avg_price*self._volume + px*amt)/(self._volume + amt)
-            self._volume += amt
-            self._pnl = (self._volume * (px-self._avg_price))
-        else:
-            if abs(amt) > abs(self._volume):
-                # do both
-                diff = self._volume
-                self._volume = amt + self._volume
-
-                # take profit/loss
-                self._realized += (diff * (px - self._avg_price))
-
-                # increasing position
-                self._avg_price = px
-
-            else:
-                # take profit/loss
-                self._volume += amt
-
-                self._pnl = (self._volume * (px-self._avg_price))
-                self._realized += (amt * (self._avg_price-px))
-        self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl+self._realized, 'unrealized': self._pnl, 'realized': self._realized})
+        # get PnL numbers
+        unrealized = sum(x._pnl for x in self.positions.values())
+        realized = sum(x._realized for x in self.positions.values())
+        pnl = sum(x._pnl+x._realized for x in self.positions.values())
+        self.portfolio_value.append([data.time, self.portfolio_value[-1][1], unrealized, realized, pnl])

@@ -185,3 +185,50 @@ def iterate_accounts(accounts_dict):
             continue
         for account in accounts_dict[currency].values():
             yield account
+
+
+def sign(x): return (1, -1)[x < 0]
+
+
+class pnl_helper(object):
+    def __init__(self):
+        self._records = []
+        self._pnl = 0.0
+        self._px = None
+        self._volume = None
+        self._realized = 0.0
+        self._avg_price = self._px
+
+    def exec(self, amt, px, side):
+        if self._px is None:
+            self._px = px
+            self._volume = amt
+            self._avg_price = self._px
+            self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl+self._realized, 'unrealized': self._pnl, 'realized': self._realized})
+            return
+        amt = amt if side == Side.BUY else -amt
+
+        if sign(amt) == sign(self._volume):
+            # increasing position
+            self._avg_price = (self._avg_price*self._volume + px*amt)/(self._volume + amt)
+            self._volume += amt
+            self._pnl = (self._volume * (px-self._avg_price))
+        else:
+            if abs(amt) > abs(self._volume):
+                # do both
+                diff = self._volume
+                self._volume = amt + self._volume
+
+                # take profit/loss
+                self._realized += (diff * (px - self._avg_price))
+
+                # increasing position
+                self._avg_price = px
+
+            else:
+                # take profit/loss
+                self._volume += amt
+
+                self._pnl = (self._volume * (px-self._avg_price))
+                self._realized += (amt * (self._avg_price-px))
+        self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl+self._realized, 'unrealized': self._pnl, 'realized': self._realized})
