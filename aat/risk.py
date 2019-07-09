@@ -107,7 +107,9 @@ class Risk(object):
             value += account.value
 
         if value < self.total_funds:
-            log.info(f'reducing total funds from {self.total_funds} to {value}')
+            log.info(f'restricting total funds from {self.total_funds} to {value}')
+        elif value > self.total_funds:
+            log.info(f'expanding total funds from {self.total_funds} to {value}')
 
         self.total_funds = value
         log.info(f'drawdown: {self.total_funds - self.starting_funds}')
