@@ -244,15 +244,17 @@ class QueryEngine(object):
             self._portfolio_value_by_instrument[instrument] = []
         self._portfolio_value_by_instrument[instrument].append([data.time, instrument, value + pnl, pnl])
 
-        pnl = sum(x._pnl for x in self._holdings.values())
-        self._portfolio_value.append([data.time, self._portfolio_value[-1][1], pnl])
+        unrealized = sum(x._pnl for x in self._holdings.values())
+        realized = sum(x._realized for x in self._holdings.values())
+        pnl = sum(x._pnl+x._realized for x in self._holdings.values())
+        self._portfolio_value.append([data.time, self._portfolio_value[-1][1], unrealized, realized, pnl])
 
     def update_holdings(self, resp: TradeResponse) -> None:
         if resp.status in (TradeResult.REJECTED, TradeResult.PENDING, TradeResult.NONE):
             return
         if resp.instrument not in self._holdings:
             self._holdings[resp.instrument] = pnl_helper()
-        self._holdings[resp.instrument].exec(resp.volume, resp.price)
+        self._holdings[resp.instrument].exec(resp.volume, resp.price, resp.side)
 
 
 def sign(x): return (1, -1)[x < 0]
@@ -267,20 +269,22 @@ class pnl_helper(object):
         self._realized = 0.0
         self._avg_price = self._px
 
-    def exec(self, amt, px):
+    def exec(self, amt, px, side):
         if self._px is None:
             self._px = px
             self._volume = amt
             self._avg_price = self._px
             self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl+self._realized, 'unrealized': self._pnl, 'realized': self._realized})
             return
+        amt = amt if side == Side.BUY else -amt
+
         if sign(amt) == sign(self._volume):
             # increasing position
             self._avg_price = (self._avg_price*self._volume + px*amt)/(self._volume + amt)
             self._volume += amt
             self._pnl = (self._volume * (px-self._avg_price))
         else:
-            if abs(amt) > abs(self._shares):
+            if abs(amt) > abs(self._volume):
                 # do both
                 diff = self._volume
                 self._volume = amt + self._volume

@@ -8,6 +8,8 @@ class LoginHandler(HTTPHandler):
         if self.current_user:
             self.redirect('/')
         else:
+            log.critical(f'\n**********\nLogin code: {self.application.settings["login_code"]}\n**********')
+
             user = self.get_argument('code', '')
             if user == self.application.settings['login_code']:
                 self.set_secure_cookie("token", user)

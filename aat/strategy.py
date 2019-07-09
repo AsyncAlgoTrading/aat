@@ -62,14 +62,16 @@ class TradingStrategy(Strategy, Callback):
         trades.set_index(['time'], inplace=True)
 
         # format into pandas
-        pd = pandas.DataFrame(portfolio_value, columns=['time', 'value', 'pnl'])
+        pd = pandas.DataFrame(portfolio_value, columns=['time', 'value', 'unrealized', 'realized', 'pnl'])
         pd.set_index(['time'], inplace=True)
+
         # setup charting
         sns.set_style('darkgrid')
-        fig = plt.figure()
-        ax1 = fig.add_subplot(311)
-        ax2 = fig.add_subplot(312)
-        ax3 = fig.add_subplot(313)
+        fig = plt.figure(figsize=(13, 7))
+        ax1 = fig.add_subplot(411)
+        ax2 = fig.add_subplot(412)
+        ax3 = fig.add_subplot(413)
+        ax4 = fig.add_subplot(414)
 
         # plot algo performance
         pd.plot(ax=ax1, y=['value'], legend=False, fontsize=5, rot=0)
@@ -80,30 +82,33 @@ class TradingStrategy(Strategy, Callback):
         pd['pos'][pd['pos'] <= 0] = np.nan
         pd['neg'][pd['neg'] > 0] = np.nan
         pd.plot(ax=ax2, y=['pos', 'neg'], kind='area', stacked=False, color=['green', 'red'], legend=False, linewidth=0, fontsize=5, rot=0)
-        ax2.set_ylabel('Realized PnL')
+        ax2.set_ylabel('PnL')
+
+        pd.plot(ax=ax3, y=['unrealized', 'realized', 'pnl'], kind='line', legend=False, fontsize=5, rot=0)
+        ax3.legend(loc="upper left")
 
         # annotate with key data
         ax1.set_title('Performance')
         ax1.set_ylabel('Portfolio value($)')
         for xy in [portfolio_value[0][:2]] + [portfolio_value[-1][:2]]:
             ax1.annotate('$%s' % xy[1], xy=xy, textcoords='data')
-            ax3.annotate('$%s' % xy[1], xy=xy, textcoords='data')
+            ax4.annotate('$%s' % xy[1], xy=xy, textcoords='data')
 
         # plot trade intent/trade action
-        ax3.set_ylabel('Intent/Action')
-        ax3.set_xlabel('Date')
+        ax4.set_ylabel('Intent/Action')
+        ax4.set_xlabel('Date')
 
-        ax3.plot(trades)
-        ax3.plot([x.time for x in requests if x.side == Side.BUY],
+        ax4.plot(trades)
+        ax4.plot([x.time for x in requests if x.side == Side.BUY],
                  [x.price for x in requests if x.side == Side.BUY],
                  '2', color='y')
-        ax3.plot([x.time for x in requests if x.side == Side.SELL],
+        ax4.plot([x.time for x in requests if x.side == Side.SELL],
                  [x.price for x in requests if x.side == Side.SELL],
                  '1', color='y')
-        ax3.plot([x.time for x in responses if x.side == Side.BUY],  # FIXME
+        ax4.plot([x.time for x in responses if x.side == Side.BUY],  # FIXME
                  [x.price for x in responses if x.side == Side.BUY],
                  '^', color='g')
-        ax3.plot([x.time for x in responses if x.side == Side.SELL],  # FIXME
+        ax4.plot([x.time for x in responses if x.side == Side.SELL],  # FIXME
                  [x.price for x in responses if x.side == Side.SELL],
                  'v', color='r')
 
@@ -113,8 +118,10 @@ class TradingStrategy(Strategy, Callback):
         ax1.set_xlim(x_bot, x_top)
         ax2.set_xlim(x_bot, x_top)
         ax3.set_xlim(x_bot, x_top)
+        ax4.set_xlim(x_bot, x_top)
         dif = (x_top-x_bot)*.01
         ax1.set_xlim(x_bot-dif, x_top+dif)
         ax2.set_xlim(x_bot-dif, x_top+dif)
         ax3.set_xlim(x_bot-dif, x_top+dif)
+        ax4.set_xlim(x_bot-dif, x_top+dif)
         plt.show()
