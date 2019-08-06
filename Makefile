@@ -31,7 +31,7 @@ build: ## build the package
 	python3 setup.py build
 
 install: ## install the package
-	python3 setup.py install
+	pip3 install .
 
 tests: ## Clean and Make unit tests
 	python3 -m pytest -v ./aat/tests --cov=aat
@@ -64,7 +64,10 @@ major:  ## steps before dist, defaults to previous tag + one micro
 	. scripts/deploy.sh MAJOR
 
 dist:  ## dist to pypi
-	python3 setup.py sdist upload -r pypi
+	rm -rf dist build
+	python3 setup.py sdist
+	python3 setup.py bdist_wheel
+	twine check dist/* && twine upload dist/*
 
 clean: ## clean the repository
 	find . -name "__pycache__" | xargs rm -rf
