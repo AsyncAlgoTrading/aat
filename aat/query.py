@@ -10,7 +10,7 @@ from .logging import log
 from .risk import Risk
 from .strategy import TradingStrategy
 from .structs import Instrument, MarketData, TradeRequest, TradeResponse
-from .utils import iterate_accounts, pnl_helper
+from .utils import iterate_accounts, pnl_helper, findpath
 
 
 class QueryEngine(object):
@@ -29,7 +29,8 @@ class QueryEngine(object):
         self._accounts = accounts
 
         # public
-        self.portfolio_value = [[datetime.now(), risk.total_funds, 0.0]]
+        self.positions_value = [[datetime.now(), 0.0, 0.0, 0.0]]
+        self.portfolio_value = [[datetime.now(), risk.total_funds]]
         self.positions = {}
         self.pending = {}
 
@@ -172,9 +173,16 @@ class QueryEngine(object):
             # delete pending order if filled
             if data.remaining <= 0:
                 del self.pending[data.order_id]
+        else:
+            # price only
+            if data.instrument in self.positions:
+                self.positions[data.instrument].price(data.price)
+
+        # recalculate value of positions
+        self._recalculate_positions(data)
 
         # recalculate value of portfolio
-        self._recalculate_positions(data)
+        self._recalculate_portfolio(data)
 
     def onFill(self, resp: TradeResponse) -> None:
         if self._trading_type not in (TradingType.BACKTEST, TradingType.SIMULATION):
@@ -248,6 +256,7 @@ class QueryEngine(object):
 
         if resp.instrument not in self.positions:
             self.positions[resp.instrument] = pnl_helper()
+
         self.positions[resp.instrument].exec(resp.volume, resp.price, resp.side)
 
     def _recalculate_positions(self, data: MarketData) -> None:
@@ -265,4 +274,44 @@ class QueryEngine(object):
         unrealized = sum(x._pnl for x in self.positions.values())
         realized = sum(x._realized for x in self.positions.values())
         pnl = sum(x._pnl+x._realized for x in self.positions.values())
-        self.portfolio_value.append([data.time, self.portfolio_value[-1][1], unrealized, realized, pnl])
+        self.positions_value.append([data.time, unrealized, realized, pnl])
+
+    def _recalculate_portfolio(self, data: MarketData) -> None:
+        '''recalculate the market value of all accounts'''
+        if data.instrument.underlying.value[0] == CurrencyType.USD:
+            left_ret = 1
+        else:
+            left_ret = self._ticker(data.instrument.underlying.value[0], exchange=self.exchanges[data.exchange])
+
+        if data.instrument.underlying.value[1] == CurrencyType.USD:
+            right_ret = 1
+        else:
+            right_ret = self._ticker(data.instrument.underlying.value[1], exchange=self.exchanges[data.exchange])
+
+        print(left_ret, right_ret)
+        self.portfolio_value.append([data.time, self.portfolio_value[-1][-1]])
+
+    def _ticker(self, currency: CurrencyType, exchange):
+        inst = Instrument(underlying=PairType.from_string(currency.value + '/USD'))
+
+        if inst in exchange.markets():
+            return self.query_lastprice(inst)
+        else:
+            for stable in ('USD', 'USDC', 'USDT'):
+                try:
+                    inst = Instrument(underlying=PairType.from_string(currency.value + '/' + stable))
+                    inst1, inst2, i1_inverted, i2_inverted = findpath(inst, exchange.markets())
+                    broken = False
+                except (AATException, ValueError):
+                    broken = True
+            if broken:
+                return None
+
+            inst1_t = self.query_lastprice(instrument=inst1).price
+            inst2_t = self.query_lastprice(instrument=inst2).price
+            if i1_inverted:
+                inst1_t = 1.0/inst1_t
+            if i2_inverted:
+                inst2_t = 1.0/inst2_t
+            px = inst1_t * inst2_t
+            return px

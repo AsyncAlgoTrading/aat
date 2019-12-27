@@ -54,15 +54,6 @@ annotate_l: ## MyPy type annotation check - count only
 docs:  ## Build the sphinx docs
 	make -C docs html
 
-micro:  ## steps before dist, defaults to previous tag + one micro
-	. scripts/deploy.sh MICRO
-
-minor:  ## steps before dist, defaults to previous tag + one micro
-	. scripts/deploy.sh MINOR
-
-major:  ## steps before dist, defaults to previous tag + one micro
-	. scripts/deploy.sh MAJOR
-
 dist:  ## dist to pypi
 	rm -rf dist build
 	python3 setup.py sdist

@@ -1,13 +1,42 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.7.2)
 project(aat)
+
+set(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH} )
-find_package(Color)
+
+if(NOT DEFINED AAT_CMAKE_MODULE_PATH)
+    set(AAT_CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake/")
+endif()
+set(CMAKE_MODULE_PATH "${AAT_CMAKE_MODULE_PATH}/modules" ${CMAKE_MODULE_PATH})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(WIN32 ON)
+    set(MACOS OFF)
+    set(LINUX OFF)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(WIN32 OFF)
+    set(MACOS ON)
+    set(LINUX OFF)
+else()
+    set(WIN32 OFF)
+    set(MACOS OFF)
+    set(LINUX ON)
 endif()
+
+
+## Helper function
+function(string_starts_with str search)
+  string(FIND "${str}" "${search}" out)
+  if("${out}" EQUAL 0)
+    return(true)
+  endif()
+  return(false)
+endfunction()
 
 ##############################
 # helper to grab gtest et al #
@@ -30,6 +59,7 @@ function (build_dep name cmake_file)
             message(FATAL_ERROR "Build step for ${name} failed: ${result}")
         endif()
     endif()
+
     add_subdirectory(${CMAKE_BINARY_DIR}/${name}-src
         ${CMAKE_BINARY_DIR}/${name}-build
         EXCLUDE_FROM_ALL)
@@ -40,15 +70,15 @@ function (build_dep name cmake_file)
 endfunction()
 ##############################
 
-
 #######################
 # BUILD CONFIGURATION #
 #######################
+find_package(Color)
 option(CMAKE_BUILD_TYPE "Release/Debug build" RELEASE)
 option(CPP_BUILD_TESTS "Build the C++ Tests" ON)
 option(CPP_BUILD_STRICT "Build the C++ with strict warnings" OFF)
 
-if(DEFINED ENV{PSP_DEBUG})
+if(DEFINED ENV{DEBUG})
     set(CMAKE_BUILD_TYPE DEBUG)
 else()
     if (NOT DEFINED CMAKE_BUILD_TYPE)
@@ -56,41 +86,49 @@ else()
     endif()
 endif()
 
-if (NOT DEFINED CPP_BUILD_TESTS)
-    set(CPP_BUILD_TESTS ON)
-endif()
-
 if (NOT DEFINED CPP_BUILD_STRICT)
     set(CPP_BUILD_STRICT OFF)
 endif()
 
-message(WARNING "${Cyan}Building C++ binding${ColorReset}")
-message(WARNING "${Cyan}Building Python binding${ColorReset}")
+if(DEFINED ENV{MANYLINUX})
+    set(MANYLINUX ON)
+else()
+    set(MANYLINUX OFF)
+endif()
+
+if(NOT DEFINED AAT_PYTHON_VERSION)
+    set(AAT_PYTHON_VERSION 3.7)
+endif()
+
+
+set(BUILD_MESSAGE "")
+set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Building C++ binding${ColorReset}")
+set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Building Python binding${ColorReset}")
 
 if (CPP_BUILD_TESTS)
-    message(WARNING "${Cyan}Building C++ tests${ColorReset}")
+    set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Building C++ tests${ColorReset}")
 else()
-    message(WARNING "${Cyan}Skipping C++ tests${ColorReset}")
+    set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Skipping C++ tests${ColorReset}")
 endif()
 
 if (NOT CPP_BUILD_STRICT)
-    message(WARNING "${Cyan}Building C++ without strict warnings${ColorReset}")
+    set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Building C++ without strict warnings${ColorReset}")
 else()
-    message(WARNING "${Cyan}Building C++ with strict warnings${ColorReset}")
+    set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Building C++ with strict warnings${ColorReset}")
 endif()
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER )
 if(CMAKE_BUILD_TYPE_LOWER STREQUAL debug)
-    message(WARNING "${Red}Building DEBUG${ColorReset}")
+    set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Red}Building DEBUG${ColorReset}")
     add_definitions(-DDEBUG)
 else()
-    message(WARNING "${Cyan}Building RELEASE${ColorReset}")
+    set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Building RELEASE${ColorReset}")
 endif()
 
 if(BUILD_DOCS)
-    message(WARNING "${Cyan}Building Documentation${ColorReset}")
+    set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Building Documentation${ColorReset}")
 else()
-    message(WARNING "${Cyan}Skipping Documentation${ColorReset}")
+    set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Skipping Documentation${ColorReset}")
 endif()
 #######################
 
@@ -115,6 +153,7 @@ set(CMAKE_CXX_FLAGS " \
     ${OPT_FLAGS} \
     ")
 
+message(WARNING "${BUILD_MESSAGE}")
 
 find_package(pybind11)
 if(NOT pybind11_FOUND)
@@ -137,22 +176,79 @@ endif()
 #########################
 # PYTHON BINDINGS BUILD #
 #########################
-include_directories("/usr/local/include/python3.7m")  # FIXME
-link_directories("/usr/local/lib")  # FIXME
-find_package( PythonInterp 3.7 REQUIRED )
-include_directories( ${PYTHON_INCLUDE_DIRS} )
+include_directories("${AAT_PYTHON_SRC}/perspective/include")
+if(MANYLINUX)
+    # Manylinux docker images have no shared libraries
+    # The instead use a statically built python.
+    # Cmake's default FindPython can't find the python headers
+    # without also finding (or failing to find) the python libraries
+    # so we use a custom FindPythonHeaders that is the same as the
+    # default, but ignores when the python libraries can't be found.
+    message("${Red}Manylinux build has no python shared libraries${ColorReset}")
+    find_package( Python ${AAT_PYTHON_VERSION} REQUIRED COMPONENTS Interpreter )
+    find_package( PythonHeaders ${AAT_PYTHON_VERSION} REQUIRED)
+else()
+    message("${Cyan}Use python shared libraries${ColorReset}")
+    find_package( Python ${AAT_PYTHON_VERSION} REQUIRED COMPONENTS Interpreter Development)
+endif()
+message("${Cyan}Using python ${PYTHON_INCLUDE_DIRS} ${Python_LIBRARIES} ${ColorReset}")
+include_directories( ${Python_INCLUDE_DIRS} )
+
+# already found from before
+find_package(Boost)
+
+if(MACOS)
+    # on mac, use the vanilla pybind11 finder
+    find_package(pybind11)
+    if(pybind11_FOUND)
+        # Homebrew install pybind11
+        set(PYTHON_PYBIND_FOUND pybind11_FOUND)
+    else()
+        # see if python installed pybind11 is available
+        find_package(Pybind)
+        if(PYTHON_PYBIND_FOUND)
+            # Need to add extra flags due to pybind weirness
+            # https://github.com/pybind/pybind11/blob/7830e8509f2adc97ce9ee32bf99cd4b82089cc4c/tools/pybind11Tools.cmake#L103
+            set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
+        endif()
+    endif()
+
+else()
+    # on linux or in docker, use our custom pybind finder to look 
+    # for just the python installed pybind
+    find_package(Pybind)
+endif()
+
+if(NOT PYTHON_PYBIND_FOUND)
+    message("${Red}PyBind11 could not be located${ColorReset}")
+    psp_build_dep("pybind11" "${AAT_CMAKE_MODULE_PATH}/Pybind.txt.in")
+else()
+    message("${Cyan}Found PyBind11 in ${PYTHON_PYBIND_INCLUDE_DIR}${ColorReset}")
+    include_directories( ${PYTHON_PYBIND_INCLUDE_DIR} )
+endif()
+
 find_package(NumPy)
+if(NOT PYTHON_NUMPY_FOUND)
+    message(FATAL_ERROR "${Red}Numpy could not be located${ColorReset}")
+else()
+    message(WARNING "${Cyan}Numpy found: ${PYTHON_NUMPY_INCLUDE_DIR}${ColorReset}")
+
+endif()
 include_directories( ${PYTHON_NUMPY_INCLUDE_DIR})
 #####################
 
 if (WIN32)
     set(CMAKE_CXX_FLAGS " /EHsc")
 else()
-    set(CMAKE_CXX_FLAGS " -std=c++0x ${CMAKE_CXX_FLAGS}")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
+    else()
+        set(CMAKE_CXX_FLAGS " -std=c++0x ${CMAKE_CXX_FLAGS}")
+    endif()
 endif()
 
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if(MACOS)
     set(CMAKE_SHARED_LIBRARY_SUFFIX .so)
 endif()
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
@@ -185,29 +281,6 @@ if(CPP_BUILD_STRICT AND NOT WIN32)
     target_compile_options(_enums PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
 endif()
 
-
-#############
-# CPP TESTS #
-#############
-if (CPP_BUILD_TESTS)
-    if (WIN32)
-      set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    endif()
-    build_dep("googletest" "cmake/GTest.txt.in")
-
-    add_subdirectory(cpp/tests)
-    add_custom_target(gcov
-        COMMAND mkdir -p ${CMAKE_BINARY_DIR}/coverage
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-    add_custom_command(TARGET gcov
-        COMMAND echo "=================== GCOV ===================="
-        COMMAND gcovr -r ../ --html --html-details -o coverage/index.html
-        COMMAND xdg-open coverage/index.html
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-endif()
-#############
 
 ########
 # Docs #

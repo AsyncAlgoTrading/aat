@@ -46,10 +46,15 @@ class TradingEngine(object):
                 account.balance = 1000
 
             if account.currency == CurrencyType.USD:
+                log.info(f'Adjusting account balance to 100,000 {account}')
                 # if holding USD, add value
+                account.balance = 100000
                 account.value = account.balance
                 options.risk_options.total_funds += account.balance
             else:
+                log.info(f'Adjusting account balance to 1,000 {account}')
+                account.balance = 1000
+
                 # calculate USD value
                 ex = self.exchanges[account.exchange]
                 spot = ex.ticker(currency=account.currency)['last']

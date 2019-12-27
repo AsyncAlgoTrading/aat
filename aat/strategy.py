@@ -55,15 +55,20 @@ class TradingStrategy(Strategy, Callback):
         matplotlib.rc('font', **{'size': 5})
 
         # extract data from trading engine
+        positions_value = engine.query.positions_value
         portfolio_value = engine.query.portfolio_value
+
         requests = engine.query.query_tradereqs()
         responses = engine.query.query_traderesps()
         trades = pandas.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query.query_trades(instrument=requests[0].instrument, page=None)])
         trades.set_index(['time'], inplace=True)
 
         # format into pandas
-        pd = pandas.DataFrame(portfolio_value, columns=['time', 'value', 'unrealized', 'realized', 'pnl'])
+        pd = pandas.DataFrame(positions_value, columns=['time', 'unrealized', 'realized', 'pnl'])
+        pd2 = pandas.DataFrame(portfolio_value, columns=['time', 'value'])
+        import ipdb; ipdb.set_trace()
         pd.set_index(['time'], inplace=True)
+        pd2.set_index(['time'], inplace=True)
 
         # setup charting
         sns.set_style('darkgrid')
@@ -74,7 +79,7 @@ class TradingStrategy(Strategy, Callback):
         ax4 = fig.add_subplot(414)
 
         # plot algo performance
-        pd.plot(ax=ax1, y=['value'], legend=False, fontsize=5, rot=0)
+        pd2.plot(ax=ax1, y=['value'], legend=False, fontsize=5, rot=0)
 
         # plot up/down chart
         pd['pos'] = pd['pnl']
