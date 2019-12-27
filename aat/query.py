@@ -4,7 +4,7 @@ from datetime import datetime
 from functools import reduce
 from typing import List, Dict
 from .enums import TradeResult, ExchangeType, PairType, CurrencyType, TradingType, Side
-from .exceptions import QueryException
+from .exceptions import QueryException, AATException
 from .execution import Execution
 from .logging import log
 from .risk import Risk
@@ -266,8 +266,10 @@ class QueryEngine(object):
             return
 
         volume = self.positions[data.instrument]._volume
-        instrument = str(data.instrument)
-        value = self.positions[data.instrument]._avg_price * volume
+        # instrument = str(data.instrument)
+        _ = str(data.instrument)
+        # value = self.positions[data.instrument]._avg_price * volume
+        _ = self.positions[data.instrument]._avg_price * volume
         pnl = self.positions[data.instrument]._pnl
 
         # get PnL numbers
@@ -310,8 +312,8 @@ class QueryEngine(object):
             inst1_t = self.query_lastprice(instrument=inst1).price
             inst2_t = self.query_lastprice(instrument=inst2).price
             if i1_inverted:
-                inst1_t = 1.0/inst1_t
+                inst1_t = 1.0 / inst1_t
             if i2_inverted:
-                inst2_t = 1.0/inst2_t
+                inst2_t = 1.0 / inst2_t
             px = inst1_t * inst2_t
             return px

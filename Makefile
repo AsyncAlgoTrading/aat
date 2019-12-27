@@ -36,10 +36,10 @@ test_verbose: ## run the tests with full output
 	@ python3 -m pytest -vv ./aat/tests --cov=aat
 
 lint: ## run linter
-	flake8 aat 
+	python3 -m flake8 aat 
 
 fix:  ## run autopep8/tslint fix
-	autopep8 --in-place -r -a -a aat/
+	python3 -m autopep8 --in-place -r -a -a aat/
 
 annotate: ## MyPy type annotation check
 	mypy -s aat 

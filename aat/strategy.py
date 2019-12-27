@@ -67,7 +67,8 @@ class TradingStrategy(Strategy, Callback):
         # format into pandas
         pd = pandas.DataFrame(positions_value, columns=['time', 'unrealized', 'realized', 'pnl'])
         pd2 = pandas.DataFrame(portfolio_value, columns=['time', 'value'])
-        import ipdb; ipdb.set_trace()
+        import ipdb
+        ipdb.set_trace()
         pd.set_index(['time'], inplace=True)
         pd2.set_index(['time'], inplace=True)
 

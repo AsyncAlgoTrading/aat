@@ -1,5 +1,6 @@
 import tornado
 from .base import HTTPHandler
+from ...logging import log
 
 
 class LoginHandler(HTTPHandler):
