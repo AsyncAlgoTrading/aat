@@ -78,16 +78,14 @@ class CMakeBuild(build_ext):
         cfg = 'Debug' if self.debug else 'Release'
 
         cmake_args = [
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + os.path.abspath(os.path.join('perspective', 'table')),
+            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + os.path.abspath('aat'),
             '-DCMAKE_BUILD_TYPE=' + cfg,
             '-DCPP_BUILD_TESTS=0',
             '-DAAT_PYTHON_VERSION={}'.format(platform.python_version()),
             '-DPYTHON_EXECUTABLE={}'.format(sys.executable),
             '-DPython_ROOT_DIR={}'.format(PREFIX),
             '-DPython_ROOT={}'.format(PREFIX),
-            '-DPSP_CMAKE_MODULE_PATH={folder}'.format(folder=os.path.join(ext.sourcedir, 'cmake')),
-            '-DPSP_CPP_SRC={folder}'.format(folder=ext.sourcedir),
-            '-DPSP_PYTHON_SRC={folder}'.format(folder=os.path.join(ext.sourcedir, "..", 'perspective'))
+            '-DAAT_CMAKE_MODULE_PATH={folder}'.format(folder=os.path.join(ext.sourcedir, 'cmake')),
         ]
 
         build_args = ['--config', cfg]
@@ -104,7 +102,6 @@ class CMakeBuild(build_ext):
             build_args += ['--', '-j2' if os.environ.get('DOCKER', '') else '-j{}'.format(CPU_COUNT)]
 
         env = os.environ.copy()
-        env['PSP_ENABLE_PYTHON'] = '1'
         env["PYTHONPATH"] = os.path.pathsep.join((os.path.join(os.path.dirname(os.__file__), 'site-packages'), os.path.dirname(os.__file__)))
 
         if not os.path.exists(self.build_temp):

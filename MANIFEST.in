@@ -1,4 +1,27 @@
-recursive-include aat *
+graft aat
+include LICENSE
+include README.md
 
-include requirements.txt
+include setup.cfg
+include pyproject.toml
+include .bumpversion.cfg
+include Makefile
 
+include aat/*.so
+include aat/*.dll
+include aat/*.dylib
+
+graft aat/tests
+
+# C++ build
+graft cpp
+graft cmake
+include CMakeLists.txt
+
+# Patterns to exclude from any directory
+global-exclude *~
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude .git
+global-exclude .ipynb_checkpoints
+global-exclude .DS_Store
