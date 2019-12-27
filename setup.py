@@ -29,6 +29,41 @@ PREFIX = sysconfig.get_config_vars()['prefix']
 name = 'aat'
 
 
+requires = [
+    'aiohttp>=3.5.4',
+    'aiostream>=0.3.1',
+    'ccxt>=1.18.529',
+    'cycler>=0.10.0',
+    'Jinja2>=2.10',
+    'matplotlib>=2.2.2',
+    'numpy>=1.14.5',
+    'pandas>=0.23.3',
+    'perspective-python>=0.1.6,<0.4.0',
+    'pyarrow>=0.11.1',
+    'scipy>=1.1.0',
+    'seaborn>=0.8.1',
+    'sphinx>=1.7.5',
+    'six>=1.10.0',
+    'requests>=2.13.0',
+    'tornado>=5.1',
+    'traitlets>=4.3.2',
+    'ujson>=1.35',
+    'uvloop>=0.12.2',
+    'websocket-client>=0.40.0',
+    'yarl==1.1.0',
+]
+
+requires_dev = [
+    'flake8>=3.7.8',
+    'mock',
+    'pybind11>=2.4.0',
+    'pytest>=4.3.0',
+    'pytest-cov>=2.6.1',
+    'Sphinx>=1.8.4',
+    'sphinx-markdown-builder>=0.5.2',
+] + requires
+
+
 def get_version(file, name='__version__'):
     path = os.path.realpath(file)
     version_ns = {}
@@ -40,9 +75,6 @@ version = get_version(pjoin(here, name, '_version.py'))
 
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
-
-with open(os.path.join(here, 'requirements.txt'), encoding='utf-8') as f:
-    requires = f.read().split()
 
 if sys.version_info.major < 3 or sys.version_info.minor < 7:
     raise Exception('Must be python3.7 or above')
@@ -121,6 +153,9 @@ setup(
     author_email='timothy.k.paine@gmail.com',
     license='Apache 2.0',
     install_requires=requires,
+    extras_require={
+        'dev': requires_dev,
+    },
     python_requires='>=3.7',
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -133,7 +168,6 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    extras_require={'dev': requires + ['pytest', 'pytest-cov', 'pylint', 'flake8', 'mock', 'autopep8', 'pybind11']},
     entry_points={
         'console_scripts': [
             'aat=aat:main',
