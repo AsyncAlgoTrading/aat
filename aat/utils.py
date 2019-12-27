@@ -199,6 +199,10 @@ class pnl_helper(object):
         self._realized = 0.0
         self._avg_price = self._px
 
+    def price(self, px):
+        self._pnl = (self._volume * (px-self._avg_price))
+        self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl+self._realized, 'unrealized': self._pnl, 'realized': self._realized})
+
     def exec(self, amt, px, side):
         if self._px is None:
             self._px = px
