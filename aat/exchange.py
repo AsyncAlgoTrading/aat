@@ -98,9 +98,9 @@ class Exchange(MarketData, OrderEntry):
                 inst1_t = self.oe_client().fetchTicker(str(inst1.underlying))
                 inst2_t = self.oe_client().fetchTicker(str(inst2.underlying))
                 if i1_inverted:
-                    inst1_t['last'] = 1.0/inst1_t['last']
+                    inst1_t['last'] = 1.0 / inst1_t['last']
                 if i2_inverted:
-                    inst2_t['last'] = 1.0/inst2_t['last']
+                    inst2_t['last'] = 1.0 / inst2_t['last']
                 px = inst1_t['last'] * inst2_t['last']
                 ret = inst1_t
                 for key in ret:

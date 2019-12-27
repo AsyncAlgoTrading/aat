@@ -15,7 +15,7 @@ class PoloniexExchange(Exchange):
     @lru_cache(None)
     def subscription(self):
         return [json.dumps({"command": "subscribe", "channel": "1002"})] + \
-                [json.dumps({"command": "subscribe", "channel": POLONIEX_PAIR_ID.get(self.currencyPairToString(x))}) for x in self.options().currency_pairs],  # ticker data
+            [json.dumps({"command": "subscribe", "channel": POLONIEX_PAIR_ID.get(self.currencyPairToString(x))}) for x in self.options().currency_pairs],  # ticker data
 
     @lru_cache(None)
     def heartbeat(self):

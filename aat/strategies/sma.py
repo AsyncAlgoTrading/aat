@@ -25,7 +25,7 @@ class SMAStrategy(TradingStrategy):
 
     def onTrade(self, data: MarketData) -> bool:
         self.trades.append(data)
-        self.trades = self.trades[-1*self.long:]
+        self.trades = self.trades[-1 * self.long:]
         long_average = self.calc_average(self.long)
         short_average = self.calc_average(self.short)
 

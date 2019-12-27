@@ -51,7 +51,7 @@ class Risk(object):
         log.info('Requesting %f @ %f', req.volume, req.price)
         total = req.volume * req.price
         total = total * -1 if req.side == Side.SELL else total
-        max = self.max_risk/100.0 * self.total_funds
+        max = self.max_risk / 100.0 * self.total_funds
 
         if (total + self.outstanding) <= max:
             # room for full volume

@@ -20,10 +20,6 @@ backtest: ## Clean and make target, run backtest
 backtest_inline:  ## Clean and make target, run backtest, plot in terminal
 	bash -c "export MPLBACKEND=\"module://itermplot\";	export ITERMPLOT=\"rv\"; python3 -m aat backtest $(VERBOSE) $(EXCHANGE)"
 
-boost:  ## Install boost python dependencies on os x with homebrew
-	brew install boost boost-python3
-	sudo ln -s /usr/local/lib/libboost_python37.dylib /usr/local/lib/libboost_python.dylib
-
 buildext: ## build the package extensions
 	python3 setup.py build_ext
 
@@ -44,6 +40,9 @@ test_verbose: ## run the tests with full output
 
 lint: ## run linter
 	flake8 aat 
+
+fix:  ## run autopep8/tslint fix
+	autopep8 --in-place -r -a -a aat/
 
 annotate: ## MyPy type annotation check
 	mypy -s aat 

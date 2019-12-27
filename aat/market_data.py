@@ -29,9 +29,9 @@ class MarketData(StreamingDataSource):
 
         if number != self._lastseqnum + 1 and number not in self._missingseqnum:
             log.error('ERROR: Missing sequence number/s: %s' % ','.join(
-                str(x) for x in range(self._lastseqnum+1, number+1)))
+                str(x) for x in range(self._lastseqnum + 1, number + 1)))
             self._missingseqnum.update(
-                x for x in range(self._lastseqnum+1, number+1))
+                x for x in range(self._lastseqnum + 1, number + 1))
             log.error(self._missingseqnum)
 
         if number in self._missingseqnum:

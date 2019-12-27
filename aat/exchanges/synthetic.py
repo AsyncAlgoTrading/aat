@@ -53,19 +53,19 @@ class SyntheticExchange(Exchange):
             #     price = abs(price)
             price = abs(price + next_)
             data = MarketData(time=datetime.now(),
-                              volume=random()*10,
+                              volume=random() * 10,
                               price=price,
                               type=TickType.TRADE,
                               instrument=self._instruments[0],
                               side=choice([Side.BUY, Side.SELL]),
                               exchange=self._underlying_exchange,
-                              remaining=random()*10,
+                              remaining=random() * 10,
                               sequence=-1,
                               order_type=OrderType.NONE)
             if self._trading_type != TradingType.BACKTEST:
-                time.sleep(random()*3)
+                time.sleep(random() * 3)
             else:
-                time.sleep(random()/500)
+                time.sleep(random() / 500)
             yield data
 
     async def run(self, trading) -> None:

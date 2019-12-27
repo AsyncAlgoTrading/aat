@@ -23,7 +23,7 @@ class OrderEntry(RestAPIDataSource):
             'password': passphrase,
             'enableRateLimit': True,
             'rateLimit': 250
-            })
+        })
 
     def _extract_fields(self, order, exchange):
         side = order.get('side', order.get('info', {}).get('side'))

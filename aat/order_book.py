@@ -91,9 +91,9 @@ class Book(object):
 
     def __str__(self) -> str:
         return str(self._instrument) + '->\n' + \
-               'ask:\t' + '\n\t'.join(['%.1f\t@\t%.1f' % (x.volume, x.price) for x in sorted(self._ask, reverse=True)]) + \
-               '\n\t=====================\n' + \
-               'bid:\t' + '\n\t'.join(['%.1f\t@\t%.1f' % (x.volume, x.price) for x in sorted(self._bid, reverse=True)]) + '\n'
+            'ask:\t' + '\n\t'.join(['%.1f\t@\t%.1f' % (x.volume, x.price) for x in sorted(self._ask, reverse=True)]) + \
+            '\n\t=====================\n' + \
+            'bid:\t' + '\n\t'.join(['%.1f\t@\t%.1f' % (x.volume, x.price) for x in sorted(self._bid, reverse=True)]) + '\n'
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -102,6 +102,7 @@ class Book(object):
 # class OrderBook(metaclass=ABCMeta):
 class OrderBook(object):
     '''OrderBook interface'''
+
     def __init__(self, instruments):
         self._ob = {instrument: Book(instrument) for instrument in instruments}
 

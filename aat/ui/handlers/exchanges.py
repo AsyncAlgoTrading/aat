@@ -10,6 +10,7 @@ class ExchangesHandler(PerspectiveHTTPMixin, HTTPHandler):
     Extends:
         HTTPHandler
     '''
+
     def initialize(self, trading_engine, psp_kwargs=None):
         self.te = trading_engine
         self.psp_kwargs = psp_kwargs or {}
@@ -17,7 +18,7 @@ class ExchangesHandler(PerspectiveHTTPMixin, HTTPHandler):
     @run_on_executor
     def get_data(self, **psp_kwargs):
         exchanges = self.te.query.query_exchanges()
-        msgs = [{'id': j + i*len(exchanges),
+        msgs = [{'id': j + i * len(exchanges),
                  'name': ExchangeType_to_string(x['exchange']),
                  'instrument': y.to_dict(True, True)['underlying']}
                 for i, x in enumerate(exchanges)

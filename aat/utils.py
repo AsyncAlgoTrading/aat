@@ -171,9 +171,9 @@ def findpath(inst, markets):
            (c2_btc not in markets and c2_btc_inv not in markets):
             continue
 
-        return {(True, True):   (c1_btc_inv, c2_btc_inv, True, True),
-                (True, False):  (c1_btc_inv, c2_btc, True, False),
-                (False, True):  (c1_btc, c2_btc_inv, False, True),
+        return {(True, True): (c1_btc_inv, c2_btc_inv, True, True),
+                (True, False): (c1_btc_inv, c2_btc, True, False),
+                (False, True): (c1_btc, c2_btc_inv, False, True),
                 (False, False): (c1_btc, c2_btc, False, False)}.get((c1_btc not in markets,
                                                                      c2_btc not in markets))
     raise AATException(f'Need {"/".join(c.value for c in to_try)} for intermediary: {inst}')
@@ -204,15 +204,15 @@ class pnl_helper(object):
             self._px = px
             self._volume = amt
             self._avg_price = self._px
-            self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl+self._realized, 'unrealized': self._pnl, 'realized': self._realized})
+            self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl + self._realized, 'unrealized': self._pnl, 'realized': self._realized})
             return
         amt = amt if side == Side.BUY else -amt
 
         if sign(amt) == sign(self._volume):
             # increasing position
-            self._avg_price = (self._avg_price*self._volume + px*amt)/(self._volume + amt)
+            self._avg_price = (self._avg_price * self._volume + px * amt) / (self._volume + amt)
             self._volume += amt
-            self._pnl = (self._volume * (px-self._avg_price))
+            self._pnl = (self._volume * (px - self._avg_price))
         else:
             if abs(amt) > abs(self._volume):
                 # do both
@@ -229,6 +229,6 @@ class pnl_helper(object):
                 # take profit/loss
                 self._volume += amt
 
-                self._pnl = (self._volume * (px-self._avg_price))
-                self._realized += (amt * (self._avg_price-px))
-        self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl+self._realized, 'unrealized': self._pnl, 'realized': self._realized})
+                self._pnl = (self._volume * (px - self._avg_price))
+                self._realized += (amt * (self._avg_price - px))
+        self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl + self._realized, 'unrealized': self._pnl, 'realized': self._realized})

@@ -36,10 +36,10 @@ class GeminiExchange(Exchange):
         signature = hmac.new(gemini_api_secret, b64, hashlib.sha384).hexdigest()
 
         session = aiohttp.ClientSession(headers={
-                                'X-GEMINI-PAYLOAD': b64.decode(),
-                                'X-GEMINI-APIKEY': gemini_api_key,
-                                'X-GEMINI-SIGNATURE': signature
-                            })
+            'X-GEMINI-PAYLOAD': b64.decode(),
+            'X-GEMINI-APIKEY': gemini_api_key,
+            'X-GEMINI-SIGNATURE': signature
+        })
 
         # startup and redundancy
         log.info('Starting....')

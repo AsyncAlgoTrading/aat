@@ -7,6 +7,16 @@ find_package(Color)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(WIN32 ON)
+    set(MACOS OFF)
+    set(LINUX OFF)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(WIN32 OFF)
+    set(MACOS ON)
+    set(LINUX OFF)
+else()
+    set(WIN32 OFF)
+    set(MACOS OFF)
+    set(LINUX ON)
 endif()
 
 ##############################
@@ -152,8 +162,20 @@ else()
 endif()
 
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if(NOT WIN32)
     set(CMAKE_SHARED_LIBRARY_SUFFIX .so)
+    
+    # Look for the binary using @loader_path (relative to binary location) instead of @rpath
+    # and include arrow in @rpath so it can be found by libbinding/libpsp
+    set(CMAKE_SKIP_BUILD_RPATH FALSE)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+
+    if(MACOS)
+        set(CMAKE_MACOSX_RPATH 1)
+        set(module_install_rpath "@loader_path/")
+    else()
+        set(module_install_rpath "\$ORIGIN")
+    endif()
 endif()
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
@@ -176,6 +198,10 @@ set_target_properties(_enums PROPERTIES
          LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat)
 # target_link_libraries(_enums binding)
 target_link_libraries(_enums ${PYTHON_LIBRARIES})
+
+## Copy in place for testing
+add_custom_command(TARGET binding POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:binding> ${CMAKE_SOURCE_DIR}/aat/)
+add_custom_command(TARGET _enums POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:_enums> ${CMAKE_SOURCE_DIR}/aat/)
 ########################
 
 if(CPP_BUILD_STRICT AND NOT WIN32)

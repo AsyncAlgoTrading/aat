@@ -6,6 +6,7 @@ from .structs import TradeRequest, TradeResponse
 
 class Strategy(metaclass=ABCMeta):
     '''Strategy interface'''
+
     def __init__(self, query=None, exchanges=None, *args, **kwargs) -> None:
         self.query = query
         self.exchanges = exchanges
@@ -119,9 +120,9 @@ class TradingStrategy(Strategy, Callback):
         ax2.set_xlim(x_bot, x_top)
         ax3.set_xlim(x_bot, x_top)
         ax4.set_xlim(x_bot, x_top)
-        dif = (x_top-x_bot)*.01
-        ax1.set_xlim(x_bot-dif, x_top+dif)
-        ax2.set_xlim(x_bot-dif, x_top+dif)
-        ax3.set_xlim(x_bot-dif, x_top+dif)
-        ax4.set_xlim(x_bot-dif, x_top+dif)
+        dif = (x_top - x_bot) * .01
+        ax1.set_xlim(x_bot - dif, x_top + dif)
+        ax2.set_xlim(x_bot - dif, x_top + dif)
+        ax3.set_xlim(x_bot - dif, x_top + dif)
+        ax4.set_xlim(x_bot - dif, x_top + dif)
         plt.show()

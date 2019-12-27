@@ -107,7 +107,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    extras_require={'dev': requires + ['pytest', 'pytest-cov', 'pylint', 'flake8', 'mock']},
+    extras_require={'dev': requires + ['pytest', 'pytest-cov', 'pylint', 'flake8', 'mock', 'autopep8']},
     entry_points={
         'console_scripts': [
             'aat=aat:main',

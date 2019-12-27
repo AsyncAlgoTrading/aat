@@ -47,6 +47,7 @@ class HTTPHandler(tornado.web.RequestHandler):
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     '''Just a default handler'''
+
     def initialize(self, *args, **kwargs):
         '''Initialize the server competition registry handler
 

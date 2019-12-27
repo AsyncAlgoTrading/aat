@@ -68,7 +68,7 @@ class QueryEngine(object):
 
     def _paginate(self, instrument: Instrument, lst: list, lst_sub: list, page: int = 1) -> list:
         '''paginate a data request'''
-        page, from_, to_ = (page, -1*page*100, -1*(page-1)*100) if page is not None else (0, 0, -1)
+        page, from_, to_ = (page, -1 * page * 100, -1 * (page - 1) * 100) if page is not None else (0, 0, -1)
 
         if instrument:
             return lst_sub[instrument][from_:to_] if page > 1 else lst_sub[instrument][from_:]
@@ -264,5 +264,5 @@ class QueryEngine(object):
         # get PnL numbers
         unrealized = sum(x._pnl for x in self.positions.values())
         realized = sum(x._realized for x in self.positions.values())
-        pnl = sum(x._pnl+x._realized for x in self.positions.values())
+        pnl = sum(x._pnl + x._realized for x in self.positions.values())
         self.portfolio_value.append([data.time, self.portfolio_value[-1][1], unrealized, realized, pnl])

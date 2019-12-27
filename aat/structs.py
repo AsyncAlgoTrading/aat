@@ -2,18 +2,18 @@ from datetime import datetime
 from dataclasses import dataclass, asdict
 from enum import Enum
 from .enums import Side, \
-                   ExchangeType, \
-                   ExchangeType_to_string, \
-                   OptionSide, \
-                   CurrencyType, \
-                   PairType, \
-                   OrderType, \
-                   OrderSubType, \
-                   TickType, \
-                   TickType_to_string, \
-                   TradeResult, \
-                   InstrumentType, \
-                   RiskReason
+    ExchangeType, \
+    ExchangeType_to_string, \
+    OptionSide, \
+    CurrencyType, \
+    PairType, \
+    OrderType, \
+    OrderSubType, \
+    TickType, \
+    TickType_to_string, \
+    TradeResult, \
+    InstrumentType, \
+    RiskReason
 
 
 @dataclass(init=False)
@@ -122,10 +122,10 @@ class Option(Instrument):
     def __str__(self):
         # 180803C00187500-AAPL-CALL
         return self.expiration.strftime('%y%m%d') + \
-               self.side.value[:1] + \
-               '{0:10.2f}'.format(self.strike).replace(' ', '0') + '-' + \
-               str(self.underlying) + '-' + \
-               '{0:8.2f}'.format(self.size).replace(' ', '0')
+            self.side.value[:1] + \
+            '{0:10.2f}'.format(self.strike).replace(' ', '0') + '-' + \
+            str(self.underlying) + '-' + \
+            '{0:8.2f}'.format(self.size).replace(' ', '0')
 
 
 @dataclass(init=False)
