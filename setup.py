@@ -1,4 +1,3 @@
-# # # # GENERATED FILE -- DO NOT MODIFY # # # #
 from setuptools import setup, find_packages, Extension
 from distutils.version import LooseVersion
 from codecs import open
