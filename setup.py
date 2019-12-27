@@ -3,6 +3,7 @@ from setuptools import setup, find_packages, Extension
 from distutils.version import LooseVersion
 from codecs import open
 from setuptools.command.build_ext import build_ext
+import io
 import os
 import os.path
 import os
@@ -23,8 +24,20 @@ except ImportError:
     import multiprocessing
     CPU_COUNT = multiprocessing.cpu_count()
 
+pjoin = os.path.join
 here = os.path.abspath(os.path.dirname(__file__))
 PREFIX = sysconfig.get_config_vars()['prefix']
+name = 'aat'
+
+
+def get_version(file, name='__version__'):
+    path = os.path.realpath(file)
+    version_ns = {}
+    with io.open(path, encoding="utf8") as f:
+        exec(f.read(), {}, version_ns)
+    return version_ns[name]
+
+version = get_version(pjoin(here, name, '_version.py'))
 
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
@@ -102,8 +115,8 @@ class CMakeBuild(build_ext):
         print()  # Add an empty line for cleaner output
 
 setup(
-    name='aat',
-    version='0.0.2',
+    name=name,
+    version=version,
     description='Algorithmic trading library',
     long_description=long_description,
     url='https://github.com/timkpaine/aat',
