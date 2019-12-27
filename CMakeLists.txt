@@ -155,15 +155,6 @@ set(CMAKE_CXX_FLAGS " \
 
 message(WARNING "${BUILD_MESSAGE}")
 
-find_package(pybind11)
-if(NOT pybind11_FOUND)
-    message("${Red}PyBind11 could not be located${ColorReset}")
-    build_dep("pybind11" "cmake/Pybind.txt.in")
-else()
-    message("${Cyan}Found PyBind11 in ${pybind11_INCLUDE_DIRS}${ColorReset}")
-endif()
-include_directories( ${pybind11_INCLUDE_DIRS} )
-
 if(WIN32)
     foreach(warning 4244 4251 4267 4275 4290 4786 4305 4996)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd${warning}")
@@ -221,7 +212,7 @@ endif()
 
 if(NOT PYTHON_PYBIND_FOUND)
     message("${Red}PyBind11 could not be located${ColorReset}")
-    psp_build_dep("pybind11" "${AAT_CMAKE_MODULE_PATH}/Pybind.txt.in")
+    build_dep("pybind11" "${AAT_CMAKE_MODULE_PATH}/Pybind.txt.in")
 else()
     message("${Cyan}Found PyBind11 in ${PYTHON_PYBIND_INCLUDE_DIR}${ColorReset}")
     include_directories( ${PYTHON_PYBIND_INCLUDE_DIR} )
@@ -252,7 +243,6 @@ if(MACOS)
     set(CMAKE_SHARED_LIBRARY_SUFFIX .so)
     
     # Look for the binary using @loader_path (relative to binary location) instead of @rpath
-    # and include arrow in @rpath so it can be found by libbinding/libpsp
     set(CMAKE_SKIP_BUILD_RPATH FALSE)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
