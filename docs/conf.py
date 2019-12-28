@@ -57,7 +57,7 @@ author = 'Tim Paine'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-_version_py = os.path.join('..', '..', 'aat', '_version.py')
+_version_py = os.path.join('..', 'aat', '_version.py')
 version_ns = {}
 
 with open(_version_py, mode='r') as version_file:

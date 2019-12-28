@@ -72,7 +72,6 @@ addons:
       - python
       - pybind11
       - cmake
-      - boost
 
 
 script:
