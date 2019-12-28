@@ -1,12 +1,33 @@
+import base64
 import ccxt
+import hashlib
+import hmac
 import logging
 import os
 import pytz
+import time
+import ujson
+import uuid
 from datetime import datetime
 from functools import lru_cache
 from .enums import ExchangeType, ExchangeType_from_string, ExchangeTypes, CurrencyType, OrderType, Side, PairType
-from .exceptions import AATException
 from .logging import log
+
+
+class AATException(Exception):
+    pass
+
+
+class CallbackException(AATException):
+    pass
+
+
+class ConfigException(AATException):
+    pass
+
+
+class QueryException(AATException):
+    pass
 
 
 @lru_cache(100)
@@ -236,3 +257,9 @@ class pnl_helper(object):
                 self._pnl = (self._volume * (px - self._avg_price))
                 self._realized += (amt * (self._avg_price - px))
         self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl + self._realized, 'unrealized': self._pnl, 'realized': self._realized})
+
+def generate_cookie_secret():
+    nonce = int(time.time() * 1000)
+    encoded_payload = ujson.dumps({"nonce": nonce}).encode()
+    b64 = base64.b64encode(encoded_payload)
+    return hmac.new(str(uuid.uuid1()).encode(), b64, hashlib.sha384).hexdigest()

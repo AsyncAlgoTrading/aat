@@ -8,8 +8,7 @@ from .enums import PairType, CurrencyType, ExchangeType, ExchangeType_to_string,
 from .market_data import MarketData
 from .order_entry import OrderEntry
 from .structs import Account, Instrument
-from .exceptions import AATException
-from .utils import findpath
+from .utils import findpath, AATException
 
 
 class Exchange(MarketData, OrderEntry):

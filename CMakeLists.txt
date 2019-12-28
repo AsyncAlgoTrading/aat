@@ -167,7 +167,6 @@ endif()
 #########################
 # PYTHON BINDINGS BUILD #
 #########################
-include_directories("${AAT_PYTHON_SRC}/perspective/include")
 if(MANYLINUX)
     # Manylinux docker images have no shared libraries
     # The instead use a statically built python.

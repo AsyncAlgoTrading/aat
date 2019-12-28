@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from .callback import Callback
 from .structs import TradeRequest, TradeResponse
 from .enums import TickType
-from .exceptions import CallbackException
+from .utils import CallbackException
 
 
 class DataSource(metaclass=ABCMeta):

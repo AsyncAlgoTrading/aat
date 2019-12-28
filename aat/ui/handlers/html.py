@@ -3,8 +3,8 @@ from .base import HTTPHandler
 
 
 class HTMLOpenHandler(HTTPHandler):
-    def initialize(self, template=None, template_kwargs=None, **kwargs):
-        super(HTMLOpenHandler, self).initialize()
+    def initialize(self, context=None, template=None, template_kwargs=None, **kwargs):
+        super(HTMLOpenHandler, self).initialize(template=template, **context)
         self.template = template
         self.template_kwargs = template_kwargs or {}
 

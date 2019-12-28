@@ -4,13 +4,12 @@ from datetime import datetime
 from functools import reduce
 from typing import List, Dict
 from .enums import TradeResult, ExchangeType, PairType, CurrencyType, TradingType, Side
-from .exceptions import QueryException, AATException
 from .execution import Execution
 from .logging import log
 from .risk import Risk
 from .strategy import TradingStrategy
 from .structs import Instrument, MarketData, TradeRequest, TradeResponse
-from .utils import iterate_accounts, pnl_helper, findpath
+from .utils import QueryException, AATException, iterate_accounts, pnl_helper, findpath
 
 
 class QueryEngine(object):

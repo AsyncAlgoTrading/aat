@@ -18,10 +18,8 @@ from .logging import log
 class TradingEngine(object):
     def __init__(self, options: TradingEngineConfig, ui_handlers: list = None, ui_settings: dict = None) -> None:
         # save UI class for later
-        ui_handlers = ui_handlers or []
-        ui_settings = ui_settings or {}
-        self._ui_handlers = ui_handlers
-        self._ui_settings = ui_settings
+        self._ui_handlers = ui_handlers or []
+        self._ui_settings = ui_settings or {}
 
         # trading type
         self.trading_type = options.type
@@ -140,8 +138,9 @@ class TradingEngine(object):
 
             loop = tornado.platform.asyncio.AsyncIOMainLoop().install()
 
-            port = 8081
+            port = 8080
             self.application = ServerApplication(self,
+                                                 port=port,
                                                  extra_handlers=self._ui_handlers,
                                                  custom_settings=self._ui_settings)
 
@@ -175,7 +174,7 @@ class TradingEngine(object):
             self.backtest.run(self)
 
     def terminate(self):
-        for strat in self._strats:
+        for strat in self.query.strategies:
             strat.onExit()
 
     def _request(self,
@@ -278,5 +277,4 @@ class TradingEngine(object):
         return resp
 
     def cancelAll(self, strat=None):
-        resp = self.execution.cancelAll(self._pending)
-        return resp
+        self.execution.cancelAll()
