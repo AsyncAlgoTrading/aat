@@ -1,4 +1,4 @@
-from traitlets import HasTraits, List, Instance, Float, Type, Tuple, Dict, Bool
+from traitlets import HasTraits, List, Instance, Float, Type, Tuple, Dict, Bool, Unicode, Integer
 from .enums import TradingType, ExchangeType, PairType, InstrumentType
 from .structs import Instrument
 
@@ -42,6 +42,8 @@ class StrategyConfig(HasTraits):
 class TradingEngineConfig(HasTraits):
     type = Instance(klass=TradingType, args=('NONE',), kwargs={})
     print = Bool(default_value=False)
+    port = Integer(default_value=8080)
+    sql_url = Unicode(default_value="sqlite:///aat.db")
     exchange_options = Instance(klass=ExchangeConfig, args=(), kwargs={})
     backtest_options = Instance(klass=BacktestConfig, args=(), kwargs={})
     risk_options = Instance(klass=RiskConfig, args=(), kwargs={})

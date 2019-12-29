@@ -38,17 +38,14 @@ class TestEnums:
         t1 = ExchangeType.COINBASE
         t2 = ExchangeType.GEMINI
         t3 = ExchangeType.KRAKEN
-        t4 = ExchangeType.POLONIEX
         assert t0 == ExchangeType.NONE
         assert t1 == ExchangeType.COINBASE
         assert t2 == ExchangeType.GEMINI
         assert t3 == ExchangeType.KRAKEN
-        assert t4 == ExchangeType.POLONIEX
         assert t0 == ExchangeType_from_string('NONE')
         assert t1 == ExchangeType_from_string('COINBASE')
         assert t2 == ExchangeType_from_string('GEMINI')
         assert t3 == ExchangeType_from_string('KRAKEN')
-        assert t4 == ExchangeType_from_string('POLONIEX')
 
     def test_tick_type(self):
         from ..enums import TickType, TickType_from_string

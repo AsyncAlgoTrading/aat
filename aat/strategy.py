@@ -1,3 +1,8 @@
+import pandas as pd
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+import seaborn as sns
 from abc import ABCMeta, abstractmethod
 from .callback import Callback
 from .enums import Side
@@ -45,14 +50,9 @@ class TradingStrategy(Strategy, Callback):
 
     def onAnalyze(self, engine):
         '''onAnalyze'''
-        pass
         if not engine:
             return
-        import pandas
-        import numpy as np
-        import matplotlib
-        import matplotlib.pyplot as plt
-        import seaborn as sns
+
         matplotlib.rc('font', **{'size': 5})
 
         # extract data from trading engine
@@ -61,15 +61,13 @@ class TradingStrategy(Strategy, Callback):
 
         requests = engine.query.query_tradereqs()
         responses = engine.query.query_traderesps()
-        trades = pandas.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query.query_trades(instrument=requests[0].instrument, page=None)])
+        trades = pd.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query.query_trades(instrument=requests[0].instrument, page=None)])
         trades.set_index(['time'], inplace=True)
 
         # format into pandas
-        pd = pandas.DataFrame(positions_value, columns=['time', 'unrealized', 'realized', 'pnl'])
-        pd2 = pandas.DataFrame(portfolio_value, columns=['time', 'value'])
-        import ipdb
-        ipdb.set_trace()
-        pd.set_index(['time'], inplace=True)
+        pd1 = pd.DataFrame(positions_value, columns=['time', 'unrealized', 'realized', 'pnl'])
+        pd2 = pd.DataFrame(portfolio_value, columns=['time', 'value'])
+        pd1.set_index(['time'], inplace=True)
         pd2.set_index(['time'], inplace=True)
 
         # setup charting
@@ -84,14 +82,14 @@ class TradingStrategy(Strategy, Callback):
         pd2.plot(ax=ax1, y=['value'], legend=False, fontsize=5, rot=0)
 
         # plot up/down chart
-        pd['pos'] = pd['pnl']
-        pd['neg'] = pd['pnl']
-        pd['pos'][pd['pos'] <= 0] = np.nan
-        pd['neg'][pd['neg'] > 0] = np.nan
-        pd.plot(ax=ax2, y=['pos', 'neg'], kind='area', stacked=False, color=['green', 'red'], legend=False, linewidth=0, fontsize=5, rot=0)
+        pd1['pos'] = pd1['pnl']
+        pd1['neg'] = pd1['pnl']
+        pd1['pos'][pd1['pos'] <= 0] = np.nan
+        pd1['neg'][pd1['neg'] > 0] = np.nan
+        pd1.plot(ax=ax2, y=['pos', 'neg'], kind='area', stacked=False, color=['green', 'red'], legend=False, linewidth=0, fontsize=5, rot=0)
         ax2.set_ylabel('PnL')
 
-        pd.plot(ax=ax3, y=['unrealized', 'realized', 'pnl'], kind='line', legend=False, fontsize=5, rot=0)
+        pd1.plot(ax=ax3, y=['unrealized', 'realized', 'pnl'], kind='line', legend=False, fontsize=5, rot=0)
         ax3.legend(loc="upper left")
 
         # annotate with key data

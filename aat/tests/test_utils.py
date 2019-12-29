@@ -59,7 +59,6 @@ class TestUtils:
         assert(str_to_exchange('coinbase') == ExchangeType.COINBASE)
         assert(str_to_exchange('gemini') == ExchangeType.GEMINI)
         assert(str_to_exchange('kraken') == ExchangeType.KRAKEN)
-        assert(str_to_exchange('poloniex') == ExchangeType.POLONIEX)
 
     def test_trade_req_to_params(self):
         from ..utils import trade_req_to_params

@@ -1,12 +1,16 @@
 import asyncio
 import tornado
 import uvloop
+from perspective import Table, PerspectiveManager, PerspectiveTornadoHandler
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from .backtest import Backtest
 from .callback import Print
 from .config import TradingEngineConfig
 from .enums import TradingType, Side, CurrencyType, TradeResult
 from .execution import Execution
 from .query import QueryEngine
+from .persistence import Base
 from .risk import Risk
 from .strategy import TradingStrategy
 from .structs import TradeRequest, TradeResponse
@@ -55,6 +59,7 @@ class TradingEngine(object):
 
                 # calculate USD value
                 ex = self.exchanges[account.exchange]
+                # FIXME for backtests, this is the wrong value
                 spot = ex.ticker(currency=account.currency)['last']
                 options.risk_options.total_funds += account.balance * spot
                 account.value = account.balance * spot
@@ -107,6 +112,19 @@ class TradingEngine(object):
         # actively trading or halted?
         self._trading = True  # type: bool
 
+        # setup sqlalachemy
+        engine = create_engine(options.sql_url, echo=False)
+        Base.metadata.create_all(engine)
+        self.sessionmaker = sessionmaker(bind=engine)
+
+        # setup webserver
+        self.port = options.port
+
+        # setup perspectives
+        self.perspective_manager = PerspectiveManager()
+        self.sample_perspective = Table([{"a": 1, "b": 2}])  # TODO remove
+        self.perspective_manager.host_table("accounts", self.sample_perspective)
+
     def haltTrading(self):
         self._trading = False
         for strat in self.query.strategies:
@@ -138,9 +156,9 @@ class TradingEngine(object):
 
             loop = tornado.platform.asyncio.AsyncIOMainLoop().install()
 
-            port = 8080
             self.application = ServerApplication(self,
-                                                 port=port,
+                                                 port=self.port,
+                                                 sessionmaker=self.sessionmaker,
                                                  extra_handlers=self._ui_handlers,
                                                  custom_settings=self._ui_settings)
 
@@ -157,9 +175,9 @@ class TradingEngine(object):
 
             # hook in tornado to asyncio
             log.critical('')
-            log.critical('Server listening on port: %s', port)
+            log.critical('Server listening on port: %s', self.port)
             log.critical('')
-            self.application.listen(port)
+            self.application.listen(self.port)
 
             # run asyncio loop
             loop.create_task(_run())

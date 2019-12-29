@@ -17,11 +17,12 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
 import sys
+import os
 import os.path
 import subprocess
 import sphinx_rtd_theme
+from recommonmark.transform import AutoStructify
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
@@ -34,7 +35,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.coverage', 'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon']
+extensions = ['sphinx.ext.coverage', 'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'recommonmark']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -43,7 +44,7 @@ templates_path = ['_templates']
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
 
 # The master toctree document.
 master_doc = 'index'
@@ -177,9 +178,30 @@ texinfo_documents = [
 ]
 
 
+def run_copyreadme(_):
+    out = os.path.abspath(os.path.join(os.path.dirname(__file__), 'index.md'))
+    readme = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'README.md'))
+    api = os.path.abspath(os.path.join(os.path.dirname(__file__), 'api.md'))
+    with open(out, 'w') as fp1:
+        with open(readme, 'r') as fp2:
+            for line in fp2:
+                if 'src=' in line:
+                    # <img>
+                    fp1.write(line.replace("docs/", ""))
+                elif "](docs/" in line:
+                    # md
+                    fp1.write(line.replace("](docs/", "]("))
+                else:
+                    fp1.write(line)
+
+        fp1.write("# API Documentation\n\n")
+        with open(api, 'r') as fp2:
+            fp1.write(fp2.read())
+
+
 def run_apidoc(_):
     out_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'api'))
-    psp_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'aat'))
+    aat_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'aat'))
     cmd_path = 'sphinx-apidoc'
     if hasattr(sys, 'real_prefix'):  # Check to see if we are in a virtualenv
         # If we are, assemble the path manually
@@ -189,9 +211,14 @@ def run_apidoc(_):
                            '-M',
                            '-o',
                            out_dir,
-                           psp_dir,
+                           aat_dir,
                            '--force'])
 
 
 def setup(app):
+    app.add_config_value('recommonmark_config', {
+        'auto_toc_tree_section': 'Contents',
+    }, True)
+    app.add_transform(AutoStructify)
+    app.connect('builder-inited', run_copyreadme)
     app.connect('builder-inited', run_apidoc)

@@ -14,13 +14,4 @@ EXCHANGE_MARKET_DATA_ENDPOINT = lru_cache(None)(lambda name, typ: {  # noqa: E73
     (ExchangeType.KRAKEN, TradingType.SANDBOX): 'wss://ws-beta.kraken.com',
     (ExchangeType.KRAKEN, TradingType.LIVE): 'wss://ws.kraken.com',
     (ExchangeType.KRAKEN, TradingType.SIMULATION): 'wss://ws.kraken.com',
-
-    (ExchangeType.POLONIEX, TradingType.SANDBOX): '',
-    (ExchangeType.POLONIEX, TradingType.LIVE): 'wss://api2.poloniex.com',
-    (ExchangeType.POLONIEX, TradingType.SIMULATION): 'wss://api2.poloniex.com',
-
-    # (ExchangeType.DERIBIT, TradingType.SANDBOX): 'wss://test.deribit.com/ws/api/v1/',
-    # (ExchangeType.DERIBIT, TradingType.LIVE): 'wss://www.deribit.com/ws/api/v1/',
-    # (ExchangeType.DERIBIT, TradingType.SIMULATION): 'wss://www.deribit.com/ws/api/v1/',
-
 }.get((name, typ), None))

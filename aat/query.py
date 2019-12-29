@@ -1,3 +1,4 @@
+import numpy as np
 import operator
 # from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -81,7 +82,7 @@ class QueryEngine(object):
     def query_lastprice(self, instrument: Instrument, exchange: ExchangeType = None) -> MarketData:
         '''get last price of asset, potentially on a given exchange'''
         if instrument not in self._last_price_by_asset_and_exchange:
-            raise QueryException('Not found!')
+            raise QueryException('Not found {}!'.format(instrument))
         if exchange:
             if exchange not in self._last_price_by_asset_and_exchange[instrument]:
                 raise QueryException('Not found!')
@@ -275,7 +276,7 @@ class QueryEngine(object):
         unrealized = sum(x._pnl for x in self.positions.values())
         realized = sum(x._realized for x in self.positions.values())
         pnl = sum(x._pnl + x._realized for x in self.positions.values())
-        self.portfolio_value.append([data.time, self.portfolio_value[-1][1], unrealized, realized, pnl])
+        self.positions_value.append([data.time, unrealized, realized, pnl])
 
     def _recalculate_portfolio(self, data: MarketData) -> None:
         '''recalculate the market value of all accounts'''
@@ -289,14 +290,19 @@ class QueryEngine(object):
         else:
             right_ret = self._ticker(data.instrument.underlying.value[1], exchange=self.exchanges[data.exchange])
 
-        print(left_ret, right_ret)
         self.portfolio_value.append([data.time, self.portfolio_value[-1][-1]])
 
     def _ticker(self, currency: CurrencyType, exchange):
         inst = Instrument(underlying=PairType.from_string(currency.value + '/USD'))
 
         if inst in exchange.markets():
-            return self.query_lastprice(inst)
+            try:
+                # we've seen a price on this instrument
+                return self.query_lastprice(inst)
+            except QueryException:
+                # no price on this instrument, price as NaN
+                return None
+
         else:
             for stable in ('USD', 'USDC', 'USDT'):
                 try:

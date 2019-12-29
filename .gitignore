@@ -83,3 +83,6 @@ coverage
 experiments
 aat_test
 docs/api
+docs/index.md
+tornado_sqlalchemy_login
+aat.db

@@ -73,7 +73,6 @@ namespace enums {
         "COINBASE",
         "GEMINI",
         "KRAKEN",
-        "POLONIEX"
     };
 
     static std::unordered_map<std::string, ExchangeType> _ExchangeType_mapping = {
@@ -82,7 +81,6 @@ namespace enums {
         {"COINBASE", ExchangeType::COINBASE},
         {"GEMINI", ExchangeType::GEMINI},
         {"KRAKEN", ExchangeType::KRAKEN},
-        {"POLONIEX", ExchangeType::POLONIEX},
     };
 
 
@@ -122,8 +120,7 @@ PYBIND11_MODULE(_enums, m)
         .value("SYNTHETIC", ExchangeType::SYNTHETIC)
         .value("COINBASE", ExchangeType::COINBASE)
         .value("GEMINI", ExchangeType::GEMINI)
-        .value("KRAKEN", ExchangeType::KRAKEN)
-        .value("POLONIEX", ExchangeType::POLONIEX);
+        .value("KRAKEN", ExchangeType::KRAKEN);
 
     m.attr("ExchangeTypes") = ExchangeType_names;
     m.def("ExchangeType_to_string", &ExchangeType_to_string, "ExchangeType enum to string");

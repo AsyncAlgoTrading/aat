@@ -8,18 +8,6 @@ runconfig: build ## Clean and make target, run target
 run:  clean build  ## Clean and make target, run target
 	python3 -m aat --live --verbose=$(VERBOSE) --exchange=$(EXCHANGE)
 
-sandbox: build  ## Clean and make target, run target
-	python3 -m aat --sandbox --verbose=$(VERBOSE) -exchange=$(EXCHANGE)
-
-backtest_config: ## Clean and make target, run backtest
-	python3 -m aat --config=./config/backtest_gemini.cfg
-
-backtest: ## Clean and make target, run backtest
-	python3 -m aat --backtest --verbose=$(VERBOSE) --exchange=$(EXCHANGE)
-
-backtest_inline:  ## Clean and make target, run backtest, plot in terminal
-	bash -c "export MPLBACKEND=\"module://itermplot\";	export ITERMPLOT=\"rv\"; python3 -m aat backtest $(VERBOSE) $(EXCHANGE)"
-
 buildext: ## build the package extensions
 	python3 setup.py build_ext
 
@@ -27,7 +15,7 @@ build: ## build the package
 	python3 setup.py build
 
 install: ## install the package
-	pip3 install .
+	python3 -m pip install .
 
 tests: ## Clean and Make unit tests
 	python3 -m pytest -v ./aat/tests --cov=aat
@@ -49,6 +37,7 @@ annotate_l: ## MyPy type annotation check - count only
 
 docs:  ## Build the sphinx docs
 	make -C docs html
+	open ./docs/_build/html/index.html
 
 dist:  ## dist to pypi
 	rm -rf dist build

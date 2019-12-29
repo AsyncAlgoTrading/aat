@@ -33,7 +33,3 @@ class TestDefine:
             == 'wss://ws-beta.kraken.com'
         assert EXCHANGE_MARKET_DATA_ENDPOINT(ExchangeType.KRAKEN, TradingType.LIVE) \
             == 'wss://ws.kraken.com'
-        assert EXCHANGE_MARKET_DATA_ENDPOINT(ExchangeType.POLONIEX, TradingType.SANDBOX) \
-            == ''
-        assert EXCHANGE_MARKET_DATA_ENDPOINT(ExchangeType.POLONIEX, TradingType.LIVE) \
-            == 'wss://api2.poloniex.com'

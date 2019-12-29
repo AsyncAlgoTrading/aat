@@ -1,144 +1,122 @@
-API
-====
 
-.. toctree::
-   :maxdepth: 4
-
-
-.. automodule:: aat.backtest
+```eval_rst
+.. automodule:: aat
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.callback
+.. automodule:: backtest
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.config
+.. automodule:: callback
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.data_source
+.. automodule:: config
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.define
+.. automodule:: data_source
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.enums
+.. automodule:: define
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.exceptions
+.. automodule:: enums
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.exchange
+.. automodule:: exchange
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.execution
+.. automodule:: exchanges
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.logging
+.. automodule:: execution
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.main
+.. automodule:: logging
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.market_data
+.. automodule:: market_data
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.order_book
+.. automodule:: order_book
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.order_entry
+.. automodule:: order_entry
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.parser
+.. automodule:: parser
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.query
+.. automodule:: persistence
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.risk
+.. automodule:: query
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.strategy
+.. automodule:: risk
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.structs
+.. automodule:: strategies
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.synthetic_exchange
+.. automodule:: strategy
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.trading
+.. automodule:: structs
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.utils
+.. automodule:: trading
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.exchanges
+.. automodule:: ui
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: aat.exchanges.coinbase
+.. automodule:: utils
     :members:
     :undoc-members:
     :show-inheritance:
-
-.. automodule:: aat.exchanges.gemini
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: aat.exchanges.kraken
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: aat.exchanges.poloniex
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-
+```

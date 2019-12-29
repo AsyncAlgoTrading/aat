@@ -258,6 +258,7 @@ class pnl_helper(object):
                 self._realized += (amt * (self._avg_price - px))
         self._records.append({'volume': self._volume, 'px': px, 'apx': self._avg_price, 'pnl': self._pnl + self._realized, 'unrealized': self._pnl, 'realized': self._realized})
 
+
 def generate_cookie_secret():
     nonce = int(time.time() * 1000)
     encoded_payload = ujson.dumps({"nonce": nonce}).encode()

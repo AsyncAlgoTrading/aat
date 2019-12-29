@@ -21,6 +21,6 @@ class TestExecution:
         # teardown_class() after any methods in this class
 
     def test_init(self):
-        from ...ui.server import ServerApplication
-        s = ServerApplication(MagicMock())
+        from ...ui.server import serverApplication
+        s = serverApplication(MagicMock())
         assert s

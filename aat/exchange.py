@@ -1,5 +1,7 @@
 import aiohttp
 import json
+import pandas as pd
+import time
 from datetime import datetime
 from functools import lru_cache
 from typing import List
@@ -111,12 +113,14 @@ class Exchange(MarketData, OrderEntry):
                         ret[key] = None
                 return ret
 
-    def historical(self, timeframe='1m', since=None, limit=None):
+    def historical(self, currency_pairs=None, timeframe='1m', since=None, limit=None):
         '''get historical data (for backtesting)'''
-        import pandas as pd
         client = self.oe_client()
-        dfs = [{'pair': str(symbol), 'exchange': ExchangeType_to_string(self.exchange()), 'data': client.fetch_ohlcv(symbol=str(symbol), timeframe=timeframe, since=since, limit=limit)}
-               for symbol in self.options().currency_pairs]
+        # space these out so we don't exceed limit
+        dfs = []
+        for symbol in currency_pairs or self.options.currency_pairs:
+            dfs.append({'pair': str(symbol), 'exchange': ExchangeType_to_string(self.exchange()), 'data': client.fetch_ohlcv(symbol=str(symbol), timeframe=timeframe, since=since, limit=limit)})
+            time.sleep(.1)
         df = pd.io.json.json_normalize(dfs, 'data', ['pair', 'exchange'])
         df.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume', 'pair', 'exchange']
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')

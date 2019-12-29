@@ -91,12 +91,12 @@ class SyntheticExchange(Exchange):
             all_curs.add(inst.underlying.value[0])
             all_curs.add(inst.underlying.value[1])
 
-        return [Account(id=str(cur.value),
+        return {cur: Account(id=str(cur.value),
                         currency=cur,
                         balance=100,
                         exchange=self.exchange(),
                         value=-1,
-                        asOf=datetime.now()) for cur in all_curs]
+                        asOf=datetime.now()) for cur in all_curs}
 
     @lru_cache(None)
     def currencies(self) -> List[CurrencyType]:
@@ -153,7 +153,7 @@ class SyntheticExchange(Exchange):
     def tickToData(self, jsn: dict) -> MarketData:
         pass
 
-    def historical(self):
+    def historical(self, currency_pairs=None, timeframe='1m', since=None, limit=None):
         data = []
         i = 0
         for msg in self.generateMsg():

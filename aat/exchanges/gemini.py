@@ -71,48 +71,49 @@ class GeminiExchange(Exchange):
                 yield ret, sub
 
         # add one for private stream
-        async for val in stream.merge(*[get_data_sub_pair(self.ws[i], sub) for i, sub in enumerate(self.subscription() + [None])]):
-            jsn = json.loads(val[0].data)
+        async with stream.merge(*[get_data_sub_pair(self.ws[i], sub) for i, sub in enumerate(self.subscription() + [None])]).stream() as streams:
+            async for val in streams:
+                jsn = json.loads(val[0].data)
 
-            if isinstance(jsn, dict) and 'events' in jsn:
-                events = jsn.get('events', [])
-            elif not isinstance(jsn, list):
-                events = [jsn]
-            else:
-                events = jsn
+                if isinstance(jsn, dict) and 'events' in jsn:
+                    events = jsn.get('events', [])
+                elif not isinstance(jsn, list):
+                    events = [jsn]
+                else:
+                    events = jsn
 
-            if val[1]:
-                # data stream
-                pair = json.loads(val[1]).get('product_id')
-            else:
-                # private events
-                pair = None
-
-            for item in events:
-                if item.get('type', 'subscription_ack') in ('subscription_ack', 'heartbeat'):
-                    # can skip these
-                    continue
-                if item.get('type') == 'accepted':
-                    # can ignore these as well, will have a fill and/or booked
-                    # https://docs.gemini.com/websocket-api/#workflow
-                    continue
-                if item.get('type') == 'closed':
-                    # can ignore these as well, will have a fill or cancelled
-                    # https://docs.gemini.com/websocket-api/#workflow
-                    continue
-
-                if pair is None:
+                if val[1]:
+                    # data stream
+                    pair = json.loads(val[1]).get('product_id')
+                else:
                     # private events
-                    pair = item['symbol']
+                    pair = None
 
-                item['symbol'] = pair
-                res = self.tickToData(item)
+                for item in events:
+                    if item.get('type', 'subscription_ack') in ('subscription_ack', 'heartbeat'):
+                        # can skip these
+                        continue
+                    if item.get('type') == 'accepted':
+                        # can ignore these as well, will have a fill and/or booked
+                        # https://docs.gemini.com/websocket-api/#workflow
+                        continue
+                    if item.get('type') == 'closed':
+                        # can ignore these as well, will have a fill or cancelled
+                        # https://docs.gemini.com/websocket-api/#workflow
+                        continue
 
-                if not self._running:
-                    pass
+                    if pair is None:
+                        # private events
+                        pair = item['symbol']
 
-                if res.type != TickType.HEARTBEAT:
-                    self.callback(res.type, res)
+                    item['symbol'] = pair
+                    res = self.tickToData(item)
+
+                    if not self._running:
+                        pass
+
+                    if res.type != TickType.HEARTBEAT:
+                        self.callback(res.type, res)
 
     def tickToData(self, jsn: dict) -> MarketData:
         order_id = jsn.get('order_id', '') or str(jsn.get('tid', ''))

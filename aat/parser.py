@@ -31,6 +31,7 @@ def parse_file_config(filename: str) -> TradingEngineConfig:
 
 
 def _parse_general(general, config) -> None:
+    # Set trading type at all levels
     if 'TradingType' in general:
         if general['TradingType'].lower() == 'live':
             set_all_trading_types(TradingType.LIVE, config)
@@ -46,13 +47,19 @@ def _parse_general(general, config) -> None:
     else:
         raise ConfigException('TradingType unspecified')
 
+    # Set verbose
     if 'verbose' in general:
         if int(general['verbose']) >= 1:
             set_verbose(int(general['verbose']))
 
+    # Add extra print callback for more verbosity
     if 'print' in general:
         if general['print'] == '1':
             config.print = True
+
+    # Sql url for intermediate storage
+    if 'sql_url' in general:
+        config.sql_url = general['sql_url']
 
 
 def _parse_exchange(exchange, config) -> None:
@@ -200,7 +207,7 @@ def _parse_backtest_options(argv, config) -> None:
         for exchange in config.exchange_options.exchange_types:
             if exchange == ExchangeType.SYNTHETIC:
                 config.exchange_options = _parse_synthetic_config(config, argv)
-                config.exchange_options.exchange_type = ExchangeType.COINBASE
+                config.exchange_options.exchange_type = ExchangeType.SYNTHETIC
     else:
         raise ConfigException('No exchange set!')
 

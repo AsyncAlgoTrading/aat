@@ -28,6 +28,20 @@ here = os.path.abspath(os.path.dirname(__file__))
 PREFIX = sysconfig.get_config_vars()['prefix']
 name = 'aat'
 
+def get_version(file, name='__version__'):
+    path = os.path.realpath(file)
+    version_ns = {}
+    with io.open(path, encoding="utf8") as f:
+        exec(f.read(), {}, version_ns)
+    return version_ns[name]
+
+version = get_version(pjoin(here, name, '_version.py'))
+
+with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
+if sys.version_info.major < 3 or sys.version_info.minor < 7:
+    raise Exception('Must be python3.7 or above')
 
 requires = [
     'aiohttp>=3.5.4',
@@ -46,7 +60,9 @@ requires = [
     'six>=1.10.0',
     'requests>=2.13.0',
     'tornado>=5.1',
+    'tornado-sqlalchemy-login>=0.1.0',
     'traitlets>=4.3.2',
+    'tqdm>=4.32.2',
     'ujson>=1.35',
     'uvloop>=0.12.2',
     'websocket-client>=0.40.0',
@@ -62,23 +78,6 @@ requires_dev = [
     'Sphinx>=1.8.4',
     'sphinx-markdown-builder>=0.5.2',
 ] + requires
-
-
-def get_version(file, name='__version__'):
-    path = os.path.realpath(file)
-    version_ns = {}
-    with io.open(path, encoding="utf8") as f:
-        exec(f.read(), {}, version_ns)
-    return version_ns[name]
-
-version = get_version(pjoin(here, name, '_version.py'))
-
-with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
-
-if sys.version_info.major < 3 or sys.version_info.minor < 7:
-    raise Exception('Must be python3.7 or above')
-
 
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=''):
@@ -153,9 +152,7 @@ setup(
     author_email='timothy.k.paine@gmail.com',
     license='Apache 2.0',
     install_requires=requires,
-    extras_require={
-        'dev': requires_dev,
-    },
+    extras_require={'dev': requires_dev},
     python_requires='>=3.7',
     classifiers=[
         'Development Status :: 3 - Alpha',

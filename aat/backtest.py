@@ -1,4 +1,6 @@
 import pandas as pd
+import time
+import tqdm
 from .config import BacktestConfig
 from .data_source import StreamingDataSource
 from .logging import log
@@ -24,9 +26,12 @@ class Backtest(StreamingDataSource):
     def run(self, engine) -> None:
         log.info('Starting....')
 
-        datas = [ex.historical() for ex in engine.exchanges.values()]
+        datas = []
+        iterable = [(e, c) for e in engine.exchanges.values() for c in e.options().currency_pairs]
+        for ex, currency in tqdm.tqdm(iterable, desc="Fetching backtest data"):
+            datas.append(ex.historical(currency_pairs=[currency]))
         data = pd.concat(datas)
-        data.sort_index()
+        data.sort_index(level=0, inplace=True)  # sort according to date, so that multiple symbols prices can be bundled
 
         for index, row in data.iterrows():
             self.receive(line_to_data(row))
