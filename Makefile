@@ -30,10 +30,10 @@ install: ## install the package
 	pip3 install .
 
 tests: ## Clean and Make unit tests
-	python3 -m pytest -v ./aat/tests --cov=aat
+	python3 -m pytest -v ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch
 
 test_verbose: ## run the tests with full output
-	@ python3 -m pytest -vv ./aat/tests --cov=aat
+	@ python3 -m pytest -vv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch
 
 lint: ## run linter
 	python3 -m flake8 aat 
