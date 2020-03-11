@@ -109,14 +109,14 @@ class CMakeBuild(build_ext):
         cfg = 'Debug' if self.debug else 'Release'
 
         cmake_args = [
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + os.path.abspath('aat'),
+            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + os.path.abspath(os.path.join(extdir, 'aat')).replace('\\', '/'),
             '-DCMAKE_BUILD_TYPE=' + cfg,
             '-DCPP_BUILD_TESTS=0',
             '-DAAT_PYTHON_VERSION={}'.format(platform.python_version()),
-            '-DPYTHON_EXECUTABLE={}'.format(sys.executable),
-            '-DPython_ROOT_DIR={}'.format(PREFIX),
-            '-DPython_ROOT={}'.format(PREFIX),
-            '-DAAT_CMAKE_MODULE_PATH={folder}'.format(folder=os.path.join(ext.sourcedir, 'cmake')),
+            '-DPYTHON_EXECUTABLE={}'.format(sys.executable).replace('\\', '/'),
+            '-DPython_ROOT_DIR={}'.format(PREFIX).replace('\\', '/'),
+            '-DPython_ROOT={}'.format(PREFIX).replace('\\', '/'),
+            '-DAAT_CMAKE_MODULE_PATH={folder}'.format(folder=os.path.join(ext.sourcedir, 'cmake')).replace('\\', '/'),
         ]
 
         build_args = ['--config', cfg]
@@ -134,6 +134,7 @@ class CMakeBuild(build_ext):
 
         env = os.environ.copy()
         env["PYTHONPATH"] = os.path.pathsep.join((os.path.join(os.path.dirname(os.__file__), 'site-packages'), os.path.dirname(os.__file__)))
+        env['OSX_DEPLOYMENT_TARGET'] = '10.9'
 
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)

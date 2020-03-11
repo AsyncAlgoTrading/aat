@@ -8,7 +8,19 @@ from .utils import (get_keys_from_environment, str_to_side,
                     parse_date)
 
 
-class OrderEntry(RestAPIDataSource):
+class OrderEntry(metaclass=ABCMeta):
+    @abstractmethod
+    def accounts(self):
+        '''get account information'''
+
+    @abstractmethod
+    def orderBook(self):
+        '''return the order book'''
+
+    @abstractmethod
+    def historical(self, timeframe='1m', since=None, limit=None):
+        '''get historical data (for backtesting)'''
+
     @lru_cache(None)
     def oe_client(self):
         options = self.options()

@@ -37,6 +37,7 @@ class CurrencyType(BaseEnum):
     USDT = 'USDT'
 
     ALGO = 'ALGO'
+    ATOM = 'ATOM'
     BAT = 'BAT'
     BCH = 'BCH'
     BTC = 'BTC'
@@ -48,6 +49,7 @@ class CurrencyType(BaseEnum):
     ETC = 'ETC'
     ETH = 'ETH'
     GNT = 'GNT'
+    KNC = 'KNC'
     LINK = 'LINK'
     LOOM = 'LOOM'
     LTC = 'LTC'

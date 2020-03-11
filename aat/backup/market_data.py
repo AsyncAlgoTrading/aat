@@ -1,45 +1,15 @@
-from abc import ABCMeta, abstractmethod
+import aiohttp
+from abc import abstractmethod
 from .callback import Callback
-from .structs import TradeRequest, TradeResponse
+from .data_source import StreamingDataSource
+from .define import EXCHANGE_MARKET_DATA_ENDPOINT
 from .enums import TickType
+from .logging import log
+from .structs import MarketData
 from .utils import CallbackException
 
 
-class DataSource(metaclass=ABCMeta):
-    pass
-
-
-class RestAPIDataSource(DataSource):
-    @abstractmethod
-    def accounts(self):
-        '''get account information'''
-
-    @abstractmethod
-    def buy(self, req: TradeRequest) -> TradeResponse:
-        '''execute a buy order'''
-
-    @abstractmethod
-    def sell(self, req: TradeRequest) -> TradeResponse:
-        '''execute a sell order'''
-
-    @abstractmethod
-    def cancel(self, resp: TradeResponse) -> None:
-        '''cancel an order'''
-
-    @abstractmethod
-    def cancelAll(self) -> None:
-        '''cancel all orders'''
-
-    @abstractmethod
-    def orderBook(self):
-        '''return the order book'''
-
-    @abstractmethod
-    def historical(self, timeframe='1m', since=None, limit=None):
-        '''get historical data (for backtesting)'''
-
-
-class StreamingDataSource(DataSource):
+class MarketData(metaclass=ABCMeta):
     def __init__(self, *args, **kwargs) -> None:
         self._running = False
         self._callbacks = {TickType.TRADE: [],
@@ -51,18 +21,9 @@ class StreamingDataSource(DataSource):
                            TickType.ANALYZE: [],
                            TickType.HALT: [],
                            TickType.CONTINUE: []}
-
-    @abstractmethod
-    async def run(self, engine) -> None:
-        '''run the exchange'''
-
-    @abstractmethod
-    async def close(self) -> None:
-        '''close the websocket'''
-
-    @abstractmethod
-    def seqnum(self, number: int):
-        '''manage sequence numbers'''
+        self._lastseqnum = -1
+        self._missingseqnum = set()  # type: set
+        self._seqnum_enabled = False
 
     @abstractmethod
     def receive(self):
@@ -71,11 +32,6 @@ class StreamingDataSource(DataSource):
     def callback(self, field: str, data, *args, **kwargs) -> None:
         for cb in self._callbacks[field]:
             cb(data, *args, **kwargs)
-
-    # Data functions
-    @abstractmethod
-    def tickToData(self, jsn):
-        '''convert json to market data based on fields'''
 
     def onTrade(self, callback: Callback) -> None:
         self._callbacks[TickType.TRADE].append(callback)
@@ -121,3 +77,67 @@ class StreamingDataSource(DataSource):
                     'onContinue']:
             if hasattr(callback, att):
                 getattr(self, att)(getattr(callback, att))
+
+    @abstractmethod
+    def subscription(self):
+        '''subscription for websocket'''
+
+    @abstractmethod
+    def heartbeat(self):
+        '''heartbeat for websocket'''
+
+    def seqnum(self, number: int) -> None:
+        if self._lastseqnum == -1:
+            # first seen
+            self._lastseqnum = number
+            return
+
+        if number != self._lastseqnum + 1 and number not in self._missingseqnum:
+            log.error('ERROR: Missing sequence number/s: %s' % ','.join(
+                str(x) for x in range(self._lastseqnum + 1, number + 1)))
+            self._missingseqnum.update(
+                x for x in range(self._lastseqnum + 1, number + 1))
+            log.error(self._missingseqnum)
+
+        if number in self._missingseqnum:
+            self._missingseqnum.remove(number)
+            log.warning('INFO: Got out of order data for seqnum: %s' % number)
+
+        else:
+            self._lastseqnum = number
+
+    async def close(self) -> None:
+        '''close the websocket'''
+        await self.ws.close()
+
+    async def run(self, engine) -> None:
+        options = self.options()
+        session = aiohttp.ClientSession()
+
+        while True:
+            # startup and redundancy
+            log.info('Starting....')
+            self.ws = await session.ws_connect(EXCHANGE_MARKET_DATA_ENDPOINT(self.exchange(), options.trading_type))
+            log.info(f'Connected: {self.exchange()}')
+
+            for sub in self.subscription():
+                await self.ws.send_str(sub)
+                log.info('Sending Subscription %s' % sub)
+
+            if self.heartbeat():
+                await self.ws.send_str(self.heartbeat())
+                log.info('Sending Heartbeat %s' % self.heartbeat())
+
+            log.info('')
+            log.critical(f'Starting algo trading: {self.exchange()}')
+            try:
+                while True:
+                    await self.receive()
+
+            except KeyboardInterrupt:
+                log.critical('Terminating program')
+                return
+
+    @abstractmethod
+    def tickToData(self, jsn: dict) -> MarketData:
+        pass

@@ -1,12 +1,8 @@
-CONFIG=./config/backtest_multi.cfg
-EXCHANGE=gdax
+CONFIG=./config/synthetic.cfg
 
 
-runconfig: build ## Clean and make target, run target
-	python3 -m aat --config=$(CONFIG)
-
-run:  clean build  ## Clean and make target, run target
-	python3 -m aat --live --verbose=$(VERBOSE) --exchange=$(EXCHANGE)
+run:  build  ## Clean and make target, run target
+	python3 -m aat $(CONFIG)
 
 buildext: ## build the package extensions
 	python3 setup.py build_ext
@@ -18,10 +14,7 @@ install: ## install the package
 	python3 -m pip install .
 
 tests: ## Clean and Make unit tests
-	python3 -m pytest -v ./aat/tests --cov=aat
-
-test_verbose: ## run the tests with full output
-	@ python3 -m pytest -vv ./aat/tests --cov=aat
+	python3 -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch
 
 lint: ## run linter
 	python3 -m flake8 aat 
@@ -29,20 +22,13 @@ lint: ## run linter
 fix:  ## run autopep8/tslint fix
 	python3 -m autopep8 --in-place -r -a -a aat/
 
-annotate: ## MyPy type annotation check
-	mypy -s aat 
-
-annotate_l: ## MyPy type annotation check - count only
-	mypy -s aat | wc -l 
-
 docs:  ## Build the sphinx docs
 	make -C docs html
 	open ./docs/_build/html/index.html
 
 dist:  ## dist to pypi
 	rm -rf dist build
-	python3 setup.py sdist
-	python3 setup.py bdist_wheel
+	python3 setup.py sdist bdist_wheel
 	twine check dist/* && twine upload dist/*
 
 clean: ## clean the repository

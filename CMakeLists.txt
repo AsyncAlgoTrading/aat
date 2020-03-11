@@ -270,7 +270,7 @@ target_link_libraries(binding ${PYTHON_LIBRARIES})
 add_library(_enums SHARED
     ${CMAKE_SOURCE_DIR}/cpp/src/enums.cpp)
 set_target_properties(_enums PROPERTIES
-         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat)
+         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat/config)
 # target_link_libraries(_enums binding)
 target_link_libraries(_enums ${PYTHON_LIBRARIES})
 
