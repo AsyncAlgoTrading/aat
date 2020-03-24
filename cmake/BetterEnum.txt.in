@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 2.8.2)
+
+project(betterenum-download NONE)
+
+include(ExternalProject)
+ExternalProject_Add(betterenum
+  GIT_REPOSITORY    https://github.com/aantron/better-enums
+  GIT_TAG           master
+  SOURCE_DIR        "${CMAKE_BINARY_DIR}/betterenum-src"
+  BINARY_DIR        "${CMAKE_BINARY_DIR}/betterenum-build"
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND     ""
+  INSTALL_COMMAND   ""
+  TEST_COMMAND      ""
+  CMAKE_ARGS        "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+)
