@@ -276,7 +276,7 @@ target_link_libraries(_enums ${PYTHON_LIBRARIES})
 
 ## Copy in place for testing
 add_custom_command(TARGET binding POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:binding> ${CMAKE_SOURCE_DIR}/aat/)
-add_custom_command(TARGET _enums POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:_enums> ${CMAKE_SOURCE_DIR}/aat/)
+add_custom_command(TARGET _enums POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:_enums> ${CMAKE_SOURCE_DIR}/aat/config)
 ########################
 
 if(CPP_BUILD_STRICT AND NOT WIN32)

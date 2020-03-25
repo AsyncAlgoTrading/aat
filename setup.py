@@ -44,37 +44,16 @@ if sys.version_info.major < 3 or sys.version_info.minor < 7:
     raise Exception('Must be python3.7 or above')
 
 requires = [
-    'aiohttp>=3.5.4',
     'aiostream>=0.3.1',
-    'ccxt>=1.18.529',
-    'cycler>=0.10.0',
-    'Jinja2>=2.10',
-    'matplotlib>=2.2.2',
-    'numpy>=1.14.5',
-    'pandas>=0.23.3',
-    'perspective-python>=0.4.0rc6',
-    'pyarrow>=0.11.1',
-    'scipy>=1.1.0',
-    'seaborn>=0.8.1',
-    'sphinx>=1.7.5',
-    'six>=1.10.0',
-    'requests>=2.13.0',
-    'tornado>=5.1',
-    'tornado-sqlalchemy-login>=0.1.0',
-    'traitlets>=4.3.2',
-    'tqdm>=4.32.2',
-    'ujson>=1.35',
-    'uvloop>=0.12.2',
-    'websocket-client>=0.40.0',
-    'yarl==1.1.0',
+    'traitlets>=4.3.3',
 ]
 
 requires_dev = [
-    'flake8>=3.7.8',
-    'mock',
-    'pybind11>=2.4.0',
-    'pytest>=4.3.0',
-    'pytest-cov>=2.6.1',
+    'flake8>=3.7.9',
+    'mock>=3.0.5',
+    'pybind11>=2.4.3',
+    'pytest>=5.4.1',
+    'pytest-cov>=2.8.1',
     'Sphinx>=1.8.4',
     'sphinx-markdown-builder>=0.5.2',
 ] + requires

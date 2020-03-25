@@ -13,7 +13,7 @@ PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
 namespace aat {
 namespace enums {
 
-    enum class TickType {
+    enum class EventType {
         TRADE = 0,
         OPEN = 1,
         FILL = 2,
@@ -27,7 +27,13 @@ namespace enums {
         HEARTBEAT = 10
     };
 
-    static const std::vector<std::string> TickType_names = {
+    enum class DataType {
+        ORDER = 0,
+        TRADE = 1,
+    };
+
+
+    static const std::vector<std::string> EventType_names = {
         "TRADE",
         "OPEN",
         "FILL",
@@ -41,22 +47,34 @@ namespace enums {
         "HEARTBEAT",
     };
 
-    static std::unordered_map<std::string, TickType> _TickType_mapping = {
-            {"TRADE", TickType::TRADE},
-            {"OPEN", TickType::OPEN},
-            {"FILL", TickType::FILL},
-            {"CANCEL", TickType::CANCEL},
-            {"CHANGE", TickType::CHANGE},
-            {"ERROR", TickType::ERROR},
-            {"ANALYZE", TickType::ANALYZE},
-            {"HALT", TickType::HALT},
-            {"CONTINUE", TickType::CONTINUE},
-            {"EXIT", TickType::EXIT},
-            {"HEARTBEAT", TickType::HEARTBEAT},
+    static const std::vector<std::string> DataType_names = {
+        "ORDER",
+        "TRADE",
     };
 
-    ENUM_TO_STRING(TickType)
-    ENUM_FROM_STRING(TickType)
+    static std::unordered_map<std::string, EventType> _EventType_mapping = {
+            {"TRADE", EventType::TRADE},
+            {"OPEN", EventType::OPEN},
+            {"FILL", EventType::FILL},
+            {"CANCEL", EventType::CANCEL},
+            {"CHANGE", EventType::CHANGE},
+            {"ERROR", EventType::ERROR},
+            {"ANALYZE", EventType::ANALYZE},
+            {"HALT", EventType::HALT},
+            {"CONTINUE", EventType::CONTINUE},
+            {"EXIT", EventType::EXIT},
+            {"HEARTBEAT", EventType::HEARTBEAT},
+    };
+
+    static std::unordered_map<std::string, DataType> _DataType_mapping = {
+            {"ORDER", DataType::ORDER},
+            {"TRADE", DataType::TRADE},
+    };
+
+    ENUM_TO_STRING(EventType)
+    ENUM_TO_STRING(DataType)
+    ENUM_FROM_STRING(EventType)
+    ENUM_FROM_STRING(DataType)
 
     enum class ExchangeType {
         NONE = 0,
@@ -86,24 +104,31 @@ PYBIND11_MODULE(_enums, m)
 {
     m.doc() = "C++ enums";
     using namespace aat::enums;
-    py::enum_<TickType>(m, "TickType", py::arithmetic())
-        .value("TRADE", TickType::TRADE)
-        .value("OPEN", TickType::OPEN)
-        .value("FILL", TickType::FILL)
-        .value("CANCEL", TickType::CANCEL)
-        .value("CHANGE", TickType::CHANGE)
-        .value("ERROR", TickType::ERROR)
-        .value("ANALYZE", TickType::ANALYZE)
-        .value("HALT", TickType::HALT)
-        .value("CONTINUE", TickType::CONTINUE)
-        .value("EXIT", TickType::EXIT)
-        .value("HEARTBEAT", TickType::HEARTBEAT);
+    py::enum_<EventType>(m, "EventType", py::arithmetic())
+        .value("TRADE", EventType::TRADE)
+        .value("OPEN", EventType::OPEN)
+        .value("FILL", EventType::FILL)
+        .value("CANCEL", EventType::CANCEL)
+        .value("CHANGE", EventType::CHANGE)
+        .value("ERROR", EventType::ERROR)
+        .value("ANALYZE", EventType::ANALYZE)
+        .value("HALT", EventType::HALT)
+        .value("CONTINUE", EventType::CONTINUE)
+        .value("EXIT", EventType::EXIT)
+        .value("HEARTBEAT", EventType::HEARTBEAT);
+
+    py::enum_<DataType>(m, "DataType", py::arithmetic())
+        .value("ORDER", DataType::ORDER)
+        .value("TRADE", DataType::TRADE);
 
     py::bind_vector<std::vector<std::string>>(m, "StringVec");
-    m.attr("TickTypes") = TickType_names;
+    m.attr("EventTypes") = EventType_names;
+    m.attr("DataTypes") = DataType_names;
 
-    m.def("TickType_to_string", &TickType_to_string, "TickType enum to string");
-    m.def("TickType_from_string", &TickType_from_string, "string to TickType enum");
+    m.def("EventType_to_string", &EventType_to_string, "EventType enum to string");
+    m.def("DataType_to_string", &DataType_to_string, "DataType enum to string");
+    m.def("EventType_from_string", &EventType_from_string, "string to EventType enum");
+    m.def("DataType_from_string", &DataType_from_string, "string to DataType enum");
 
     py::enum_<ExchangeType>(m, "ExchangeType", py::arithmetic())
         .value("NONE", ExchangeType::NONE)

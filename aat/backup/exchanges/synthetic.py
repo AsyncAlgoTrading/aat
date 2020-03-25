@@ -92,11 +92,11 @@ class SyntheticExchange(Exchange):
             all_curs.add(inst.underlying.value[1])
 
         return {cur: Account(id=str(cur.value),
-                        currency=cur,
-                        balance=100,
-                        exchange=self.exchange(),
-                        value=-1,
-                        asOf=datetime.now()) for cur in all_curs}
+                             currency=cur,
+                             balance=100,
+                             exchange=self.exchange(),
+                             value=-1,
+                             asOf=datetime.now()) for cur in all_curs}
 
     @lru_cache(None)
     def currencies(self) -> List[CurrencyType]:

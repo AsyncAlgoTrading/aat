@@ -12,7 +12,7 @@ def _config_to_dict(filename: str) -> dict:
     ret = {}
     for s in config.sections():
         d = dict(config.items(s))
-        for k,v in d.items():
+        for k, v in d.items():
             if v.startswith('\n'):
                 d[k] = v.strip().split('\n')
             elif ',' in v:

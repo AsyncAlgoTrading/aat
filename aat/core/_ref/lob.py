@@ -136,6 +136,7 @@ class LimitOrderBook:
     Implementation as described by WK Selph (see header doc string for link).
 
     """
+
     def __init__(self):
         self.bids = LimitLevelTree()
         self.asks = LimitLevelTree()
@@ -258,11 +259,10 @@ class LimitOrderBook:
             # to that price level
             self._orders[order.uid] = order
             self._price_levels[order.price].append(order)
-    
-    
+
     def levels(self, depth=None):
         """Returns the price levels as a dict {'bids': [bid1, ...], 'asks': [ask1, ...]}
-        
+
         :param depth: Desired number of levels on each side to return.
         :return:
         """
@@ -272,10 +272,11 @@ class LimitOrderBook:
         asks_all = (price_level for price_level in levels_sorted if price_level > self.best_bid.price)
         asks = list(islice(asks_all, depth)) if depth else list(asks_all)
         levels_dict = {
-            'bids' : [self._price_levels[price] for price in bids],
-            'asks' : [self._price_levels[price] for price in asks],
-            }
+            'bids': [self._price_levels[price] for price in bids],
+            'asks': [self._price_levels[price] for price in asks],
+        }
         return levels_dict
+
 
 class LimitLevel:
     """AVL BST node.
@@ -449,18 +450,18 @@ class LimitLevel:
         """
         if self.balance_factor > 1:
             # right is heavier
-            if self.right_child.balance_factor< 0:
+            if self.right_child.balance_factor < 0:
                 # right_child.left is heavier, RL case
                 self._rl_case()
-            elif self.right_child.balance_factor> 0:
+            elif self.right_child.balance_factor > 0:
                 # right_child.right is heavier, RR case
                 self._rr_case()
         elif self.balance_factor < -1:
             # left is heavier
-            if self.left_child.balance_factor< 0:
+            if self.left_child.balance_factor < 0:
                 # left_child.left is heavier, LL case
                 self._ll_case()
-            elif self.left_child.balance_factor> 0:
+            elif self.left_child.balance_factor > 0:
                 # left_child.right is heavier, LR case
                 self._lr_case()
         else:

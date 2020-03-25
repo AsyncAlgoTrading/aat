@@ -10,6 +10,9 @@ buildext: ## build the package extensions
 build: ## build the package
 	python3 setup.py build
 
+js:  ## build the js assets
+	cd js && yarn build
+
 install: ## install the package
 	python3 -m pip install .
 
@@ -17,10 +20,10 @@ tests: ## Clean and Make unit tests
 	python3 -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch
 
 lint: ## run linter
-	python3 -m flake8 aat 
+	python3 -m flake8 aat setup.py
 
 fix:  ## run autopep8/tslint fix
-	python3 -m autopep8 --in-place -r -a -a aat/
+	python3 -m autopep8 --in-place -r -a -a aat/ setup.py
 
 docs:  ## Build the sphinx docs
 	make -C docs html
@@ -46,4 +49,4 @@ help:
 print-%:
 	@echo '$*=$($*)'
 
-.PHONY: clean run runconfig sandbox backtest backtest_config test tests test_verbose help install docs data dist js build buildext boost
+.PHONY: run buildext build js install tests lint fix docs dist clean help

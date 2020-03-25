@@ -5,6 +5,7 @@ from .order_entry import _OrderEntry
 
 _EXCHANGES = {}
 
+
 class Exchange(_MarketData, _OrderEntry):
     '''Generic representation of an exchange. There are two primary functionalities of an exchange.
 
@@ -18,7 +19,7 @@ class Exchange(_MarketData, _OrderEntry):
     @staticmethod
     def registerExchange(exchange_name, clazz):
         _EXCHANGES[exchange_name] = clazz
-    
+
     @staticmethod
     def exchanges(exchange=None):
         if exchange:
@@ -26,7 +27,7 @@ class Exchange(_MarketData, _OrderEntry):
                 raise Exception(f'Unknown exchange type: {exchange}')
             return _EXCHANGES[exchange]
         return list(_EXCHANGES.keys())
-    
+
     @abstractmethod
     async def connect():
         '''connect to exchange. should be asynchronous.
