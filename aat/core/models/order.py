@@ -1,9 +1,10 @@
 from .data import Data
-from ...config import DataType, OrderFlag
+from ...config import DataType, OrderFlag, OrderType
 
 
 class Order(Data):
     type: DataType = DataType.ORDER
+    order_type: OrderType = OrderType.LIMIT
     flag: OrderFlag = OrderFlag.NONE
     filled: float = 0.0
 

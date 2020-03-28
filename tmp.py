@@ -1,10 +1,8 @@
 from datetime import datetime
 from aat.config import Side, DataType
 from aat.core import Instrument, OrderBook, Order
-from aat.core.order_book import _insort, _PriceLevel
 
 _INSTRUMENT = Instrument('TE.ST')        
-
 
 ob = OrderBook(_INSTRUMENT)
 
@@ -32,9 +30,10 @@ data = Order(id=1,
             type=DataType.ORDER,
             instrument=_INSTRUMENT,
             exchange='')
+print(ob)
 ob.add(data)
 
-print(ob)
-assert ob.topOfBook() == {"bid": (0.0, 0.0), "ask": (4.5, 3.0)}
+print(ob.topOfBook())
+assert ob.topOfBook() == {"bid": (0.0, 0.0), "ask": (0.0, 90.0)}
 print(ob.levels(3))
-assert ob.levels(3) == {'bid': [], 'ask': [(4.5, 3.0), (4.5, 3.0), (5.5, 1.0), (6.0, 1.0)]}
+assert ob.levels(3) == {'bid': [(0, 0)], 'ask': [(0.0, 90.0), (0.0, 90.0), (5.5, 1.0), (6.0, 1.0)]}

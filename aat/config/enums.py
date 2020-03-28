@@ -57,10 +57,12 @@ class DataType(BaseEnum):
     TRADE = 'TRADE'
 
 
-# class OrderType(BaseEnum):
-#     # Order Types
-#     LIMIT = 'LIMIT'
-#     MARKET = 'MARKET'
+class OrderType(BaseEnum):
+    # Order Types
+    LIMIT = 'LIMIT'
+    MARKET = 'MARKET'
+    STOP_MARKET = 'STOP_MARKET'
+    STOP_LIMIT = 'STOP_LIMIT'
 
 
 class OrderFlag(BaseEnum):

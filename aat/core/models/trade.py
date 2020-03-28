@@ -1,3 +1,4 @@
+from collections import deque
 from .data import Data
 from .order import Order
 from ...config import DataType
@@ -5,7 +6,7 @@ from ...config import DataType
 
 class Trade(Data):
     type: DataType = DataType.TRADE
-    maker_order: Order
+    maker_orders: deque
     taker_order: Order
 
     def __str__(self):

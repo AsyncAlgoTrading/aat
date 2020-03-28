@@ -1,7 +1,4 @@
 from collections import deque
-from datetime import datetime
-from ..models import Event, Trade
-from ...config import EventType
 
 
 class _PriceLevel(object):
@@ -20,10 +17,10 @@ class _PriceLevel(object):
         # append order to deque
         if order in self._orders:
             # change event
-            self._collector.push(Event(type=EventType.CHANGE, target=order))
+            self._collector.pushChange(order)
         else:
             self._orders.append(order)
-            self._collector.push(Event(type=EventType.OPEN, target=order))
+            self._collector.pushOpen(order)
 
     def remove(self, order):
         # check if order is in level
@@ -35,7 +32,7 @@ class _PriceLevel(object):
         self._orders.remove(order)
 
         # trigger cancel event
-        self._collector.push(Event(type=EventType.CANCEL, target=order))
+        self._collector.pushCanncel(order)
 
         # return the order
         return order
@@ -63,41 +60,36 @@ class _PriceLevel(object):
                 self._orders.appendleft(maker_order)
 
                 # will exit loop
-                self._collector.push(Event(type=EventType.FILL, target=taker_order))
-                self._collector.push(Event(type=EventType.CHANGE, target=maker_order))
+                self._collector.pushFill(taker_order)
+                self._collector.pushChange(maker_order, accumulate=True)
 
             elif maker_remaining < to_fill:
                 # maker_order is fully executed
                 # don't append to deque
                 # tell maker order filled
                 taker_order.filled += maker_remaining
-                self._collector.push(Event(type=EventType.CHANGE, target=taker_order))
-                self._collector.push(Event(type=EventType.FILL, target=maker_order))
+                self._collector.pushChange(taker_order)
+                self._collector.pushFill(maker_order, accumulate=True)
 
             else:
                 # exactly equal
                 maker_order.filled += to_fill
                 taker_order.filled += maker_remaining
 
-                self._collector.push(Event(type=EventType.FILL, target=taker_order))
-                self._collector.push(Event(type=EventType.FILL, target=maker_order))
+                self._collector.pushFill(taker_order)
+                self._collector.pushFill(maker_order, accumulate=True)
 
         if taker_order.filled >= taker_order.volume:
             # execute the taker order
-            self._collector.push(Event(type=EventType.TRADE,
-                                       target=Trade(timestamp=datetime.now().timestamp(),
-                                                    instrument=taker_order.instrument,
-                                                    price=maker_order.price,
-                                                    volume=to_fill,
-                                                    side=taker_order.side,
-                                                    maker_order=maker_order,
-                                                    taker_order=taker_order,
-                                                    exchange=maker_order.exchange)))
+            self._collector.pushTrade(taker_order)
             # return nothing to signify to stop
             return None
 
         # return order, this level is cleared and the order still has volume
         return taker_order
+
+    def clear(self):
+        self._orders.clear()
 
     def __bool__(self):
         '''use deque size as truth value'''

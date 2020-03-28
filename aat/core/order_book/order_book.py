@@ -1,10 +1,48 @@
 from .collector import _Collector
 from .price_level import _PriceLevel
 from .utils import _insort
-from ...config import Side, OrderFlag
+from ...config import Side, OrderFlag, OrderType
 
 
 class OrderBook(object):
+    '''A limit order book.
+
+    Supports the following order types:
+        - [x] market
+            - [x] executes the entire volume
+            - [ ] if price specified, will execute (price*volume) worth (e.g. relies on total price, not volume)
+
+            Flags:
+                - [x] no flag
+                - [ ] fill-or-kill: entire order must fill against current book, otherwise nothing fills
+                - [ ] all-or-none: entire order must fill against 1 order, otherwise nothing fills
+                - [ ] immediate-or-cancel: same as fill or kill for market orders
+
+        - [x] limit
+            - [x] either puts on book or crosses spread, by default puts remainder on book
+
+            Flags:
+                - [x] no flag
+                - [ ] fill-or-kill: entire order must fill before book moves, otherwise cancelled
+                - [ ] all-or-none: entire order must fill against 1 order, otherwise cancelled
+                - [ ] immediate-or-cancel: whenever this order executes, fill whatever fills and cancel remaining
+
+        - [ ] stop-market
+            - 0 volume order, but when crosses triggers the submission of a market order
+        - [ ] stop-limit
+            - 0 volume order, but when crosses triggers the submission of a market order
+    
+    Supports the following order flags:
+        - [x] no flag
+        - [ ] fill-or-kill
+        - [ ] all-or-none
+        - [ ] immediate-or-cancel
+
+    Args:
+        instrument (Instrument): the instrument for the book
+        exchange_name (str): name of the exchange
+        callback (Function): callback on events
+    '''
     def __init__(self,
                  instrument,
                  exchange_name='',
@@ -52,7 +90,7 @@ class OrderBook(object):
                 if trade:
                     # clear sell level
                     cleared.append(top)
-                    top = self._sell_levels[len(cleared)] if len(self._sell_levels) > len(cleared) else float('inf')
+                    top = self._sell_levels[len(cleared)] if len(self._sell_levels) > len(cleared) else None
                     continue
 
                 # trade is done, check if level was cleared exactly
@@ -68,13 +106,14 @@ class OrderBook(object):
             if order.filled < order.volume:
                 if order.flag in (OrderFlag.ALL_OR_NONE, OrderFlag.FILL_OR_KILL):
                     # cancel the order, do not execute any
-                    self._collector.flush()
+                    self._collector.clear()
 
                 elif order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
                     # execute the ones that filled, kill the remainder
-                    pass
+                    self._collector.pushCancel(order)
+                    self._collector.flush()
 
-                elif order.price >= 0:
+                elif order.order_type == OrderType.LIMIT:
                     self._collector.flush()
 
                     # limit order, put on books
@@ -87,7 +126,9 @@ class OrderBook(object):
 
                 else:
                     # market order, partial
-                    pass
+                    if order.filled > 0:
+                        self._collector.pushTrade(order)
+
             else:
                 # execute all the orders
                 self._collector.flush()
@@ -109,7 +150,7 @@ class OrderBook(object):
                 if trade:
                     # clear sell level
                     cleared.append(top)
-                    top = self._buy_levels[-1 - len(cleared)] if len(self._buy_levels) > len(cleared) else 0
+                    top = self._buy_levels[-1 - len(cleared)] if len(self._buy_levels) > len(cleared) else None
                     continue
 
                 # trade is done, check if level was cleared exactly
@@ -125,13 +166,14 @@ class OrderBook(object):
             if order.filled < order.volume:
                 if order.flag in (OrderFlag.ALL_OR_NONE, OrderFlag.FILL_OR_KILL):
                     # cancel the order, do not execute any
-                    self._collector.flush()
+                    self._collector.clear()
 
                 elif order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
                     # execute the ones that filled, kill the remainder
-                    pass
+                    self._collector.pushCancel(order)
+                    self._collector.flush()
 
-                elif order.price < float('inf'):
+                elif order.order_type == OrderType.LIMIT:
                     self._collector.flush()
 
                     # push to book
@@ -144,7 +186,9 @@ class OrderBook(object):
 
                 else:
                     # market order, partial
-                    pass
+                    if order.filled > 0:
+                        self._collector.pushTrade(order)
+
             else:
                 # execute all the orders
                 self._collector.flush()
