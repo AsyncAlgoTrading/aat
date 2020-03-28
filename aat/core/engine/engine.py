@@ -1,17 +1,24 @@
 import asyncio
+import os
 import os.path
-import uvloop
 from aiostream.stream import merge
 from traitlets.config.application import Application
 from traitlets import validate, TraitError, Unicode, Bool, List, Instance
 from tornado.web import StaticFileHandler, RedirectHandler, Application as TornadoApplication
 from perspective import PerspectiveManager, PerspectiveTornadoHandler
 
-from ..config import EventType
-from ..core import Event, EventHandler, PrintHandler, TableHandler
-from ..exchange import Exchange
-# from ..strategy import Strategy
-from ..ui import ServerApplication
+from ..models import Event
+from ..handler import EventHandler, PrintHandler
+from ..table import TableHandler
+from ...config import EventType
+from ...exchange import Exchange
+# from aat.strategy import Strategy
+from ...ui import ServerApplication
+
+try:
+    import uvloop
+except ImportError:
+    uvloop = None
 
 
 class TradingEngine(Application):
@@ -57,7 +64,8 @@ class TradingEngine(Application):
         self.exchanges = [Exchange.exchanges(_.lower())(self.tick, verbose=self.verbose) for _ in config.get('exchange', {}).get('exchanges', [])]
 
         # set event loop to use uvloop
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        if uvloop:
+            asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
         # install event loop
         self.event_loop = asyncio.get_event_loop()

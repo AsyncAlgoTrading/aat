@@ -31,7 +31,7 @@ class OrderBook(object):
             - 0 volume order, but when crosses triggers the submission of a market order
         - [ ] stop-limit
             - 0 volume order, but when crosses triggers the submission of a market order
-    
+
     Supports the following order flags:
         - [x] no flag
         - [ ] fill-or-kill
@@ -43,6 +43,7 @@ class OrderBook(object):
         exchange_name (str): name of the exchange
         callback (Function): callback on events
     '''
+
     def __init__(self,
                  instrument,
                  exchange_name='',
