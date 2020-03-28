@@ -46,4 +46,3 @@ class Strategy(metaclass=ABCMeta):
     def onContinue(self, data):
         '''onContinue'''
         pass
-

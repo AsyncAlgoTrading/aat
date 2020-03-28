@@ -10,7 +10,7 @@ from perspective import PerspectiveManager, PerspectiveTornadoHandler
 from ..config import EventType
 from ..core import Event, EventHandler, PrintHandler, TableHandler
 from ..exchange import Exchange
-from ..strategy import Strategy
+# from ..strategy import Strategy
 from ..ui import ServerApplication
 
 

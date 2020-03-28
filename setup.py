@@ -19,7 +19,7 @@ except ImportError:
     try:
         from backports.shutil_which import which
     except ImportError:
-        which = lambda x: x  # just rely on path
+        def which(x): return x  # just rely on path
     import multiprocessing
     CPU_COUNT = multiprocessing.cpu_count()
 
@@ -28,12 +28,14 @@ here = os.path.abspath(os.path.dirname(__file__))
 PREFIX = sysconfig.get_config_vars()['prefix']
 name = 'aat'
 
+
 def get_version(file, name='__version__'):
     path = os.path.realpath(file)
     version_ns = {}
     with io.open(path, encoding="utf8") as f:
         exec(f.read(), {}, version_ns)
     return version_ns[name]
+
 
 version = get_version(pjoin(here, name, '_version.py'))
 
@@ -57,6 +59,7 @@ requires_dev = [
     'Sphinx>=1.8.4',
     'sphinx-markdown-builder>=0.5.2',
 ] + requires
+
 
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=''):
@@ -120,6 +123,7 @@ class CMakeBuild(build_ext):
         subprocess.check_call([self.cmake_cmd, os.path.abspath(ext.sourcedir)] + cmake_args, cwd=self.build_temp, env=env, stderr=subprocess.STDOUT)
         subprocess.check_call([self.cmake_cmd, '--build', '.'] + build_args, cwd=self.build_temp, env=env, stderr=subprocess.STDOUT)
         print()  # Add an empty line for cleaner output
+
 
 setup(
     name=name,

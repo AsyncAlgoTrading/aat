@@ -1,2 +1,2 @@
 from .exchange import Exchange  # noqa: F401
-from .synthetic import SyntheticExchange
+from .synthetic import SyntheticExchange  # noqa: F401

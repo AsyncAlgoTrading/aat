@@ -55,3 +55,17 @@ class EventType(BaseEnum):
 class DataType(BaseEnum):
     ORDER = 'ORDER'
     TRADE = 'TRADE'
+
+
+# class OrderType(BaseEnum):
+#     # Order Types
+#     LIMIT = 'LIMIT'
+#     MARKET = 'MARKET'
+
+
+class OrderFlag(BaseEnum):
+    # Order flags
+    NONE = 'NONE'  # normal order
+    FILL_OR_KILL = 'FILL_OR_KILL'  # fill entire order or cancel
+    ALL_OR_NONE = 'ALL_OR_NONE'  # fill entire order in single transaction or cancel
+    IMMEDIATE_OR_CANCEL = 'IMMEDIATE_OR_CANCEL'  # fill what you can immediately, cancel the rest

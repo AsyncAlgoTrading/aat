@@ -1,6 +1,5 @@
 from perspective import Table
-from ..config import EventType
-from .models import Event, Data
+from .models import Event, Order, Trade
 from .handler import EventHandler
 
 
@@ -13,8 +12,8 @@ class TableHandler(EventHandler):
     onExit = None
 
     def __init__(self):
-        self._trades = Table(Data.schema(), index="timestamp")
-        self._orders = Table(Data.schema(), index="id")
+        self._trades = Table(Trade.schema(), index="timestamp")
+        self._orders = Table(Order.schema(), index="id")
 
     def installTables(self, manager):
         manager.host_table("trades", self._trades)

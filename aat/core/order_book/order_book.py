@@ -1,123 +1,8 @@
-import bisect
-from collections import deque
-from datetime import datetime
-from .models import Data, Event, Trade
-from ..config import Side, EventType, DataType
+from .collector import _Collector
+from .price_level import _PriceLevel
+from .utils import _insort
+from ...config import Side, OrderFlag
 
-
-def _insort(a, x):
-    '''insert x into a if not currently there'''
-    i = bisect.bisect_left(a, x)
-    if i != len(a) and a[i] == x:
-        # don't insert
-        return False
-    a.insert(i, x)
-    return True
-
-
-class _PriceLevel(object):
-    def __init__(self, price, callback):
-        self._price = price
-        self._orders = deque()
-        self._on_event = callback
-
-    def setCallback(self, callback):
-        self._on_event = callback
-
-    def price(self):
-        return self._price
-
-    def volume(self):
-        return sum((x.volume - x.filled) for x in self._orders)
-
-    def add(self, order):
-        # append order to deque
-        if order in self._orders:
-            # change event
-            self._on_event(Event(type=EventType.CHANGE, target=order))
-        else:
-            self._orders.append(order)
-            self._on_event(Event(type=EventType.OPEN, target=order))
-
-    def remove(self, order):
-        # check if order is in level
-        if order.price != self._price or order not in self._orders:
-            # something is wrong
-            raise Exception(f'Order not found in price leve {self._price}: {order}')
-
-        # remove order
-        self._orders.remove(order)
-
-        # trigger cancel event
-        self._on_event(Event(type=EventType.CANCEL, target=order))
-
-        # return the order
-        return order
-
-    def cross(self, taker_order):
-        if taker_order.filled >= taker_order.volume:
-            # already filled:
-            return None
-
-        while taker_order.filled < taker_order.volume and self._orders:
-            # need to fill original volume - filled so far
-            to_fill = taker_order.volume - taker_order.filled
-
-            # pop maker order from list
-            maker_order = self._orders.popleft()
-
-            # remaining in maker_order
-            maker_remaining = maker_order.volume - maker_order.filled
-
-            if maker_remaining > to_fill:
-                # maker_order is partially executed
-                maker_order.filled += to_fill
-
-                # push back in deque
-                self._orders.appendleft(maker_order)
-
-                # will exit loop
-                self._on_event(Event(type=EventType.FILL, target=taker_order))
-                self._on_event(Event(type=EventType.CHANGE, target=maker_order))
-            elif maker_remaining < to_fill:
-                # maker_order is fully executed
-                # don't append to deque
-                # tell maker order filled
-                taker_order.filled += maker_remaining
-                self._on_event(Event(type=EventType.CHANGE, target=taker_order))
-                self._on_event(Event(type=EventType.FILL, target=maker_order))
-            else:
-                # exactly equal
-                maker_order.filled += to_fill
-                taker_order.filled += maker_remaining
-                self._on_event(Event(type=EventType.FILL, target=taker_order))
-                self._on_event(Event(type=EventType.FILL, target=maker_order))
-
-        if taker_order.filled >= taker_order.volume:
-            # execute the taker order
-            self._on_event(Event(type=EventType.TRADE,
-                                 target=Trade(timestamp=datetime.now().timestamp(),
-                                              instrument=taker_order.instrument,
-                                              price=maker_order.price,
-                                              volume=to_fill,
-                                              side=taker_order.side,
-                                              maker_order=maker_order,
-                                              taker_order=taker_order,
-                                              exchange=maker_order.exchange)))
-            # return nothing to signify to stop
-            return None
-
-        # return order, this level is cleared and the order still has volume
-        return taker_order
-
-    def __bool__(self):
-        '''use deque size as truth value'''
-        return len(self._orders) > 0
-
-    def __iter__(self):
-        '''iterate through orders'''
-        for order in self._orders:
-            yield order
 
 class OrderBook(object):
     def __init__(self,
@@ -136,15 +21,11 @@ class OrderBook(object):
         self._buys = {}
         self._sells = {}
 
-        # setup callback
-        self._callback = callback
+        # setup collector for conditional orders
+        self._collector = _Collector(callback)
 
     def setCallback(self, callback):
-        self._callback = callback
-        for sell_level in self._sell_levels:
-            self._sells[sell_level].setCallback(callback)
-        for buy_level in self._buy_levels:
-            self._buys[buy_level].setCallback(callback)
+        self._collector.setCallback(callback)
 
     def add(self, order):
         '''add a new order to the order book, potentially triggering events:
@@ -156,12 +37,13 @@ class OrderBook(object):
         '''
         if order.side == Side.BUY:
             # order is buy, so look at top of sell side
-            top = self._sell_levels[0] if len(self._sell_levels) > 0 else float('inf')
+            top = self._sell_levels[0] if len(self._sell_levels) > 0 else None
 
+            # price levels to clear
             cleared = []
 
             # check if crosses
-            while order.price >= top:
+            while top is not None and order.price >= top:
                 # execute order against level
                 # if returns trade, it cleared the level
                 # else, order was fully executed
@@ -182,24 +64,43 @@ class OrderBook(object):
             # clear levels
             self._sell_levels = self._sell_levels[len(cleared):]
 
-            # if order remaining, push to book
+            # if order remaining, check rules/push to book
             if order.filled < order.volume:
-                # push to book
-                if _insort(self._buy_levels, order.price):
-                    # new price level
-                    self._buys[order.price] = _PriceLevel(order.price, self._callback)
+                if order.flag in (OrderFlag.ALL_OR_NONE, OrderFlag.FILL_OR_KILL):
+                    # cancel the order, do not execute any
+                    self._collector.flush()
 
-                # add order to price level
-                self._buys[order.price].add(order)
+                elif order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
+                    # execute the ones that filled, kill the remainder
+                    pass
+
+                elif order.price >= 0:
+                    self._collector.flush()
+
+                    # limit order, put on books
+                    if _insort(self._buy_levels, order.price):
+                        # new price level
+                        self._buys[order.price] = _PriceLevel(order.price, collector=self._collector)
+
+                    # add order to price level
+                    self._buys[order.price].add(order)
+
+                else:
+                    # market order, partial
+                    pass
+            else:
+                # execute all the orders
+                self._collector.flush()
 
         else:
             # order is sell, so look at top of buy side
-            top = self._buy_levels[-1] if len(self._buy_levels) > 0 else 0
+            top = self._buy_levels[-1] if len(self._buy_levels) > 0 else None
 
+            # price levels to clear
             cleared = []
 
             # check if crosses
-            while order.price <= top:
+            while top is not None and order.price <= top:
                 # execute order against level
                 # if returns trade, it cleared the level
                 # else, order was fully executed
@@ -222,13 +123,34 @@ class OrderBook(object):
 
             # if order remaining, push to book
             if order.filled < order.volume:
-                # push to book
-                if _insort(self._sell_levels, order.price):
-                    # new price level
-                    self._sells[order.price] = _PriceLevel(order.price, self._callback)
+                if order.flag in (OrderFlag.ALL_OR_NONE, OrderFlag.FILL_OR_KILL):
+                    # cancel the order, do not execute any
+                    self._collector.flush()
 
-                # add order to price level
-                self._sells[order.price].add(order)
+                elif order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
+                    # execute the ones that filled, kill the remainder
+                    pass
+
+                elif order.price < float('inf'):
+                    self._collector.flush()
+
+                    # push to book
+                    if _insort(self._sell_levels, order.price):
+                        # new price level
+                        self._sells[order.price] = _PriceLevel(order.price, collector=self._collector)
+
+                    # add order to price level
+                    self._sells[order.price].add(order)
+
+                else:
+                    # market order, partial
+                    pass
+            else:
+                # execute all the orders
+                self._collector.flush()
+
+        # clear the collector
+        self._collector.clear()
 
     def cancel(self, order):
         '''remove an order from the order book, potentially triggering events:
@@ -258,9 +180,9 @@ class OrderBook(object):
 
     def topOfBook(self):
         '''return top of both sides
-        
+
         Args:
-            
+
         Returns:
             value (dict): returns {'bid': tuple, 'ask': tuple}
         '''
@@ -280,7 +202,7 @@ class OrderBook(object):
 
     def level(self, level=0, price=None, side=None):
         '''return book level
-        
+
         Args:
             level (int): depth of book to return
             price (float): price level to look for
@@ -304,7 +226,7 @@ class OrderBook(object):
 
     def levels(self, levels=0):
         '''return book levels starting at top
-        
+
         Args:
             levels (int): number of levels to return
         Returns:

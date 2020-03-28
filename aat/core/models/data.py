@@ -1,6 +1,5 @@
 from pydantic import BaseModel
-from typing import Any
-from ...config import Side, DataType, EventType
+from ...config import Side, DataType
 from ..instrument import Instrument
 
 
@@ -8,7 +7,7 @@ class Data(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    id: int
+    id: int = 0
     timestamp: int
     volume: float
     price: float
@@ -20,7 +19,6 @@ class Data(BaseModel):
     # maybe specific
     exchange: str
     filled: float = 0.0
-    sequence: int = -1
 
     def __eq__(self, other):
         return (self.price == other.price) and \

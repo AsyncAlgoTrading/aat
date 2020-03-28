@@ -1,15 +1,14 @@
 from .data import Data
-from .order import Order
-from ...config import DataType
+from ...config import DataType, OrderFlag
 
 
-class Trade(Data):
-    type: DataType = DataType.TRADE
-    maker_order: Order
-    taker_order: Order
+class Order(Data):
+    type: DataType = DataType.ORDER
+    flag: OrderFlag = OrderFlag.NONE
+    filled: float = 0.0
 
     def __str__(self):
-        return f'<{self.instrument}-{self.volume}@{self.price}-{self.exchange}>'
+        return f'<{self.instrument}-{self.volume}@{self.price}-{self.exchange}-{self.side}>'
 
     def to_json(self):
         ret = {}

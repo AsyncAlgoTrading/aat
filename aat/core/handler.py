@@ -13,16 +13,16 @@ class EventHandler(metaclass=ABCMeta):
     def callback(self, event_type):
         return \
             {EventType.TRADE: self._valid_callback('onTrade'),
-            EventType.OPEN: self._valid_callback('onOpen'),
-            EventType.CANCEL: self._valid_callback('onCancel'),
-            EventType.CHANGE: self._valid_callback('onChange'),
-            EventType.FILL: self._valid_callback('onFill'),
-            EventType.DATA: self._valid_callback('onData'),
-            EventType.HALT: self._valid_callback('onHalt'),
-            EventType.CONTINUE: self._valid_callback('onContinue'),
-            EventType.ERROR: self._valid_callback('onError'),
-            EventType.START: self._valid_callback('onStart'),
-            EventType.EXIT: self._valid_callback('onExit')} \
+             EventType.OPEN: self._valid_callback('onOpen'),
+             EventType.CANCEL: self._valid_callback('onCancel'),
+             EventType.CHANGE: self._valid_callback('onChange'),
+             EventType.FILL: self._valid_callback('onFill'),
+             EventType.DATA: self._valid_callback('onData'),
+             EventType.HALT: self._valid_callback('onHalt'),
+             EventType.CONTINUE: self._valid_callback('onContinue'),
+             EventType.ERROR: self._valid_callback('onError'),
+             EventType.START: self._valid_callback('onStart'),
+             EventType.EXIT: self._valid_callback('onExit')} \
             .get(event_type, None)
 
     @abstractmethod
@@ -77,6 +77,7 @@ class EventHandler(metaclass=ABCMeta):
     def onAnalyze(self, engine):
         '''onAnalyze'''
         pass
+
 
 class PrintHandler(EventHandler):
     def onTrade(self, event: Event):

@@ -1,9 +1,10 @@
 from datetime import datetime
 from aat.config import Side, DataType
-from aat.core import Instrument, OrderBook, Data
-from aat.core.order_book import _insort, _PriceLevel
+from aat.core import Instrument, OrderBook, Order
+from aat.core.order_book.utils import _insort
+from aat.core.order_book.price_level import _PriceLevel
 
-_INSTRUMENT = Instrument('TE.ST')        
+_INSTRUMENT = Instrument('TE.ST')
 
 
 class TestUtils:
@@ -32,27 +33,27 @@ class TestOrderBook:
         x = .5
         while x < 10.0:
             side = Side.BUY if x <= 5 else Side.SELL
-            ob.add(Data(id=1,
-                        timestamp=datetime.now().timestamp(),
-                        volume=1.0,
-                        price=x,
-                        side=side,
-                        type=DataType.ORDER,
-                        instrument=_INSTRUMENT,
-                        exchange=''))
+            ob.add(Order(id=1,
+                         timestamp=datetime.now().timestamp(),
+                         volume=1.0,
+                         price=x,
+                         side=side,
+                         type=DataType.ORDER,
+                         instrument=_INSTRUMENT,
+                         exchange=''))
             x += .5
 
         assert ob.topOfBook()['bid'] == (5.0, 1.0)
         assert ob.topOfBook()['ask'] == (5.5, 1.0)
 
-        data = Data(id=1,
-                    timestamp=datetime.now().timestamp(),
-                    volume=5.0,
-                    price=4.5,
-                    side=Side.SELL,
-                    type=DataType.ORDER,
-                    instrument=_INSTRUMENT,
-                    exchange='')
+        data = Order(id=1,
+                     timestamp=datetime.now().timestamp(),
+                     volume=5.0,
+                     price=4.5,
+                     side=Side.SELL,
+                     type=DataType.ORDER,
+                     instrument=_INSTRUMENT,
+                     exchange='')
         ob.add(data)
 
         print(ob)
@@ -60,14 +61,14 @@ class TestOrderBook:
         print(ob.levels(3))
         assert ob.levels(3) == {'bid': [(4.0, 1.0), (0.5, 1.0), (4.0, 1.0), (3.5, 1.0)], 'ask': [(4.5, 3.0), (4.5, 3.0), (5.5, 1.0), (6.0, 1.0)]}
 
-        data = Data(id=1,
-                    timestamp=datetime.now().timestamp(),
-                    volume=4.0,
-                    price=5.5,
-                    side=Side.BUY,
-                    type=DataType.ORDER,
-                    instrument=_INSTRUMENT,
-                    exchange='')
+        data = Order(id=1,
+                     timestamp=datetime.now().timestamp(),
+                     volume=4.0,
+                     price=5.5,
+                     side=Side.BUY,
+                     type=DataType.ORDER,
+                     instrument=_INSTRUMENT,
+                     exchange='')
         ob.add(data)
 
         print(ob)
@@ -81,27 +82,27 @@ class TestOrderBook:
         x = .5
         while x < 10.0:
             side = Side.BUY if x <= 5 else Side.SELL
-            ob.add(Data(id=1,
-                        timestamp=datetime.now().timestamp(),
-                        volume=1.0,
-                        price=x,
-                        side=side,
-                        type=DataType.ORDER,
-                        instrument=_INSTRUMENT,
-                        exchange=''))
+            ob.add(Order(id=1,
+                         timestamp=datetime.now().timestamp(),
+                         volume=1.0,
+                         price=x,
+                         side=side,
+                         type=DataType.ORDER,
+                         instrument=_INSTRUMENT,
+                         exchange=''))
             x += .5
 
         assert ob.topOfBook()['bid'] == (5.0, 1.0)
         assert ob.topOfBook()['ask'] == (5.5, 1.0)
 
-        data = Data(id=1,
-                    timestamp=datetime.now().timestamp(),
-                    volume=100.0,
-                    price=0.0,
-                    side=Side.SELL,
-                    type=DataType.ORDER,
-                    instrument=_INSTRUMENT,
-                    exchange='')
+        data = Order(id=1,
+                     timestamp=datetime.now().timestamp(),
+                     volume=100.0,
+                     price=0.0,
+                     side=Side.SELL,
+                     type=DataType.ORDER,
+                     instrument=_INSTRUMENT,
+                     exchange='')
         ob.add(data)
 
         print(ob)
