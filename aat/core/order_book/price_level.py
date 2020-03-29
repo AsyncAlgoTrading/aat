@@ -5,6 +5,7 @@ class _PriceLevel(object):
     def __init__(self, price, collector):
         self._price = price
         self._orders = deque()
+        self._orders_staged = deque()
         self._collector = collector
 
     def price(self):
@@ -32,7 +33,7 @@ class _PriceLevel(object):
         self._orders.remove(order)
 
         # trigger cancel event
-        self._collector.pushCanncel(order)
+        self._collector.pushCancel(order)
 
         # return the order
         return order
@@ -48,6 +49,9 @@ class _PriceLevel(object):
 
             # pop maker order from list
             maker_order = self._orders.popleft()
+
+            # add to staged in case we need to revert
+            self._orders_staged.append(maker_order)
 
             # remaining in maker_order
             maker_remaining = maker_order.volume - maker_order.filled
@@ -89,7 +93,18 @@ class _PriceLevel(object):
         return taker_order
 
     def clear(self):
+        '''clear queues'''
         self._orders.clear()
+        self._orders_staged.clear()
+
+    def commit(self):
+        '''staged orders accepted, clear'''
+        self.clear()
+
+    def revert(self):
+        '''staged order reverted, unstage the orders'''
+        self._orders = self._orders_staged
+        self._orders_staged = deque()
 
     def __bool__(self):
         '''use deque size as truth value'''
