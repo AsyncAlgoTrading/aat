@@ -374,4 +374,32 @@ class CoinbaseExchange(Exchange):
 ## Exchange
 
 ### Orderbook
+We implement a full limit-order book, supporting the following order types:
+
+#### Market
+Executes the entire volume. If price specified, will execute (price*volume) worth (e.g. relies on total price, not volume)
+
+#### Limit:
+Either puts the order on the book,  or crosses spread triggering a trade. By default puts remainder of unexecuted volume on book.
+
+#### Stop-Market
+When trade prices cross the target price, triggers a market order.
+
+#### Stop-Limit
+When trade prices cross the target price, triggers a limit order.
+
+#### Flags
+We support a number of order flags for Market and Limit orders:
+
+- No Flag: default behavior for the given order type
+- Fill-Or-Kill:
+    - Market Order: entire order must fill against current book, otherwise nothing fills
+    - Limit Order: entire order must fill against current book, otherwise nothing fills and order cancelled
+- All-Or-None:
+    - Market Order: entire order must fill against 1 order on the book, otherwise nothing fills
+    - Limit Order: entire order must fill against 1 order, otherwise nothing filled and order cancelled
+
+- Immediate-Or-Cancel:
+    - Market Order: same as fill or kill
+    - Limit Order: whenever this order executes, fill whatever fills and cancel remaining
 
