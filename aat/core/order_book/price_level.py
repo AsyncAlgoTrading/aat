@@ -1,5 +1,5 @@
 from collections import deque
-from ...config import OrderFlag
+from ...config import OrderType, OrderFlag
 
 
 class _PriceLevel(object):
@@ -68,20 +68,38 @@ class _PriceLevel(object):
                     # maker_order is partially executed
                     maker_order.filled += to_fill
 
-                    # push back in deque
-                    self._orders.appendleft(maker_order)
-
                     # will exit loop
+                    taker_order.filled = taker_order.volume
                     self._collector.pushFill(taker_order)
-                    self._collector.pushChange(maker_order, accumulate=True)
+
+                    if maker_order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
+                        # change event
+                        self._collector.pushCancel(maker_order)
+                    else:
+                        # push back in deque
+                        self._orders.appendleft(maker_order)
+
+                        # change event
+                        self._collector.pushChange(maker_order, accumulate=True)
 
             elif maker_remaining < to_fill:
-                # maker_order is fully executed
-                # don't append to deque
-                # tell maker order filled
+                # partially fill it regardles
+                # this will either trigger the revert in order_book,
+                # or it will be partially executed
                 taker_order.filled += maker_remaining
-                self._collector.pushChange(taker_order)
-                self._collector.pushFill(maker_order, accumulate=True)
+
+                if taker_order.flag == OrderFlag.ALL_OR_NONE:
+                    # taker order can't be filled, push maker back and cancel taker
+                    # push back in deque
+                    self._orders.appendleft(maker_order)
+                    return None
+
+                else:
+                    # maker_order is fully executed
+                    # don't append to deque
+                    # tell maker order filled
+                    self._collector.pushChange(taker_order)
+                    self._collector.pushFill(maker_order, accumulate=True)
 
             else:
                 # exactly equal
@@ -94,6 +112,7 @@ class _PriceLevel(object):
         if taker_order.filled >= taker_order.volume:
             # execute the taker order
             self._collector.pushTrade(taker_order)
+
             # return nothing to signify to stop
             return None
 
@@ -116,9 +135,10 @@ class _PriceLevel(object):
 
     def __bool__(self):
         '''use deque size as truth value'''
-        return len(self._orders) > 0
+        return len(list(order for order in self._orders if order.order_type not in (OrderType.STOP_LIMIT, OrderType.STOP_MARKET))) > 0
 
     def __iter__(self):
         '''iterate through orders'''
         for order in self._orders:
-            yield order
+            if order.order_type not in (OrderType.STOP_LIMIT, OrderType.STOP_MARKET):
+                yield order

@@ -15,7 +15,7 @@ class OrderBook(object):
             Flags:
                 - [x] no flag
                 - [x] fill-or-kill: entire order must fill against current book, otherwise nothing fills
-                - [ ] all-or-none: entire order must fill against 1 order, otherwise nothing fills
+                - [x] all-or-none: entire order must fill against 1 order, otherwise nothing fills
                 - [x] immediate-or-cancel: same as fill or kill
 
         - [x] limit
@@ -24,7 +24,7 @@ class OrderBook(object):
             Flags:
                 - [x] no flag
                 - [x] fill-or-kill: entire order must fill against current book, otherwise cancelled
-                - [ ] all-or-none: entire order must fill against 1 order, otherwise cancelled
+                - [x] all-or-none: entire order must fill against 1 order, otherwise cancelled
                 - [x] immediate-or-cancel: whenever this order executes, fill whatever fills and cancel remaining
 
         - [ ] stop-market
@@ -34,9 +34,9 @@ class OrderBook(object):
 
     Supports the following order flags:
         - [x] no flag
-        - [ ] fill-or-kill
-        - [ ] all-or-none
-        - [ ] immediate-or-cancel
+        - [x] fill-or-kill
+        - [x] all-or-none
+        - [x] immediate-or-cancel
 
     Args:
         instrument (Instrument): the instrument for the book
@@ -135,7 +135,7 @@ class OrderBook(object):
 
             else:
                 # Limit Orders
-                if order.flag in (OrderFlag.ALL_OR_NONE, OrderFlag.FILL_OR_KILL):
+                if order.flag == OrderFlag.FILL_OR_KILL:
                     if order.filled > 0:
                         # reverse partial
                         # cancel the order, do not execute any
@@ -154,14 +154,45 @@ class OrderBook(object):
                             prices[order.price] = _PriceLevel(order.price, collector=self._collector)
                         # add order to price level
                         prices[order.price].add(order)
+                elif order.flag == OrderFlag.ALL_OR_NONE:
+                    if order.filled > 0:
+                        # order could not fill fully, revert
+                        # cancel the order, do not execute any
+                        self._collector.revert()
+                        
+                        # cancel the order
+                        self._collector.pushCancel(order)
+                        self._collector.commit()
+                    else:
+                        # add to book
+                        self._collector.commit()
+
+                        # limit order, put on books
+                        if _insort(levels, order.price):
+                            # new price level
+                            prices[order.price] = _PriceLevel(order.price, collector=self._collector)
+                        # add order to price level
+                        prices[order.price].add(order)
+
 
                 elif order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
-                    # clear levels
-                    self._clearOrders(order, self._collector.clearedLevels())
+                    if order.filled > 0:
+                        # clear levels
+                        self._clearOrders(order, self._collector.clearedLevels())
 
-                    # execute the ones that filled, kill the remainder
-                    self._collector.pushCancel(order)
-                    self._collector.commit()
+                        # execute the ones that filled, kill the remainder
+                        self._collector.pushCancel(order)
+                        self._collector.commit()
+                    else:
+                        # add to book
+                        self._collector.commit()
+
+                        # limit order, put on books
+                        if _insort(levels, order.price):
+                            # new price level
+                            prices[order.price] = _PriceLevel(order.price, collector=self._collector)
+                        # add order to price level
+                        prices[order.price].add(order)
                 else:
                     # clear levels
                     self._clearOrders(order, self._collector.clearedLevels())
@@ -303,8 +334,9 @@ class OrderBook(object):
                     orig = orig * 2
                     count = orig
                 # append to last list
-                sells[-1].append(self._sells[level])
-                count -= 1
+                if self._sells[level]:
+                    sells[-1].append(self._sells[level])
+                    count -= 1
 
         # reverse so visually upside down
         sells.reverse()
@@ -326,8 +358,9 @@ class OrderBook(object):
                     orig = orig * 2
                     count = orig
                 # append to last list
-                buys[-1].append(self._buys[level])
-                count -= 1
+                if self._buys[level]:
+                    buys[-1].append(self._buys[level])
+                    count -= 1
 
         # sell list, then line, then buy list
         # if you hit a list, give aggregate

@@ -74,8 +74,8 @@ class _Collector(object):
                                      exchange=taker_order.exchange)))
 
     def accumulate(self, order):
-        self._price = (self._price * self._volume + order.price * order.volume) / (self._volume + order.volume)
-        self._volume += order.volume
+        self._price = ((self._price * self._volume + order.price * order.filled) / (self._volume + order.filled)) if (self._volume + order.filled > 0) else float('nan')
+        self._volume += order.filled
         self._orders.append(order)
 
     def clearLevel(self, price_level):
