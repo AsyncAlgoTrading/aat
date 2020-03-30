@@ -14,18 +14,18 @@ class OrderBook(object):
 
             Flags:
                 - [x] no flag
-                - [ ] fill-or-kill: entire order must fill against current book, otherwise nothing fills
+                - [x] fill-or-kill: entire order must fill against current book, otherwise nothing fills
                 - [ ] all-or-none: entire order must fill against 1 order, otherwise nothing fills
-                - [ ] immediate-or-cancel: same as fill or kill for market orders
+                - [x] immediate-or-cancel: same as fill or kill
 
         - [x] limit
             - [x] either puts on book or crosses spread, by default puts remainder on book
 
             Flags:
                 - [x] no flag
-                - [ ] fill-or-kill: entire order must fill before book moves, otherwise cancelled
+                - [x] fill-or-kill: entire order must fill against current book, otherwise cancelled
                 - [ ] all-or-none: entire order must fill against 1 order, otherwise cancelled
-                - [ ] immediate-or-cancel: whenever this order executes, fill whatever fills and cancel remaining
+                - [x] immediate-or-cancel: whenever this order executes, fill whatever fills and cancel remaining
 
         - [ ] stop-market
             - 0 volume order, but when crosses triggers the submission of a market order
@@ -93,7 +93,6 @@ class OrderBook(object):
         prices = self._buys if order.side==Side.BUY else self._sells
         prices_cross = self._sells if order.side==Side.BUY else self._buys
 
-
         # check if crosses
         while top is not None and (order.price >= top if order.side == Side.BUY else order.price <= top):
             # execute order against level
@@ -114,21 +113,59 @@ class OrderBook(object):
 
         # if order remaining, check rules/push to book
         if order.filled < order.volume:
-            if order.flag in (OrderFlag.ALL_OR_NONE, OrderFlag.FILL_OR_KILL):
-                # cancel the order, do not execute any
-                self._collector.revert()
+            if order.order_type == OrderType.MARKET:
+                # Market orders
+                if order.flag in (OrderFlag.ALL_OR_NONE, OrderFlag.FILL_OR_KILL):
+                    # cancel the order, do not execute any
+                    self._collector.revert()
+                    
+                    # cancel the order
+                    self._collector.pushCancel(order)
+                    self._collector.commit()
+                else:
+                    # market order, partial
+                    if order.filled > 0:
+                        self._collector.pushTrade(order)
+
+                    # clear levels
+                    self._clearOrders(order, self._collector.clearedLevels())
+
+                    # execute order
+                    self._collector.commit()
 
             else:
-                # clear levels
-                self._clearOrders(order, self._collector.clearedLevels())
+                # Limit Orders
+                if order.flag in (OrderFlag.ALL_OR_NONE, OrderFlag.FILL_OR_KILL):
+                    if order.filled > 0:
+                        # reverse partial
+                        # cancel the order, do not execute any
+                        self._collector.revert()
+                        
+                        # cancel the order
+                        self._collector.pushCancel(order)
+                        self._collector.commit()
+                    else:
+                        # add to book
+                        self._collector.commit()
 
-                if order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
+                        # limit order, put on books
+                        if _insort(levels, order.price):
+                            # new price level
+                            prices[order.price] = _PriceLevel(order.price, collector=self._collector)
+                        # add order to price level
+                        prices[order.price].add(order)
+
+                elif order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
+                    # clear levels
+                    self._clearOrders(order, self._collector.clearedLevels())
 
                     # execute the ones that filled, kill the remainder
                     self._collector.pushCancel(order)
                     self._collector.commit()
+                else:
+                    # clear levels
+                    self._clearOrders(order, self._collector.clearedLevels())
 
-                elif order.order_type == OrderType.LIMIT:
                     # execute order
                     self._collector.commit()
 
@@ -139,11 +176,9 @@ class OrderBook(object):
                     # add order to price level
                     prices[order.price].add(order)
 
-                else:
-                    # market order, partial
-                    if order.filled > 0:
-                        self._collector.pushTrade(order)
         else:
+            # don't need to add trade as this is done in the price_levels
+
             # clear levels
             self._clearOrders(order, self._collector.clearedLevels())
 

@@ -1,4 +1,5 @@
 from collections import deque
+from ...config import OrderFlag
 
 
 class _PriceLevel(object):
@@ -57,15 +58,22 @@ class _PriceLevel(object):
             maker_remaining = maker_order.volume - maker_order.filled
 
             if maker_remaining > to_fill:
-                # maker_order is partially executed
-                maker_order.filled += to_fill
+                # handle fill or kill/all or nothing
+                if maker_order.flag in (OrderFlag.FILL_OR_KILL, OrderFlag.ALL_OR_NONE):
+                    # kill the maker order and continue
+                    self._collector.pushCancel(maker_order)
+                    continue
 
-                # push back in deque
-                self._orders.appendleft(maker_order)
+                else:
+                    # maker_order is partially executed
+                    maker_order.filled += to_fill
 
-                # will exit loop
-                self._collector.pushFill(taker_order)
-                self._collector.pushChange(maker_order, accumulate=True)
+                    # push back in deque
+                    self._orders.appendleft(maker_order)
+
+                    # will exit loop
+                    self._collector.pushFill(taker_order)
+                    self._collector.pushChange(maker_order, accumulate=True)
 
             elif maker_remaining < to_fill:
                 # maker_order is fully executed

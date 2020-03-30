@@ -1,9 +1,9 @@
 from datetime import datetime
-from aat.config import Side, DataType
+from aat.config import Side, DataType, OrderFlag, OrderType
 from aat.core import Order
 
 
-def _seed(ob, instrument):
+def _seed(ob, instrument, flag=OrderFlag.NONE):
     x = .5
     while x < 10.0:
         side = Side.BUY if x <= 5 else Side.SELL
@@ -13,6 +13,8 @@ def _seed(ob, instrument):
                      price=x,
                      side=side,
                      type=DataType.ORDER,
+                     order_type=OrderType.LIMIT,
+                     flag=flag,
                      instrument=instrument,
                      exchange=''))
         x += .5
