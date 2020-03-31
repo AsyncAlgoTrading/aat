@@ -1,6 +1,7 @@
 import asyncio
 import numpy as np
 import string
+from collections import deque
 from datetime import datetime
 from random import choice, random
 from ..exchange import Exchange
@@ -14,11 +15,11 @@ def _getName(n=1):
 
 
 class SyntheticExchange(Exchange):
-    def __init__(self, callback=None, verbose=False, **kwargs):
+    def __init__(self, verbose=False, **kwargs):
         self._exchange_type = 'synthetic'
-        self._callback = callback or print
         self._verbose = verbose
         self._id = 0
+        self._events = deque()
 
     def _seed(self, symbols=None):
         self._instruments = {symbol: Instrument(symbol) for symbol in symbols or _getName(1)}
@@ -60,7 +61,7 @@ class SyntheticExchange(Exchange):
 
         # set callbacks to the trading engine
         for orderbook in self._orderbooks.values():
-            orderbook.setCallback(self._callback)
+            orderbook.setCallback(self._events.append)
 
     async def tick(self):
 
@@ -71,6 +72,11 @@ class SyntheticExchange(Exchange):
 
         # loop forever
         while True:
+            while self._events:
+                event = self._events.popleft()
+                yield event
+                await asyncio.sleep(.1)
+
             await asyncio.sleep(.1)
             # choose a random symbol
             symbol = choice(list(self._instruments.keys()))

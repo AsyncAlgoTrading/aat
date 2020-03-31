@@ -7,10 +7,10 @@ from traitlets import validate, TraitError, Unicode, Bool, List, Instance
 from tornado.web import StaticFileHandler, RedirectHandler, Application as TornadoApplication
 from perspective import PerspectiveManager, PerspectiveTornadoHandler
 
-from ..models import Event, Error
 from ..handler import EventHandler, PrintHandler
+from ..models import Event, Error
 from ..table import TableHandler
-from ...config import EventType
+from ...config import EventType, getStrategies
 from ...exchange import Exchange
 # from aat.strategy import Strategy
 from ...ui import ServerApplication
@@ -61,7 +61,7 @@ class TradingEngine(Application):
         self.verbose = bool(int(config.get('general', {}).get('verbose', self.verbose)))
         self.api = bool(int(config.get('general', {}).get('api', self.api)))
         self.trading_type = config.get('general', {}).get('trading_type', 'simulation')
-        self.exchanges = [Exchange.exchanges(_.lower())(self.tick, verbose=self.verbose) for _ in config.get('exchange', {}).get('exchanges', [])]
+        self.exchanges = [Exchange.exchanges(_.lower())(verbose=self.verbose) for _ in config.get('exchange', {}).get('exchanges', [])]
 
         # set event loop to use uvloop
         if uvloop:
@@ -73,12 +73,24 @@ class TradingEngine(Application):
         # setup subscriptions
         self._subscriptions = {m: [] for m in EventType.keys()}
 
+        # install event handlers
+        strategies = getStrategies(config.get('strategy', {}).get('strategies', []))
+        for strategy in strategies:
+            self.log.critical("Installing strategy: {}".format(strategy))
+            self.registerHandler(strategy)
+
+        # warn if no event handlers installed
+        if not self.event_handlers:
+            self.log.critical('Warning! No event handlers set')
+
         # install print handler if verbose
         if self.verbose:
+            self.log.critical('Installing print handler')
             self.registerHandler(PrintHandler())
 
         # install webserver
         if self.api:
+            self.log.critical('Installing API handlers')
             table_handler = TableHandler()
             table_handler.installTables(self.table_manager)
             self.registerHandler(table_handler)
@@ -89,9 +101,9 @@ class TradingEngine(Application):
             self.api_handlers.append((r"/static/fonts/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'assets', 'static', 'fonts')}))
             self.api_handlers.append((r"/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'assets', 'static', 'html')}))
             self.api_application = ServerApplication(handlers=self.api_handlers)
-            print('.......')
-            print(f'listening on 0.0.0.0:{self.port}')
-            print('.......')
+            self.log.critical('.......')
+            self.log.critical(f'listening on 0.0.0.0:{self.port}')
+            self.log.critical('.......')
             self.api_application.listen(self.port)
 
     def registerHandler(self, handler):

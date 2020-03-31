@@ -1,6 +1,8 @@
+import importlib
 import os
 import os.path
 from configparser import ConfigParser
+from typing import List
 
 
 def _config_to_dict(filename: str) -> dict:
@@ -19,6 +21,17 @@ def _config_to_dict(filename: str) -> dict:
                 d[k] = v.strip().split(',')
         ret[s] = d
     return ret
+
+
+def getStrategies(strategies: List) -> List:
+    strategy_instances = []
+    for strategy in strategies:
+        mod, clazz_and_args = strategy.split(':')
+        clazz, args = clazz_and_args.split(',') if ',' in clazz_and_args else clazz_and_args, ()
+        mod = importlib.import_module(mod)
+        clazz = getattr(mod, clazz)
+        strategy_instances.append(clazz(*args))
+    return strategy_instances
 
 
 def parseConfig(argv: list) -> dict:
