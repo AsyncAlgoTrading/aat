@@ -47,6 +47,9 @@ if sys.version_info.major < 3 or sys.version_info.minor < 7:
 
 requires = [
     'aiostream>=0.3.1',
+    'numpy>=1.11.0',
+    'perspective-python>=0.4.6',
+    'pydantic>=1.4',
     'traitlets>=4.3.3',
 ]
 
