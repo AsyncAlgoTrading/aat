@@ -7,7 +7,7 @@ from traitlets import validate, TraitError, Unicode, Bool, List, Instance
 from tornado.web import StaticFileHandler, RedirectHandler, Application as TornadoApplication
 from perspective import PerspectiveManager, PerspectiveTornadoHandler
 
-from ..models import Event
+from ..models import Event, Error
 from ..handler import EventHandler, PrintHandler
 from ..table import TableHandler
 from ...config import EventType
@@ -84,10 +84,10 @@ class TradingEngine(Application):
             self.registerHandler(table_handler)
             self.api_handlers.append((r"/", RedirectHandler, {"url": "/index.html"}))
             self.api_handlers.append((r"/api/v1/ws", PerspectiveTornadoHandler, {"manager": self.table_manager, "check_origin": True}))
-            self.api_handlers.append((r"/static/js/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', 'ui', 'assets', 'static', 'js')}))
-            self.api_handlers.append((r"/static/css/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', 'ui', 'assets', 'static', 'css')}))
-            self.api_handlers.append((r"/static/fonts/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', 'ui', 'assets', 'static', 'fonts')}))
-            self.api_handlers.append((r"/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', 'ui', 'assets', 'static', 'html')}))
+            self.api_handlers.append((r"/static/js/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'assets', 'static', 'js')}))
+            self.api_handlers.append((r"/static/css/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'assets', 'static', 'css')}))
+            self.api_handlers.append((r"/static/fonts/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'assets', 'static', 'fonts')}))
+            self.api_handlers.append((r"/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'assets', 'static', 'html')}))
             self.api_application = ServerApplication(handlers=self.api_handlers)
             print('.......')
             print(f'listening on 0.0.0.0:{self.port}')
@@ -148,7 +148,12 @@ class TradingEngine(Application):
             event (Event): event to send
         '''
         for handler in self._subscriptions[event.type]:
-            handler(event)
+            try:
+                handler(event)
+            except KeyboardInterrupt:
+                raise
+            except BaseException as e:
+                self.tick(Event(type=EventType.ERROR, target=Error(handler, event, e)))
 
     def start(self):
         try:

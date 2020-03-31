@@ -1,6 +1,6 @@
 import sys
 from .config import parseConfig
-from .engine import TradingEngine
+from .core import TradingEngine
 
 
 def main(argv: list) -> None:

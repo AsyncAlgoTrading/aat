@@ -5,7 +5,7 @@
   "dependencies": {
     "@finos/perspective": "^0.4.6",
     "@finos/perspective-viewer": "^0.4.6",
-    "@finos/perspective-viewer-d3fc": "^0.4.-rc.4",
+    "@finos/perspective-viewer-d3fc": "^0.4.6",
     "@finos/perspective-viewer-datagrid": "^0.4.6",
     "@finos/perspective-workspace": "^0.4.6",
     "@lumino/commands": "^1.5.0",

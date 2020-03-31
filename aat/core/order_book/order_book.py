@@ -27,9 +27,9 @@ class OrderBook(object):
                 - [x] all-or-none: entire order must fill against 1 order, otherwise cancelled
                 - [x] immediate-or-cancel: whenever this order executes, fill whatever fills and cancel remaining
 
-        - [ ] stop-market
+        - [x] stop-market
             - 0 volume order, but when crosses triggers the submission of a market order
-        - [ ] stop-limit
+        - [x] stop-limit
             - 0 volume order, but when crosses triggers the submission of a market order
 
     Supports the following order flags:
@@ -85,20 +85,27 @@ class OrderBook(object):
         Args:
             order (Data): order to submit to orderbook
         '''
+        # secondary triggered orders
+        secondaries = []
+
         # order is buy, so look at top of sell side
         top = self._getTop(order.side, self._collector.clearedLevels())
 
         # set levels to the right side
         levels = self._buy_levels if order.side == Side.BUY else self._sell_levels
-        prices = self._buys if order.side==Side.BUY else self._sells
-        prices_cross = self._sells if order.side==Side.BUY else self._buys
+        prices = self._buys if order.side == Side.BUY else self._sells
+        prices_cross = self._sells if order.side == Side.BUY else self._buys
 
         # check if crosses
         while top is not None and (order.price >= top if order.side == Side.BUY else order.price <= top):
             # execute order against level
             # if returns trade, it cleared the level
             # else, order was fully executed
-            trade = prices_cross[top].cross(order)
+            trade, secondary = prices_cross[top].cross(order)
+
+            if secondary:
+                # append to secondaries
+                secondaries.extend(secondary)
 
             if trade:
                 # clear sell level
@@ -118,7 +125,7 @@ class OrderBook(object):
                 if order.flag in (OrderFlag.ALL_OR_NONE, OrderFlag.FILL_OR_KILL):
                     # cancel the order, do not execute any
                     self._collector.revert()
-                    
+
                     # cancel the order
                     self._collector.pushCancel(order)
                     self._collector.commit()
@@ -140,7 +147,7 @@ class OrderBook(object):
                         # reverse partial
                         # cancel the order, do not execute any
                         self._collector.revert()
-                        
+
                         # cancel the order
                         self._collector.pushCancel(order)
                         self._collector.commit()
@@ -159,7 +166,7 @@ class OrderBook(object):
                         # order could not fill fully, revert
                         # cancel the order, do not execute any
                         self._collector.revert()
-                        
+
                         # cancel the order
                         self._collector.pushCancel(order)
                         self._collector.commit()
@@ -173,7 +180,6 @@ class OrderBook(object):
                             prices[order.price] = _PriceLevel(order.price, collector=self._collector)
                         # add order to price level
                         prices[order.price].add(order)
-
 
                 elif order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
                     if order.filled > 0:
@@ -218,6 +224,11 @@ class OrderBook(object):
 
         # clear the collector
         self._collector.clear()
+
+        # execute secondaries
+        for secondary in secondaries:
+            print('HERE', len(secondaries), secondary)
+            self.add(secondary)
 
     def cancel(self, order):
         '''remove an order from the order book, potentially triggering events:

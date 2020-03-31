@@ -7,6 +7,8 @@ class _PriceLevel(object):
         self._price = price
         self._orders = deque()
         self._orders_staged = deque()
+        self._stop_orders = []
+        self._stop_orders_staged = []
         self._collector = collector
 
     def price(self):
@@ -17,12 +19,18 @@ class _PriceLevel(object):
 
     def add(self, order):
         # append order to deque
-        if order in self._orders:
-            # change event
-            self._collector.pushChange(order)
+        if order.order_type in (OrderType.STOP_LIMIT, OrderType.STOP_MARKET):
+            if order.stop_target in self._stop_orders:
+                return
+            print('adding', order)
+            self._stop_orders.append(order.stop_target)
         else:
-            self._orders.append(order)
-            self._collector.pushOpen(order)
+            if order in self._orders:
+                # change event
+                self._collector.pushChange(order)
+            else:
+                self._orders.append(order)
+                self._collector.pushOpen(order)
 
     def remove(self, order):
         # check if order is in level
@@ -40,9 +48,21 @@ class _PriceLevel(object):
         return order
 
     def cross(self, taker_order):
+        '''Cross the spread
+
+        Args:
+            taker_order (Order): the order crossing the spread
+        Returns:
+            order (Order or None): the order crossing, if there is some remaining
+            secondary_orders (List[Order] or None): Orders that get triggered as a result of the crossing (e.g. stop orders)
+        '''
+        if taker_order.order_type in (OrderType.STOP_MARKET, OrderType.STOP_LIMIT):
+            self.add(taker_order)
+            return None, ()
+
         if taker_order.filled >= taker_order.volume:
             # already filled:
-            return None
+            return None, self._get_stop_orders()
 
         while taker_order.filled < taker_order.volume and self._orders:
             # need to fill original volume - filled so far
@@ -92,7 +112,7 @@ class _PriceLevel(object):
                     # taker order can't be filled, push maker back and cancel taker
                     # push back in deque
                     self._orders.appendleft(maker_order)
-                    return None
+                    return None, self._get_stop_orders()
 
                 else:
                     # maker_order is fully executed
@@ -114,15 +134,24 @@ class _PriceLevel(object):
             self._collector.pushTrade(taker_order)
 
             # return nothing to signify to stop
-            return None
+            return None, self._get_stop_orders()
 
         # return order, this level is cleared and the order still has volume
-        return taker_order
+        return taker_order, self._get_stop_orders()
 
     def clear(self):
         '''clear queues'''
         self._orders.clear()
         self._orders_staged.clear()
+        self._stop_orders = []
+        self._stop_orders_staged = []
+
+    def _get_stop_orders(self):
+        if self._stop_orders:
+            self._stop_orders_staged = self._stop_orders.copy()
+            self._stop_orders = []
+            return self._stop_orders_staged
+        return []
 
     def commit(self):
         '''staged orders accepted, clear'''
@@ -132,13 +161,14 @@ class _PriceLevel(object):
         '''staged order reverted, unstage the orders'''
         self._orders = self._orders_staged
         self._orders_staged = deque()
+        self._stop_orders = self._stop_orders_staged
+        self._stop_orders_staged = []
 
     def __bool__(self):
         '''use deque size as truth value'''
-        return len(list(order for order in self._orders if order.order_type not in (OrderType.STOP_LIMIT, OrderType.STOP_MARKET))) > 0
+        return len(self._orders) > 0
 
     def __iter__(self):
         '''iterate through orders'''
         for order in self._orders:
-            if order.order_type not in (OrderType.STOP_LIMIT, OrderType.STOP_MARKET):
-                yield order
+            yield order
