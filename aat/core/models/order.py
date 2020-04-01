@@ -9,6 +9,7 @@ class Order(Data):
     flag: OrderFlag = OrderFlag.NONE
     filled: float = 0.0
     stop_target: Data = None
+    notional: float = 0.0
 
     @validator("stop_target")
     def _assert_stop_target_not_stop(cls, v, values, **kwargs):

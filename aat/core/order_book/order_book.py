@@ -10,7 +10,7 @@ class OrderBook(object):
     Supports the following order types:
         - [x] market
             - [x] executes the entire volume
-            - [ ] if price specified, will execute (price*volume) worth (e.g. relies on total price, not volume)
+            - [ ] if notional specified, will execute (price*volume) worth (e.g. relies on total price, not volume)
 
             Flags:
                 - [x] no flag
