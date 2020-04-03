@@ -92,15 +92,15 @@ class _PriceLevel(object):
                     taker_order.filled = taker_order.volume
                     self._collector.pushFill(taker_order)
 
+                    # change event
+                    self._collector.pushChange(maker_order, accumulate=True)
+
                     if maker_order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
-                        # change event
+                        # cancel maker event, don't put in queue
                         self._collector.pushCancel(maker_order)
                     else:
                         # push back in deque
                         self._orders.appendleft(maker_order)
-
-                        # change event
-                        self._collector.pushChange(maker_order, accumulate=True)
 
             elif maker_remaining < to_fill:
                 # partially fill it regardles

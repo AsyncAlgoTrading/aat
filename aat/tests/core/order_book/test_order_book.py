@@ -1,5 +1,4 @@
 from datetime import datetime
-from aat.config import Side, DataType
 from aat.core import Instrument, OrderBook, Order
 from .helpers import _seed
 
@@ -24,10 +23,8 @@ class TestOrderBook:
                      timestamp=datetime.now().timestamp(),
                      volume=5.0,
                      price=4.5,
-                     side=Side.SELL,
-                     type=DataType.ORDER,
-                     instrument=_INSTRUMENT,
-                     exchange='')
+                     side=Order.Sides.SELL,
+                     instrument=_INSTRUMENT)
         ob.add(data)
 
         print(ob)
@@ -39,10 +36,8 @@ class TestOrderBook:
                      timestamp=datetime.now().timestamp(),
                      volume=4.0,
                      price=5.5,
-                     side=Side.BUY,
-                     type=DataType.ORDER,
-                     instrument=_INSTRUMENT,
-                     exchange='')
+                     side=Order.Sides.BUY,
+                     instrument=_INSTRUMENT)
         ob.add(data)
 
         print(ob)
@@ -62,10 +57,8 @@ class TestOrderBook:
                      timestamp=datetime.now().timestamp(),
                      volume=100.0,
                      price=0.0,
-                     side=Side.SELL,
-                     type=DataType.ORDER,
-                     instrument=_INSTRUMENT,
-                     exchange='')
+                     side=Order.Sides.SELL,
+                     instrument=_INSTRUMENT)
         ob.add(data)
 
         print(ob)

@@ -17,7 +17,7 @@ class Data(BaseModel):
     instrument: Instrument
 
     # maybe specific
-    exchange: str
+    exchange: str = ''
     filled: float = 0.0
 
     def __eq__(self, other):

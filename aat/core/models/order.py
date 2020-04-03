@@ -1,15 +1,26 @@
 from pydantic import validator
 from .data import Data
-from ...config import DataType, OrderFlag, OrderType
+from ...config import DataType, OrderFlag, OrderType, Side
 
 
 class Order(Data):
+    # for convenience
+    Types = OrderType
+    Sides = Side
+    Flags = OrderFlag
+
+    # Values
     type: DataType = DataType.ORDER
     order_type: OrderType = OrderType.LIMIT
     flag: OrderFlag = OrderFlag.NONE
     filled: float = 0.0
     stop_target: Data = None
     notional: float = 0.0
+
+    @validator("type")
+    def _assert_type_is_order(cls, v):
+        assert v == DataType.ORDER
+        return v
 
     @validator("stop_target")
     def _assert_stop_target_not_stop(cls, v, values, **kwargs):
@@ -20,6 +31,12 @@ class Order(Data):
         if values['order_type'] == OrderType.STOP_MARKET:
             assert v.order_type == OrderType.MARKET
         return v
+
+    @validator("notional")
+    def _assert_notional_set_correct(cls, v, values, **kwargs):
+        if values['order_type'] == OrderType.MARKET:
+            return v
+        return values['price'] * values['volume']
 
     def __str__(self):
         return f'<{self.instrument}-{self.volume}@{self.price}-{self.exchange}-{self.side}>'

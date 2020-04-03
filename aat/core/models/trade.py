@@ -6,6 +6,9 @@ from ...config import DataType
 
 
 class Trade(Data):
+    # for convenience
+    Types = DataType
+
     type: DataType = DataType.TRADE
     maker_orders: deque
     taker_order: Order
@@ -20,6 +23,11 @@ class Trade(Data):
     def transaction_cost(self):
         '''any transaction costs incurred on the order'''
         return 0.0
+
+    @validator("type")
+    def _assert_type_is_order(cls, v):
+        assert v == DataType.TRADE
+        return v
 
     @validator("maker_orders")
     def _assert_maker_orders(cls, v):

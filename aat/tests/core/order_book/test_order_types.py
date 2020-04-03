@@ -1,5 +1,4 @@
 from datetime import datetime
-from aat.config import Side, DataType, OrderType
 from aat.core import Instrument, OrderBook, Order
 from .helpers import _seed
 
@@ -20,11 +19,9 @@ class TestMarketOrder:
                      timestamp=datetime.now().timestamp(),
                      volume=100.0,
                      price=0.0,
-                     side=Side.SELL,
-                     type=DataType.ORDER,
-                     order_type=OrderType.MARKET,
-                     instrument=_INSTRUMENT,
-                     exchange='')
+                     side=Order.Sides.SELL,
+                     order_type=Order.Types.MARKET,
+                     instrument=_INSTRUMENT)
         ob.add(data)
 
         print(ob)
@@ -50,22 +47,18 @@ class TestStopLoss:
                      timestamp=datetime.now().timestamp(),
                      volume=0.0,
                      price=5.0,
-                     side=Side.SELL,
-                     type=DataType.ORDER,
-                     order_type=OrderType.STOP_MARKET,
+                     side=Order.Sides.SELL,
+                     order_type=Order.Types.STOP_MARKET,
                      stop_target=Order(
                          id=1,
                          timestamp=datetime.now().timestamp(),
                          volume=1.0,
                          price=4.0,
-                         side=Side.SELL,
-                         type=DataType.ORDER,
-                         order_type=OrderType.MARKET,
-                         instrument=_INSTRUMENT,
-                         exchange=''
+                         side=Order.Sides.SELL,
+                         order_type=Order.Types.MARKET,
+                         instrument=_INSTRUMENT
                      ),
-                     instrument=_INSTRUMENT,
-                     exchange='')
+                     instrument=_INSTRUMENT)
         print(ob)
         ob.add(data)
 
@@ -73,21 +66,17 @@ class TestStopLoss:
                      timestamp=datetime.now().timestamp(),
                      volume=0.0,
                      price=5.0,
-                     side=Side.SELL,
-                     type=DataType.ORDER,
-                     order_type=OrderType.STOP_LIMIT,
+                     side=Order.Sides.SELL,
+                     order_type=Order.Types.STOP_LIMIT,
                      stop_target=Order(
                          id=1,
                          timestamp=datetime.now().timestamp(),
                          volume=0.5,
                          price=5.0,
-                         side=Side.SELL,
-                         type=DataType.ORDER,
-                         instrument=_INSTRUMENT,
-                         exchange=''
+                         side=Order.Sides.SELL,
+                         instrument=_INSTRUMENT
                      ),
-                     instrument=_INSTRUMENT,
-                     exchange='')
+                     instrument=_INSTRUMENT)
         print(ob)
         ob.add(data)
 
@@ -98,11 +87,9 @@ class TestStopLoss:
                      timestamp=datetime.now().timestamp(),
                      volume=0.5,
                      price=5.0,
-                     side=Side.SELL,
-                     type=DataType.ORDER,
-                     order_type=OrderType.LIMIT,
-                     instrument=_INSTRUMENT,
-                     exchange='')
+                     side=Order.Sides.SELL,
+                     order_type=Order.Types.LIMIT,
+                     instrument=_INSTRUMENT)
         print(ob)
         ob.add(data)
 
@@ -124,21 +111,17 @@ class TestStopLoss:
                      timestamp=datetime.now().timestamp(),
                      volume=0.0,
                      price=5.0,
-                     side=Side.SELL,
-                     type=DataType.ORDER,
-                     order_type=OrderType.STOP_LIMIT,
+                     side=Order.Sides.SELL,
+                     order_type=Order.Types.STOP_LIMIT,
                      stop_target=Order(
                          id=1,
                          timestamp=datetime.now().timestamp(),
                          volume=0.5,
                          price=4.5,
-                         side=Side.SELL,
-                         type=DataType.ORDER,
-                         instrument=_INSTRUMENT,
-                         exchange=''
+                         side=Order.Sides.SELL,
+                         instrument=_INSTRUMENT
                      ),
-                     instrument=_INSTRUMENT,
-                     exchange='')
+                     instrument=_INSTRUMENT)
         print(ob)
         ob.add(data)
 
@@ -149,11 +132,9 @@ class TestStopLoss:
                      timestamp=datetime.now().timestamp(),
                      volume=0.5,
                      price=5.0,
-                     side=Side.SELL,
-                     type=DataType.ORDER,
-                     order_type=OrderType.LIMIT,
-                     instrument=_INSTRUMENT,
-                     exchange='')
+                     side=Order.Sides.SELL,
+                     order_type=Order.Types.LIMIT,
+                     instrument=_INSTRUMENT)
         print(ob)
         ob.add(data)
 
