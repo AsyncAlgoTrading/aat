@@ -63,18 +63,22 @@ class _Collector(object):
 
     def pushTrade(self, taker_order):
         '''push taker order trade'''
+        if not self.orders():
+            raise Exception('No maker orders provided!')
+        if taker_order.filled <= 0:
+            raise Exception('No trade occurred')
         self.push(Event(type=EventType.TRADE,
                         target=Trade(timestamp=datetime.now().timestamp(),
                                      instrument=taker_order.instrument,
                                      price=self.price(),
                                      volume=self.volume(),
                                      side=taker_order.side,
-                                     maker_orders=self.orders(),
+                                     maker_orders=self.orders().copy(),
                                      taker_order=taker_order,
                                      exchange=taker_order.exchange)))
 
     def accumulate(self, order):
-        self._price = ((self._price * self._volume + order.price * order.filled) / (self._volume + order.filled)) if (self._volume + order.filled > 0) else float('nan')
+        self._price = ((self._price * self._volume + order.price * order.filled) / (self._volume + order.filled)) if (self._volume + order.filled > 0) else 0.0
         self._volume += order.filled
         self._orders.append(order)
 
