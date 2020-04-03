@@ -10,7 +10,7 @@ from perspective import PerspectiveManager, PerspectiveTornadoHandler  # type: i
 from ..handler import EventHandler, PrintHandler
 from ..models import Event, Error
 from ..table import TableHandler
-from ...config import EventType, getStrategies
+from ...config import EventType, getStrategies, getExchanges
 from ...exchange import Exchange
 # from aat.strategy import Strategy
 from ...ui import ServerApplication
@@ -61,7 +61,7 @@ class TradingEngine(Application):
         self.verbose = bool(int(config.get('general', {}).get('verbose', self.verbose)))
         self.api = bool(int(config.get('general', {}).get('api', self.api)))
         self.trading_type = config.get('general', {}).get('trading_type', 'simulation')
-        self.exchanges = [Exchange.exchanges(_.lower())(verbose=self.verbose) for _ in config.get('exchange', {}).get('exchanges', [])]
+        self.exchanges = getExchanges(config.get('exchange', {}).get('exchanges', []), verbose=self.verbose)
 
         # set event loop to use uvloop
         if uvloop:

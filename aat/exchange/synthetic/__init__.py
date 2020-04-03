@@ -15,15 +15,18 @@ def _getName(n=1):
 
 
 class SyntheticExchange(Exchange):
+    _inst = 0
+
     def __init__(self, verbose=False, **kwargs):
-        self._exchange_type = 'synthetic'
+        self._exchange_name = 'synthetic{}'.format(SyntheticExchange._inst)
         self._verbose = verbose
         self._id = 0
         self._events = deque()
+        SyntheticExchange._inst += 1
 
     def _seed(self, symbols=None):
         self._instruments = {symbol: Instrument(symbol) for symbol in symbols or _getName(1)}
-        self._orderbooks = {symbol: OrderBook(instrument=i, exchange_name='synthetic', callback=lambda x: None) for symbol, i in self._instruments.items()}
+        self._orderbooks = {symbol: OrderBook(instrument=i, exchange_name=self._exchange_name, callback=lambda x: None) for symbol, i in self._instruments.items()}
         self._seedOrders()
 
     def _seedOrders(self):
@@ -31,8 +34,8 @@ class SyntheticExchange(Exchange):
         for symbol, orderbook in self._orderbooks.items():
 
             # pick a random startpoint, endpoint, and midpoint
-            start = round(random() * 50, 2)
-            end = start + round(random() * 50 + 10, 2)
+            start = round(random() * 50, 2) + 50
+            end = start + round(random() * 50 + 10, 2) + 50
             mid = (start + end) / 2.0
 
             while start < end:
@@ -45,7 +48,7 @@ class SyntheticExchange(Exchange):
                                     side=side,
                                     type=DataType.ORDER,
                                     instrument=self._instruments[symbol],
-                                    exchange=self._exchange_type))
+                                    exchange=self._exchange_name))
                 start = round(start + increment, 2)
                 self._id += 1
 
@@ -99,7 +102,7 @@ class SyntheticExchange(Exchange):
                                     side=Side.BUY,
                                     type=DataType.ORDER,
                                     instrument=instrument,
-                                    exchange='synthetic'))
+                                    exchange=self._exchange_name))
                 self._id += 1
             elif do == 'sell':
                 # new sell order
@@ -111,7 +114,7 @@ class SyntheticExchange(Exchange):
                                     side=Side.SELL,
                                     type=DataType.ORDER,
                                     instrument=instrument,
-                                    exchange='synthetic'))
+                                    exchange=self._exchange_name))
                 self._id += 1
             elif do == 'cross':
                 # cross the spread
@@ -126,7 +129,7 @@ class SyntheticExchange(Exchange):
                                         side=Side.BUY,
                                         type=DataType.ORDER,
                                         instrument=instrument,
-                                        exchange='synthetic'))
+                                        exchange=self._exchange_name))
                     self._id += 1
                 else:
                     # cross to sell
@@ -138,7 +141,7 @@ class SyntheticExchange(Exchange):
                                         side=Side.SELL,
                                         type=DataType.ORDER,
                                         instrument=instrument,
-                                        exchange='synthetic'))
+                                        exchange=self._exchange_name))
                     self._id += 1
             elif do == 'cancel' or do == 'change':
                 # cancel an existing order

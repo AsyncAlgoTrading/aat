@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod
 from inspect import isabstract
-from typing import Callable, Union
 from .models import Event
 from ..config import EventType
 

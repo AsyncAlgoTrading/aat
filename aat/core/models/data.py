@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, Mapping, Union, Type
+from typing import Mapping, Union, Type
 from ...config import Side, DataType
 from ..instrument import Instrument
 

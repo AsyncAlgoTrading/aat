@@ -5,13 +5,13 @@ from configparser import ConfigParser
 from typing import List, Dict, Union
 
 
-def _config_to_dict(filename: str) -> Dict[str, Dict[str, Union[str, List[str]]]]:
+def _config_to_dict(filename: str) -> Dict[str, Dict[str, Union[str, List[str], List[List[str]]]]]:
     if not os.path.exists(filename):
         raise Exception(f'File does not exist {filename}')
     config = ConfigParser()
     config.read(filename)
 
-    ret: Dict[str, Dict[str, Union[str, List[str]]]] = {}
+    ret = {}  # type: Dict[str, Dict[str, Union[str, List[str], List[List[str]]]]]
 
     for s in config.sections():
         d: Dict[str, str] = dict(config.items(s))
@@ -19,6 +19,9 @@ def _config_to_dict(filename: str) -> Dict[str, Dict[str, Union[str, List[str]]]
         for k, v in d.items():
             if v.startswith('\n'):
                 ret[s][k] = v.strip().split('\n')
+                for i, item in enumerate(ret[s][k]):
+                    if ',' in item:
+                        ret[s][k][i] = item.strip().split(',')  # type: ignore
             elif ',' in v:
                 ret[s][k] = v.strip().split(',')
             else:
@@ -35,6 +38,17 @@ def getStrategies(strategies: List) -> List:
         clazz = getattr(mod, clazz)
         strategy_instances.append(clazz(*args))
     return strategy_instances
+
+
+def getExchanges(exchanges: List, verbose: bool = False) -> List:
+    exchange_instances = []
+    for exchange in exchanges:
+        mod, clazz_and_args = exchange.split(':')
+        clazz, args = clazz_and_args.split(',') if ',' in clazz_and_args else clazz_and_args, ()
+        mod = importlib.import_module(mod)
+        clazz = getattr(mod, clazz)
+        exchange_instances.append(clazz(*args, verbose=verbose))
+    return exchange_instances
 
 
 def parseConfig(argv: list) -> dict:
