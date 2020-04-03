@@ -24,7 +24,7 @@ class Order(Data):
         return v
 
     @validator("stop_target")
-    def _assert_stop_target_not_stop(cls, v, values, **kwargs) -> Order:
+    def _assert_stop_target_not_stop(cls, v, values, **kwargs):
         assert isinstance(v, Order)
         assert v.order_type not in (OrderType.STOP_LIMIT, OrderType.STOP_MARKET)
         if values['order_type'] == OrderType.STOP_LIMIT:
