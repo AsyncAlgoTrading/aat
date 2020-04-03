@@ -1,4 +1,5 @@
 from pydantic import validator
+from typing import Mapping, Union, Type
 from .data import Data
 from ...config import DataType, OrderFlag, OrderType, Side
 
@@ -14,7 +15,7 @@ class Order(Data):
     order_type: OrderType = OrderType.LIMIT
     flag: OrderFlag = OrderFlag.NONE
     filled: float = 0.0
-    stop_target: Data = None
+    stop_target: Union[Data, None] = None
     notional: float = 0.0
 
     @validator("type")
@@ -23,7 +24,7 @@ class Order(Data):
         return v
 
     @validator("stop_target")
-    def _assert_stop_target_not_stop(cls, v, values, **kwargs):
+    def _assert_stop_target_not_stop(cls, v, values, **kwargs) -> Order:
         assert isinstance(v, Order)
         assert v.order_type not in (OrderType.STOP_LIMIT, OrderType.STOP_MARKET)
         if values['order_type'] == OrderType.STOP_LIMIT:
@@ -33,7 +34,7 @@ class Order(Data):
         return v
 
     @validator("notional")
-    def _assert_notional_set_correct(cls, v, values, **kwargs):
+    def _assert_notional_set_correct(cls, v, values, **kwargs) -> float:
         if values['order_type'] == OrderType.MARKET:
             return v
         return values['price'] * values['volume']
@@ -41,19 +42,18 @@ class Order(Data):
     def __str__(self):
         return f'<{self.instrument}-{self.volume}@{self.price}-{self.exchange}-{self.side}>'
 
-    def to_json(self):
-        ret = {}
-        ret['id'] = self.id
-        ret['timestamp'] = self.timestamp
-        ret['volume'] = self.volume
-        ret['price'] = self.price
-        ret['side'] = self.side.value
-        ret['instrument'] = str(self.instrument)
-        ret['exchange'] = self.exchange
-        return ret
+    def to_json(self) -> Mapping[str, Union[str, int, float]]:
+        return \
+            {'id': self.id,
+             'timestamp': self.timestamp,
+             'volume': self.volume,
+             'price': self.price,
+             'side': self.side.value,
+             'instrument': str(self.instrument),
+             'exchange': self.exchange}
 
     @staticmethod
-    def schema():
+    def perspectiveSchema() -> Mapping[str, Type]:
         return {
             "id": int,
             "timestamp": int,

@@ -1,5 +1,5 @@
 import asyncio
-import numpy as np
+import numpy as np  # type: ignore
 import string
 from collections import deque
 from datetime import datetime

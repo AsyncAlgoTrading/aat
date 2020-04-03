@@ -12,4 +12,4 @@ class Event(BaseModel):
     target: Any
 
     def __str__(self):
-        return f'[{self.type}-{self.target}]'
+        return f'<{self.type}-{self.target}>'

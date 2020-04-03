@@ -1,25 +1,26 @@
-from perspective import Table
+from perspective import Table  # type: ignore
+from typing import Tuple
 from .models import Event, Order, Trade
 from .handler import EventHandler
 
 
 class TableHandler(EventHandler):
-    onData = None
-    onHalt = None
-    onContinue = None
-    onError = None
-    onStart = None
-    onExit = None
+    onData = None  # type: ignore
+    onHalt = None  # type: ignore
+    onContinue = None  # type: ignore
+    onError = None  # type: ignore
+    onStart = None  # type: ignore
+    onExit = None  # type: ignore
 
     def __init__(self):
-        self._trades = Table(Trade.schema(), index="timestamp")
-        self._orders = Table(Order.schema(), index="id")
+        self._trades = Table(Trade.perspectiveSchema(), index="timestamp")
+        self._orders = Table(Order.perspectiveSchema(), index="id")
 
-    def installTables(self, manager):
+    def installTables(self, manager) -> None:
         manager.host_table("trades", self._trades)
         manager.host_table("orders", self._orders)
 
-    def tables(self):
+    def tables(self) -> Tuple[Table, Table]:
         return self._trades, self._orders
 
     def onTrade(self, event: Event):

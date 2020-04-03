@@ -89,3 +89,5 @@ docs/index.md
 tornado_sqlalchemy_login
 aat.db
 python_junit.xml
+.mypy_cache
+

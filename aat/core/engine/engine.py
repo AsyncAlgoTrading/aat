@@ -1,11 +1,11 @@
 import asyncio
 import os
 import os.path
-from aiostream.stream import merge
-from traitlets.config.application import Application
-from traitlets import validate, TraitError, Unicode, Bool, List, Instance
+from aiostream.stream import merge  # type: ignore
+from traitlets.config.application import Application  # type: ignore
+from traitlets import validate, TraitError, Unicode, Bool, List, Instance  # type: ignore
 from tornado.web import StaticFileHandler, RedirectHandler, Application as TornadoApplication
-from perspective import PerspectiveManager, PerspectiveTornadoHandler
+from perspective import PerspectiveManager, PerspectiveTornadoHandler  # type: ignore
 
 from ..handler import EventHandler, PrintHandler
 from ..models import Event, Error
@@ -16,7 +16,7 @@ from ...exchange import Exchange
 from ...ui import ServerApplication
 
 try:
-    import uvloop
+    import uvloop  # type: ignore
 except ImportError:
     uvloop = None
 
@@ -165,7 +165,7 @@ class TradingEngine(Application):
             except KeyboardInterrupt:
                 raise
             except BaseException as e:
-                self.tick(Event(type=EventType.ERROR, target=Error(handler, event, e)))
+                self.tick(Event(type=EventType.ERROR, target=Error(target=event, handler=handler, exception=e)))
 
     def start(self):
         try:

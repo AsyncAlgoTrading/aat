@@ -1,3 +1,4 @@
+from typing import Any, Dict
 from aat.core import Event
 from aat.strategy import Strategy
 
@@ -5,11 +6,11 @@ from aat.strategy import Strategy
 class BuyAndHoldStrategy(Strategy):
     def __init__(self, *args, **kwargs) -> None:
         super(BuyAndHoldStrategy, self).__init__(*args, **kwargs)
-        self.bought = {}
+        self._bought: Dict[str, Any] = {}
 
-    def onTrade(self, event: Event):
+    def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
-        print('Trade:', event)
+        print('Trade:\n\t{}\n\tSlippage:{}\n\tTxnCost:{}'.format(event, event.target.slippage(), event.target.transactionCost()))
         # if event.target.instrument not in self.bought:
         #     req = TradeRequest(side=Side.BUY,
         #                        volume=1,
@@ -21,6 +22,9 @@ class BuyAndHoldStrategy(Strategy):
         #     log.info("requesting buy : %s", req)
         #     self.request(req)
         #     self.bought[data.instrument] = 'pending'
+
+    def onError(self, event: Event) -> None:
+        print("Error:", event)
 
     # def onFill(self, res: TradeResponse) -> None:
     #     self.bought[res.instrument] = res

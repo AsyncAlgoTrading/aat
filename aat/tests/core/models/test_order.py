@@ -1,3 +1,4 @@
+# type: ignore
 import pydantic
 import pytest
 from datetime import datetime

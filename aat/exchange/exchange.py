@@ -29,7 +29,7 @@ class Exchange(_MarketData, _OrderEntry):
         return list(_EXCHANGES.keys())
 
     @abstractmethod
-    async def connect():
+    async def connect(self):
         '''connect to exchange. should be asynchronous.
 
         For OrderEntry-only, can just return None

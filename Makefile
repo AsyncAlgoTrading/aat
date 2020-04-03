@@ -25,6 +25,12 @@ lint: ## run linter
 fix:  ## run autopep8/tslint fix
 	python3 -m autopep8 --in-place -r -a -a aat/ setup.py
 
+annotate: ## MyPy type annotation check
+	python3 -m mypy aat
+
+annotate_l: ## MyPy type annotation check - count only
+	python3 -m mypy -s aat | wc -l 
+
 docs:  ## Build the sphinx docs
 	make -C docs html
 	open ./docs/_build/html/index.html

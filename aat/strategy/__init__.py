@@ -4,6 +4,9 @@ from ..core import Event, EventHandler, Trade, Order
 
 
 class Strategy(EventHandler):
+    def __init__(self, *args, **kwargs):
+        pass
+
     #########################
     # Event Handler Methods #
     #########################
@@ -120,15 +123,15 @@ class Strategy(EventHandler):
         pass
 
 
-Strategy.onTrade._original = 1
-Strategy.onOpen._original = 1
-Strategy.onFill._original = 1
-Strategy.onCancel._original = 1
-Strategy.onChange._original = 1
-Strategy.onError._original = 1
-Strategy.onStart._original = 1
-Strategy.onExit._original = 1
-Strategy.onHalt._original = 1
-Strategy.onContinue._original = 1
-Strategy.onData._original = 1
-Strategy.onAnalyze._original = 1
+setattr(Strategy.onTrade, '_original', 1)
+setattr(Strategy.onOpen, '_original', 1)
+setattr(Strategy.onFill, '_original', 1)
+setattr(Strategy.onCancel, '_original', 1)
+setattr(Strategy.onChange, '_original', 1)
+setattr(Strategy.onError, '_original', 1)
+setattr(Strategy.onStart, '_original', 1)
+setattr(Strategy.onExit, '_original', 1)
+setattr(Strategy.onHalt, '_original', 1)
+setattr(Strategy.onContinue, '_original', 1)
+setattr(Strategy.onData, '_original', 1)
+setattr(Strategy.onAnalyze, '_original', 1)

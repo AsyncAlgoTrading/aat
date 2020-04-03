@@ -7,6 +7,8 @@ class Error(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    type: EventType
+    type: EventType = EventType.ERROR
+
     target: Any
     exception: BaseException
+    handler: Any = None

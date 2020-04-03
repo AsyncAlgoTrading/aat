@@ -1,10 +1,12 @@
-from ..config import EventType
-from .models import Event
 from abc import ABCMeta, abstractmethod
 from inspect import isabstract
+from typing import Callable, Union
+from .models import Event
+from ..config import EventType
 
 
 class EventHandler(metaclass=ABCMeta):
+    # onAnalyze(self, engine):
     def _valid_callback(self, callback):
         if hasattr(self, callback) and not isabstract(callback) and not hasattr(getattr(self, callback), "_original"):
             return getattr(self, callback)
@@ -26,56 +28,56 @@ class EventHandler(metaclass=ABCMeta):
             .get(event_type, None)
 
     @abstractmethod
-    def onTrade(self, event: Event):
+    def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
 
     @abstractmethod
-    def onOpen(self, event: Event):
+    def onOpen(self, event: Event) -> None:
         '''Called whenever an Order `Open` event is received'''
         pass
 
     @abstractmethod
-    def onFill(self, event: Event):
+    def onFill(self, event: Event) -> None:
         '''Called whenever an Order `Fill` event is received'''
         pass
 
     @abstractmethod
-    def onCancel(self, event: Event):
+    def onCancel(self, event: Event) -> None:
         '''Called whenever an Order `Cancel` event is received'''
         pass
 
     @abstractmethod
-    def onChange(self, event: Event):
+    def onChange(self, event: Event) -> None:
         '''Called whenever an Order `Change` event is received'''
         pass
 
     @abstractmethod
-    def onError(self, event: Event):
+    def onError(self, event: Event) -> None:
         '''Called whenever an internal error occurs'''
         pass
 
     @abstractmethod
-    def onStart(self):
+    def onStart(self, event: Event) -> None:
         '''Called once at engine initialization time'''
         pass
 
     @abstractmethod
-    def onExit(self):
+    def onExit(self, event: Event) -> None:
         '''Called once at engine exit time'''
         pass
 
     @abstractmethod
-    def onHalt(self, data):
+    def onHalt(self, event: Event) -> None:
         '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
         pass
 
     @abstractmethod
-    def onContinue(self, data):
+    def onContinue(self, event: Event) -> None:
         '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
         pass
 
     @abstractmethod
-    def onData(self, event: Event):
+    def onData(self, event: Event) -> None:
         '''Called whenever other data is received'''
 
     def onAnalyze(self, engine):

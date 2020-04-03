@@ -1,5 +1,6 @@
 from collections import deque
 from pydantic import validator
+from typing import Mapping, Type, Union
 from .data import Data
 from .order import Order
 from ...config import DataType
@@ -20,7 +21,7 @@ class Trade(Data):
         '''the amount of slippage of the order'''
         return 0.0
 
-    def transaction_cost(self):
+    def transactionCost(self):
         '''any transaction costs incurred on the order'''
         return 0.0
 
@@ -37,19 +38,18 @@ class Trade(Data):
     def __str__(self):
         return f'<{self.instrument}-{self.volume:.2f}@{self.price:.2f}-{self.exchange}>'
 
-    def to_json(self):
-        ret = {}
-        ret['id'] = self.id
-        ret['timestamp'] = self.timestamp
-        ret['volume'] = self.volume
-        ret['price'] = self.price
-        ret['side'] = self.side.value
-        ret['instrument'] = str(self.instrument)
-        ret['exchange'] = self.exchange
-        return ret
+    def to_json(self) -> Mapping[str, Union[str, int, float]]:
+        return \
+            {'id': self.id,
+             'timestamp': self.timestamp,
+             'volume': self.volume,
+             'price': self.price,
+             'side': self.side.value,
+             'instrument': str(self.instrument),
+             'exchange': self.exchange}
 
     @staticmethod
-    def schema():
+    def perspectiveSchema() -> Mapping[str, Type]:
         return {
             "id": int,
             "timestamp": int,

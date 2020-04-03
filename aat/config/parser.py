@@ -2,24 +2,27 @@ import importlib
 import os
 import os.path
 from configparser import ConfigParser
-from typing import List
+from typing import List, Dict, Union
 
 
-def _config_to_dict(filename: str) -> dict:
+def _config_to_dict(filename: str) -> Dict[str, Dict[str, Union[str, List[str]]]]:
     if not os.path.exists(filename):
         raise Exception(f'File does not exist {filename}')
     config = ConfigParser()
     config.read(filename)
 
-    ret = {}
+    ret: Dict[str, Dict[str, Union[str, List[str]]]] = {}
+
     for s in config.sections():
-        d = dict(config.items(s))
+        d: Dict[str, str] = dict(config.items(s))
+        ret[s] = {}
         for k, v in d.items():
             if v.startswith('\n'):
-                d[k] = v.strip().split('\n')
+                ret[s][k] = v.strip().split('\n')
             elif ',' in v:
-                d[k] = v.strip().split(',')
-        ret[s] = d
+                ret[s][k] = v.strip().split(',')
+            else:
+                ret[s][k] = v
     return ret
 
 

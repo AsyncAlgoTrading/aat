@@ -6,5 +6,5 @@ class _MarketData(metaclass=ABCMeta):
     side of a data source'''
 
     @abstractmethod
-    async def tick():
+    async def tick(self):
         '''return data from exchange'''
