@@ -257,33 +257,37 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 include_directories("${CMAKE_SOURCE_DIR}/cpp/include")
 
+set(SOURCE_FILES
+${CMAKE_SOURCE_DIR}/cpp/src/binding.cpp
+${CMAKE_SOURCE_DIR}/cpp/src/enums.cpp
+${CMAKE_SOURCE_DIR}/cpp/src/order_book.cpp
+)
+
 ########################
 # Python extra targets #
 ########################
-add_library(binding SHARED
-    ${CMAKE_SOURCE_DIR}/cpp/src/binding.cpp
-    ${HEADER_FILES})
+add_library(binding SHARED ${SOURCE_FILES})
 set_target_properties(binding PROPERTIES
          LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat)
 target_link_libraries(binding ${PYTHON_LIBRARIES})
 
-add_library(_enums SHARED
-    ${CMAKE_SOURCE_DIR}/cpp/src/enums.cpp)
-set_target_properties(_enums PROPERTIES
-         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat/config)
+# add_library(_enums SHARED
+#     ${CMAKE_SOURCE_DIR}/cpp/src/enums.cpp)
+# set_target_properties(_enums PROPERTIES
+#          LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat)
 # target_link_libraries(_enums binding)
-target_link_libraries(_enums ${PYTHON_LIBRARIES})
+# target_link_libraries(_enums ${PYTHON_LIBRARIES})
 
 ## Copy in place for testing
 add_custom_command(TARGET binding POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:binding> ${CMAKE_SOURCE_DIR}/aat/)
-add_custom_command(TARGET _enums POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:_enums> ${CMAKE_SOURCE_DIR}/aat/config)
+# add_custom_command(TARGET _enums POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:_enums> ${CMAKE_SOURCE_DIR}/aat/)
 ########################
 
 if(CPP_BUILD_STRICT AND NOT WIN32)
     target_compile_options(binding PRIVATE -Wall -Werror)
     target_compile_options(binding PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
-    target_compile_options(_enums PRIVATE -Wall -Werror)
-    target_compile_options(_enums PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
+    # target_compile_options(_enums PRIVATE -Wall -Werror)
+    # target_compile_options(_enums PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
 endif()
 
 
