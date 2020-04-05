@@ -16,7 +16,7 @@ namespace core {
 
         bool operator==(const Instrument& other);
         std::string toString() const;
-    
+
     private:
         std::string name;
         InstrumentType type;

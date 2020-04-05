@@ -1,3 +1,5 @@
+#include <sstream>
+#include <aat/enums.hpp>
 #include <aat/models.hpp>
 
 namespace aat {
@@ -5,55 +7,56 @@ namespace core {
 
     bool
     Data::operator==(const Data& other) {
-        return (this->price == other.price && this->instrument == other.instrument && this->side == other.side);
+        return (price == other.price && instrument == other.instrument && side == other.side);
     }
 
     bool
-    Data::operator<(const Data& other) {}
+    Data::operator<(const Data& other) {
+        return price < other.price;
+    }
 
     std::string
-    Data::toString() const {}
+    Data::toString() const {
+        std::stringstream ss;
+        ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << DataType_to_string(type) << "-" << exchange << "-" << Side_to_string(side) << ">";
+        return ss.str();
+    }
 
     json
-    Data::toJson() const {}
+    Data::toJson() const {
+        json ret;
+        ret["id"] = id;
+        ret["timestamp"] = timestamp;
+        ret["volume"] = volume;
+        ret["price"] = price;
+        ret["side"] = Side_to_string(side);
+        ret["type"] = DataType_to_string(type);
+        ret["instrument"] = instrument.toString();
+        ret["exchange"] = exchange;
+        return ret;
+    }
 
     json
-    Data::perspectiveSchema() const {}
+    Data::perspectiveSchema() const {
+        json ret;
+        ret["id"] = "int";
+        ret["timestamp"] = "int";
+        ret["volume"] = "float";
+        ret["price"] = "float";
+        ret["side"] = "str";
+        ret["type"] = "str";
+        ret["instrument"] = "str";
+        ret["exchange"] = "str";
+        return ret;
+    }
 
-    // def __eq__(self, other) -> bool:
-    //     return (self.price == other.price) and \
-//            (self.instrument == other.instrument) and \
-//            (self.side == other.side)
 
-    // def __str__(self):
-    //     return f'<{self.instrument}-{self.volume}@{self.price}-{self.type}-{self.exchange}-{self.side}>'
-
-    // def __lt__(self, other) -> bool:
-    //     return self.price < other.price
-
-    // def to_json(self) -> Mapping[str, Union[str, int, float]]:
-    //     return \
-//         {'id': self.id,
-    //          'timestamp': self.timestamp,
-    //          'volume': self.volume,
-    //          'price': self.price,
-    //          'side': self.side.value,
-    //          'type': self.type.value,
-    //          'instrument': str(self.instrument),
-    //          'exchange': self.exchange}
-
-    // @staticmethod
-    // def perspectiveSchema() -> Mapping[str, Type]:
-    //     return {
-    //         "id": int,
-    //         "timestamp": int,
-    //         "volume": float,
-    //         "price": float,
-    //         "side": str,
-    //         "type": str,
-    //         "instrument": str,
-    //         "exchange": str,
-    //     }
+    std::string
+    Event::toString() const {
+        std::stringstream ss;
+        ss << "<" << EventType_to_string(type) << "-" << target.cast<std::string>() << ">";
+        return ss.str();
+    }
 
 } // namespace core
 } // namespace aat

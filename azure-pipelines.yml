@@ -24,6 +24,20 @@ jobs:
         versionSpec: '$(python.version)'
       displayName: 'Use Python $(python.version)'
 
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '12.x'
+
+    - script: |
+        apt-get install boost-devel
+      displayName: "System deps"
+
+    - bash: npm install -g yarn
+      displayName: "Install Yarn"
+
+    - bash: yarn
+      displayName: 'Install Deps'
+
     - script: |
         python -m pip install --upgrade pip numpy pyarrow==0.15.1
         pip install -e .[dev]
@@ -62,6 +76,20 @@ jobs:
       inputs:
         versionSpec: '$(python.version)'
       displayName: 'Use Python $(python.version)'
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '12.x'
+
+    - script: |
+        brew install boost
+      displayName: "System deps"
+
+    - bash: npm install -g yarn
+      displayName: "Install Yarn"
+
+    - bash: yarn
+      displayName: 'Install Deps'
 
     - script: |
         python -m pip install --upgrade pip numpy pyarrow==0.15.1

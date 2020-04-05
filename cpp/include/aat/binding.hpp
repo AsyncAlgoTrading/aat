@@ -46,9 +46,6 @@ PYBIND11_MODULE(binding, m) {
         .value("IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL);
 
     using namespace aat::core;
-    py::class_<OrderBook>(m, "OrderBook")
-        .def(py::init<const std::string&>());
-    py::class_<Instrument>(m, "Instrument")
-        .def(py::init<const std::string&, InstrumentType&>())
-        .def("__repr__", &Instrument::toString);
+    py::class_<OrderBook>(m, "OrderBook").def(py::init<const std::string&>());
+    py::class_<Instrument>(m, "Instrument").def(py::init<const std::string&, InstrumentType&>()).def("__repr__", &Instrument::toString);
 }

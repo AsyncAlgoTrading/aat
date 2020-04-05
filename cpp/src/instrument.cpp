@@ -9,7 +9,8 @@ namespace core {
         return this->name == other.name && this->type == other.type;
     }
 
-    std::string Instrument::toString() const {
+    std::string
+    Instrument::toString() const {
         std::stringstream ss;
         ss << "(" << name << "-" << InstrumentType_to_string(type) << ")";
         return ss.str();
