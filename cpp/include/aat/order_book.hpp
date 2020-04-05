@@ -10,34 +10,28 @@ namespace py = pybind11;
 namespace aat {
 namespace core {
 
-class PriceLevel {
-public:
+    class PriceLevel {
+    public:
+    private:
+    };
 
-private:
-};
+    class Collector {
+    public:
+        void reset();
 
+    private:
+        py::function callback;
+        std::deque<Event> event_queue;
+        std::deque<Order> orders;
+        std::deque<PriceLevel> price_levels;
+    };
 
-class Collector {
-public:
+    class OrderBook {
+    public:
+        OrderBook(const std::string& name) {}
 
-    void reset();
+    private:
+    };
 
-private:
-    py::function callback;
-    std::deque<Event> event_queue;
-    std::deque<Order> orders;
-    std::deque<PriceLevel> price_levels;
-};
-
-
-class OrderBook {
-public:
-    OrderBook(const std::string &name){ }
-
-private:
-
-};
-
-
-}
-}
+} // namespace core
+} // namespace aat

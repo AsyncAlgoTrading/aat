@@ -8,15 +8,12 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(binding, m)
-{
+PYBIND11_MODULE(binding, m) {
     m.doc() = "C++ bindings";
 
     using namespace aat::config;
 
-    py::enum_<Side>(m, "Side", py::arithmetic())
-        .value("BUY", Side::BUY)
-        .value("SELL", Side::SELL);
+    py::enum_<Side>(m, "Side", py::arithmetic()).value("BUY", Side::BUY).value("SELL", Side::SELL);
 
     py::enum_<EventType>(m, "EventType", py::arithmetic())
         .value("TRADE", EventType::TRADE)
@@ -31,9 +28,7 @@ PYBIND11_MODULE(binding, m)
         .value("START", EventType::START)
         .value("EXIT", EventType::EXIT);
 
-    py::enum_<DataType>(m, "DataType", py::arithmetic())
-        .value("ORDER", DataType::ORDER)
-        .value("TRADE", DataType::TRADE);
+    py::enum_<DataType>(m, "DataType", py::arithmetic()).value("ORDER", DataType::ORDER).value("TRADE", DataType::TRADE);
 
     py::enum_<OrderType>(m, "OrderType", py::arithmetic())
         .value("LIMIT", OrderType::LIMIT)
@@ -60,7 +55,5 @@ PYBIND11_MODULE(binding, m)
     m.def("OrderFlag_from_string", &OrderFlag_from_string, "string to OrderFlag enum");
 
     using namespace aat::core;
-    py::class_<OrderBook>(m, "OrderBook")
-        .def(py::init<const std::string &>())
-    ;
+    py::class_<OrderBook>(m, "OrderBook").def(py::init<const std::string&>());
 }

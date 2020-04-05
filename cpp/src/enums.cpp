@@ -1,8 +1,5 @@
 #include <aat/enums.hpp>
 
 namespace aat {
-namespace config {
-
-
-}
-}
+namespace config {}
+} // namespace aat

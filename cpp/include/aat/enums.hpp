@@ -12,24 +12,9 @@ PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
 
 namespace aat {
 namespace config {
-    enum class Side {
-        BUY = 0,
-        SELL = 1
-    };
+    enum class Side { BUY = 0, SELL = 1 };
 
-    enum class EventType {
-        TRADE = 0,
-        OPEN = 1,
-        CANCEL = 2,
-        CHANGE = 3,
-        FILL = 4,
-        DATA = 5,
-        HALT = 6,
-        CONTINUE = 7,
-        ERROR = 8,
-        START = 9,
-        EXIT = 10
-    };
+    enum class EventType { TRADE = 0, OPEN = 1, CANCEL = 2, CHANGE = 3, FILL = 4, DATA = 5, HALT = 6, CONTINUE = 7, ERROR = 8, START = 9, EXIT = 10 };
 
     enum class DataType {
         ORDER = 0,
@@ -131,7 +116,6 @@ namespace config {
         {"IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL},
     };
 
-
     ENUM_TO_STRING(Side)
     ENUM_TO_STRING(EventType)
     ENUM_TO_STRING(DataType)
@@ -142,5 +126,5 @@ namespace config {
     ENUM_FROM_STRING(DataType)
     ENUM_FROM_STRING(OrderType)
     ENUM_FROM_STRING(OrderFlag)
-}
-}
+} // namespace config
+} // namespace aat
