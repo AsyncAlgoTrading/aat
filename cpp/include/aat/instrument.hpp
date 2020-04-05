@@ -10,12 +10,13 @@ namespace core {
 
     class Instrument {
     public:
-        Instrument(std::string name, InstrumentType type)
+        Instrument(const std::string& name, InstrumentType& type)
             : name(name)
             , type(type) {}
 
         bool operator==(const Instrument& other);
-
+        std::string toString() const;
+    
     private:
         std::string name;
         InstrumentType type;

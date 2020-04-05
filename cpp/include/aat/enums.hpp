@@ -64,6 +64,11 @@ namespace config {
         "TRADE",
     };
 
+    static const std::vector<std::string> InstrumentType_names = {
+        "CURRENCY",
+        "EQUITY",
+    };
+
     static const std::vector<std::string> OrderType_names = {
         "LIMIT",
         "MARKET",
@@ -102,6 +107,11 @@ namespace config {
         {"TRADE", DataType::TRADE},
     };
 
+    static std::unordered_map<std::string, InstrumentType> _InstrumentType_mapping = {
+        {"CURRENCY", InstrumentType::CURRENCY},
+        {"EQUITY", InstrumentType::EQUITY},
+    };
+
     static std::unordered_map<std::string, OrderType> _OrderType_mapping = {
         {"LIMIT", OrderType::LIMIT},
         {"MARKET", OrderType::MARKET},
@@ -119,11 +129,13 @@ namespace config {
     ENUM_TO_STRING(Side)
     ENUM_TO_STRING(EventType)
     ENUM_TO_STRING(DataType)
+    ENUM_TO_STRING(InstrumentType)
     ENUM_TO_STRING(OrderType)
     ENUM_TO_STRING(OrderFlag)
     ENUM_FROM_STRING(Side)
     ENUM_FROM_STRING(EventType)
     ENUM_FROM_STRING(DataType)
+    ENUM_FROM_STRING(InstrumentType)
     ENUM_FROM_STRING(OrderType)
     ENUM_FROM_STRING(OrderFlag)
 } // namespace config
