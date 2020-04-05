@@ -12,19 +12,23 @@ PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
 
 namespace aat {
 namespace config {
+    enum class Side {
+        BUY = 0,
+        SELL = 1
+    };
 
     enum class EventType {
         TRADE = 0,
         OPEN = 1,
-        FILL = 2,
-        CANCEL = 3,
-        CHANGE = 4,
-        ERROR = 5,
-        ANALYZE = 6,
-        HALT = 7,
-        CONTINUE = 8,
-        EXIT = 9,
-        HEARTBEAT = 10
+        CANCEL = 2,
+        CHANGE = 3,
+        FILL = 4,
+        DATA = 5,
+        HALT = 6,
+        CONTINUE = 7,
+        ERROR = 8,
+        START = 9,
+        EXIT = 10
     };
 
     enum class DataType {
@@ -32,19 +36,42 @@ namespace config {
         TRADE = 1,
     };
 
+    enum class InstrumentType {
+        CURRENCY = 0,
+        EQUITY = 1,
+    };
+
+    enum class OrderType {
+        LIMIT = 0,
+        MARKET = 1,
+        STOP_MARKET = 2,
+        STOP_LIMIT = 3,
+    };
+
+    enum class OrderFlag {
+        NONE = 0,
+        FILL_OR_KILL = 1,
+        ALL_OR_NONE = 2,
+        IMMEDIATE_OR_CANCEL = 3,
+    };
+
+    static const std::vector<std::string> Side_names = {
+        "BUY",
+        "SELL",
+    };
 
     static const std::vector<std::string> EventType_names = {
         "TRADE",
         "OPEN",
-        "FILL",
         "CANCEL",
         "CHANGE",
-        "ERROR",
-        "ANALYZE",
+        "FILL",
+        "DATA",
         "HALT",
         "CONTINUE",
+        "ERROR",
+        "START",
         "EXIT",
-        "HEARTBEAT",
     };
 
     static const std::vector<std::string> DataType_names = {
@@ -52,47 +79,68 @@ namespace config {
         "TRADE",
     };
 
+    static const std::vector<std::string> OrderType_names = {
+        "LIMIT",
+        "MARKET",
+        "STOP_MARKET",
+        "STOP_LIMIT",
+    };
+
+    static const std::vector<std::string> OrderFlag_names = {
+        "NONE",
+        "FILL_OR_KILL",
+        "ALL_OR_NONE",
+        "IMMEDIATE_OR_CANCEL",
+    };
+
+    static std::unordered_map<std::string, Side> _Side_mapping = {
+        {"BUY", Side::BUY},
+        {"SELL", Side::SELL},
+    };
+
     static std::unordered_map<std::string, EventType> _EventType_mapping = {
-            {"TRADE", EventType::TRADE},
-            {"OPEN", EventType::OPEN},
-            {"FILL", EventType::FILL},
-            {"CANCEL", EventType::CANCEL},
-            {"CHANGE", EventType::CHANGE},
-            {"ERROR", EventType::ERROR},
-            {"ANALYZE", EventType::ANALYZE},
-            {"HALT", EventType::HALT},
-            {"CONTINUE", EventType::CONTINUE},
-            {"EXIT", EventType::EXIT},
-            {"HEARTBEAT", EventType::HEARTBEAT},
+        {"TRADE", EventType::TRADE},
+        {"OPEN", EventType::OPEN},
+        {"CANCEL", EventType::CANCEL},
+        {"CHANGE", EventType::CHANGE},
+        {"FILL", EventType::FILL},
+        {"DATA", EventType::DATA},
+        {"HALT", EventType::HALT},
+        {"CONTINUE", EventType::CONTINUE},
+        {"ERROR", EventType::ERROR},
+        {"START", EventType::START},
+        {"EXIT", EventType::EXIT},
     };
 
     static std::unordered_map<std::string, DataType> _DataType_mapping = {
-            {"ORDER", DataType::ORDER},
-            {"TRADE", DataType::TRADE},
+        {"ORDER", DataType::ORDER},
+        {"TRADE", DataType::TRADE},
     };
 
+    static std::unordered_map<std::string, OrderType> _OrderType_mapping = {
+        {"LIMIT", OrderType::LIMIT},
+        {"MARKET", OrderType::MARKET},
+        {"STOP_MARKET", OrderType::STOP_MARKET},
+        {"STOP_LIMIT", OrderType::STOP_LIMIT},
+    };
+
+    static std::unordered_map<std::string, OrderFlag> _OrderFlag_mapping = {
+        {"NONE", OrderFlag::NONE},
+        {"FILL_OR_KILL", OrderFlag::FILL_OR_KILL},
+        {"ALL_OR_NONE", OrderFlag::ALL_OR_NONE},
+        {"IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL},
+    };
+
+
+    ENUM_TO_STRING(Side)
     ENUM_TO_STRING(EventType)
     ENUM_TO_STRING(DataType)
+    ENUM_TO_STRING(OrderType)
+    ENUM_TO_STRING(OrderFlag)
+    ENUM_FROM_STRING(Side)
     ENUM_FROM_STRING(EventType)
     ENUM_FROM_STRING(DataType)
-
-
-    enum class ExchangeType {
-        NONE = 0,
-        SYNTHETIC = 1,
-    };
-
-    static const std::vector<std::string> ExchangeType_names = {
-        "NONE",
-        "SYNTHETIC",
-    };
-
-    static std::unordered_map<std::string, ExchangeType> _ExchangeType_mapping = {
-        {"NONE", ExchangeType::NONE},
-        {"SYNTHETIC", ExchangeType::SYNTHETIC},
-    };
-
-    ENUM_TO_STRING(ExchangeType)
-    ENUM_FROM_STRING(ExchangeType)
+    ENUM_FROM_STRING(OrderType)
+    ENUM_FROM_STRING(OrderFlag)
 }
 }

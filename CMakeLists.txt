@@ -187,6 +187,8 @@ include_directories( ${Python_INCLUDE_DIRS} )
 # already found from before
 find_package(Boost)
 
+build_dep("json" "${AAT_CMAKE_MODULE_PATH}/Json.txt.in")
+
 if(MACOS)
     # on mac, use the vanilla pybind11 finder
     find_package(pybind11)
@@ -258,9 +260,11 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 include_directories("${CMAKE_SOURCE_DIR}/cpp/include")
 
 set(SOURCE_FILES
-${CMAKE_SOURCE_DIR}/cpp/src/binding.cpp
-${CMAKE_SOURCE_DIR}/cpp/src/enums.cpp
-${CMAKE_SOURCE_DIR}/cpp/src/order_book.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/binding.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/enums.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/instrument.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/models.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/order_book.cpp
 )
 
 ########################
