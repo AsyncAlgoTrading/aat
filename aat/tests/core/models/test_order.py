@@ -15,31 +15,14 @@ class TestOrder:
                   volume=0.0,
                   price=5.0,
                   side=Order.Sides.SELL,
-                  order_type=Order.Types.STOP_LIMIT,
+                  order_type=Order.Types.STOP,
                   stop_target=Order(
                       id=1,
                       timestamp=datetime.now().timestamp(),
                       volume=0.5,
                       price=5.0,
                       side=Order.Sides.SELL,
-                      order_type=Order.Types.MARKET,
-                      instrument=_INSTRUMENT,
-                  ),
-                  instrument=_INSTRUMENT)
-
-        with pytest.raises(pydantic.ValidationError):
-            Order(id=1,
-                  timestamp=datetime.now().timestamp(),
-                  volume=0.0,
-                  price=5.0,
-                  side=Order.Sides.SELL,
-                  order_type=Order.Types.STOP_MARKET,
-                  stop_target=Order(
-                      id=1,
-                      timestamp=datetime.now().timestamp(),
-                      volume=0.5,
-                      price=5.0,
-                      side=Order.Sides.SELL,
+                      order_type=Order.Types.STOP,
                       instrument=_INSTRUMENT,
                   ),
                   instrument=_INSTRUMENT)

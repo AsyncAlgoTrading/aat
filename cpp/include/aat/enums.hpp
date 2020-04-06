@@ -29,8 +29,7 @@ namespace config {
     enum class OrderType {
         LIMIT = 0,
         MARKET = 1,
-        STOP_MARKET = 2,
-        STOP_LIMIT = 3,
+        STOP = 2,
     };
 
     enum class OrderFlag {
@@ -72,8 +71,7 @@ namespace config {
     static const std::vector<std::string> OrderType_names = {
         "LIMIT",
         "MARKET",
-        "STOP_MARKET",
-        "STOP_LIMIT",
+        "STOP",
     };
 
     static const std::vector<std::string> OrderFlag_names = {
@@ -115,8 +113,7 @@ namespace config {
     static std::unordered_map<std::string, OrderType> _OrderType_mapping = {
         {"LIMIT", OrderType::LIMIT},
         {"MARKET", OrderType::MARKET},
-        {"STOP_MARKET", OrderType::STOP_MARKET},
-        {"STOP_LIMIT", OrderType::STOP_LIMIT},
+        {"STOP", OrderType::STOP},
     };
 
     static std::unordered_map<std::string, OrderFlag> _OrderFlag_mapping = {

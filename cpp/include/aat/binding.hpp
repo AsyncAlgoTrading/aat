@@ -33,11 +33,7 @@ PYBIND11_MODULE(binding, m) {
     py::enum_<DataType>(m, "DataType", py::arithmetic()).value("ORDER", DataType::ORDER).value("TRADE", DataType::TRADE);
     py::enum_<InstrumentType>(m, "InstrumentType", py::arithmetic()).value("CURRENCY", InstrumentType::CURRENCY).value("EQUITY", InstrumentType::EQUITY);
 
-    py::enum_<OrderType>(m, "OrderType", py::arithmetic())
-        .value("LIMIT", OrderType::LIMIT)
-        .value("MARKET", OrderType::LIMIT)
-        .value("STOP_LIMIT", OrderType::STOP_LIMIT)
-        .value("STOP_MARKET", OrderType::STOP_MARKET);
+    py::enum_<OrderType>(m, "OrderType", py::arithmetic()).value("LIMIT", OrderType::LIMIT).value("MARKET", OrderType::LIMIT).value("STOP", OrderType::STOP);
 
     py::enum_<OrderFlag>(m, "OrderFlag", py::arithmetic())
         .value("NONE", OrderFlag::NONE)

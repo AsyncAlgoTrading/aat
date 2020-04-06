@@ -50,12 +50,52 @@ namespace core {
         return ret;
     }
 
-
     std::string
     Event::toString() const {
         std::stringstream ss;
         ss << "<" << EventType_to_string(type) << "-" << target.toString() << ">";
         return ss.str();
+    }
+
+    json
+    Event::toJson() const {
+        json ret;
+        ret["type"] = EventType_to_string(type);
+        ret["target"] = target.toString();
+        return ret;
+    }
+
+    std::string
+    Order::toString() const {
+        std::stringstream ss;
+        ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << exchange << "-" << Side_to_string(side) << ">";
+        return ss.str();
+    }
+
+    json
+    Order::toJson() const {
+        json ret;
+        ret["id"] = id;
+        ret["timestamp"] = timestamp;
+        ret["volume"] = volume;
+        ret["price"] = price;
+        ret["side"] = Side_to_string(side);
+        ret["instrument"] = instrument.toString();
+        ret["exchange"] = exchange;
+        return ret;
+    }
+
+    json
+    Order::perspectiveSchema() const {
+        json ret;
+        ret["id"] = "int";
+        ret["timestamp"] = "int";
+        ret["volume"] = "float";
+        ret["price"] = "float";
+        ret["side"] = "str";
+        ret["instrument"] = "str";
+        ret["exchange"] = "str";
+        return ret;
     }
 
 } // namespace core

@@ -19,8 +19,7 @@ class OrderType(BaseEnum):
     # Order Types
     LIMIT = 'LIMIT'
     MARKET = 'MARKET'
-    STOP_MARKET = 'STOP_MARKET'
-    STOP_LIMIT = 'STOP_LIMIT'
+    STOP = 'STOP'
 
 
 class OrderFlag(BaseEnum):

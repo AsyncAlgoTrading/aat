@@ -19,7 +19,7 @@ class _PriceLevel(object):
 
     def add(self, order):
         # append order to deque
-        if order.order_type in (OrderType.STOP_LIMIT, OrderType.STOP_MARKET):
+        if order.order_type == OrderType.STOP:
             if order.stop_target in self._stop_orders:
                 return
             print('adding', order)
@@ -56,7 +56,7 @@ class _PriceLevel(object):
             order (Order or None): the order crossing, if there is some remaining
             secondary_orders (List[Order] or None): Orders that get triggered as a result of the crossing (e.g. stop orders)
         '''
-        if taker_order.order_type in (OrderType.STOP_MARKET, OrderType.STOP_LIMIT):
+        if taker_order.order_type == OrderType.STOP:
             self.add(taker_order)
             return None, ()
 
