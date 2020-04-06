@@ -46,7 +46,7 @@ namespace core {
 
     class Event {
     public:
-        Event(EventType type, py::object target)
+        Event(EventType type, Data target)
         : type(type),
           target(target) {}
 
@@ -60,14 +60,14 @@ namespace core {
 
     class Order : Data {
     public:
-        Order()
+        Order();
 
     private:
-        DataType type = DataType.ORDER;
-        OrderType order_type = OrderType.LIMIT;
-        OrderFlag flag = OrderFlag.NONE;
+        DataType type; // = DataType.ORDER;
+        OrderType order_type; // = OrderType.LIMIT;
+        OrderFlag flag; // = OrderFlag.NONE;
         double filled = 0.0;
-        Order stop_target;
+        Order& stop_target;
         double notional = 0.0;
     };
 

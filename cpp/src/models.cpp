@@ -54,7 +54,7 @@ namespace core {
     std::string
     Event::toString() const {
         std::stringstream ss;
-        ss << "<" << EventType_to_string(type) << "-" << target.cast<std::string>() << ">";
+        ss << "<" << EventType_to_string(type) << "-" << target.toString() << ">";
         return ss.str();
     }
 
