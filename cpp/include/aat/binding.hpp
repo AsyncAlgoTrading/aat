@@ -44,6 +44,42 @@ PYBIND11_MODULE(binding, m) {
         .export_values();
 
     using namespace aat::core;
-    py::class_<OrderBook>(m, "OrderBook").def(py::init<const std::string&>());
-    py::class_<Instrument>(m, "Instrument").def(py::init<const std::string&, InstrumentType&>()).def("__repr__", &Instrument::toString);
+    py::class_<OrderBook>(m, "OrderBook")
+        .def(py::init<const std::string&>());
+
+    py::class_<Instrument>(m, "Instrument")
+        .def(py::init<const std::string&, InstrumentType&>())
+        .def(py::init<const py::object&, InstrumentType&>())
+        .def(py::init<const py::object&>())
+        .def(py::init<const std::string&>())
+        .def("__repr__", &Instrument::toString)
+        .def("__eq__", &Instrument::operator==);
+
+    py::class_<Data>(m, "Data")
+        .def(py::init<std::uint64_t, std::uint64_t, double, double, Side, DataType, Instrument, std::string, float>())
+        .def("__repr__", &Data::toString)
+        .def("__eq__", &Data::operator==)
+        .def("__lt__", &Data::operator<)
+        .def("toJson", &Data::toJson)
+        .def("perspectiveSchema", &Data::perspectiveSchema);
+
+    py::class_<Event>(m, "Event")
+        .def(py::init<EventType, Data>())
+        .def("__repr__", &Event::toString)
+        .def("toJson", &Event::toJson);
+
+    py::class_<Order>(m, "Order")
+        .def(py::init<std::uint64_t, std::uint64_t, double, double, Side, Instrument, std::string, float, OrderType, OrderFlag, Order*, double>())
+        .def("__repr__", &Order::toString)
+        .def("toJson", &Order::toJson)
+        .def("perspectiveSchema", &Order::perspectiveSchema);
+
+    py::class_<Trade>(m, "Trade")
+        .def(py::init<std::uint64_t, std::uint64_t, double, double, Side, Instrument, std::string, float, std::deque<Order*>, Order*>())
+        .def("__repr__", &Trade::toString)
+        .def("slippage", &Trade::slippage)
+        .def("transactionCost", &Trade::transactionCost)
+        .def("toJson", &Trade::toJson)
+        .def("perspectiveSchema", &Trade::perspectiveSchema);
+
 }

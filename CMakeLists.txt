@@ -188,6 +188,7 @@ include_directories( ${Python_INCLUDE_DIRS} )
 find_package(Boost)
 
 build_dep("json" "${AAT_CMAKE_MODULE_PATH}/Json.txt.in")
+build_dep("json-pybind" "${AAT_CMAKE_MODULE_PATH}/Json_pybind.txt.in")
 
 if(MACOS)
     # on mac, use the vanilla pybind11 finder
