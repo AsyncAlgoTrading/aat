@@ -29,7 +29,7 @@ jobs:
         versionSpec: '12.x'
 
     - script: |
-        apt-get install boost-devel
+        sudo apt-get install boost-devel
       displayName: "System deps"
 
     - bash: npm install -g yarn

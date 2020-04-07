@@ -15,7 +15,8 @@ PYBIND11_MODULE(binding, m) {
      * Enums
      */
     using namespace aat::config;
-    py::enum_<Side>(m, "Side", py::arithmetic()).value("BUY", Side::BUY).value("SELL", Side::SELL);
+    py::enum_<Side>(m, "Side", py::arithmetic()).value("BUY", Side::BUY).value("SELL", Side::SELL)
+    .export_values();
 
     py::enum_<EventType>(m, "EventType", py::arithmetic())
         .value("TRADE", EventType::TRADE)
@@ -28,18 +29,23 @@ PYBIND11_MODULE(binding, m) {
         .value("CONTINUE", EventType::CONTINUE)
         .value("ERROR", EventType::ERROR)
         .value("START", EventType::START)
-        .value("EXIT", EventType::EXIT);
+        .value("EXIT", EventType::EXIT)
+        .export_values();
 
-    py::enum_<DataType>(m, "DataType", py::arithmetic()).value("ORDER", DataType::ORDER).value("TRADE", DataType::TRADE);
-    py::enum_<InstrumentType>(m, "InstrumentType", py::arithmetic()).value("CURRENCY", InstrumentType::CURRENCY).value("EQUITY", InstrumentType::EQUITY);
+    py::enum_<DataType>(m, "DataType", py::arithmetic()).value("ORDER", DataType::ORDER).value("TRADE", DataType::TRADE)
+    .export_values();
+    py::enum_<InstrumentType>(m, "InstrumentType", py::arithmetic()).value("CURRENCY", InstrumentType::CURRENCY).value("EQUITY", InstrumentType::EQUITY)
+    .export_values();
 
-    py::enum_<OrderType>(m, "OrderType", py::arithmetic()).value("LIMIT", OrderType::LIMIT).value("MARKET", OrderType::LIMIT).value("STOP", OrderType::STOP);
+    py::enum_<OrderType>(m, "OrderType", py::arithmetic()).value("LIMIT", OrderType::LIMIT).value("MARKET", OrderType::MARKET).value("STOP", OrderType::STOP)
+        .export_values();
 
     py::enum_<OrderFlag>(m, "OrderFlag", py::arithmetic())
         .value("NONE", OrderFlag::NONE)
         .value("FILL_OR_KILL", OrderFlag::FILL_OR_KILL)
         .value("ALL_OR_NONE", OrderFlag::ALL_OR_NONE)
-        .value("IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL);
+        .value("IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL)
+        .export_values();
 
     using namespace aat::core;
     py::class_<OrderBook>(m, "OrderBook").def(py::init<const std::string&>());
