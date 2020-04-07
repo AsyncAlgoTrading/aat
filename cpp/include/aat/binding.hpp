@@ -15,8 +15,7 @@ PYBIND11_MODULE(binding, m) {
      * Enums
      */
     using namespace aat::config;
-    py::enum_<Side>(m, "Side", py::arithmetic()).value("BUY", Side::BUY).value("SELL", Side::SELL)
-    .export_values();
+    py::enum_<Side>(m, "Side", py::arithmetic()).value("BUY", Side::BUY).value("SELL", Side::SELL).export_values();
 
     py::enum_<EventType>(m, "EventType", py::arithmetic())
         .value("TRADE", EventType::TRADE)
@@ -32,13 +31,10 @@ PYBIND11_MODULE(binding, m) {
         .value("EXIT", EventType::EXIT)
         .export_values();
 
-    py::enum_<DataType>(m, "DataType", py::arithmetic()).value("ORDER", DataType::ORDER).value("TRADE", DataType::TRADE)
-    .export_values();
-    py::enum_<InstrumentType>(m, "InstrumentType", py::arithmetic()).value("CURRENCY", InstrumentType::CURRENCY).value("EQUITY", InstrumentType::EQUITY)
-    .export_values();
+    py::enum_<DataType>(m, "DataType", py::arithmetic()).value("ORDER", DataType::ORDER).value("TRADE", DataType::TRADE).export_values();
+    py::enum_<InstrumentType>(m, "InstrumentType", py::arithmetic()).value("CURRENCY", InstrumentType::CURRENCY).value("EQUITY", InstrumentType::EQUITY).export_values();
 
-    py::enum_<OrderType>(m, "OrderType", py::arithmetic()).value("LIMIT", OrderType::LIMIT).value("MARKET", OrderType::MARKET).value("STOP", OrderType::STOP)
-        .export_values();
+    py::enum_<OrderType>(m, "OrderType", py::arithmetic()).value("LIMIT", OrderType::LIMIT).value("MARKET", OrderType::MARKET).value("STOP", OrderType::STOP).export_values();
 
     py::enum_<OrderFlag>(m, "OrderFlag", py::arithmetic())
         .value("NONE", OrderFlag::NONE)
