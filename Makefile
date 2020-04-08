@@ -26,7 +26,7 @@ fix:  ## run autopep8/tslint fix
 	python3 -m autopep8 --in-place -r -a -a aat/ setup.py
 
 fixcpp:  ## run clang-format
-	clang-format -i -style=file cpp/src/*.cpp cpp/src/**/*.cpp cpp/include/aat/*.hpp cpp/include/aat/**/*.hpp
+	clang-format -i -style=file `find ./cpp -name "*.*pp"`
 
 annotate: ## MyPy type annotation check
 	python3 -m mypy aat
@@ -58,4 +58,5 @@ help:
 print-%:
 	@echo '$*=$($*)'
 
-.PHONY: run buildext build js install tests lint fix docs dist clean help
+.PHONY: run buildext build js install tests lint fix docs dist clean help fixcpp
+

@@ -27,6 +27,5 @@ namespace core {
         Data target;
     };
 
-
 } // namespace core
 } // namespace aat
