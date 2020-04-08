@@ -14,7 +14,19 @@ namespace aat {
 namespace config {
     enum class Side { BUY = 0, SELL = 1 };
 
-    enum class EventType { TRADE = 0, OPEN = 1, CANCEL = 2, CHANGE = 3, FILL = 4, DATA = 5, HALT = 6, CONTINUE = 7, ERROR = 8, START = 9, EXIT = 10 };
+    enum class EventType {
+        TRADE = 0,
+        OPEN = 1,
+        CANCEL = 2,
+        CHANGE = 3,
+        FILL = 4,
+        DATA = 5,
+        HALT = 6,
+        CONTINUE = 7,
+        ERROR = 8,
+        START = 9,
+        EXIT = 10
+    };
 
     enum class DataType {
         ORDER = 0,
@@ -105,9 +117,10 @@ namespace config {
         {"TRADE", DataType::TRADE},
     };
 
-    static std::unordered_map<std::string, InstrumentType> _InstrumentType_mapping = {
-        {"CURRENCY", InstrumentType::CURRENCY},
-        {"EQUITY", InstrumentType::EQUITY},
+    static std::unordered_map<std::string, InstrumentType>
+        _InstrumentType_mapping = {
+            {"CURRENCY", InstrumentType::CURRENCY},
+            {"EQUITY", InstrumentType::EQUITY},
     };
 
     static std::unordered_map<std::string, OrderType> _OrderType_mapping = {

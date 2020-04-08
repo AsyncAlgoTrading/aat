@@ -16,7 +16,10 @@ PYBIND11_MODULE(binding, m) {
      * Enums
      */
     using namespace aat::config;
-    py::enum_<Side>(m, "Side", py::arithmetic()).value("BUY", Side::BUY).value("SELL", Side::SELL).export_values();
+    py::enum_<Side>(m, "Side", py::arithmetic())
+        .value("BUY", Side::BUY)
+        .value("SELL", Side::SELL)
+        .export_values();
 
     py::enum_<EventType>(m, "EventType", py::arithmetic())
         .value("TRADE", EventType::TRADE)
@@ -32,10 +35,20 @@ PYBIND11_MODULE(binding, m) {
         .value("EXIT", EventType::EXIT)
         .export_values();
 
-    py::enum_<DataType>(m, "DataType", py::arithmetic()).value("ORDER", DataType::ORDER).value("TRADE", DataType::TRADE).export_values();
-    py::enum_<InstrumentType>(m, "InstrumentType", py::arithmetic()).value("CURRENCY", InstrumentType::CURRENCY).value("EQUITY", InstrumentType::EQUITY).export_values();
+    py::enum_<DataType>(m, "DataType", py::arithmetic())
+        .value("ORDER", DataType::ORDER)
+        .value("TRADE", DataType::TRADE)
+        .export_values();
+    py::enum_<InstrumentType>(m, "InstrumentType", py::arithmetic())
+        .value("CURRENCY", InstrumentType::CURRENCY)
+        .value("EQUITY", InstrumentType::EQUITY)
+        .export_values();
 
-    py::enum_<OrderType>(m, "OrderType", py::arithmetic()).value("LIMIT", OrderType::LIMIT).value("MARKET", OrderType::MARKET).value("STOP", OrderType::STOP).export_values();
+    py::enum_<OrderType>(m, "OrderType", py::arithmetic())
+        .value("LIMIT", OrderType::LIMIT)
+        .value("MARKET", OrderType::MARKET)
+        .value("STOP", OrderType::STOP)
+        .export_values();
 
     py::enum_<OrderFlag>(m, "OrderFlag", py::arithmetic())
         .value("NONE", OrderFlag::NONE)
@@ -63,8 +76,8 @@ PYBIND11_MODULE(binding, m) {
     //     .def("__eq__", &Instrument::operator==);
 
     // py::class_<Data>(m, "Data")
-    //     .def(py::init<std::uint64_t, double, double, double, Side, DataType, Instrument, Exchange, float>())
-    //     .def("__repr__", &Data::toString)
+    //     .def(py::init<std::uint64_t, double, double, double, Side, DataType,
+    //     Instrument, Exchange, float>()) .def("__repr__", &Data::toString)
     //     .def("__eq__", &Data::operator==)
     //     .def("__lt__", &Data::operator<)
     //     .def("toJson", &Data::toJson)
@@ -76,13 +89,15 @@ PYBIND11_MODULE(binding, m) {
     //     .def("toJson", &Event::toJson);
 
     // py::class_<Order>(m, "Order")
-    //     .def(py::init<std::uint64_t, double, double, double, Side, Instrument, Exchange, float, OrderType, OrderFlag, Order*, double>())
+    //     .def(py::init<std::uint64_t, double, double, double, Side,
+    //     Instrument, Exchange, float, OrderType, OrderFlag, Order*, double>())
     //     .def("__repr__", &Order::toString)
     //     .def("toJson", &Order::toJson)
     //     .def("perspectiveSchema", &Order::perspectiveSchema);
 
     // py::class_<Trade>(m, "Trade")
-    //     .def(py::init<std::uint64_t, double, double, double, Side, Instrument, Exchange, float, std::deque<Order*>, Order*>())
+    //     .def(py::init<std::uint64_t, double, double, double, Side,
+    //     Instrument, Exchange, float, std::deque<Order*>, Order*>())
     //     .def("__repr__", &Trade::toString)
     //     .def("slippage", &Trade::slippage)
     //     .def("transactionCost", &Trade::transactionCost)

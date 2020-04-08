@@ -7,7 +7,8 @@ namespace core {
     std::string
     Trade::toString() const {
         std::stringstream ss;
-        ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << exchange.toString() << ">";
+        ss << "<" << instrument.toString() << "-" << volume << "@" << price
+           << "-" << exchange.toString() << ">";
         return ss.str();
     }
 
