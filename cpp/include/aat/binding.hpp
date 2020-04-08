@@ -4,8 +4,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11_json/pybind11_json.hpp>
 
-#include <aat/enums.hpp>
-#include <aat/order_book.hpp>
+#include <aat/config/enums.hpp>
+#include <aat/core/order_book/order_book.hpp>
 
 namespace py = pybind11;
 

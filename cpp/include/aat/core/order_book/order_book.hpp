@@ -3,7 +3,8 @@
 #include <string>
 #include <pybind11/pybind11.h>
 
-#include <aat/models.hpp>
+#include <aat/core/models/event.hpp>
+#include <aat/core/models/order.hpp>
 
 namespace py = pybind11;
 

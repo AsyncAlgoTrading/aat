@@ -1,4 +1,4 @@
-#include <aat/enums.hpp>
+#include <aat/config/enums.hpp>
 
 namespace aat {
 namespace config {}

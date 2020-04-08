@@ -1,5 +1,5 @@
 #include <sstream>
-#include <aat/instrument.hpp>
+#include <aat/core/instrument.hpp>
 
 namespace aat {
 namespace core {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string.h>
-#include <aat/enums.hpp>
+#include <aat/config/enums.hpp>
 
 using namespace aat::config;
 

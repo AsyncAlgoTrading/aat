@@ -262,10 +262,14 @@ include_directories("${CMAKE_SOURCE_DIR}/cpp/include")
 
 set(SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/cpp/src/binding.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/src/enums.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/src/instrument.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/src/models.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/src/order_book.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/config/enums.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/instrument.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/exchange.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/models/data.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/models/event.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/models/order.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/models/trade.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/order_book/order_book.cpp
 )
 
 ########################
