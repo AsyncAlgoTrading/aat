@@ -4,10 +4,10 @@
 
 namespace aat {
 namespace core {
-    std::string
-    Exchange::toString() const {
-        return name;
-    }
+  std::string
+  Exchange::toString() const {
+    return name;
+  }
 
 } // namespace core
 } // namespace aat

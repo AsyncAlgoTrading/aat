@@ -13,19 +13,19 @@ using namespace aat::config;
 
 namespace aat {
 namespace core {
-    class Event {
-    public:
-        Event(EventType type, Data target)
-            : type(type)
-            , target(target) {}
+  class Event {
+  public:
+    Event(EventType type, Data target)
+      : type(type)
+      , target(target) {}
 
-        std::string toString() const;
-        json toJson() const;
+    std::string toString() const;
+    json toJson() const;
 
-    protected:
-        EventType type;
-        Data target;
-    };
+  protected:
+    EventType type;
+    Data target;
+  };
 
 } // namespace core
 } // namespace aat

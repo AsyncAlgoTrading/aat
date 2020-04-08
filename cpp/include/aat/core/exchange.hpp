@@ -13,16 +13,16 @@ using namespace aat::config;
 namespace aat {
 namespace core {
 
-    class Exchange {
-    public:
-        Exchange(std::string name = "")
-            : name(name) {}
+  class Exchange {
+  public:
+    Exchange(std::string name = "")
+      : name(name) {}
 
-        std::string toString() const;
+    std::string toString() const;
 
-    private:
-        std::string name;
-    };
+  private:
+    std::string name;
+  };
 
 } // namespace core
 } // namespace aat

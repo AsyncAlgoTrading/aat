@@ -3,6 +3,8 @@
 #include <string>
 #include <pybind11/pybind11.h>
 
+#include <aat/core/order_book/price_level.hpp>
+#include <aat/core/order_book/collector.hpp>
 #include <aat/core/models/event.hpp>
 #include <aat/core/models/order.hpp>
 
@@ -11,28 +13,12 @@ namespace py = pybind11;
 namespace aat {
 namespace core {
 
-    class PriceLevel {
-    public:
-    private:
-    };
+  class OrderBook {
+  public:
+    OrderBook(const std::string& name) {}
 
-    class Collector {
-    public:
-        void reset();
-
-    private:
-        py::function callback;
-        std::deque<Event> event_queue;
-        std::deque<Order> orders;
-        std::deque<PriceLevel> price_levels;
-    };
-
-    class OrderBook {
-    public:
-        OrderBook(const std::string& name) {}
-
-    private:
-    };
+  private:
+  };
 
 } // namespace core
 } // namespace aat

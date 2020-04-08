@@ -22,7 +22,6 @@ class _PriceLevel(object):
         if order.order_type == OrderType.STOP:
             if order.stop_target in self._stop_orders:
                 return
-            print('adding', order)
             self._stop_orders.append(order.stop_target)
         else:
             if order in self._orders:
