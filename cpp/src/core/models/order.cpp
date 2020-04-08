@@ -4,14 +4,10 @@
 
 namespace aat {
 namespace core {
-    Order::Order(std::uint64_t id, double timestamp, double volume,
-        double price, Side side, Instrument instrument,
-        Exchange exchange = Exchange(), float filled = 0.0,
-        OrderType order_type = OrderType::LIMIT,
-        OrderFlag flag = OrderFlag::NONE, Order* stop_target = nullptr,
-        double notional = 0.0)
-        : Data(id, timestamp, volume, price, side, DataType::ORDER, instrument,
-            exchange, filled)
+    Order::Order(std::uint64_t id, double timestamp, double volume, double price, Side side, Instrument instrument,
+        Exchange exchange = Exchange(), float filled = 0.0, OrderType order_type = OrderType::LIMIT,
+        OrderFlag flag = OrderFlag::NONE, Order* stop_target = nullptr, double notional = 0.0)
+        : Data(id, timestamp, volume, price, side, DataType::ORDER, instrument, exchange, filled)
         , order_type(order_type)
         , flag(flag)
         , stop_target(stop_target)
@@ -32,8 +28,8 @@ namespace core {
     std::string
     Order::toString() const {
         std::stringstream ss;
-        ss << "<" << instrument.toString() << "-" << volume << "@" << price
-           << "-" << exchange.toString() << "-" << Side_to_string(side) << ">";
+        ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << exchange.toString() << "-"
+           << Side_to_string(side) << ">";
         return ss.str();
     }
 

@@ -15,10 +15,8 @@ namespace aat {
 namespace core {
     class Order : Data {
     public:
-        Order(std::uint64_t id, double timestamp, double volume, double price,
-            Side side, Instrument instrument, Exchange exchange, float filled,
-            OrderType order_type, OrderFlag flag, Order* stop_target,
-            double notional);
+        Order(std::uint64_t id, double timestamp, double volume, double price, Side side, Instrument instrument,
+            Exchange exchange, float filled, OrderType order_type, OrderFlag flag, Order* stop_target, double notional);
 
         std::string toString() const;
         json toJson() const;

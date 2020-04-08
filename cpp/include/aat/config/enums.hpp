@@ -117,10 +117,9 @@ namespace config {
         {"TRADE", DataType::TRADE},
     };
 
-    static std::unordered_map<std::string, InstrumentType>
-        _InstrumentType_mapping = {
-            {"CURRENCY", InstrumentType::CURRENCY},
-            {"EQUITY", InstrumentType::EQUITY},
+    static std::unordered_map<std::string, InstrumentType> _InstrumentType_mapping = {
+        {"CURRENCY", InstrumentType::CURRENCY},
+        {"EQUITY", InstrumentType::EQUITY},
     };
 
     static std::unordered_map<std::string, OrderType> _OrderType_mapping = {

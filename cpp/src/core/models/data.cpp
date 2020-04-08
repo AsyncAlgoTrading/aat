@@ -6,8 +6,7 @@ namespace aat {
 namespace core {
     bool
     Data::operator==(const Data& other) {
-        return (price == other.price && instrument == other.instrument
-            && side == other.side);
+        return (price == other.price && instrument == other.instrument && side == other.side);
     }
 
     bool
@@ -18,9 +17,8 @@ namespace core {
     std::string
     Data::toString() const {
         std::stringstream ss;
-        ss << "<" << instrument.toString() << "-" << volume << "@" << price
-           << "-" << DataType_to_string(type) << "-" << exchange.toString()
-           << "-" << Side_to_string(side) << ">";
+        ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << DataType_to_string(type) << "-"
+           << exchange.toString() << "-" << Side_to_string(side) << ">";
         return ss.str();
     }
 

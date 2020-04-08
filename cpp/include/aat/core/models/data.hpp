@@ -15,9 +15,8 @@ namespace aat {
 namespace core {
     class Data {
     public:
-        Data(std::uint64_t id, double timestamp, double volume, double price,
-            Side side, DataType type, Instrument instrument,
-            Exchange exchange = Exchange(), float filled = 0.0)
+        Data(std::uint64_t id, double timestamp, double volume, double price, Side side, DataType type,
+            Instrument instrument, Exchange exchange = Exchange(), float filled = 0.0)
             : id(id)
             , timestamp(timestamp)
             , volume(volume)
