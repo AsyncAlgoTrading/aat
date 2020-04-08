@@ -16,7 +16,8 @@ namespace core {
   class Order : Data {
   public:
     Order(std::uint64_t id, double timestamp, double volume, double price, Side side, Instrument instrument,
-      Exchange exchange, float filled, OrderType order_type, OrderFlag flag, Order* stop_target, double notional);
+      Exchange exchange = NullExchange, float filled = 0.0, OrderType order_type = OrderType::LIMIT,
+      OrderFlag flag = OrderFlag::NONE, Order* stop_target = nullptr, double notional = 0.0);
 
     std::string toString() const;
     json toJson() const;

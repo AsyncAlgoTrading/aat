@@ -15,14 +15,17 @@ namespace core {
 
   class Exchange {
   public:
-    Exchange(std::string name = "")
+    Exchange(std::string name)
       : name(name) {}
 
     std::string toString() const;
 
+
   private:
     std::string name;
   };
+
+  static Exchange NullExchange = Exchange("");
 
 } // namespace core
 } // namespace aat

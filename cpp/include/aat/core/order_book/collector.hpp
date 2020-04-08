@@ -17,10 +17,10 @@ namespace core {
   class Collector {
   public:
     Collector();
-    Collector(py::function callback);
+    Collector(std::function<void(Event&)> callback);
 
     void reset();
-    void setCallback(py::function callback);
+    void setCallback(std::function<void(Event&)> callback);
     void push(Event& event);
     void pushOpen(Order& order);
     void pushFill(Order& order, bool accumulate = false);
@@ -40,8 +40,8 @@ namespace core {
     std::deque<PriceLevel*> getClearedLevels() const;
 
   private:
-    py::function callback;
-    std::deque<Event*> event_queue;
+    std::function<void(Event&)> callback;
+    std::deque<Event*> events;
     std::deque<Order*> orders;
     std::deque<PriceLevel*> price_levels;
   };

@@ -73,9 +73,9 @@ class OrderBook(object):
         else:
             self._buy_levels = self._buy_levels[:-amount] if amount else self._buy_levels
 
-    def _getTop(self, side, x):
+    def _getTop(self, side, cleared):
         '''internal'''
-        return (self._sell_levels[x] if len(self._sell_levels) > x else None) if side == Side.BUY else (self._buy_levels[-1 - x] if len(self._buy_levels) > x else None)
+        return (self._sell_levels[cleared] if len(self._sell_levels) > cleared else None) if side == Side.BUY else (self._buy_levels[-1 - cleared] if len(self._buy_levels) > cleared else None)
 
     def add(self, order):
         '''add a new order to the order book, potentially triggering events:
