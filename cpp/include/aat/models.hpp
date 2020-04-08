@@ -15,8 +15,8 @@ namespace core {
 
     class Exchange {
     public:
-        Exchange(std::string name = "") 
-        : name(name) {}
+        Exchange(std::string name = "")
+            : name(name) {}
 
         std::string toString() const;
 
@@ -105,7 +105,7 @@ namespace core {
     class Trade : Data {
     public:
         Trade(std::uint64_t id, double timestamp, double volume, double price, Side side, Instrument instrument, Exchange exchange = Exchange(), float filled = 0.0,
-              std::deque<Order*> maker_orders = std::deque<Order*>(), Order* taker_order = nullptr)
+            std::deque<Order*> maker_orders = std::deque<Order*>(), Order* taker_order = nullptr)
             : Data(id, timestamp, volume, price, side, DataType::TRADE, instrument, exchange, filled)
             , maker_orders(maker_orders)
             , taker_order(taker_order)
@@ -115,8 +115,14 @@ namespace core {
             assert(maker_orders.length > 0);
         }
 
-        double slippage() const { return 0.0; }
-        double transactionCost() const { return 0.0; }
+        double
+        slippage() const {
+            return 0.0;
+        }
+        double
+        transactionCost() const {
+            return 0.0;
+        }
         std::string toString() const;
         json toJson() const;
         json perspectiveSchema() const;
@@ -127,7 +133,6 @@ namespace core {
         double _slippage;
         double _transaction_cost;
     };
-
 
 } // namespace core
 } // namespace aat

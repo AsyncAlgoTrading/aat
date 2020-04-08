@@ -45,8 +45,7 @@ PYBIND11_MODULE(binding, m) {
         .export_values();
 
     using namespace aat::core;
-    py::class_<OrderBook>(m, "OrderBook")
-        .def(py::init<const std::string&>());
+    py::class_<OrderBook>(m, "OrderBook").def(py::init<const std::string&>());
 
     // py::class_<Exchange>(m, "Exchange")
     //     .def(py::init<const std::string&>())
@@ -54,7 +53,6 @@ PYBIND11_MODULE(binding, m) {
     //         return Exchange(obj.cast<std::string>());
     //     })
     //     .def("__repr__", &Exchange::toString);
-
 
     // py::class_<Instrument>(m, "Instrument")
     //     .def(py::init<const std::string&, InstrumentType&>())
@@ -90,5 +88,4 @@ PYBIND11_MODULE(binding, m) {
     //     .def("transactionCost", &Trade::transactionCost)
     //     .def("toJson", &Trade::toJson)
     //     .def("perspectiveSchema", &Trade::perspectiveSchema);
-
 }

@@ -9,7 +9,6 @@ namespace core {
         return name;
     }
 
-
     bool
     Data::operator==(const Data& other) {
         return (price == other.price && instrument == other.instrument && side == other.side);
@@ -103,7 +102,6 @@ namespace core {
         return ret;
     }
 
-
     std::string
     Trade::toString() const {
         std::stringstream ss;
@@ -136,7 +134,6 @@ namespace core {
         ret["exchange"] = "str";
         return ret;
     }
-
 
 } // namespace core
 } // namespace aat
