@@ -1,7 +1,10 @@
+# from ...binding import Data
+
 from pydantic import BaseModel
 from typing import Mapping, Union, Type
 from ...config import Side, DataType
 from ..instrument import Instrument
+from ..exchange import Exchange
 
 
 class Data(BaseModel):
@@ -18,7 +21,7 @@ class Data(BaseModel):
     instrument: Instrument
 
     # maybe specific
-    exchange: str = ''
+    exchange: Exchange = Exchange('')
     filled: float = 0.0
 
     def __eq__(self, other) -> bool:
@@ -41,7 +44,7 @@ class Data(BaseModel):
              'side': self.side.value,
              'type': self.type.value,
              'instrument': str(self.instrument),
-             'exchange': self.exchange}
+             'exchange': str(self.exchange)}
 
     @staticmethod
     def perspectiveSchema() -> Mapping[str, Type]:

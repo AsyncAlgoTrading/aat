@@ -1,3 +1,5 @@
+# from ...binding import Trade
+
 from collections import deque
 from pydantic import validator
 from typing import Mapping, Type, Union
@@ -46,7 +48,7 @@ class Trade(Data):
              'price': self.price,
              'side': self.side.value,
              'instrument': str(self.instrument),
-             'exchange': self.exchange}
+             'exchange': str(self.exchange)}
 
     @staticmethod
     def perspectiveSchema() -> Mapping[str, Type]:

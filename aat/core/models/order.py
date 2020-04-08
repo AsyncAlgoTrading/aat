@@ -1,3 +1,5 @@
+# from ...binding import Order
+
 from pydantic import validator
 from typing import Mapping, Union, Type
 from .data import Data
@@ -46,7 +48,7 @@ class Order(Data):
              'price': self.price,
              'side': self.side.value,
              'instrument': str(self.instrument),
-             'exchange': self.exchange}
+             'exchange': str(self.exchange)}
 
     @staticmethod
     def perspectiveSchema() -> Mapping[str, Type]:

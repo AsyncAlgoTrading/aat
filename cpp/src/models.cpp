@@ -4,6 +4,11 @@
 
 namespace aat {
 namespace core {
+    std::string
+    Exchange::toString() const {
+        return name;
+    }
+
 
     bool
     Data::operator==(const Data& other) {
@@ -18,7 +23,7 @@ namespace core {
     std::string
     Data::toString() const {
         std::stringstream ss;
-        ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << DataType_to_string(type) << "-" << exchange << "-" << Side_to_string(side) << ">";
+        ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << DataType_to_string(type) << "-" << exchange.toString() << "-" << Side_to_string(side) << ">";
         return ss.str();
     }
 
@@ -32,7 +37,7 @@ namespace core {
         ret["side"] = Side_to_string(side);
         ret["type"] = DataType_to_string(type);
         ret["instrument"] = instrument.toString();
-        ret["exchange"] = exchange;
+        ret["exchange"] = exchange.toString();
         return ret;
     }
 
@@ -68,7 +73,7 @@ namespace core {
     std::string
     Order::toString() const {
         std::stringstream ss;
-        ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << exchange << "-" << Side_to_string(side) << ">";
+        ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << exchange.toString() << "-" << Side_to_string(side) << ">";
         return ss.str();
     }
 
@@ -81,7 +86,7 @@ namespace core {
         ret["price"] = price;
         ret["side"] = Side_to_string(side);
         ret["instrument"] = instrument.toString();
-        ret["exchange"] = exchange;
+        ret["exchange"] = exchange.toString();
         return ret;
     }
 
@@ -102,7 +107,7 @@ namespace core {
     std::string
     Trade::toString() const {
         std::stringstream ss;
-        ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << exchange << ">";
+        ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << exchange.toString() << ">";
         return ss.str();
     }
 
@@ -115,7 +120,7 @@ namespace core {
         ret["price"] = price;
         ret["side"] = Side_to_string(side);
         ret["instrument"] = instrument.toString();
-        ret["exchange"] = exchange;
+        ret["exchange"] = exchange.toString();
         return ret;
     }
 

@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <deque>
 #include <nlohmann/json.hpp>
-#include <pybind11_json/pybind11_json.hpp>
 #include <aat/enums.hpp>
 #include <aat/instrument.hpp>
 
@@ -14,9 +13,20 @@ using namespace aat::config;
 namespace aat {
 namespace core {
 
+    class Exchange {
+    public:
+        Exchange(std::string name = "") 
+        : name(name) {}
+
+        std::string toString() const;
+
+    private:
+        std::string name;
+    };
+
     class Data {
     public:
-        Data(std::uint64_t id, std::uint64_t timestamp, double volume, double price, Side side, DataType type, Instrument instrument, std::string exchange = "", float filled = 0.0)
+        Data(std::uint64_t id, double timestamp, double volume, double price, Side side, DataType type, Instrument instrument, Exchange exchange = Exchange(), float filled = 0.0)
             : id(id)
             , timestamp(timestamp)
             , volume(volume)
@@ -34,15 +44,15 @@ namespace core {
         json perspectiveSchema() const;
 
     protected:
-        std::uint64_t id = 0;
-        std::uint64_t timestamp;
+        std::uint64_t id;
+        double timestamp;
         double volume;
         double price;
         Side side;
         DataType type;
         Instrument instrument;
-        std::string exchange = "";
-        float filled = 0.0;
+        Exchange exchange;
+        float filled;
     };
 
     class Event {
@@ -61,7 +71,7 @@ namespace core {
 
     class Order : Data {
     public:
-        Order(std::uint64_t id, std::uint64_t timestamp, double volume, double price, Side side, Instrument instrument, std::string exchange = "", float filled = 0.0,
+        Order(std::uint64_t id, double timestamp, double volume, double price, Side side, Instrument instrument, Exchange exchange = Exchange(), float filled = 0.0,
             OrderType order_type = OrderType::LIMIT, OrderFlag flag = OrderFlag::NONE, Order* stop_target = nullptr, double notional = 0.0)
             : Data(id, timestamp, volume, price, side, DataType::ORDER, instrument, exchange, filled)
             , order_type(order_type)
@@ -94,7 +104,7 @@ namespace core {
 
     class Trade : Data {
     public:
-        Trade(std::uint64_t id, std::uint64_t timestamp, double volume, double price, Side side, Instrument instrument, std::string exchange = "", float filled = 0.0,
+        Trade(std::uint64_t id, double timestamp, double volume, double price, Side side, Instrument instrument, Exchange exchange = Exchange(), float filled = 0.0,
               std::deque<Order*> maker_orders = std::deque<Order*>(), Order* taker_order = nullptr)
             : Data(id, timestamp, volume, price, side, DataType::TRADE, instrument, exchange, filled)
             , maker_orders(maker_orders)
