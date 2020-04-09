@@ -251,8 +251,8 @@ namespace core {
 
     // collect bids and asks at `level`
     if (buy_levels.size() > level) {
-      ret.push_back(buy_levels[buy_levels.size() - level]);
-      ret.push_back(buys.at(buy_levels[buy_levels.size() - level])->getVolume());
+      ret.push_back(buy_levels[buy_levels.size() - level - 1]);
+      ret.push_back(buys.at(buy_levels[buy_levels.size() - level - 1])->getVolume());
     } else {
       ret.push_back(0.0);
       ret.push_back(0.0);
@@ -305,11 +305,11 @@ namespace core {
   }
 
   void
-  OrderBook::clearOrders(Order* order, double amount) {
+  OrderBook::clearOrders(Order* order, std::uint64_t amount) {
     if (order->side == Side::BUY) {
       sell_levels.erase(sell_levels.begin(), sell_levels.begin() + amount);
     } else {
-      buy_levels.erase(buy_levels.begin() + (buy_levels.size() - amount), buy_levels.end());
+      buy_levels.erase(buy_levels.begin() + (buy_levels.size() - amount - 1), buy_levels.end());
     }
   }
 
@@ -323,7 +323,7 @@ namespace core {
       }
     } else {
       if (buy_levels.size() > cleared) {
-        return buy_levels[buy_levels.size() - cleared];
+        return buy_levels[buy_levels.size() - cleared - 1];
       } else {
         return -1;
       }
@@ -340,6 +340,64 @@ namespace core {
   std::string
   OrderBook::toString() const {
     std::stringstream ss;
+
+    // show top 5 levels, then group next 5, 10, 20, etc
+    // sells first
+    std::vector<PriceLevel*> sells_to_print;
+    auto count = 5;
+    auto orig = 5;
+
+    for(auto i = 0; i < sell_levels.size(); ++i){
+      if(i < 5){
+        // append to list
+        sells_to_print.push_back(sells.at(sell_levels[i]));
+      } else {
+        // TODO implement the rest from python in C++
+        break;
+      }
+    }
+
+    // reverse so visually upside down
+    std::reverse(sells_to_print.begin(), sells_to_print.end());
+
+    // show top 5 levels, then group next 5, 10, 20, etc
+    // buys second
+    std::vector<PriceLevel*> buys_to_print;
+    count = 5;
+    orig = 5;
+
+    for(auto i = 0; i < buy_levels.size(); ++i){
+      if(i < 5) {
+        // append to list
+        buys_to_print.push_back(buys.at(buy_levels[buy_levels.size() - i - 1]));
+      } else {
+        // TODO implement the rest from python in C++
+        break;
+      }
+    }
+    // sell list, then line, then buy list
+    
+    // format the sells on top, tabbed to the right, with price\tvolume
+    for(PriceLevel* price_level: sells_to_print) {
+        // TODO implement the rest from python in C++
+        ss << "\t\t" \
+           << price_level->getPrice() \
+           << "\t\t" \
+           << price_level->getVolume() \
+           << std::endl;
+    }
+
+    ss << "-----------------------------------------------------\n";
+
+    // format the buys on bottom, tabbed to the left, with volume\tprice so prices align
+    for(PriceLevel* price_level: buys_to_print) {
+        // TODO implement the rest from python in C++
+        ss << "\t\t" \
+           << price_level->getVolume() \
+           << "\t\t" \
+           << price_level->getPrice() \
+           << std::endl;
+    }
     return ss.str();
   }
 

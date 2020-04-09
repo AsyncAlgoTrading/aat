@@ -10,6 +10,9 @@ buildext: ## build the package extensions
 build: ## build the package
 	python3 setup.py build
 
+debug: ## build debug build of the package
+	DEBUG=1 python3 setup.py build
+
 js:  ## build the js assets
 	cd js && yarn build
 

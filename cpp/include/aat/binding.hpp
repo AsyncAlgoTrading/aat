@@ -74,7 +74,6 @@ PYBIND11_MODULE(binding, m) {
     .def("level", (std::vector<double> (OrderBook::*)(std::uint64_t) const) &OrderBook::level)
     .def("levels", &OrderBook::levels);
 
-
   py::class_<ExchangeType>(m, "ExchangeTypeCpp")
     .def(py::init<const std::string&>())
     .def("__init__", [](py::object obj) { return ExchangeType(obj.cast<std::string>()); })

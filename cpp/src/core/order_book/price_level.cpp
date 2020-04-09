@@ -2,9 +2,18 @@
 
 namespace aat {
 namespace core {
+  using namespace aat::config;
+
+
   PriceLevel::PriceLevel(double price, Collector& collector)
     : price(price)
-    , collector(collector) {}
+    , collector(collector)
+    , orders()
+    , orders_staged()
+    , stop_orders()
+    , stop_orders_staged() {
+      py::print(orders.size());
+    }
 
   double
   PriceLevel::getVolume() const {
@@ -18,13 +27,17 @@ namespace core {
   void
   PriceLevel::add(Order* order) {
     // append order to deque
+    py::print(order);
+    py::print(order->order_type);
     if (order->order_type == OrderType::STOP) {
-      if (std::find(orders.begin(), orders.end(), order) != orders.end()) {
+      if (orders.size() > 0 && std::find(orders.begin(), orders.end(), order) != orders.end()) {
         return;
       }
       orders.push_back(order);
     } else {
-      if (std::find(orders.begin(), orders.end(), order) != orders.end()) {
+      py::print(1);
+      py::print(orders.empty());
+      if (orders.size() > 0 && std::find(orders.begin(), orders.end(), order) != orders.end()) {
         collector.pushChange(order);
       } else {
         // change event
@@ -166,10 +179,17 @@ namespace core {
 
   void
   PriceLevel::revert() {
-    orders = orders_staged;
-    orders_staged = std::deque<Order*>();
-    stop_orders = stop_orders_staged;
-    stop_orders_staged = std::vector<Order*>();
+    orders.clear();
+    orders.insert(orders.begin(), 
+      std::make_move_iterator(orders_staged.begin()),
+      std::make_move_iterator(orders_staged.end()));
+    orders_staged.clear();
+
+    stop_orders.clear();
+    stop_orders.insert(stop_orders.begin(), 
+      std::make_move_iterator(stop_orders_staged.begin()),
+      std::make_move_iterator(stop_orders_staged.end()));
+    stop_orders_staged.clear();
   }
 
 } // namespace core

@@ -351,7 +351,6 @@ class OrderBook(object):
                 yield order
 
     def __repr__(self):
-        ret = ''
         # show top 5 levels, then group next 5, 10, 20, etc
         # sells first
         sells = []
@@ -377,7 +376,7 @@ class OrderBook(object):
         sells.reverse()
 
         # show top 5 levels, then group next 5, 10, 20, etc
-        # sells first
+        # buys second
         buys = []
         count = 5
         orig = 5

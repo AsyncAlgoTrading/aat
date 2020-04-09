@@ -37,7 +37,7 @@ namespace core {
     std::string toString() const;
 
   private:
-    void clearOrders(Order* order, double amount);
+    void clearOrders(Order* order, std::uint64_t amount);
     double getTop(Side side, std::uint64_t cleared);
     bool insort(std::vector<double> levels, double value);
 
