@@ -63,7 +63,7 @@ PYBIND11_MODULE(binding, m) {
   py::class_<OrderBook>(m, "OrderBookCpp")
     .def(py::init<Instrument&>())
     .def(py::init<Instrument&, Exchange&>())
-    .def(py::init<Instrument&, Exchange&, std::function<void(Event&)>>());
+    .def(py::init<Instrument&, Exchange&, std::function<void(Event*)>>());
 
   py::class_<Exchange>(m, "ExchangeCpp")
     .def(py::init<const std::string&>())
@@ -79,7 +79,7 @@ PYBIND11_MODULE(binding, m) {
     .def("__eq__", &Instrument::operator==);
 
   py::class_<Data>(m, "DataCpp")
-    .def(py::init<std::uint64_t, double, double, double, Side, DataType, Instrument, Exchange, float>())
+    .def(py::init<std::uint64_t, double, double, double, Side, DataType, Instrument, Exchange, double>())
     .def("__repr__", &Data::toString)
     .def("__eq__", &Data::operator==)
     .def("__lt__", &Data::operator<)
@@ -92,7 +92,7 @@ PYBIND11_MODULE(binding, m) {
     .def("toJson", &Event::toJson);
 
   py::class_<Order>(m, "OrderCpp")
-    .def(py::init<std::uint64_t, double, double, double, Side, Instrument, Exchange, float, OrderType, OrderFlag,
+    .def(py::init<std::uint64_t, double, double, double, Side, Instrument, Exchange, double, OrderType, OrderFlag,
       Order*, double>())
     .def("__repr__", &Order::toString)
     .def("toJson", &Order::toJson)
@@ -100,7 +100,7 @@ PYBIND11_MODULE(binding, m) {
 
   py::class_<Trade>(m, "TradeCpp")
     .def(
-      py::init<std::uint64_t, double, double, double, Side, Instrument, Exchange, float, std::deque<Order*>, Order*>())
+      py::init<std::uint64_t, double, double, double, Side, Instrument, Exchange, double, std::deque<Order*>, Order*>())
     .def("__repr__", &Trade::toString)
     .def("slippage", &Trade::slippage)
     .def("transactionCost", &Trade::transactionCost)

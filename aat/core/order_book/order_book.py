@@ -242,7 +242,7 @@ class OrderBook(object):
         prices = self._buys if side == Side.BUY else self._sells
 
         if price not in levels:
-            raise Exception('Orderbook out of sync!')
+            raise Exception('Orderbook out of sync')
         prices[price].remove(order)
 
         # delete level if no more volume

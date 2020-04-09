@@ -3,18 +3,12 @@
 namespace aat {
 namespace core {
   Collector::Collector()
-    : callback([](Event* e) {})
-    , events(std::deque<Event*>())
-    , orders(std::deque<Order*>())
-    , price_levels(std::deque<PriceLevel*>())
+    : callback(nullptr)
     , price(0.0)
     , volume(0.0) {}
 
   Collector::Collector(std::function<void(Event*)> callback)
     : callback(callback)
-    , events(std::deque<Event*>())
-    , orders(std::deque<Order*>())
-    , price_levels(std::deque<PriceLevel*>())
     , price(0.0)
     , volume(0.0) {}
 
@@ -101,7 +95,8 @@ namespace core {
     while (events.size()) {
       Event* ev = events.front();
       events.pop_front();
-      callback(ev);
+      if (callback)
+        callback(ev);
     }
 
     for (PriceLevel* pl : price_levels)

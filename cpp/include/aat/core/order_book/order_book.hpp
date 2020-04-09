@@ -20,26 +20,29 @@ namespace core {
   public:
     OrderBook(Instrument& instrument);
     OrderBook(Instrument& instrument, Exchange& exchange);
-    OrderBook(Instrument& instrument, Exchange& exchange, std::function<void(Event&)> callback);
+    OrderBook(Instrument& instrument, Exchange& exchange, std::function<void(Event*)> callback);
 
-    void setCallback(std::function<void(Event&)> callback);
-    void add(Order& order);
-    void cancel(Order& order);
-    std::vector<std::vector<float>> topOfBook() const;
+    void setCallback(std::function<void(Event*)> callback);
+
+    void add(Order* order);
+    void cancel(Order* order);
+
+    std::vector<double> topOfBook() const;
     double spread() const;
-    std::vector<std::vector<float>> level(std::uint64_t level = 0, Side side = Side::NONE) const;
-    std::vector<std::vector<float>> level(double price = -1.0) const;
-    std::vector<std::vector<float>> levels(std::uint64_t levels) const;
+
+    std::vector<std::vector<double>> level(std::uint64_t level = 0, Side side = Side::NONE) const;
+    std::vector<std::vector<double>> level(double price = -1.0) const;
+    std::vector<std::vector<double>> levels(std::uint64_t levels) const;
     /*
      * def __iter__(self);
      * def __repr__(self);
      */
 
   private:
-    void clearOrders(Order& order, double amount);
+    void clearOrders(Order* order, double amount);
     PriceLevel* getTop(Side side, std::uint64_t cleared);
 
-    std::function<void(Event&)> callback;
+    std::function<void(Event*)> callback;
     Collector collector;
     Instrument& instrument;
     Exchange& exchange;

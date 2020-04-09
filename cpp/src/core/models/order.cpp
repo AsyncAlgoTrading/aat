@@ -6,7 +6,7 @@ namespace aat {
 namespace core {
 
   Order::Order(std::uint64_t id, double timestamp, double volume, double price, Side side, Instrument instrument,
-    Exchange exchange, float filled, OrderType order_type, OrderFlag flag, Order* stop_target, double notional)
+    Exchange exchange, double filled, OrderType order_type, OrderFlag flag, Order* stop_target, double notional)
     : Data(id, timestamp, volume, price, side, DataType::ORDER, instrument, exchange, filled)
     , order_type(order_type)
     , flag(flag)

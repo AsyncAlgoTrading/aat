@@ -16,7 +16,7 @@ namespace aat {
 namespace core {
   struct Trade : public Data {
     Trade(std::uint64_t id, double timestamp, double volume, double price, Side side, Instrument instrument,
-      Exchange exchange = NullExchange, float filled = 0.0, std::deque<Order*> maker_orders = std::deque<Order*>(),
+      Exchange exchange = NullExchange, double filled = 0.0, std::deque<Order*> maker_orders = std::deque<Order*>(),
       Order* taker_order = nullptr)
       : Data(id, timestamp, volume, price, side, DataType::TRADE, instrument, exchange, filled)
       , maker_orders(maker_orders)
