@@ -7,7 +7,7 @@ namespace core {
   std::string
   Event::toString() const {
     std::stringstream ss;
-    ss << "<" << EventType_to_string(type) << "-" << target.toString() << ">";
+    ss << "<" << EventType_to_string(type) << "-" << target->toString() << ">";
     return ss.str();
   }
 
@@ -15,7 +15,7 @@ namespace core {
   Event::toJson() const {
     json ret;
     ret["type"] = EventType_to_string(type);
-    ret["target"] = target.toString();
+    ret["target"] = target->toJson();
     return ret;
   }
 

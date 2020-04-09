@@ -15,7 +15,7 @@ namespace aat {
 namespace core {
   class Event {
   public:
-    Event(EventType type, Data target)
+    Event(EventType type, Data* target)
       : type(type)
       , target(target) {}
 
@@ -24,7 +24,7 @@ namespace core {
 
   protected:
     EventType type;
-    Data target;
+    Data* target;
   };
 
 } // namespace core

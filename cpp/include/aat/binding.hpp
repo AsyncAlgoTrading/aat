@@ -89,7 +89,7 @@ PYBIND11_MODULE(binding, m) {
       .def("perspectiveSchema", &Data::perspectiveSchema);
 
   py::class_<Event>(m, "EventCpp")
-      .def(py::init<EventType, Data>())
+      .def(py::init<EventType, Data*>())
       .def("__repr__", &Event::toString)
       .def("toJson", &Event::toJson);
 

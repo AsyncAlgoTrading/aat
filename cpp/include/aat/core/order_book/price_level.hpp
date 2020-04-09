@@ -25,17 +25,14 @@ namespace core {
     double getVolume() const;
 
     void add(Order* order);
-    void remove(Order* order);
+    Order* remove(Order* order);
     Order* cross(Order* taker_order);
 
     void clear();
     void commit();
     void revert();
 
-    /*
-    bool __bool__() const;
-    def __iter__(self):
-    */
+    std::uint64_t size() const { return orders.size(); }
 
   private:
     double price;

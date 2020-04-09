@@ -3,58 +3,157 @@
 namespace aat {
 namespace core {
   Collector::Collector()
-    : callback([](Event& e) {}) {}
-  Collector::Collector(std::function<void(Event&)> callback)
-    : callback(callback) {}
+    : callback([](Event* e) {})
+    , events(std::deque<Event*>())
+    , orders(std::deque<Order*>())
+    , price_levels(std::deque<PriceLevel*>())
+    , price(0.0)
+    , volume(0.0) {}
+
+  Collector::Collector(std::function<void(Event*)> callback)
+    : callback(callback)
+    , events(std::deque<Event*>())
+    , orders(std::deque<Order*>())
+    , price_levels(std::deque<PriceLevel*>())
+    , price(0.0)
+    , volume(0.0) {}
 
   void
-  Collector::reset() {}
+  Collector::reset() {
+    events.clear();
+    price = 0.0;
+    volume = 0.0;
+    orders.clear();
+    price_levels.clear();
+  }
+
   void
-  Collector::setCallback(std::function<void(Event&)> callback) {
+  Collector::setCallback(std::function<void(Event*)> callback) {
     this->callback = callback;
   }
+
   void
-  Collector::push(Event& event) {}
+  Collector::push(Event* event) {
+    events.push_back(event);
+  }
+
   void
-  Collector::pushOpen(Order& order) {}
+  Collector::pushOpen(Order* order) {
+    push(new Event(EventType::OPEN, order));
+  }
+
   void
-  Collector::pushFill(Order& order, bool accumulate) {}
+  Collector::pushFill(Order* order, bool accumulate) {
+    if(accumulate){
+      _accumulate(order);
+    }
+    push(new Event(EventType::FILL, order));
+  }
+
   void
-  Collector::pushChange(Order& order, bool accumulate) {}
+  Collector::pushChange(Order* order, bool accumulate) {
+    if(accumulate){
+      _accumulate(order);
+    }
+    push(new Event(EventType::CHANGE, order));
+  }
+
   void
-  Collector::pushCancel(Order& order, bool accumulate) {}
+  Collector::pushCancel(Order* order, bool accumulate) {
+    if(accumulate){
+      _accumulate(order);
+    }
+    push(new Event(EventType::CANCEL, order));
+  }
+
   void
-  Collector::pushTrade(Order& taker_order) {}
+  Collector::pushTrade(Order* taker_order) {
+    if(orders.size() == 0){
+      throw AATCPPException("No maker orders provied!");
+    }
+
+    if (taker_order->filled <= 0){
+      throw AATCPPException("No Trade occurred");
+    }
+
+    push(new Event(EventType::TRADE,
+                   new Trade(0,
+                     0.0,
+                     volume,
+                     price,
+                     taker_order->side,
+                     taker_order->instrument,
+                     taker_order->exchange,
+                     taker_order->filled,
+                     orders,
+                     taker_order)));
+  }
+
   void
-  Collector::accumulate(Order& order) {}
+  Collector::_accumulate(Order* order) {
+    price = (volume + order->filled > 0) ? ((price * volume + order->price * order->filled) / (volume + order->filled)): 0.0;
+    volume += order->filled;
+    orders.push_back(order);
+  }
+
+  std::uint64_t
+  Collector::clearLevel(PriceLevel* price_level) {
+    price_levels.push_back(price_level);
+    return price_level->size();
+  }
+
   void
-  Collector::clearLevel(PriceLevel& price_level) {}
+  Collector::commit() {
+    // flush the event queue
+    while (events.size()){
+        Event* ev = events.front();
+        events.pop_front();
+        callback(ev);
+    }
+
+    for(PriceLevel* pl: price_levels)
+        pl->commit();
+
+    reset();
+  }
+
   void
-  Collector::commit() {}
+  Collector::revert() {
+    for (PriceLevel* pl: price_levels)
+      pl->revert();
+    reset();
+  }
+
   void
-  Collector::revert() {}
-  void
-  Collector::clear() {}
+  Collector::clear() {
+    reset();
+  }
+
   double
   Collector::getPrice() const {
-    return 0.0;
+    return price;
   }
+
   double
   Collector::getVolume() const {
-    return 0.0;
+    return volume;
   }
+
   std::deque<Order*>
   Collector::getOrders() const {
     return orders;
   }
+
   std::deque<Event*>
   Collector::getEvents() const {
     return events;
   }
+
   std::deque<PriceLevel*>
   Collector::getPriceLevels() const {
     return price_levels;
   }
+
   std::deque<PriceLevel*>
   Collector::getClearedLevels() const {}
 

@@ -14,8 +14,7 @@ using namespace aat::config;
 
 namespace aat {
 namespace core {
-  class Trade : Data {
-  public:
+  struct Trade : public Data {
     Trade(std::uint64_t id, double timestamp, double volume, double price, Side side, Instrument instrument,
       Exchange exchange = NullExchange, float filled = 0.0, std::deque<Order*> maker_orders = std::deque<Order*>(),
       Order* taker_order = nullptr)
@@ -40,7 +39,6 @@ namespace core {
     json toJson() const;
     json perspectiveSchema() const;
 
-  protected:
     std::deque<Order*> maker_orders;
     Order* taker_order;
     double _slippage;

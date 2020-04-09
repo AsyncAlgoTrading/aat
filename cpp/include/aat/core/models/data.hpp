@@ -13,7 +13,7 @@ using namespace aat::config;
 
 namespace aat {
 namespace core {
-  class Data {
+  struct Data {
   public:
     Data(std::uint64_t id, double timestamp, double volume, double price, Side side, DataType type,
       Instrument instrument, Exchange exchange = NullExchange, float filled = 0.0)
@@ -33,7 +33,6 @@ namespace core {
     json toJson() const;
     json perspectiveSchema() const;
 
-  protected:
     std::uint64_t id;
     double timestamp;
     double volume;
