@@ -29,7 +29,7 @@ jobs:
         versionSpec: '12.x'
 
     - script: |
-        sudo apt-get install boost-devel
+        sudo apt-get install boost-dev
       displayName: "System deps"
 
     - bash: npm install -g yarn
@@ -82,7 +82,7 @@ jobs:
         versionSpec: '12.x'
 
     - script: |
-        brew install boost
+        brew install boost cmake
       displayName: "System deps"
 
     - bash: npm install -g yarn

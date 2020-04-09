@@ -1,6 +1,3 @@
-# from ...binding import Event
-
-
 from pydantic import BaseModel
 from typing import Any
 from ...config import EventType

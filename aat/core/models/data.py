@@ -1,5 +1,3 @@
-# from ...binding import Data
-
 from pydantic import BaseModel
 from typing import Mapping, Union, Type
 from ...config import Side, DataType

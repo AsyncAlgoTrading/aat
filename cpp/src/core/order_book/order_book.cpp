@@ -337,5 +337,11 @@ namespace core {
     return orig_length == levels.size();
   }
 
+  std::string
+  OrderBook::toString() const {
+    std::stringstream ss;
+    return ss.str();
+  }
+
 } // namespace core
 } // namespace aat

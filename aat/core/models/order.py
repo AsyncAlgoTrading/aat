@@ -1,5 +1,3 @@
-# from ...binding import Order
-
 from pydantic import validator
 from typing import Mapping, Union, Type
 from .data import Data

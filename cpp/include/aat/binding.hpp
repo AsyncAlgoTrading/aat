@@ -63,7 +63,17 @@ PYBIND11_MODULE(binding, m) {
   py::class_<OrderBook>(m, "OrderBookCpp")
     .def(py::init<Instrument&>())
     .def(py::init<Instrument&, ExchangeType&>())
-    .def(py::init<Instrument&, ExchangeType&, std::function<void(Event*)>>());
+    .def(py::init<Instrument&, ExchangeType&, std::function<void(Event*)>>())
+    .def("__repr__", &OrderBook::toString)
+    .def("setCallback", &OrderBook::setCallback)
+    .def("add", &OrderBook::add)
+    .def("cancel", &OrderBook::cancel)
+    .def("topOfBook", &OrderBook::topOfBook)
+    .def("spread", &OrderBook::spread)
+    .def("level", (std::vector<PriceLevel*>  (OrderBook::*)(double) const) &OrderBook::level)
+    .def("level", (std::vector<double> (OrderBook::*)(std::uint64_t) const) &OrderBook::level)
+    .def("levels", &OrderBook::levels);
+
 
   py::class_<ExchangeType>(m, "ExchangeTypeCpp")
     .def(py::init<const std::string&>())
