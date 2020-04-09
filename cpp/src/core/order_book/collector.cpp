@@ -44,7 +44,7 @@ namespace core {
 
   void
   Collector::pushFill(Order* order, bool accumulate) {
-    if(accumulate){
+    if (accumulate) {
       _accumulate(order);
     }
     push(new Event(EventType::FILL, order));
@@ -52,7 +52,7 @@ namespace core {
 
   void
   Collector::pushChange(Order* order, bool accumulate) {
-    if(accumulate){
+    if (accumulate) {
       _accumulate(order);
     }
     push(new Event(EventType::CHANGE, order));
@@ -60,7 +60,7 @@ namespace core {
 
   void
   Collector::pushCancel(Order* order, bool accumulate) {
-    if(accumulate){
+    if (accumulate) {
       _accumulate(order);
     }
     push(new Event(EventType::CANCEL, order));
@@ -68,30 +68,23 @@ namespace core {
 
   void
   Collector::pushTrade(Order* taker_order) {
-    if(orders.size() == 0){
+    if (orders.size() == 0) {
       throw AATCPPException("No maker orders provied!");
     }
 
-    if (taker_order->filled <= 0){
+    if (taker_order->filled <= 0) {
       throw AATCPPException("No Trade occurred");
     }
 
     push(new Event(EventType::TRADE,
-                   new Trade(0,
-                     0.0,
-                     volume,
-                     price,
-                     taker_order->side,
-                     taker_order->instrument,
-                     taker_order->exchange,
-                     taker_order->filled,
-                     orders,
-                     taker_order)));
+      new Trade(0, 0.0, volume, price, taker_order->side, taker_order->instrument, taker_order->exchange,
+        taker_order->filled, orders, taker_order)));
   }
 
   void
   Collector::_accumulate(Order* order) {
-    price = (volume + order->filled > 0) ? ((price * volume + order->price * order->filled) / (volume + order->filled)): 0.0;
+    price = (volume + order->filled > 0) ? ((price * volume + order->price * order->filled) / (volume + order->filled))
+                                         : 0.0;
     volume += order->filled;
     orders.push_back(order);
   }
@@ -105,21 +98,21 @@ namespace core {
   void
   Collector::commit() {
     // flush the event queue
-    while (events.size()){
-        Event* ev = events.front();
-        events.pop_front();
-        callback(ev);
+    while (events.size()) {
+      Event* ev = events.front();
+      events.pop_front();
+      callback(ev);
     }
 
-    for(PriceLevel* pl: price_levels)
-        pl->commit();
+    for (PriceLevel* pl : price_levels)
+      pl->commit();
 
     reset();
   }
 
   void
   Collector::revert() {
-    for (PriceLevel* pl: price_levels)
+    for (PriceLevel* pl : price_levels)
       pl->revert();
     reset();
   }

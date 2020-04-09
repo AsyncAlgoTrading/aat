@@ -66,46 +66,44 @@ PYBIND11_MODULE(binding, m) {
     .def(py::init<Instrument&, Exchange&, std::function<void(Event&)>>());
 
   py::class_<Exchange>(m, "ExchangeCpp")
-      .def(py::init<const std::string&>())
-      .def("__init__", [](py::object obj) {
-          return Exchange(obj.cast<std::string>());
-      })
-      .def("__repr__", &Exchange::toString);
+    .def(py::init<const std::string&>())
+    .def("__init__", [](py::object obj) { return Exchange(obj.cast<std::string>()); })
+    .def("__repr__", &Exchange::toString);
 
   py::class_<Instrument>(m, "InstrumentCpp")
-      .def(py::init<const std::string&, InstrumentType&>())
-      .def(py::init<const py::object&, InstrumentType&>())
-      .def(py::init<const py::object&>())
-      .def(py::init<const std::string&>())
-      .def("__repr__", &Instrument::toString)
-      .def("__eq__", &Instrument::operator==);
+    .def(py::init<const std::string&, InstrumentType&>())
+    .def(py::init<const py::object&, InstrumentType&>())
+    .def(py::init<const py::object&>())
+    .def(py::init<const std::string&>())
+    .def("__repr__", &Instrument::toString)
+    .def("__eq__", &Instrument::operator==);
 
   py::class_<Data>(m, "DataCpp")
-      .def(py::init<std::uint64_t, double, double, double, Side, DataType,
-      Instrument, Exchange, float>()) .def("__repr__", &Data::toString)
-      .def("__eq__", &Data::operator==)
-      .def("__lt__", &Data::operator<)
-      .def("toJson", &Data::toJson)
-      .def("perspectiveSchema", &Data::perspectiveSchema);
+    .def(py::init<std::uint64_t, double, double, double, Side, DataType, Instrument, Exchange, float>())
+    .def("__repr__", &Data::toString)
+    .def("__eq__", &Data::operator==)
+    .def("__lt__", &Data::operator<)
+    .def("toJson", &Data::toJson)
+    .def("perspectiveSchema", &Data::perspectiveSchema);
 
   py::class_<Event>(m, "EventCpp")
-      .def(py::init<EventType, Data*>())
-      .def("__repr__", &Event::toString)
-      .def("toJson", &Event::toJson);
+    .def(py::init<EventType, Data*>())
+    .def("__repr__", &Event::toString)
+    .def("toJson", &Event::toJson);
 
   py::class_<Order>(m, "OrderCpp")
-      .def(py::init<std::uint64_t, double, double, double, Side,
-      Instrument, Exchange, float, OrderType, OrderFlag, Order*, double>())
-      .def("__repr__", &Order::toString)
-      .def("toJson", &Order::toJson)
-      .def("perspectiveSchema", &Order::perspectiveSchema);
+    .def(py::init<std::uint64_t, double, double, double, Side, Instrument, Exchange, float, OrderType, OrderFlag,
+      Order*, double>())
+    .def("__repr__", &Order::toString)
+    .def("toJson", &Order::toJson)
+    .def("perspectiveSchema", &Order::perspectiveSchema);
 
   py::class_<Trade>(m, "TradeCpp")
-      .def(py::init<std::uint64_t, double, double, double, Side,
-      Instrument, Exchange, float, std::deque<Order*>, Order*>())
-      .def("__repr__", &Trade::toString)
-      .def("slippage", &Trade::slippage)
-      .def("transactionCost", &Trade::transactionCost)
-      .def("toJson", &Trade::toJson)
-      .def("perspectiveSchema", &Trade::perspectiveSchema);
+    .def(
+      py::init<std::uint64_t, double, double, double, Side, Instrument, Exchange, float, std::deque<Order*>, Order*>())
+    .def("__repr__", &Trade::toString)
+    .def("slippage", &Trade::slippage)
+    .def("transactionCost", &Trade::transactionCost)
+    .def("toJson", &Trade::toJson)
+    .def("perspectiveSchema", &Trade::perspectiveSchema);
 }

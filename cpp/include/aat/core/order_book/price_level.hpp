@@ -32,7 +32,10 @@ namespace core {
     void commit();
     void revert();
 
-    std::uint64_t size() const { return orders.size(); }
+    std::uint64_t
+    size() const {
+      return orders.size();
+    }
 
   private:
     double price;

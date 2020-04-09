@@ -9,7 +9,7 @@ namespace core {
   double
   PriceLevel::getVolume() const {
     double sum = 0.0;
-    for(Order* order: orders) {
+    for (Order* order : orders) {
       sum += (order->volume - order->filled);
     }
     return sum;
@@ -18,13 +18,13 @@ namespace core {
   void
   PriceLevel::add(Order* order) {
     // append order to deque
-    if (order->order_type == OrderType::STOP){
-      if (std::find(orders.begin(), orders.end(), order) != orders.end()){
+    if (order->order_type == OrderType::STOP) {
+      if (std::find(orders.begin(), orders.end(), order) != orders.end()) {
         return;
       }
       orders.push_back(order);
     } else {
-      if (std::find(orders.begin(), orders.end(), order) != orders.end()){
+      if (std::find(orders.begin(), orders.end(), order) != orders.end()) {
         collector.pushChange(order);
       } else {
         // change event
@@ -34,9 +34,10 @@ namespace core {
     }
   }
 
-  Order* PriceLevel::remove(Order* order) {
+  Order*
+  PriceLevel::remove(Order* order) {
     // check if order is in level
-    if(order->price != price || std::find(orders.begin(), orders.end(), order) == orders.end()) {
+    if (order->price != price || std::find(orders.begin(), orders.end(), order) == orders.end()) {
       // something is wrong
       throw AATCPPException("Order note found in price level!");
     }
@@ -52,17 +53,17 @@ namespace core {
 
   Order*
   PriceLevel::cross(Order* taker_order) {
-    if (taker_order->order_type == OrderType::STOP){
+    if (taker_order->order_type == OrderType::STOP) {
       add(taker_order);
       return nullptr; //, ()
     }
 
-    if (taker_order->filled >= taker_order->volume){
+    if (taker_order->filled >= taker_order->volume) {
       // already filled
       return nullptr; //, _get_stop_orders()
     }
 
-    while (taker_order->filled < taker_order->volume && orders.size() > 0){
+    while (taker_order->filled < taker_order->volume && orders.size() > 0) {
       // need to fill original volume - filled so far
       double to_fill = taker_order->volume - taker_order->filled;
 

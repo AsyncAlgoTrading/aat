@@ -20,7 +20,6 @@ namespace core {
 
     std::string toString() const;
 
-
   private:
     std::string name;
   };
