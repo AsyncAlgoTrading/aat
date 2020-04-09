@@ -1,6 +1,6 @@
 from datetime import datetime
 from aat.config import Side, DataType, OrderFlag, OrderType
-from aat.core import Order, Exchange
+from aat.core import Order, ExchangeType
 
 
 def _seed(ob, instrument, flag=OrderFlag.NONE):
@@ -16,5 +16,5 @@ def _seed(ob, instrument, flag=OrderFlag.NONE):
                      order_type=OrderType.LIMIT,
                      flag=flag,
                      instrument=instrument,
-                     exchange=Exchange("")))
+                     exchange=ExchangeType("")))
         x += .5
