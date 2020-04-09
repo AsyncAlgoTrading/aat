@@ -1,7 +1,7 @@
-# from ..binding import Exchange
+# from ..binding import ExchangeType
 
 
-class Exchange(object):
+class ExchangeType(object):
     def __init__(self, name):
         self._name = name
 

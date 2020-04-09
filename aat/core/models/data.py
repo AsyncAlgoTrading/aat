@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Mapping, Union, Type
 from ...config import Side, DataType
 from ..instrument import Instrument
-from ..exchange import Exchange
+from ..exchange import ExchangeType
 
 
 class Data(BaseModel):
@@ -21,7 +21,7 @@ class Data(BaseModel):
     instrument: Instrument
 
     # maybe specific
-    exchange: Exchange = Exchange('')
+    exchange: ExchangeType = ExchangeType('')
     filled: float = 0.0
 
     def __eq__(self, other) -> bool:

@@ -37,7 +37,7 @@ namespace core {
     std::deque<Order*> getOrders() const;
     std::deque<Event*> getEvents() const;
     std::deque<PriceLevel*> getPriceLevels() const;
-    std::deque<PriceLevel*> getClearedLevels() const;
+    std::uint64_t getClearedLevels() const;
 
   private:
     void _accumulate(Order* order);

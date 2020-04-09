@@ -88,7 +88,7 @@ class OrderBook(object):
         # secondary triggered orders
         secondaries = []
 
-        # order is buy, so look at top of sell side
+        # get the top price on the opposite side of book
         top = self._getTop(order.side, self._collector.clearedLevels())
 
         # set levels to the right side
@@ -140,6 +140,10 @@ class OrderBook(object):
                     # execute order
                     self._collector.commit()
 
+                    # execute secondaries
+                    for secondary in secondaries:
+                        self.add(secondary)
+
             else:
                 # Limit Orders
                 if order.flag == OrderFlag.FILL_OR_KILL:
@@ -161,6 +165,11 @@ class OrderBook(object):
                             prices[order.price] = _PriceLevel(order.price, collector=self._collector)
                         # add order to price level
                         prices[order.price].add(order)
+
+                        # execute secondaries
+                        for secondary in secondaries:
+                            self.add(secondary)
+
                 elif order.flag == OrderFlag.ALL_OR_NONE:
                     if order.filled > 0:
                         # order could not fill fully, revert
@@ -170,6 +179,7 @@ class OrderBook(object):
                         # cancel the order
                         self._collector.pushCancel(order)
                         self._collector.commit()
+
                     else:
                         # add to book
                         self._collector.commit()
@@ -178,8 +188,13 @@ class OrderBook(object):
                         if _insort(levels, order.price):
                             # new price level
                             prices[order.price] = _PriceLevel(order.price, collector=self._collector)
+
                         # add order to price level
                         prices[order.price].add(order)
+
+                        # execute secondaries
+                        for secondary in secondaries:
+                            self.add(secondary)
 
                 elif order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
                     if order.filled > 0:
@@ -188,7 +203,14 @@ class OrderBook(object):
 
                         # execute the ones that filled, kill the remainder
                         self._collector.pushCancel(order)
+
+                        # commit
                         self._collector.commit()
+
+                        # execute secondaries
+                        for secondary in secondaries:
+                            self.add(secondary)
+
                     else:
                         # add to book
                         self._collector.commit()
@@ -197,8 +219,14 @@ class OrderBook(object):
                         if _insort(levels, order.price):
                             # new price level
                             prices[order.price] = _PriceLevel(order.price, collector=self._collector)
+                        
                         # add order to price level
                         prices[order.price].add(order)
+
+                        # execute secondaries
+                        for secondary in secondaries:
+                            self.add(secondary)
+
                 else:
                     # clear levels
                     self._clearOrders(order, self._collector.clearedLevels())
@@ -210,25 +238,27 @@ class OrderBook(object):
                     if _insort(levels, order.price):
                         # new price level
                         prices[order.price] = _PriceLevel(order.price, collector=self._collector)
+
                     # add order to price level
                     prices[order.price].add(order)
 
+                    # execute secondaries
+                    for secondary in secondaries:
+                        self.add(secondary)
         else:
             # don't need to add trade as this is done in the price_levels
-
             # clear levels
             self._clearOrders(order, self._collector.clearedLevels())
 
             # execute all the orders
             self._collector.commit()
 
+            # execute secondaries
+            for secondary in secondaries:
+                self.add(secondary)
+
         # clear the collector
         self._collector.clear()
-
-        # execute secondaries
-        for secondary in secondaries:
-            print('HERE', len(secondaries), secondary)
-            self.add(secondary)
 
     def cancel(self, order):
         '''remove an order from the order book, potentially triggering events:
@@ -271,28 +301,22 @@ class OrderBook(object):
         tob = self.topOfBook()
         return tob['ask'] - tob['bid']
 
-    def level(self, level=0, price=None, side=None):
+    def level(self, level=0, price=None):
         '''return book level
 
         Args:
             level (int): depth of book to return
             price (float): price level to look for
-            side (Side): side to return, or None to return both
         Returns:
             value (tuple): returns ask or bid if Side specified, otherwise ask,bid
         '''
         # collect bids and asks at `level`
         if price:
-            bid = (self._buys[price], self._buys[price].volume()) if price in self._buy_levels else None
-            ask = (self._sells[price], self._sells[price].volume()) if price in self._sell_levels else None
+            bid = self._buys[price] if price in self._buy_levels else None
+            ask = self._sells[price] if price in self._sell_levels else None
         else:
             bid = (self._buy_levels[-level], self._buys[self._buy_levels[-level]].volume()) if len(self._buy_levels) > level else None
             ask = (self._sell_levels[level], self._sells[self._sell_levels[level]].volume()) if len(self._sell_levels) > level else None
-
-        if side == Side.SELL:
-            return ask
-        elif side == Side.BUY:
-            return bid
         return ask, bid
 
     def levels(self, levels=0):

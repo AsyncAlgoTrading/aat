@@ -13,9 +13,9 @@ using namespace aat::config;
 namespace aat {
 namespace core {
 
-  class Exchange {
+  class ExchangeType {
   public:
-    Exchange(std::string name)
+    ExchangeType(std::string name)
       : name(name) {}
 
     std::string toString() const;
@@ -24,7 +24,7 @@ namespace core {
     std::string name;
   };
 
-  static Exchange NullExchange = Exchange("");
+  static ExchangeType NullExchange = ExchangeType("");
 
 } // namespace core
 } // namespace aat

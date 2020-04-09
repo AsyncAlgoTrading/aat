@@ -26,7 +26,7 @@ namespace core {
 
     void add(Order* order);
     Order* remove(Order* order);
-    Order* cross(Order* taker_order);
+    Order* cross(Order* taker_order, std::vector<Order*>& secondaries);
 
     void clear();
     void commit();

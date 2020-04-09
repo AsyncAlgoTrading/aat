@@ -5,7 +5,7 @@ from collections import deque
 from datetime import datetime
 from random import choice, random
 from ..exchange import Exchange
-from ...core import Instrument, OrderBook, Order, Event
+from ...core import Instrument, OrderBook, Order, Event, ExchangeType
 from ...config import Side, DataType, EventType
 
 
@@ -18,7 +18,7 @@ class SyntheticExchange(Exchange):
     _inst = 0
 
     def __init__(self, verbose=False, **kwargs):
-        self._exchange_name = 'synthetic{}'.format(SyntheticExchange._inst)
+        self._exchange = ExchangeType('synthetic{}'.format(SyntheticExchange._inst))
         self._verbose = verbose
         self._id = 0
         self._events = deque()
@@ -26,7 +26,7 @@ class SyntheticExchange(Exchange):
 
     def _seed(self, symbols=None):
         self._instruments = {symbol: Instrument(symbol) for symbol in symbols or _getName(1)}
-        self._orderbooks = {symbol: OrderBook(instrument=i, exchange_name=self._exchange_name, callback=lambda x: None) for symbol, i in self._instruments.items()}
+        self._orderbooks = {symbol: OrderBook(instrument=i, exchange_name=self._exchange, callback=lambda x: None) for symbol, i in self._instruments.items()}
         self._seedOrders()
 
     def _seedOrders(self):
@@ -48,7 +48,7 @@ class SyntheticExchange(Exchange):
                                     side=side,
                                     type=DataType.ORDER,
                                     instrument=self._instruments[symbol],
-                                    exchange=self._exchange_name))
+                                    exchange=self._exchange))
                 start = round(start + increment, 2)
                 self._id += 1
 
@@ -102,7 +102,7 @@ class SyntheticExchange(Exchange):
                                     side=Side.BUY,
                                     type=DataType.ORDER,
                                     instrument=instrument,
-                                    exchange=self._exchange_name))
+                                    exchange=self._exchange))
                 self._id += 1
             elif do == 'sell':
                 # new sell order
@@ -114,7 +114,7 @@ class SyntheticExchange(Exchange):
                                     side=Side.SELL,
                                     type=DataType.ORDER,
                                     instrument=instrument,
-                                    exchange=self._exchange_name))
+                                    exchange=self._exchange))
                 self._id += 1
             elif do == 'cross':
                 # cross the spread
@@ -129,7 +129,7 @@ class SyntheticExchange(Exchange):
                                         side=Side.BUY,
                                         type=DataType.ORDER,
                                         instrument=instrument,
-                                        exchange=self._exchange_name))
+                                        exchange=self._exchange))
                     self._id += 1
                 else:
                     # cross to sell
@@ -141,7 +141,7 @@ class SyntheticExchange(Exchange):
                                         side=Side.SELL,
                                         type=DataType.ORDER,
                                         instrument=instrument,
-                                        exchange=self._exchange_name))
+                                        exchange=self._exchange))
                     self._id += 1
             elif do == 'cancel' or do == 'change':
                 # cancel an existing order
@@ -149,11 +149,11 @@ class SyntheticExchange(Exchange):
                 levels = orderbook.levels(5)
                 if side == 'buy' and levels:
                     level = choice(levels['bid'])
-                    price_levels = orderbook.level(price=level[0])[1]
-                    if price_levels is None:
+                    price_level = orderbook.level(price=level[0])[1]
+                    if price_level is None:
                         continue
 
-                    orders = price_levels[0]._orders
+                    orders = price_level._orders
                     if orders:
                         order = choice(orders)
 
@@ -165,7 +165,7 @@ class SyntheticExchange(Exchange):
 
                 elif levels:
                     level = choice(levels['ask'])
-                    orders = orderbook.level(price=level[0])[0][0]._orders
+                    orders = orderbook.level(price=level[0])[0]._orders
                     if orders:
                         order = choice(orders)
                         if do == 'cancel':

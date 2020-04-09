@@ -5,7 +5,7 @@
 namespace aat {
 namespace core {
   std::string
-  Exchange::toString() const {
+  ExchangeType::toString() const {
     return name;
   }
 

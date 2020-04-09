@@ -142,8 +142,10 @@ namespace core {
     return price_levels;
   }
 
-  std::deque<PriceLevel*>
-  Collector::getClearedLevels() const {}
+  std::uint64_t
+  Collector::getClearedLevels() const {
+    return price_levels.size();
+  }
 
 } // namespace core
 } // namespace aat

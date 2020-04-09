@@ -52,15 +52,17 @@ namespace core {
   }
 
   Order*
-  PriceLevel::cross(Order* taker_order) {
+  PriceLevel::cross(Order* taker_order, std::vector<Order*>& secondaries) {
     if (taker_order->order_type == OrderType::STOP) {
       add(taker_order);
-      return nullptr; //, ()
+      return nullptr;
     }
 
     if (taker_order->filled >= taker_order->volume) {
       // already filled
-      return nullptr; //, _get_stop_orders()
+      for (Order* order : stop_orders)
+        secondaries.push_back(order);
+      return nullptr;
     }
 
     while (taker_order->filled < taker_order->volume && orders.size() > 0) {
@@ -112,7 +114,10 @@ namespace core {
           // taker order can't be filled, push maker back and cancel taker
           // push back in deque
           orders.push_front(maker_order);
-          return nullptr; //, self._get_stop_orders()
+
+          for (Order* order : stop_orders)
+            secondaries.push_back(order);
+          return nullptr;
         } else {
           // maker_order is fully executed
           // don't append to deque
@@ -135,11 +140,15 @@ namespace core {
       collector.pushTrade(taker_order);
 
       // return nothing to signify to stop
-      return nullptr; //, self._get_stop_orders()
+      for (Order* order : stop_orders)
+        secondaries.push_back(order);
+      return nullptr;
     }
 
     // return order, this level is cleared and the order still has volume
-    return taker_order; //, self._get_stop_orders()
+    for (Order* order : stop_orders)
+      secondaries.push_back(order);
+    return taker_order;
   }
 
   void

@@ -7,12 +7,12 @@ namespace core {
     , exchange(NullExchange)
     , callback(nullptr) {}
 
-  OrderBook::OrderBook(Instrument& instrument, Exchange& exchange)
+  OrderBook::OrderBook(Instrument& instrument, ExchangeType& exchange)
     : instrument(instrument)
     , exchange(exchange)
     , callback(nullptr) {}
 
-  OrderBook::OrderBook(Instrument& instrument, Exchange& exchange, std::function<void(Event*)> callback)
+  OrderBook::OrderBook(Instrument& instrument, ExchangeType& exchange, std::function<void(Event*)> callback)
     : instrument(instrument)
     , exchange(exchange)
     , callback(callback) {}
@@ -23,7 +23,182 @@ namespace core {
   }
 
   void
-  OrderBook::add(Order* order) {}
+  OrderBook::add(Order* order) {
+    // secondary triggered orders
+    std::vector<Order*> secondaries;
+
+    // order is buy, so look at top of sell side
+    double top = getTop(order->side, collector.getClearedLevels());
+
+    // set levels to the right side
+    std::vector<double>& levels = (order->side == Side::BUY) ? buy_levels : sell_levels;
+    std::unordered_map<double, PriceLevel*>& prices = (order->side == Side::BUY) ? buys : sells;
+    std::unordered_map<double, PriceLevel*>& prices_cross = (order->side == Side::BUY) ? sells : buys;
+
+    // check if crosses
+    while (top > 0.0 && ((order->side == Side::BUY) ? order->price >= top : order->price <= top)) {
+      // execute order against level
+      // if returns trade, it cleared the level
+      // else, order was fully executed
+      Order* trade = prices_cross[top]->cross(order, secondaries);
+      if (trade) {
+        // clear sell level
+        top = getTop(order->side, collector.clearLevel(prices_cross[top]));
+        continue;
+      }
+      // trade is done, check if level was cleared exactly
+      if (prices_cross.at(top)->size() <= 0) {
+        // level cleared exactly
+        collector.clearLevel(prices_cross.at(top));
+      }
+
+      break;
+    }
+
+    // if order remaining, check rules/push to book
+    if (order->filled < order->volume) {
+      if (order->order_type == OrderType::MARKET) {
+        // Market orders
+        if (order->flag == OrderFlag::ALL_OR_NONE || order->flag == OrderFlag::FILL_OR_KILL) {
+          // cancel the order, do not execute any
+          collector.revert();
+
+          // cancel the order
+          collector.pushCancel(order);
+          collector.commit();
+        } else {
+          // market order, partial
+          if (order->filled > 0)
+            collector.pushTrade(order);
+
+          // clear levels
+          clearOrders(order, collector.getClearedLevels());
+
+          // execute order
+          collector.commit();
+
+          // execute secondaries
+          for (Order* secondary : secondaries)
+            add(secondary);
+        }
+      } else {
+        // Limit Orders
+        if (order->flag == OrderFlag::FILL_OR_KILL) {
+          if (order->filled > 0) {
+            // reverse partial
+            // cancel the order, do not execute any
+            collector.revert();
+
+            // cancel the order
+            collector.pushCancel(order);
+            collector.commit();
+          } else {
+            // add to book
+            collector.commit();
+
+            // limit order, put on books
+            if (insort(levels, order->price)) {
+              // new price level
+              prices[order->price] = new PriceLevel(order->price, collector);
+            }
+            // add order to price level
+            prices[order->price]->add(order);
+
+            // execute secondaries
+            for (Order* secondary : secondaries)
+              add(secondary);
+          }
+        } else if (order->flag == OrderFlag::ALL_OR_NONE) {
+          if (order->filled > 0) {
+            // order could not fill fully, revert
+            // cancel the order, do not execute any
+            collector.revert();
+
+            // cancel the order
+            collector.pushCancel(order);
+            collector.commit();
+          } else {
+            // add to book
+            collector.commit();
+
+            // limit order, put on books
+            if (insort(levels, order->price)) {
+              // new price level
+              prices[order->price] = new PriceLevel(order->price, collector);
+            }
+            // add order to price level
+            prices[order->price]->add(order);
+
+            // execute secondaries
+            for (Order* secondary : secondaries)
+              add(secondary);
+          }
+        } else if (order->flag == OrderFlag::IMMEDIATE_OR_CANCEL) {
+          if (order->filled > 0) {
+            // clear levels
+            clearOrders(order, collector.getClearedLevels());
+
+            // execute the ones that filled, kill the remainder
+            collector.pushCancel(order);
+            collector.commit();
+
+            // execute secondaries
+            for (Order* secondary : secondaries)
+              add(secondary);
+
+          } else {
+            // add to book
+            collector.commit();
+
+            // limit order, put on books
+            if (insort(levels, order->price)) {
+              // new price level
+              prices[order->price] = new PriceLevel(order->price, collector);
+            }
+            // add order to price level
+            prices[order->price]->add(order);
+
+            // execute secondaries
+            for (Order* secondary : secondaries)
+              add(secondary);
+          }
+        } else {
+          // clear levels
+          clearOrders(order, collector.getClearedLevels());
+
+          // execute order
+          collector.commit();
+
+          // limit order, put on books
+          if (insort(levels, order->price)) {
+            // new price level
+            prices[order->price] = new PriceLevel(order->price, collector);
+          }
+          // add order to price level
+          prices[order->price]->add(order);
+
+          // execute secondaries
+          for (Order* secondary : secondaries)
+            add(secondary);
+        }
+      }
+    } else {
+      // don't need to add trade as this is done in the price_levels
+
+      // clear levels
+      clearOrders(order, collector.getClearedLevels());
+
+      // execute all the orders
+      collector.commit();
+
+      // execute secondaries
+      for (Order* secondary : secondaries)
+        add(secondary);
+    }
+
+    // clear the collector
+    collector.clear();
+  }
 
   void
   OrderBook::cancel(Order* order) {
@@ -70,21 +245,96 @@ namespace core {
     return tob[3] - tob[1];
   }
 
-  std::vector<std::vector<double>>
-  OrderBook::level(std::uint64_t level, Side side) const {}
+  std::vector<double>
+  OrderBook::level(std::uint64_t level) const {
+    std::vector<double> ret;
+
+    // collect bids and asks at `level`
+    if (buy_levels.size() > level) {
+      ret.push_back(buy_levels[buy_levels.size() - level]);
+      ret.push_back(buys.at(buy_levels[buy_levels.size() - level])->getVolume());
+    } else {
+      ret.push_back(0.0);
+      ret.push_back(0.0);
+    }
+
+    if (sell_levels.size() > level) {
+      ret.push_back(sell_levels[level]);
+      ret.push_back(buys.at(sell_levels[level])->getVolume());
+    } else {
+      ret.push_back(std::numeric_limits<double>::infinity());
+      ret.push_back(0.0);
+    }
+    return ret;
+  }
+
+  std::vector<PriceLevel*>
+  OrderBook::level(double price) const {
+    std::vector<PriceLevel*> ret;
+
+    if (std::find(buy_levels.begin(), buy_levels.end(), price) == buy_levels.end()) {
+      ret.push_back(buys.at(price));
+    } else {
+      ret.push_back(nullptr);
+    }
+
+    if (std::find(sell_levels.begin(), sell_levels.end(), price) == sell_levels.end()) {
+      ret.push_back(sells.at(price));
+    } else {
+      ret.push_back(nullptr);
+    }
+    return ret;
+  }
 
   std::vector<std::vector<double>>
-  OrderBook::level(double price) const {}
+  OrderBook::levels(std::uint64_t levels) const {
+    std::vector<std::vector<double>> ret;
+    // bid
+    ret.push_back(std::vector<double>());
+    // ask
+    ret.push_back(std::vector<double>());
 
-  std::vector<std::vector<double>>
-  OrderBook::levels(std::uint64_t levels) const {}
+    for (auto i = 0; i < levels; ++i) {
+      auto _level = level((std::uint64_t)i);
+      ret[0].push_back(_level[0]);
+      ret[0].push_back(_level[1]);
+      ret[1].push_back(_level[2]);
+      ret[1].push_back(_level[3]);
+    }
+    return ret;
+  }
 
   void
-  OrderBook::clearOrders(Order* order, double amount) {}
+  OrderBook::clearOrders(Order* order, double amount) {
+    if (order->side == Side::BUY) {
+      sell_levels.erase(sell_levels.begin(), sell_levels.begin() + amount);
+    } else {
+      buy_levels.erase(buy_levels.begin() + (buy_levels.size() - amount), buy_levels.end());
+    }
+  }
 
-  PriceLevel*
+  double
   OrderBook::getTop(Side side, std::uint64_t cleared) {
-    return nullptr;
+    if (side == Side::BUY) {
+      if (sell_levels.size() > cleared) {
+        return sell_levels[cleared];
+      } else {
+        return -1;
+      }
+    } else {
+      if (buy_levels.size() > cleared) {
+        return buy_levels[buy_levels.size() - cleared];
+      } else {
+        return -1;
+      }
+    }
+  }
+
+  bool
+  OrderBook::insort(std::vector<double> levels, double value) {
+    auto orig_length = levels.size();
+    levels.insert(std::upper_bound(levels.begin(), levels.end(), value), value);
+    return orig_length == levels.size();
   }
 
 } // namespace core

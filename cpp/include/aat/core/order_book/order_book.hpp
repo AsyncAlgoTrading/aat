@@ -19,8 +19,8 @@ namespace core {
   class OrderBook {
   public:
     OrderBook(Instrument& instrument);
-    OrderBook(Instrument& instrument, Exchange& exchange);
-    OrderBook(Instrument& instrument, Exchange& exchange, std::function<void(Event*)> callback);
+    OrderBook(Instrument& instrument, ExchangeType& exchange);
+    OrderBook(Instrument& instrument, ExchangeType& exchange, std::function<void(Event*)> callback);
 
     void setCallback(std::function<void(Event*)> callback);
 
@@ -30,22 +30,21 @@ namespace core {
     std::vector<double> topOfBook() const;
     double spread() const;
 
-    std::vector<std::vector<double>> level(std::uint64_t level = 0, Side side = Side::NONE) const;
-    std::vector<std::vector<double>> level(double price = -1.0) const;
+    std::vector<double> level(std::uint64_t level) const;
+    std::vector<PriceLevel*> level(double price) const;
     std::vector<std::vector<double>> levels(std::uint64_t levels) const;
-    /*
-     * def __iter__(self);
-     * def __repr__(self);
-     */
+
+    std::string toString() const;
 
   private:
     void clearOrders(Order* order, double amount);
-    PriceLevel* getTop(Side side, std::uint64_t cleared);
+    double getTop(Side side, std::uint64_t cleared);
+    bool insort(std::vector<double> levels, double value);
 
     std::function<void(Event*)> callback;
     Collector collector;
     Instrument& instrument;
-    Exchange& exchange;
+    ExchangeType& exchange;
 
     std::vector<double> buy_levels;
     std::vector<double> sell_levels;

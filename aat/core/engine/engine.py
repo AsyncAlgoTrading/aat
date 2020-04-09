@@ -71,7 +71,7 @@ class TradingEngine(Application):
         self.event_loop = asyncio.get_event_loop()
 
         # setup subscriptions
-        self._subscriptions = {m: [] for m in EventType.keys()}
+        self._subscriptions = {m: [] for m in EventType.__members__.values()}
 
         # install event handlers
         strategies = getStrategies(config.get('strategy', {}).get('strategies', []))
@@ -119,7 +119,7 @@ class TradingEngine(Application):
             self.event_handlers.append(handler)
 
             # register callbacks for event types
-            for type in EventType.keys():
+            for type in EventType.__members__.values():
                 # get callback, could be none if not implemented
                 cb = handler.callback(type)
                 if cb:

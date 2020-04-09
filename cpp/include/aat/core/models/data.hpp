@@ -16,7 +16,7 @@ namespace core {
   struct Data {
   public:
     Data(std::uint64_t id, double timestamp, double volume, double price, Side side, DataType type,
-      Instrument instrument, Exchange exchange = NullExchange, double filled = 0.0)
+      Instrument instrument, ExchangeType exchange = NullExchange, double filled = 0.0)
       : id(id)
       , timestamp(timestamp)
       , volume(volume)
@@ -40,7 +40,7 @@ namespace core {
     Side side;
     DataType type;
     Instrument instrument;
-    Exchange exchange;
+    ExchangeType exchange;
     double filled;
   };
 
