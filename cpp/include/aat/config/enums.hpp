@@ -7,35 +7,32 @@
 #include <pybind11/stl_bind.h>
 #include <aat/common.hpp>
 
-namespace py = pybind11;
-PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
-
 namespace aat {
 namespace config {
   enum class Side { NONE = 0, BUY = 1, SELL = 2 };
 
   enum class EventType {
-    TRADE = 1,
-    OPEN = 2,
-    CANCEL = 3,
-    CHANGE = 4,
-    FILL = 5,
-    DATA = 6,
-    HALT = 7,
-    CONTINUE = 8,
-    ERROR = 9,
-    START = 10,
-    EXIT = 11
+    TRADE = 0,
+    OPEN = 1,
+    CANCEL = 2,
+    CHANGE = 3,
+    FILL = 4,
+    DATA = 5,
+    HALT = 6,
+    CONTINUE = 7,
+    ERROR = 8,
+    START = 9,
+    EXIT = 10
   };
 
   enum class DataType {
-    ORDER = 1,
-    TRADE = 2,
+    ORDER = 0,
+    TRADE = 1,
   };
 
   enum class InstrumentType {
-    CURRENCY = 1,
-    EQUITY = 2,
+    CURRENCY = 0,
+    EQUITY = 1,
   };
 
   enum class OrderType {
@@ -141,6 +138,7 @@ namespace config {
   ENUM_TO_STRING(InstrumentType)
   ENUM_TO_STRING(OrderType)
   ENUM_TO_STRING(OrderFlag)
+
   ENUM_FROM_STRING(Side)
   ENUM_FROM_STRING(EventType)
   ENUM_FROM_STRING(DataType)

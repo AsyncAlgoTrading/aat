@@ -40,6 +40,7 @@ PYBIND11_MODULE(binding, m) {
     .value("ORDER", DataType::ORDER)
     .value("TRADE", DataType::TRADE)
     .export_values();
+
   py::enum_<InstrumentType>(m, "InstrumentType", py::arithmetic())
     .value("CURRENCY", InstrumentType::CURRENCY)
     .value("EQUITY", InstrumentType::EQUITY)
