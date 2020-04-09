@@ -219,7 +219,7 @@ class OrderBook(object):
                         if _insort(levels, order.price):
                             # new price level
                             prices[order.price] = _PriceLevel(order.price, collector=self._collector)
-                        
+
                         # add order to price level
                         prices[order.price].add(order)
 
