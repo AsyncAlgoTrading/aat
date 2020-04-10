@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.7.2)
 project(aat)
 
+include(ExternalProject)
+
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
