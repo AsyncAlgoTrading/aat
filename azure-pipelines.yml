@@ -36,12 +36,12 @@ jobs:
       displayName: "Install Yarn"
 
     - bash: yarn
-      displayName: 'Install Deps'
+      displayName: 'Install JS dependencies'
 
     - script: |
         python -m pip install --upgrade pip numpy pyarrow==0.15.1
         pip install -e .[dev]
-      displayName: 'Install dependencies'
+      displayName: 'Install Python Dependencies'
 
     - script: |
         make lint
@@ -89,12 +89,12 @@ jobs:
       displayName: "Install Yarn"
 
     - bash: yarn
-      displayName: 'Install Deps'
+      displayName: 'Install JS dependencies'
 
     - script: |
         python -m pip install --upgrade pip numpy pyarrow==0.15.1
         pip install -e .[dev]
-      displayName: 'Install dependencies'
+      displayName: 'Install Python Dependencies'
 
     - script: |
         make lint
