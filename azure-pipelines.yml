@@ -9,58 +9,59 @@ pr:
     - '*'  # must quote since "*" is a YAML reserved character; we want a string
 
 jobs:
-- job: 'Linux'
-  pool:
-    vmImage: 'ubuntu-latest'
+# - job: 'Linux'
+#   pool:
+#     vmImage: 'ubuntu-latest'
 
-  strategy:
-    matrix:
-      Python37:
-        python.version: '3.7'
+#   strategy:
+#     matrix:
+#       Python37:
+#         python.version: '3.7'
 
-  steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '$(python.version)'
-      displayName: 'Use Python $(python.version)'
+#   steps:
+#     - task: UsePythonVersion@0
+#       inputs:
+#         versionSpec: '$(python.version)'
+#       displayName: 'Use Python $(python.version)'
 
-    - task: NodeTool@0
-      inputs:
-        versionSpec: '12.x'
+#     - task: NodeTool@0
+#       inputs:
+#         versionSpec: '12.x'
 
-    - script: |
-        sudo apt-get install libboost-dev
-      displayName: "System deps"
+#     - script: |
+#         sudo apt-get install libboost-dev
+#         wget https://github.com/pybind/pybind11/archive/v2.5.0.tar.gz && tar xfz v2.5.0.tar.gz && cd pybind11-2.5.0 && mkdir build && cd build && cmake .. -DPYBIND11_TEST=OFF && sudo make -j4 install
+#       displayName: "System deps"
 
-    - bash: npm install -g yarn
-      displayName: "Install Yarn"
+#     - bash: npm install -g yarn
+#       displayName: "Install Yarn"
 
-    - bash: yarn
-      displayName: 'Install JS dependencies'
+#     - bash: yarn
+#       displayName: 'Install JS dependencies'
 
-    - script: |
-        python -m pip install --upgrade pip numpy pyarrow==0.15.1
-        pip install -e .[dev]
-      displayName: 'Install Python Dependencies'
+#     - script: |
+#         python -m pip install --upgrade pip numpy pyarrow==0.15.1
+#         pip install -e .[dev]
+#       displayName: 'Install Python Dependencies'
 
-    - script: |
-        make lint
-      displayName: 'Lint'
+#     - script: |
+#         make lint
+#       displayName: 'Lint'
 
-    - script:
-        make tests
-      displayName: 'Test'
+#     - script:
+#         make tests
+#       displayName: 'Test'
 
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testResultsFiles: 'python_junit.xml'
-        testRunTitle: 'Publish test results for Python $(python.version) $(manylinux_flag)'
+#     - task: PublishTestResults@2
+#       condition: succeededOrFailed()
+#       inputs:
+#         testResultsFiles: 'python_junit.xml'
+#         testRunTitle: 'Publish test results for Python $(python.version) $(manylinux_flag)'
 
-    - task: PublishCodeCoverageResults@1
-      inputs: 
-        codeCoverageTool: Cobertura
-        summaryFileLocation: '$(System.DefaultWorkingDirectory)/*coverage.xml'
+#     - task: PublishCodeCoverageResults@1
+#       inputs: 
+#         codeCoverageTool: Cobertura
+#         summaryFileLocation: '$(System.DefaultWorkingDirectory)/*coverage.xml'
 
 - job: 'Mac'
   pool:
@@ -82,7 +83,7 @@ jobs:
         versionSpec: '12.x'
 
     - script: |
-        brew install boost cmake
+        brew install boost cmake pybind11
       displayName: "System deps"
 
     - bash: npm install -g yarn
