@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.2)
 
+include(ExternalProject)
 ExternalProject_Add(Json-pybind
   GIT_REPOSITORY    https://github.com/pybind/pybind11_json.git
   GIT_TAG           0.2.6
