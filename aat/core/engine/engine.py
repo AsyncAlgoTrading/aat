@@ -7,6 +7,7 @@ from traitlets import validate, TraitError, Unicode, Bool, List, Instance  # typ
 from tornado.web import StaticFileHandler, RedirectHandler, Application as TornadoApplication
 from perspective import PerspectiveManager, PerspectiveTornadoHandler  # type: ignore
 
+from .manager import Dispatcher
 from ..execution import ExecutionManager
 from ..handler import EventHandler, PrintHandler
 from ..models import Event, Error
@@ -68,6 +69,8 @@ class TradingEngine(Application):
         self.port = config.get('general', {}).get('port', self.port)
         self.verbose = bool(int(config.get('general', {}).get('verbose', self.verbose)))
         self.api = bool(int(config.get('general', {}).get('api', self.api)))
+
+        self.dispatcher = Dispatcher(self)
         self.trading_type = config.get('general', {}).get('trading_type', 'simulation')
         self.exchanges = getExchanges(config.get('exchange', {}).get('exchanges', []), verbose=self.verbose)
 

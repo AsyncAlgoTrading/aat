@@ -1,5 +1,5 @@
 # from ..binding import Instrument
-from ..config import InstrumentType
+from ...config import InstrumentType
 
 
 class Instrument(object):
