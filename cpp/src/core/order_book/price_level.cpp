@@ -4,7 +4,6 @@ namespace aat {
 namespace core {
   using namespace aat::config;
 
-
   PriceLevel::PriceLevel(double price, Collector& collector)
     : price(price)
     , collector(collector)
@@ -12,8 +11,8 @@ namespace core {
     , orders_staged()
     , stop_orders()
     , stop_orders_staged() {
-      py::print(orders.size());
-    }
+    py::print(orders.size());
+  }
 
   double
   PriceLevel::getVolume() const {
@@ -180,14 +179,12 @@ namespace core {
   void
   PriceLevel::revert() {
     orders.clear();
-    orders.insert(orders.begin(), 
-      std::make_move_iterator(orders_staged.begin()),
-      std::make_move_iterator(orders_staged.end()));
+    orders.insert(
+      orders.begin(), std::make_move_iterator(orders_staged.begin()), std::make_move_iterator(orders_staged.end()));
     orders_staged.clear();
 
     stop_orders.clear();
-    stop_orders.insert(stop_orders.begin(), 
-      std::make_move_iterator(stop_orders_staged.begin()),
+    stop_orders.insert(stop_orders.begin(), std::make_move_iterator(stop_orders_staged.begin()),
       std::make_move_iterator(stop_orders_staged.end()));
     stop_orders_staged.clear();
   }

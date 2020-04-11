@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
+from datetime import datetime
 from typing import Mapping, Union, Type
 from ...config import Side, DataType
 from ..instrument import Instrument
@@ -10,7 +11,7 @@ class Data(BaseModel):
         arbitrary_types_allowed = True
 
     id: int = 0
-    timestamp: int
+    timestamp: int = None
     volume: float
     price: float
     side: Side
@@ -21,6 +22,12 @@ class Data(BaseModel):
     # maybe specific
     exchange: ExchangeType = ExchangeType('')
     filled: float = 0.0
+
+    @validator("timestamp", always=True)
+    def _set_timestamp_if_unset(cls, v):
+        if v is None:
+            return datetime.now().timestamp()
+        return v
 
     def __eq__(self, other) -> bool:
         return (self.price == other.price) and \

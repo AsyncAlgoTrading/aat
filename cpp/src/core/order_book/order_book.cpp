@@ -347,8 +347,8 @@ namespace core {
     auto count = 5;
     auto orig = 5;
 
-    for(auto i = 0; i < sell_levels.size(); ++i){
-      if(i < 5){
+    for (auto i = 0; i < sell_levels.size(); ++i) {
+      if (i < 5) {
         // append to list
         sells_to_print.push_back(sells.at(sell_levels[i]));
       } else {
@@ -366,8 +366,8 @@ namespace core {
     count = 5;
     orig = 5;
 
-    for(auto i = 0; i < buy_levels.size(); ++i){
-      if(i < 5) {
+    for (auto i = 0; i < buy_levels.size(); ++i) {
+      if (i < 5) {
         // append to list
         buys_to_print.push_back(buys.at(buy_levels[buy_levels.size() - i - 1]));
       } else {
@@ -376,27 +376,19 @@ namespace core {
       }
     }
     // sell list, then line, then buy list
-    
+
     // format the sells on top, tabbed to the right, with price\tvolume
-    for(PriceLevel* price_level: sells_to_print) {
-        // TODO implement the rest from python in C++
-        ss << "\t\t" \
-           << price_level->getPrice() \
-           << "\t\t" \
-           << price_level->getVolume() \
-           << std::endl;
+    for (PriceLevel* price_level : sells_to_print) {
+      // TODO implement the rest from python in C++
+      ss << "\t\t" << price_level->getPrice() << "\t\t" << price_level->getVolume() << std::endl;
     }
 
     ss << "-----------------------------------------------------\n";
 
     // format the buys on bottom, tabbed to the left, with volume\tprice so prices align
-    for(PriceLevel* price_level: buys_to_print) {
-        // TODO implement the rest from python in C++
-        ss << "\t\t" \
-           << price_level->getVolume() \
-           << "\t\t" \
-           << price_level->getPrice() \
-           << std::endl;
+    for (PriceLevel* price_level : buys_to_print) {
+      // TODO implement the rest from python in C++
+      ss << "\t\t" << price_level->getVolume() << "\t\t" << price_level->getPrice() << std::endl;
     }
     return ss.str();
   }

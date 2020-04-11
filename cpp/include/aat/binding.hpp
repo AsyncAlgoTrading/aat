@@ -70,8 +70,8 @@ PYBIND11_MODULE(binding, m) {
     .def("cancel", &OrderBook::cancel)
     .def("topOfBook", &OrderBook::topOfBook)
     .def("spread", &OrderBook::spread)
-    .def("level", (std::vector<PriceLevel*>  (OrderBook::*)(double) const) &OrderBook::level)
-    .def("level", (std::vector<double> (OrderBook::*)(std::uint64_t) const) &OrderBook::level)
+    .def("level", (std::vector<PriceLevel*>(OrderBook::*)(double) const) & OrderBook::level)
+    .def("level", (std::vector<double>(OrderBook::*)(std::uint64_t) const) & OrderBook::level)
     .def("levels", &OrderBook::levels);
 
   py::class_<ExchangeType>(m, "ExchangeTypeCpp")

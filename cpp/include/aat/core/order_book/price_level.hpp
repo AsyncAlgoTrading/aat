@@ -40,7 +40,7 @@ namespace core {
   private:
     double price;
     Collector& collector;
-    std::deque<Order*> orders {};
+    std::deque<Order*> orders{};
     std::deque<Order*> orders_staged;
     std::vector<Order*> stop_orders;
     std::vector<Order*> stop_orders_staged;

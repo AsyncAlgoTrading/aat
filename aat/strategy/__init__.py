@@ -1,11 +1,14 @@
 from abc import abstractmethod
 from typing import Union
-from ..core import Event, EventHandler, Trade, Order
+from ..config import Side
+from ..core import Event, EventHandler, Trade, Order, Instrument, ExchangeType
 
 
 class Strategy(EventHandler):
     def __init__(self, *args, **kwargs):
-        pass
+        self._strategy_open_orders = []
+        self._strategy_past_orders = []
+        self._strategy_trades = []
 
     #########################
     # Event Handler Methods #
@@ -70,9 +73,9 @@ class Strategy(EventHandler):
         Returns:
             None
         '''
-        pass
+        self._strategy_open_orders.append(order)
 
-    def sell(self):
+    def sell(self, order: Order):
         '''submit a sell order. Note that this is merely a request for an order, it provides no guarantees that the order will
         execute. At a later point, if your order executes, you will receive an alert via the `sold` method
 
@@ -81,9 +84,9 @@ class Strategy(EventHandler):
         Returns:
             None
         '''
-        pass
+        self._strategy_open_orders.append(order)
 
-    def bought(self, order_or_trade: Union[Order, Trade]):
+    def onBought(self, order_or_trade: Union[Order, Trade], my_order: Order = None):
         '''callback method for when/if your order executes.
 
         Args:
@@ -91,13 +94,47 @@ class Strategy(EventHandler):
         '''
         pass
 
-    def sold(self, order_or_trade: Union[Order, Trade]):
+    def onSold(self, order_or_trade: Union[Order, Trade] = None, my_order: Order = None):
         '''callback method for when/if your order executes.
 
         Args:
             order_or_trade (Union[Order, Trade]): the trade/s as your order completes, and/or a cancellation order
         '''
         pass
+
+    def onReject(self, order: Order):
+        '''callback method for if your order fails to execute
+
+        Args:
+            order (Order): the order you attempted to make
+        '''
+        pass
+
+    def request(self, order: Order):
+        '''helper method, defers to buy/sell'''
+        if order.side == Side.BUY:
+            return self.buy(order)
+        return self.sell(order)
+
+    def openOrders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
+        ret = self._strategy_open_orders.copy()
+        if instrument:
+            ret = [r for r in ret if r.instrument == instrument]
+        if exchange:
+            ret = [r for r in ret if r.exchange == exchange]
+        if side:
+            ret = [r for r in ret if r.side == side]
+        return ret
+
+    def pastOrders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
+        ret = self._strategy_past_orders.copy()
+        if instrument:
+            ret = [r for r in ret if r.instrument == instrument]
+        if exchange:
+            ret = [r for r in ret if r.exchange == exchange]
+        if side:
+            ret = [r for r in ret if r.side == side]
+        return ret
 
     #################
     # Other Methods #

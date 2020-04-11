@@ -1,6 +1,5 @@
 from typing import Any, Dict
-from aat.core import Event
-from aat.strategy import Strategy
+from aat import Strategy, Event, Order, Side
 
 
 class BuyAndHoldStrategy(Strategy):
@@ -11,45 +10,44 @@ class BuyAndHoldStrategy(Strategy):
     def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
         print('Trade:\n\t{}\n\tSlippage:{}\n\tTxnCost:{}'.format(event, event.target.slippage(), event.target.transactionCost()))
-        # if event.target.instrument not in self.bought:
-        #     req = TradeRequest(side=Side.BUY,
-        #                        volume=1,
-        #                        instrument=data.instrument,
-        #                        order_type=OrderType.MARKET,
-        #                        exchange=data.exchange,
-        #                        price=data.price,
-        #                        time=data.time)
-        #     log.info("requesting buy : %s", req)
-        #     self.request(req)
-        #     self.bought[data.instrument] = 'pending'
+        if event.target.instrument not in self._bought and not self.openOrders(event.target.instrument):
+            # TODO await self.buy(...) ?
+            req = Order(side=Side.BUY,
+                        price=event.target.price,
+                        volume=1,
+                        instrument=event.target.instrument,
+                        order_type=Order.Types.MARKET,
+                        exchange=event.target.exchange)
+            print("requesting buy : {}".format(req))
+            self.request(req)
 
     def onError(self, event: Event) -> None:
         print("Error:", event)
 
-    # def onFill(self, res: TradeResponse) -> None:
-    #     self.bought[res.instrument] = res
-    #     log.info('bought %.2f @ %.2f' % (res.volume, res.price))
+    def onBought(self, event: Event) -> None:
+        print('bought {.2f} @ {.2f}'.format(event.target.volume, event.target.price))
+        self._bought[event.target.instrument] = event.target
 
-    # def slippage(self, resp: TradeResponse) -> TradeResponse:
-    #     slippage = resp.price * .0001  # .01% price impact
-    #     if resp.side == Side.BUY:
-    #         # price moves against (up)
-    #         resp.slippage = slippage
-    #         resp.price += slippage
-    #     else:
-    #         # price moves against (down)
-    #         resp.slippage = -slippage
-    #         resp.price -= slippage
-    #     return resp
+    def slippage(self, order: Order) -> Order:
+        slippage = order.price * .0001  # .01% price impact
+        if order.side == Side.BUY:
+            # price moves against (up)
+            order.slippage = slippage
+            order.price += slippage
+        else:
+            # price moves against (down)
+            order.slippage = -slippage
+            order.price -= slippage
+        return order
 
-    # def transactionCost(self, resp: TradeResponse) -> TradeResponse:
-    #     txncost = resp.price * resp.volume * .0025  # gdax is 0.0025 max fee
-    #     if resp.side == Side.BUY:
-    #         # price moves against (up)
-    #         resp.transaction_cost = txncost
-    #         resp.price += txncost
-    #     else:
-    #         # price moves against (down)
-    #         resp.transaction_cost = -txncost
-    #         resp.price -= txncost
-    #     return resp
+    def transactionCost(self, order: Order) -> Order:
+        txncost = order.price * order.volume * .0025  # 0.0025 max fee
+        if order.side == Side.BUY:
+            # price moves against (up)
+            order.transaction_cost = txncost
+            order.price += txncost
+        else:
+            # price moves against (down)
+            order.transaction_cost = -txncost
+            order.price -= txncost
+        return order
