@@ -1,5 +1,5 @@
 from typing import Any, Dict
-from aat import Strategy, Event, Order, Side
+from aat import Strategy, Event, Order, Trade, Side
 
 
 class BuyAndHoldStrategy(Strategy):
@@ -28,26 +28,26 @@ class BuyAndHoldStrategy(Strategy):
         print('bought {.2f} @ {.2f}'.format(event.target.volume, event.target.price))
         self._bought[event.target.instrument] = event.target
 
-    def slippage(self, order: Order) -> Order:
-        slippage = order.price * .0001  # .01% price impact
-        if order.side == Side.BUY:
+    def slippage(self, trade: Trade) -> Trade:
+        slippage = trade.price * .0001  # .01% price impact
+        if trade.side == Side.BUY:
             # price moves against (up)
-            order.slippage = slippage
-            order.price += slippage
+            trade.slippage = slippage
+            trade.price += slippage
         else:
             # price moves against (down)
-            order.slippage = -slippage
-            order.price -= slippage
-        return order
+            trade.slippage = -slippage
+            trade.price -= slippage
+        return trade
 
-    def transactionCost(self, order: Order) -> Order:
-        txncost = order.price * order.volume * .0025  # 0.0025 max fee
-        if order.side == Side.BUY:
+    def transactionCost(self, trade: Trade) -> Trade:
+        txncost = trade.price * trade.volume * .0025  # 0.0025 max fee
+        if trade.side == Side.BUY:
             # price moves against (up)
-            order.transaction_cost = txncost
-            order.price += txncost
+            trade.transaction_cost = txncost
+            trade.price += txncost
         else:
             # price moves against (down)
-            order.transaction_cost = -txncost
-            order.price -= txncost
-        return order
+            trade.transaction_cost = -txncost
+            trade.price -= txncost
+        return trade

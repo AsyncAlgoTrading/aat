@@ -7,8 +7,11 @@ from traitlets import validate, TraitError, Unicode, Bool, List, Instance  # typ
 from tornado.web import StaticFileHandler, RedirectHandler, Application as TornadoApplication
 from perspective import PerspectiveManager, PerspectiveTornadoHandler  # type: ignore
 
+from ..execution import ExecutionManager
 from ..handler import EventHandler, PrintHandler
 from ..models import Event, Error
+from ..order_entry import OrderManager
+from ..risk import RiskManager
 from ..table import TableHandler
 from ...config import EventType, getStrategies, getExchanges
 from ...exchange import Exchange
@@ -29,11 +32,16 @@ class TradingEngine(Application):
     verbose = Bool(default_value=True)
     api = Bool(default_value=True)
     port = Unicode(default_value='8080', help="Port to run on").tag(config=True)
-    trading_type = Unicode(default_value='simulation')
-    exchanges = List(trait=Instance(klass=Exchange))
     event_loop = Instance(klass=asyncio.events.AbstractEventLoop)
 
+    trading_type = Unicode(default_value='simulation')
+    order_manager = Instance(OrderManager, args=(), kwargs={})
+    risk_manager = Instance(RiskManager, args=(), kwargs={})
+    execution_manager = Instance(ExecutionManager, args=(), kwargs={})
+
+    exchanges = List(trait=Instance(klass=Exchange))
     event_handlers = List(trait=Instance(EventHandler), default_value=[])
+
     api_application = Instance(klass=TornadoApplication)
     api_handlers = List(default_value=[])
     table_manager = Instance(klass=PerspectiveManager, args=(), kwargs={})
