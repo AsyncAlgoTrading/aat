@@ -11,7 +11,6 @@ namespace core {
     , orders_staged()
     , stop_orders()
     , stop_orders_staged() {
-    py::print(orders.size());
   }
 
   double
@@ -26,16 +25,12 @@ namespace core {
   void
   PriceLevel::add(Order* order) {
     // append order to deque
-    py::print(order);
-    py::print(order->order_type);
     if (order->order_type == OrderType::STOP) {
       if (orders.size() > 0 && std::find(orders.begin(), orders.end(), order) != orders.end()) {
         return;
       }
       orders.push_back(order);
     } else {
-      py::print(1);
-      py::print(orders.empty());
       if (orders.size() > 0 && std::find(orders.begin(), orders.end(), order) != orders.end()) {
         collector.pushChange(order);
       } else {

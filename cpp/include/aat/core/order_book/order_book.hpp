@@ -39,7 +39,7 @@ namespace core {
   private:
     void clearOrders(Order* order, std::uint64_t amount);
     double getTop(Side side, std::uint64_t cleared);
-    bool insort(std::vector<double> levels, double value);
+    bool insort(std::vector<double>& levels, double value);
 
     std::function<void(Event*)> callback;
     Collector collector;

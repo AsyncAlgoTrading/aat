@@ -174,6 +174,7 @@ namespace core {
             // new price level
             prices[order->price] = new PriceLevel(order->price, collector);
           }
+          py::print("putting on book", order->price, order->volume);
           // add order to price level
           prices[order->price]->add(order);
 
@@ -231,7 +232,7 @@ namespace core {
 
     if (sell_levels.size() > 0) {
       ret.push_back(sell_levels.front());
-      ret.push_back(buys.at(sell_levels.front())->getVolume());
+      ret.push_back(sells.at(sell_levels.front())->getVolume());
     } else {
       ret.push_back(std::numeric_limits<double>::infinity());
       ret.push_back(0.0);
@@ -260,7 +261,7 @@ namespace core {
 
     if (sell_levels.size() > level) {
       ret.push_back(sell_levels[level]);
-      ret.push_back(buys.at(sell_levels[level])->getVolume());
+      ret.push_back(sells.at(sell_levels[level])->getVolume());
     } else {
       ret.push_back(std::numeric_limits<double>::infinity());
       ret.push_back(0.0);
@@ -309,7 +310,7 @@ namespace core {
     if (order->side == Side::BUY) {
       sell_levels.erase(sell_levels.begin(), sell_levels.begin() + amount);
     } else {
-      buy_levels.erase(buy_levels.begin() + (buy_levels.size() - amount - 1), buy_levels.end());
+      buy_levels.erase(buy_levels.begin() + (buy_levels.size() - amount), buy_levels.end());
     }
   }
 
@@ -331,10 +332,10 @@ namespace core {
   }
 
   bool
-  OrderBook::insort(std::vector<double> levels, double value) {
+  OrderBook::insort(std::vector<double>& levels, double value) {
     auto orig_length = levels.size();
     levels.insert(std::upper_bound(levels.begin(), levels.end(), value), value);
-    return orig_length == levels.size();
+    return orig_length != levels.size();
   }
 
   std::string
@@ -365,11 +366,14 @@ namespace core {
     std::vector<PriceLevel*> buys_to_print;
     count = 5;
     orig = 5;
+    int i = 0;
 
-    for (auto i = 0; i < buy_levels.size(); ++i) {
-      if (i < 5) {
+    py::print("buy_level_size:", buy_levels.size());
+    for (auto iter=buy_levels.end()-1; iter>buy_levels.begin(); --iter) {
+      if ((i++) < 5) {
         // append to list
-        buys_to_print.push_back(buys.at(buy_levels[buy_levels.size() - i - 1]));
+        // py::print(*iter);
+        buys_to_print.push_back(buys.at(*iter));
       } else {
         // TODO implement the rest from python in C++
         break;
@@ -388,7 +392,7 @@ namespace core {
     // format the buys on bottom, tabbed to the left, with volume\tprice so prices align
     for (PriceLevel* price_level : buys_to_print) {
       // TODO implement the rest from python in C++
-      ss << "\t\t" << price_level->getVolume() << "\t\t" << price_level->getPrice() << std::endl;
+      ss << price_level->getVolume() << "\t\t" << price_level->getPrice() << std::endl;
     }
     return ss.str();
   }
