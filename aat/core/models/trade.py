@@ -3,7 +3,7 @@ from pydantic import validator
 from typing import Mapping, Type, Union
 from .data import Data
 from .order import Order
-from ...config import DataType
+from ...config import DataType, Side
 
 
 class Trade(Data):
@@ -16,6 +16,28 @@ class Trade(Data):
 
     _slippage: float = 0.0
     _transaction_cost: float = 0.0
+
+    def addSlippage(self, slippage: float):
+        '''add slippage to an trade'''
+        if self.side == Side.BUY:
+            # price moves against (up)
+            self._slippage = slippage
+            self.price += slippage
+        else:
+            # price moves against (down)
+            self._slippage = -slippage
+            self.price -= slippage
+
+    def addTransactionCost(self, txncost: float):
+        '''add transaction cost to a trade'''
+        if self.side == Side.BUY:
+            # price moves against (up)
+            self.transaction_cost = txncost
+            self.price += txncost
+        else:
+            # price moves against (down)
+            self.transaction_cost = -txncost
+            self.price -= txncost
 
     def slippage(self):
         '''the amount of slippage of the order'''

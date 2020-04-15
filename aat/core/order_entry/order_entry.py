@@ -6,4 +6,4 @@ class OrderManager(object):
         pass
 
     def request(self, order: Order):
-        pass
+        print(order)

@@ -4,6 +4,9 @@ CONFIG=./config/synthetic.cfg
 run:  build  ## Clean and make target, run target
 	python3 -m aat $(CONFIG)
 
+rundebug:  debug  ## Clean and make debug target, run target
+	python3 -m aat $(CONFIG)
+
 buildext: ## build the package extensions
 	python3 setup.py build_ext
 

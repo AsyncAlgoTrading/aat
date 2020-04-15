@@ -10,7 +10,9 @@ class BuyAndHoldStrategy(Strategy):
     def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
         print('Trade:\n\t{}\n\tSlippage:{}\n\tTxnCost:{}'.format(event, event.target.slippage(), event.target.transactionCost()))
-        if event.target.instrument not in self._bought and not self.openOrders(event.target.instrument):
+
+        # no past trades, no current orders
+        if not self.orders(event.target.instrument) and not self.trades(event.target.instrument):
             # TODO await self.buy(...) ?
             req = Order(side=Side.BUY,
                         price=event.target.price,
@@ -30,24 +32,10 @@ class BuyAndHoldStrategy(Strategy):
 
     def slippage(self, trade: Trade) -> Trade:
         slippage = trade.price * .0001  # .01% price impact
-        if trade.side == Side.BUY:
-            # price moves against (up)
-            trade.slippage = slippage
-            trade.price += slippage
-        else:
-            # price moves against (down)
-            trade.slippage = -slippage
-            trade.price -= slippage
+        trade.addSlippage(slippage)
         return trade
 
     def transactionCost(self, trade: Trade) -> Trade:
         txncost = trade.price * trade.volume * .0025  # 0.0025 max fee
-        if trade.side == Side.BUY:
-            # price moves against (up)
-            trade.transaction_cost = txncost
-            trade.price += txncost
-        else:
-            # price moves against (down)
-            trade.transaction_cost = -txncost
-            trade.price -= txncost
+        trade.addTransactionCost(txncost)
         return trade

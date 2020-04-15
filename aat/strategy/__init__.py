@@ -9,6 +9,10 @@ class Strategy(EventHandler):
         self._strategy_open_orders = []
         self._strategy_past_orders = []
         self._strategy_trades = []
+        self._manager = None
+
+    def _setManager(self, mgr):
+        self._manager = mgr
 
     #########################
     # Event Handler Methods #
@@ -73,7 +77,9 @@ class Strategy(EventHandler):
         Returns:
             None
         '''
+        # TODO move me
         self._strategy_open_orders.append(order)
+        self._manager.request(order)
 
     def sell(self, order: Order):
         '''submit a sell order. Note that this is merely a request for an order, it provides no guarantees that the order will
@@ -84,7 +90,9 @@ class Strategy(EventHandler):
         Returns:
             None
         '''
+        # TODO move me
         self._strategy_open_orders.append(order)
+        self._manager.request(order)
 
     def onBought(self, order_or_trade: Union[Order, Trade], my_order: Order = None):
         '''callback method for when/if your order executes.
@@ -92,7 +100,8 @@ class Strategy(EventHandler):
         Args:
             order_or_trade (Union[Order, Trade]): the trade/s as your order completes, and/or a cancellation order
         '''
-        pass
+        # TODO move me
+        self._strategy_trades.append(order_or_trade)
 
     def onSold(self, order_or_trade: Union[Order, Trade] = None, my_order: Order = None):
         '''callback method for when/if your order executes.
@@ -100,7 +109,8 @@ class Strategy(EventHandler):
         Args:
             order_or_trade (Union[Order, Trade]): the trade/s as your order completes, and/or a cancellation order
         '''
-        pass
+        # TODO move me
+        self._strategy_trades.append(order_or_trade)
 
     def onReject(self, order: Order):
         '''callback method for if your order fails to execute
@@ -108,7 +118,7 @@ class Strategy(EventHandler):
         Args:
             order (Order): the order you attempted to make
         '''
-        pass
+        self._strategy_open_orders.remove(order)
 
     def request(self, order: Order):
         '''helper method, defers to buy/sell'''
@@ -116,7 +126,7 @@ class Strategy(EventHandler):
             return self.buy(order)
         return self.sell(order)
 
-    def openOrders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
+    def orders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         ret = self._strategy_open_orders.copy()
         if instrument:
             ret = [r for r in ret if r.instrument == instrument]
@@ -136,9 +146,20 @@ class Strategy(EventHandler):
             ret = [r for r in ret if r.side == side]
         return ret
 
+    def trades(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
+        ret = self._strategy_trades.copy()
+        if instrument:
+            ret = [r for r in ret if r.instrument == instrument]
+        if exchange:
+            ret = [r for r in ret if r.exchange == exchange]
+        if side:
+            ret = [r for r in ret if r.side == side]
+        return ret
+
     #################
     # Other Methods #
     #################
+
     def slippage(self, trade: Trade):
         '''method to inject slippage when backtesting
 

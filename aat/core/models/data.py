@@ -30,6 +30,7 @@ class Data(BaseModel):
         return v
 
     def __eq__(self, other) -> bool:
+        assert isinstance(other, Data)
         return (self.price == other.price) and \
                (self.instrument == other.instrument) and \
                (self.side == other.side)
