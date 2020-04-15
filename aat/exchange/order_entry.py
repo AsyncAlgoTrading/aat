@@ -12,5 +12,8 @@ class _OrderEntry(metaclass=ABCMeta):
         '''get accounts from source'''
         return []
 
-    def sendOrder(self, order: Order):
-        '''send order to exchange'''
+    async def newOrder(self, order: Order):
+        '''submit a new order to the exchange. should be asynchronous
+
+        For MarketData-only, can just return None
+        '''

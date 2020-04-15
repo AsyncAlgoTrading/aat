@@ -1,11 +1,9 @@
-from typing import Any, Dict
 from aat import Strategy, Event, Order, Trade, Side
 
 
 class BuyAndHoldStrategy(Strategy):
     def __init__(self, *args, **kwargs) -> None:
         super(BuyAndHoldStrategy, self).__init__(*args, **kwargs)
-        self._bought: Dict[str, Any] = {}
 
     def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
@@ -21,14 +19,15 @@ class BuyAndHoldStrategy(Strategy):
                         order_type=Order.Types.MARKET,
                         exchange=event.target.exchange)
             print("requesting buy : {}".format(req))
-            self.request(req)
+            self.newOrder(req)
 
     def onError(self, event: Event) -> None:
         print("Error:", event)
 
     def onBought(self, event: Event) -> None:
         print('bought {.2f} @ {.2f}'.format(event.target.volume, event.target.price))
-        self._bought[event.target.instrument] = event.target
+        import sys
+        sys.exit(0)
 
     def slippage(self, trade: Trade) -> Trade:
         slippage = trade.price * .0001  # .01% price impact

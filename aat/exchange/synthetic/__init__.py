@@ -18,20 +18,21 @@ class SyntheticExchange(Exchange):
     _inst = 0
 
     def __init__(self, verbose=False, **kwargs):
-        self._exchange = ExchangeType('synthetic{}'.format(SyntheticExchange._inst))
+        super().__init__(ExchangeType('synthetic{}'.format(SyntheticExchange._inst)))
         self._verbose = verbose
         self._id = 0
         self._events = deque()
+        self._pending_orders = deque()
         SyntheticExchange._inst += 1
 
     def _seed(self, symbols=None):
         self._instruments = {symbol: Instrument(symbol) for symbol in symbols or _getName(1)}
-        self._orderbooks = {symbol: OrderBook(instrument=i, exchange_name=self._exchange, callback=lambda x: None) for symbol, i in self._instruments.items()}
+        self._orderbooks = {Instrument(symbol): OrderBook(instrument=i, exchange_name=self._exchange, callback=lambda x: None) for symbol, i in self._instruments.items()}
         self._seedOrders()
 
     def _seedOrders(self):
         # seed all orderbooks
-        for symbol, orderbook in self._orderbooks.items():
+        for instrument, orderbook in self._orderbooks.items():
 
             # pick a random startpoint, endpoint, and midpoint
             start = round(random() * 50, 2) + 50
@@ -47,7 +48,7 @@ class SyntheticExchange(Exchange):
                                     price=start,
                                     side=side,
                                     type=DataType.ORDER,
-                                    instrument=self._instruments[symbol],
+                                    instrument=instrument,
                                     exchange=self._exchange))
                 start = round(start + increment, 2)
                 self._id += 1
@@ -75,16 +76,20 @@ class SyntheticExchange(Exchange):
 
         # loop forever
         while True:
+            while self._pending_orders:
+                order = self._pending_orders.popleft()
+                self._orderbooks[order.instrument].add(order)
+                await asyncio.sleep(.1)
+
             while self._events:
                 event = self._events.popleft()
                 yield event
                 await asyncio.sleep(.1)
-
             await asyncio.sleep(.1)
             # choose a random symbol
             symbol = choice(list(self._instruments.keys()))
             instrument = self._instruments[symbol]
-            orderbook = self._orderbooks[symbol]
+            orderbook = self._orderbooks[instrument]
 
             # add a new buy order, a new sell order, or a cross
             do = choice(('buy', 'sell', 'cross', 'cancel', 'change'))
@@ -177,6 +182,9 @@ class SyntheticExchange(Exchange):
             # print current state if running in verbose mode
             if self._verbose:
                 print(self)
+
+    def newOrder(self, order: Order):
+        self._pending_orders.append(order)
 
 
 Exchange.registerExchange('synthetic', SyntheticExchange)

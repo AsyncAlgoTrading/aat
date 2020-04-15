@@ -68,6 +68,11 @@ class Strategy(EventHandler):
     #######################
     # Order Entry Methods #
     #######################
+    def newOrder(self, order: Order):
+        '''helper method, defers to buy/sell'''
+        self._strategy_open_orders.append(order)
+        self._manager.newOrder(order)
+
     def buy(self, order: Order):
         '''submit a buy order. Note that this is merely a request for an order, it provides no guarantees that the order will
         execute. At a later point, if your order executes, you will receive an alert via the `bought` method
@@ -79,7 +84,7 @@ class Strategy(EventHandler):
         '''
         # TODO move me
         self._strategy_open_orders.append(order)
-        self._manager.request(order)
+        self._manager.newOrder(order)
 
     def sell(self, order: Order):
         '''submit a sell order. Note that this is merely a request for an order, it provides no guarantees that the order will
@@ -92,7 +97,7 @@ class Strategy(EventHandler):
         '''
         # TODO move me
         self._strategy_open_orders.append(order)
-        self._manager.request(order)
+        self._manager.newOrder(order)
 
     def onBought(self, order_or_trade: Union[Order, Trade], my_order: Order = None):
         '''callback method for when/if your order executes.
@@ -119,12 +124,6 @@ class Strategy(EventHandler):
             order (Order): the order you attempted to make
         '''
         self._strategy_open_orders.remove(order)
-
-    def request(self, order: Order):
-        '''helper method, defers to buy/sell'''
-        if order.side == Side.BUY:
-            return self.buy(order)
-        return self.sell(order)
 
     def orders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         ret = self._strategy_open_orders.copy()

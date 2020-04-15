@@ -12,6 +12,7 @@ from ..execution import ExecutionManager
 from ..handler import EventHandler, PrintHandler
 from ..models import Event, Error
 from ..order_entry import OrderManager
+from ..portfolio import PortfolioManager
 from ..risk import RiskManager
 from ..table import TableHandler
 from ...config import EventType, getStrategies, getExchanges
@@ -38,8 +39,8 @@ class TradingEngine(Application):
     trading_type = Unicode(default_value='simulation')
     order_manager = Instance(OrderManager, args=(), kwargs={})
     risk_manager = Instance(RiskManager, args=(), kwargs={})
+    portfolio_manager = Instance(PortfolioManager, args=(), kwargs={})
     execution_manager = Instance(ExecutionManager, args=(), kwargs={})
-
     exchanges = List(trait=Instance(klass=Exchange))
     event_handlers = List(trait=Instance(EventHandler), default_value=[])
 
@@ -70,9 +71,9 @@ class TradingEngine(Application):
         self.verbose = bool(int(config.get('general', {}).get('verbose', self.verbose)))
         self.api = bool(int(config.get('general', {}).get('api', self.api)))
 
-        self.manager = Manager(self)
         self.trading_type = config.get('general', {}).get('trading_type', 'simulation')
         self.exchanges = getExchanges(config.get('exchange', {}).get('exchanges', []), verbose=self.verbose)
+        self.manager = Manager(self, self.trading_type, self.exchanges)
 
         # set event loop to use uvloop
         if uvloop:
