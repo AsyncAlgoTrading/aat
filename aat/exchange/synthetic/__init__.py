@@ -124,6 +124,7 @@ class SyntheticExchange(Exchange):
             elif do == 'cross':
                 # cross the spread
                 side = choice(('buy', 'sell'))
+                volume = volume * 2
                 if side == 'buy':
                     # cross to buy
                     price = round(levels['ask'][0] + choice((0.0, .01, .05)), 2)
@@ -184,6 +185,8 @@ class SyntheticExchange(Exchange):
                 print(self)
 
     def newOrder(self, order: Order):
+        order.id = self._id
+        self._id += 1
         self._pending_orders.append(order)
 
 

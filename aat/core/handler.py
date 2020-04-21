@@ -5,6 +5,11 @@ from ..config import EventType
 
 
 class EventHandler(metaclass=ABCMeta):
+    _manager = None
+
+    def _setManager(self, mgr):
+        self._manager = mgr
+
     # onAnalyze(self, engine):
     def _valid_callback(self, callback):
         if hasattr(self, callback) and not isabstract(callback) and not hasattr(getattr(self, callback), "_original"):

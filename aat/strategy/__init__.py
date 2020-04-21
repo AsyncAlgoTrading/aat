@@ -9,10 +9,6 @@ class Strategy(EventHandler):
         self._strategy_open_orders = []
         self._strategy_past_orders = []
         self._strategy_trades = []
-        self._manager = None
-
-    def _setManager(self, mgr):
-        self._manager = mgr
 
     #########################
     # Event Handler Methods #
@@ -71,7 +67,7 @@ class Strategy(EventHandler):
     def newOrder(self, order: Order):
         '''helper method, defers to buy/sell'''
         self._strategy_open_orders.append(order)
-        self._manager.newOrder(order)
+        self._manager.newOrder(order, self)
 
     def buy(self, order: Order):
         '''submit a buy order. Note that this is merely a request for an order, it provides no guarantees that the order will
@@ -84,7 +80,7 @@ class Strategy(EventHandler):
         '''
         # TODO move me
         self._strategy_open_orders.append(order)
-        self._manager.newOrder(order)
+        self._manager.newOrder(order, self)
 
     def sell(self, order: Order):
         '''submit a sell order. Note that this is merely a request for an order, it provides no guarantees that the order will
@@ -97,7 +93,7 @@ class Strategy(EventHandler):
         '''
         # TODO move me
         self._strategy_open_orders.append(order)
-        self._manager.newOrder(order)
+        self._manager.newOrder(order, self)
 
     def onBought(self, order_or_trade: Union[Order, Trade], my_order: Order = None):
         '''callback method for when/if your order executes.

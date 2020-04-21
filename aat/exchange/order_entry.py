@@ -13,7 +13,7 @@ class _OrderEntry(metaclass=ABCMeta):
         return []
 
     async def newOrder(self, order: Order):
-        '''submit a new order to the exchange. should be asynchronous
+        '''submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id
 
         For MarketData-only, can just return None
         '''

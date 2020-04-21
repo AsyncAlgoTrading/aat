@@ -10,17 +10,18 @@ class Data(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+    # internal
     id: int = 0
     timestamp: int = None
+
+    # public
     volume: float
     price: float
     side: Side
-
     type: DataType
     instrument: Instrument
-
-    # maybe specific
     exchange: ExchangeType = ExchangeType('')
+
     filled: float = 0.0
 
     @validator("timestamp", always=True)

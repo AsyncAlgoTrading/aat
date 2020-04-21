@@ -95,6 +95,9 @@ class TradingEngine(Application):
         if not self.event_handlers:
             self.log.critical('Warning! No event handlers set')
 
+        # register internal management event handler
+        self.registerHandler(self.manager)
+
         # install print handler if verbose
         if self.verbose:
             self.log.critical('Installing print handler')
@@ -177,6 +180,8 @@ class TradingEngine(Application):
             try:
                 handler(event)
             except KeyboardInterrupt:
+                raise
+            except SystemExit:
                 raise
             except BaseException as e:
                 self.tick(Event(type=EventType.ERROR, target=Error(target=event, handler=handler, exception=e)))
