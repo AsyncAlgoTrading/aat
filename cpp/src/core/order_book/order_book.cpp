@@ -75,6 +75,7 @@ namespace core {
           clearOrders(order, collector.getClearedLevels());
 
           // execute order
+          collector.pushCancel(order);
           collector.commit();
 
           // execute secondaries

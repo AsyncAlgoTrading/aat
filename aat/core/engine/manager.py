@@ -44,7 +44,7 @@ class Manager(EventHandler):
 
     def onCancel(self, event):
         # TODO
-        pass
+        self._order_mgr.onCancel(event)
 
     def onChange(self, event):
         # TODO

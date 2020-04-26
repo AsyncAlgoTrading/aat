@@ -137,7 +137,8 @@ class OrderBook(object):
                     # clear levels
                     self._clearOrders(order, self._collector.clearedLevels())
 
-                    # execute order
+                    # execute order, cancel the rest
+                    self._collector.pushCancel(order)
                     self._collector.commit()
 
                     # execute secondaries

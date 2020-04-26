@@ -4,6 +4,8 @@ from ...config import EventType
 
 
 class Event(BaseModel):
+    Types = EventType
+
     class Config:
         arbitrary_types_allowed = True
 

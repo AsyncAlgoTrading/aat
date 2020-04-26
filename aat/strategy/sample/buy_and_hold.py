@@ -13,7 +13,7 @@ class BuyAndHoldStrategy(Strategy):
         if not self.orders(event.target.instrument) and not self.trades(event.target.instrument):
             # TODO await self.buy(...) ?
             req = Order(side=Side.BUY,
-                        price=event.target.price,
+                        price=event.target.price+10,
                         volume=1,
                         instrument=event.target.instrument,
                         order_type=Order.Types.MARKET,
@@ -25,7 +25,12 @@ class BuyAndHoldStrategy(Strategy):
         print("Error:", event)
 
     def onBought(self, event: Event) -> None:
-        print('bought {.2f} @ {.2f}'.format(event.target.volume, event.target.price))
+        print('bought {:.2f} @ {:.2f}'.format(event.target.volume, event.target.price))
+        import sys
+        sys.exit(0)
+
+    def onReject(self, event: Event) -> None:
+        print('order rejected')
         import sys
         sys.exit(0)
 
