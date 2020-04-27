@@ -23,7 +23,6 @@ class OrderManager(object):
             raise Exception('Exchange not installed: {}'.format(order.exchange))
 
         exchange.newOrder(order)
-        print(order.id)
         self._pending_orders[order.id] = (order, strategy)
 
     def onTrade(self, event):

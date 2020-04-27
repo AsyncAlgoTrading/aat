@@ -1,3 +1,4 @@
+import asyncio
 from abc import abstractmethod
 from typing import Union
 from ..config import Side
@@ -67,7 +68,8 @@ class Strategy(EventHandler):
     def newOrder(self, order: Order):
         '''helper method, defers to buy/sell'''
         self._strategy_open_orders.append(order)
-        self._manager.newOrder(order, self)
+        loop = asyncio.get_event_loop()
+        return loop.call_soon(self._manager.newOrder, order, self)
 
     def buy(self, order: Order):
         '''submit a buy order. Note that this is merely a request for an order, it provides no guarantees that the order will
@@ -80,7 +82,8 @@ class Strategy(EventHandler):
         '''
         # TODO move me
         self._strategy_open_orders.append(order)
-        self._manager.newOrder(order, self)
+        loop = asyncio.get_event_loop()
+        return loop.call_soon(self._manager.newOrder, order, self)
 
     def sell(self, order: Order):
         '''submit a sell order. Note that this is merely a request for an order, it provides no guarantees that the order will
@@ -93,7 +96,8 @@ class Strategy(EventHandler):
         '''
         # TODO move me
         self._strategy_open_orders.append(order)
-        self._manager.newOrder(order, self)
+        loop = asyncio.get_event_loop()
+        return loop.call_soon(self._manager.newOrder, order, self)
 
     def onBought(self, order_or_trade: Union[Order, Trade], my_order: Order = None):
         '''callback method for when/if your order executes.
