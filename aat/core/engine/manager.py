@@ -27,55 +27,57 @@ class Manager(EventHandler):
     def trades(self):
         raise NotImplementedError()
 
-    def newOrder(self, order: Order, strategy):
-        self._order_mgr.newOrder(order, strategy)
+    async def newOrder(self, order: Order, strategy):
+        ret = await self._order_mgr.newOrder(order, strategy)
+        return ret
+
     # *********************
 
     # **********************
     # EventHandler methods *
     # **********************
-    def onTrade(self, event):
+    async def onTrade(self, event):
         # TODO
-        self._order_mgr.onTrade(event)
+        await self._order_mgr.onTrade(event)
 
-    def onOpen(self, event):
-        # TODO
-        pass
-
-    def onCancel(self, event):
-        # TODO
-        self._order_mgr.onCancel(event)
-
-    def onChange(self, event):
+    async def onOpen(self, event):
         # TODO
         pass
 
-    def onFill(self, event):
+    async def onCancel(self, event):
+        # TODO
+        await self._order_mgr.onCancel(event)
+
+    async def onChange(self, event):
         # TODO
         pass
 
-    def onHalt(self, event):
+    async def onFill(self, event):
         # TODO
         pass
 
-    def onContinue(self, event):
+    async def onHalt(self, event):
         # TODO
         pass
 
-    def onData(self, event):
+    async def onContinue(self, event):
         # TODO
         pass
 
-    def onError(self, event):
+    async def onData(self, event):
+        # TODO
+        pass
+
+    async def onError(self, event):
         # TODO
         print('\n\nA Fatal Error has occurred')
         print(event.target)
         sys.exit(1)
 
-    def onExit(self, event):
+    async def onExit(self, event):
         # TODO
         pass
 
-    def onStart(self, event):
+    async def onStart(self, event):
         # TODO
         pass

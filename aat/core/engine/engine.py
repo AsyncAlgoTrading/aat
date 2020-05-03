@@ -2,6 +2,7 @@ import asyncio
 import os
 import os.path
 from aiostream.stream import merge  # type: ignore
+from concurrent.futures import ThreadPoolExecutor
 from traitlets.config.application import Application  # type: ignore
 from traitlets import validate, TraitError, Unicode, Bool, List, Instance  # type: ignore
 from tornado.web import StaticFileHandler, RedirectHandler, Application as TornadoApplication
@@ -35,6 +36,7 @@ class TradingEngine(Application):
     api = Bool(default_value=True)
     port = Unicode(default_value='8080', help="Port to run on").tag(config=True)
     event_loop = Instance(klass=asyncio.events.AbstractEventLoop)
+    executor = Instance(klass=ThreadPoolExecutor, args=(4,), kwargs={})
 
     trading_type = Unicode(default_value='simulation')
     order_manager = Instance(OrderManager, args=(), kwargs={})
@@ -144,6 +146,11 @@ class TradingEngine(Application):
             return handler
         return None
 
+    def _make_async(self, function):
+        async def _wrapper(event):
+            return await self.event_loop.run_in_executor(self.executor, function, event)
+        return _wrapper
+
     def registerCallback(self, event_type, callback):
         '''register a callback for a given event type
 
@@ -154,6 +161,8 @@ class TradingEngine(Application):
             value (bool): True if registered (new), else False
         '''
         if callback not in self._subscriptions[event_type]:
+            if not asyncio.iscoroutinefunction(callback):
+                callback = self._make_async(callback)
             self._subscriptions[event_type].append(callback)
             return True
         return False
@@ -164,13 +173,13 @@ class TradingEngine(Application):
         await asyncio.gather(*(asyncio.create_task(exch.connect()) for exch in self.exchanges))
 
         # send start event to all callbacks
-        self.tick(Event(type=EventType.START, target=None))
+        await self.tick(Event(type=EventType.START, target=None))
 
         async with merge(*(exch.tick() for exch in self.exchanges)).stream() as stream:
             async for event in stream:
-                self.tick(event)
+                await self.tick(event)
 
-    def tick(self, event):
+    async def tick(self, event):
         '''send an event to all registered event handlers
 
         Arguments:
@@ -178,13 +187,17 @@ class TradingEngine(Application):
         '''
         for handler in self._subscriptions[event.type]:
             try:
-                handler(event)
+                await handler(event)
             except KeyboardInterrupt:
                 raise
             except SystemExit:
                 raise
             except BaseException as e:
-                self.tick(Event(type=EventType.ERROR, target=Error(target=event, handler=handler, exception=e)))
+                if event.type == EventType.ERROR:
+                    # don't infinite error
+                    raise
+                await self.tick(Event(type=EventType.ERROR, target=Error(target=event, handler=handler, exception=e)))
+                await asyncio.sleep(1)
 
     def start(self):
         try:
@@ -196,4 +209,5 @@ class TradingEngine(Application):
         except KeyboardInterrupt:
             pass
         # send exit event to all callbacks
-        self.tick(Event(type=EventType.EXIT, target=None))
+        asyncio.ensure_future(self.tick(Event(type=EventType.EXIT, target=None)))
+

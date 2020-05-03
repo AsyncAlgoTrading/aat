@@ -184,10 +184,10 @@ class SyntheticExchange(Exchange):
             if self._verbose:
                 print(self)
 
-    def newOrder(self, order: Order):
+    async def newOrder(self, order: Order):
         order.id = self._id
         self._id += 1
         self._pending_orders.append(order)
-
+        return order
 
 Exchange.registerExchange('synthetic', SyntheticExchange)

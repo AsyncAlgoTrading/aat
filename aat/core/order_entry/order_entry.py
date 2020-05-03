@@ -17,15 +17,16 @@ class OrderManager(object):
         '''add an exchange'''
         self._exchanges[exchange.exchange()] = exchange
 
-    def newOrder(self, order: Order, strategy):
+    async def newOrder(self, order: Order, strategy):
         exchange = self._exchanges.get(order.exchange)
         if not exchange:
             raise Exception('Exchange not installed: {}'.format(order.exchange))
 
-        exchange.newOrder(order)
+        await exchange.newOrder(order)
         self._pending_orders[order.id] = (order, strategy)
+        return order
 
-    def onTrade(self, event):
+    async def onTrade(self, event):
         action, strat, order = False, None, None
 
         for order in event.target.maker_orders:
@@ -43,16 +44,16 @@ class OrderManager(object):
             # TODO add to event loop
             event = Event(type=Event.Types.TRADE, target=order)
             if order.side == Order.Sides.SELL:
-                strat.onSold(event)
+                await strat.onSold(event)
             else:
-                strat.onBought(event)
+                await strat.onBought(event)
             del self._pending_orders[order.id]
 
-    def onCancel(self, event):
+    async def onCancel(self, event):
         order = event.target
         if order.id in self._pending_orders:
             _, strat = self._pending_orders[order.id]
 
             # TODO add to event loop
-            strat.onReject(event)
+            await strat.onReject(event)
             del self._pending_orders[order.id]

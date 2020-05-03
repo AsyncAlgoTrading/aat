@@ -5,7 +5,7 @@ class BuyAndHoldStrategy(Strategy):
     def __init__(self, *args, **kwargs) -> None:
         super(BuyAndHoldStrategy, self).__init__(*args, **kwargs)
 
-    def onTrade(self, event: Event) -> None:
+    async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
         print('Trade:\n\t{}\n\tSlippage:{}\n\tTxnCost:{}'.format(event, event.target.slippage(), event.target.transactionCost()))
 
@@ -19,17 +19,17 @@ class BuyAndHoldStrategy(Strategy):
                         order_type=Order.Types.MARKET,
                         exchange=event.target.exchange)
             print("requesting buy : {}".format(req))
-            self.newOrder(req)
+            await self.newOrder(req)
 
-    def onError(self, event: Event) -> None:
+    async def onError(self, event: Event) -> None:
         print("Error:", event)
 
-    def onBought(self, event: Event) -> None:
+    async def onBought(self, event: Event) -> None:
         print('bought {:.2f} @ {:.2f}'.format(event.target.volume, event.target.price))
         import sys
         sys.exit(0)
 
-    def onReject(self, event: Event) -> None:
+    async def onReject(self, event: Event) -> None:
         print('order rejected')
         import sys
         sys.exit(0)

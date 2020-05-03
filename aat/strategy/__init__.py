@@ -65,13 +65,13 @@ class Strategy(EventHandler):
     #######################
     # Order Entry Methods #
     #######################
-    def newOrder(self, order: Order):
+    async def newOrder(self, order: Order):
         '''helper method, defers to buy/sell'''
         self._strategy_open_orders.append(order)
-        loop = asyncio.get_event_loop()
-        return loop.call_soon(self._manager.newOrder, order, self)
+        return await self._manager.newOrder(order, self)
 
-    def buy(self, order: Order):
+
+    async def buy(self, order: Order):
         '''submit a buy order. Note that this is merely a request for an order, it provides no guarantees that the order will
         execute. At a later point, if your order executes, you will receive an alert via the `bought` method
 
@@ -82,10 +82,9 @@ class Strategy(EventHandler):
         '''
         # TODO move me
         self._strategy_open_orders.append(order)
-        loop = asyncio.get_event_loop()
-        return loop.call_soon(self._manager.newOrder, order, self)
+        return await self._manager.newOrder(order, self)
 
-    def sell(self, order: Order):
+    async def sell(self, order: Order):
         '''submit a sell order. Note that this is merely a request for an order, it provides no guarantees that the order will
         execute. At a later point, if your order executes, you will receive an alert via the `sold` method
 
@@ -96,8 +95,7 @@ class Strategy(EventHandler):
         '''
         # TODO move me
         self._strategy_open_orders.append(order)
-        loop = asyncio.get_event_loop()
-        return loop.call_soon(self._manager.newOrder, order, self)
+        return await self._manager.newOrder(order, self)
 
     def onBought(self, order_or_trade: Union[Order, Trade], my_order: Order = None):
         '''callback method for when/if your order executes.
