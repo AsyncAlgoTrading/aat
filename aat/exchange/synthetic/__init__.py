@@ -190,4 +190,5 @@ class SyntheticExchange(Exchange):
         self._pending_orders.append(order)
         return order
 
+
 Exchange.registerExchange('synthetic', SyntheticExchange)

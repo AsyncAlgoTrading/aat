@@ -210,4 +210,3 @@ class TradingEngine(Application):
             pass
         # send exit event to all callbacks
         asyncio.ensure_future(self.tick(Event(type=EventType.EXIT, target=None)))
-

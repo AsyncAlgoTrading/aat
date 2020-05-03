@@ -1,4 +1,3 @@
-import asyncio
 from abc import abstractmethod
 from typing import Union
 from ..config import Side
@@ -69,7 +68,6 @@ class Strategy(EventHandler):
         '''helper method, defers to buy/sell'''
         self._strategy_open_orders.append(order)
         return await self._manager.newOrder(order, self)
-
 
     async def buy(self, order: Order):
         '''submit a buy order. Note that this is merely a request for an order, it provides no guarantees that the order will

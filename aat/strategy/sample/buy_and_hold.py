@@ -13,7 +13,7 @@ class BuyAndHoldStrategy(Strategy):
         if not self.orders(event.target.instrument) and not self.trades(event.target.instrument):
             # TODO await self.buy(...) ?
             req = Order(side=Side.BUY,
-                        price=event.target.price+10,
+                        price=event.target.price + 10,
                         volume=1,
                         instrument=event.target.instrument,
                         order_type=Order.Types.MARKET,
