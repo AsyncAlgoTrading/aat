@@ -2,8 +2,7 @@
 AsyncAlgoTrading
 
 [![Build Status](https://dev.azure.com/tpaine154/aat/_apis/build/status/timkpaine.aat?branchName=master)](https://dev.azure.com/tpaine154/aat/_build/latest?definitionId=18&branchName=master)
-[![Coverage](https://img.shields.io/azure-devops/coverage/tpaine154/aat/18)](https://dev.azure.com/tpaine154/aat/_apis/build/status/timkpaine.aat?branchName=master)
-[![BCH compliance](https://bettercodehub.com/edge/badge/timkpaine/aat?branch=master)](https://bettercodehub.com/)
+[![Coverage](https://img.shields.io/azure-devops/coverage/tpaine154/aat/18/master)](https://dev.azure.com/tpaine154/aat/_apis/build/status/timkpaine.aat?branchName=master)
 [![License](https://img.shields.io/github/license/timkpaine/aat.svg)](https://pypi.python.org/pypi/aat)
 [![PyPI](https://img.shields.io/pypi/v/aat.svg)](https://pypi.python.org/pypi/aat)
 [![Docs](https://img.shields.io/readthedocs/aat.svg)](http://aat.readthedocs.io/en/latest/)
