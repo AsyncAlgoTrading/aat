@@ -51,8 +51,8 @@
     "build": "tsc && webpack && yarn copyassets",
     "copyassets": "cpx \"node_modules/@finos/perspective/dist/umd/*wasm*\" ../aat/ui/assets/static/js/",
     "clean": "rimraf build",
-    "fix": "eslint -c .eslintrc.js --ext .ts --fix src/ tests/",
-    "lint": "eslint -c .eslintrc.js --ext .ts src/ tests/",
+    "fix": "./node_modules/.bin/eslint -c .eslintrc.js --ext .ts --fix src/ tests/",
+    "lint": "./node_modules/.bin/eslint -c .eslintrc.js --ext .ts src/ tests/",
     "test": "NODE_ENV=test jest -i --coverage --no-cache --collectCoverageFrom=str/**/*.{ts}"
   },
   "typings": "build/index",

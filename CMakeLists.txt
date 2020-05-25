@@ -279,6 +279,7 @@ ${CMAKE_SOURCE_DIR}/cpp/src/config/parser.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/order_book/collector.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/order_book/order_book.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/python/binding.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/python/construct.cpp
 )
 
 ########################

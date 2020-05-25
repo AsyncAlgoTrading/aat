@@ -4,10 +4,10 @@
 #include <string>
 #include <deque>
 #include <nlohmann/json.hpp>
+#include <aat/common.hpp>
 #include <aat/config/enums.hpp>
 #include <aat/core/instrument/instrument.hpp>
 
-// for convenience
 using json = nlohmann::json;
 using namespace aat::common;
 using namespace aat::config;
@@ -17,13 +17,13 @@ namespace core {
 
   class ExchangeType {
    public:
-    explicit ExchangeType(std::string name)
+    explicit ExchangeType(str_t name)
       : name(name) {}
 
-    std::string toString() const;
+    str_t toString() const;
 
    private:
-    std::string name;
+    str_t name;
   };
 
   static ExchangeType NullExchange = ExchangeType("");

@@ -14,6 +14,7 @@
 #include <aat/core/models/order.hpp>
 #include <aat/core/models/trade.hpp>
 #include <aat/core/order_book/order_book.hpp>
+#include <aat/python/construct.hpp>
 
 namespace py = pybind11;
 using namespace aat::common;
@@ -21,9 +22,9 @@ using namespace aat::common;
 PYBIND11_MODULE(binding, m) {
   m.doc() = "C++ bindings";
 
-  /*
+  /*******************************
    * Enums
-   */
+   ******************************/
   using namespace aat::config;
   py::enum_<Side>(m, "Side", py::arithmetic()).value("BUY", Side::BUY).value("SELL", Side::SELL).export_values();
 
@@ -64,6 +65,9 @@ PYBIND11_MODULE(binding, m) {
     .value("IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL)
     .export_values();
 
+  /*******************************
+   * OrderBook
+   ******************************/
   using namespace aat::core;
   py::class_<OrderBook>(m, "OrderBookCpp")
     .def(py::init<Instrument&>())
@@ -79,19 +83,28 @@ PYBIND11_MODULE(binding, m) {
     .def("level", (std::vector<double>(OrderBook::*)(std::uint64_t) const) & OrderBook::level)
     .def("levels", &OrderBook::levels);
 
+  /*******************************
+   * Exchange
+   ******************************/
   py::class_<ExchangeType>(m, "ExchangeTypeCpp")
-    .def(py::init<const std::string&>())
-    .def("__init__", [](py::object obj) { return ExchangeType(obj.cast<std::string>()); })
+    .def(py::init<const str_t&>())
+    .def("__init__", [](py::object obj) { return ExchangeType(obj.cast<str_t>()); })
     .def("__repr__", &ExchangeType::toString);
 
+  /*******************************
+   * Instrument
+   ******************************/
   py::class_<Instrument>(m, "InstrumentCpp")
-    .def(py::init<const std::string&, InstrumentType&>())
+    .def(py::init<const str_t&, InstrumentType&>())
     .def(py::init<const py::object&, InstrumentType&>())
     .def(py::init<const py::object&>())
-    .def(py::init<const std::string&>())
+    .def(py::init<const str_t&>())
     .def("__repr__", &Instrument::toString)
     .def("__eq__", &Instrument::operator==);
 
+  /*******************************
+   * Models
+   ******************************/
   py::class_<Data>(m, "DataCpp")
     .def(py::init<uint_t, timestamp_t, double, double, Side, DataType, Instrument, ExchangeType, double>())
     .def(py::init<timestamp_t, double, double, Side, DataType, Instrument, ExchangeType, double>())
@@ -131,4 +144,10 @@ PYBIND11_MODULE(binding, m) {
     .def("transactionCost", &Trade::transactionCost)
     .def("toJson", &Trade::toJson)
     .def("perspectiveSchema", &Trade::perspectiveSchema);
+
+  /*******************************
+   * Helpers
+   ******************************/
+  using namespace aat::python;
+  m.def("make_data", &make_data);
 }

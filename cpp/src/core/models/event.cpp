@@ -6,7 +6,7 @@ namespace aat {
 namespace core {
   str_t
   Event::toString() const {
-    std::stringstream ss;
+    sstream_t ss;
     ss << "<" << EventType_to_string(type) << "-" << target->toString() << ">";
     return ss.str();
   }

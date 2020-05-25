@@ -1,23 +1,17 @@
 #pragma once
 
-#include <iostream>
 #include <pybind11/pybind11.h>
-#include <pybind11_json/pybind11_json.hpp>
-
-#include <aat/config/enums.hpp>
 #include <aat/core/models/data.hpp>
-#include <aat/core/models/event.hpp>
-#include <aat/core/models/order.hpp>
-#include <aat/core/models/trade.hpp>
-#include <aat/core/order_book/order_book.hpp>
 
+namespace py = pybind11;
 using namespace aat::common;
 using namespace aat::config;
+using namespace aat::core;
 
 namespace aat {
 namespace python {
-  Data
-  make_data()
+  Data make_data(py::object id, py::object timestamp, double volume, double price, Side side, DataType type,
+    Instrument instrument, ExchangeType exchange = NullExchange, double filled = 0.0);
 
 }  // namespace python
 }  // namespace aat

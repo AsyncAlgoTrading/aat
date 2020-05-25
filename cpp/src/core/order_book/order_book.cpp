@@ -339,9 +339,9 @@ namespace core {
     return orig_length != levels.size();
   }
 
-  std::string
+  str_t
   OrderBook::toString() const {
-    std::stringstream ss;
+    sstream_t ss;
 
     // show top 5 levels, then group next 5, 10, 20, etc
     // sells first

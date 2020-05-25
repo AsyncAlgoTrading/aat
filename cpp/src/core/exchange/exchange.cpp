@@ -1,10 +1,9 @@
 #include <sstream>
-#include <aat/config/enums.hpp>
 #include <aat/core/exchange/exchange.hpp>
 
 namespace aat {
 namespace core {
-  std::string
+  str_t
   ExchangeType::toString() const {
     return name;
   }

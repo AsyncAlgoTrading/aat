@@ -1,4 +1,3 @@
-#include <sstream>
 #include <aat/core/instrument/instrument.hpp>
 
 namespace aat {
@@ -9,9 +8,9 @@ namespace core {
     return this->name == other.name && this->type == other.type;
   }
 
-  std::string
+  str_t
   Instrument::toString() const {
-    std::stringstream ss;
+    sstream_t ss;
     ss << "(" << name << "-" << InstrumentType_to_string(type) << ")";
     return ss.str();
   }

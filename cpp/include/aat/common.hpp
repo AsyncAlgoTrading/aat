@@ -3,6 +3,7 @@
 #include <exception>
 #include <stdint.h>
 #include <string>
+#include <sstream>
 #include <pybind11/pybind11.h>
 #include <nlohmann/json.hpp>
 #include <date.h>
@@ -38,6 +39,7 @@ namespace aat {
 namespace common {
   typedef std::uint64_t uint_t;
   typedef std::string str_t;
+  typedef std::stringstream sstream_t;
 
   typedef std::chrono::system_clock datetime;
   typedef std::chrono::system_clock::time_point timestamp_t;

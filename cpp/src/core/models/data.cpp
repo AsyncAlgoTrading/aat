@@ -16,7 +16,7 @@ namespace core {
 
   str_t
   Data::toString() const {
-    std::stringstream ss;
+    sstream_t ss;
     ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << DataType_to_string(type) << "-"
        << exchange.toString() << "-" << Side_to_string(side) << ">";
     return ss.str();

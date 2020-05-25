@@ -43,7 +43,7 @@ namespace core {
 
   str_t
   Order::toString() const {
-    std::stringstream ss;
+    sstream_t ss;
     ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << exchange.toString() << "-"
        << Side_to_string(side) << ">";
     return ss.str();
