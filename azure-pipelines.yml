@@ -89,7 +89,7 @@ jobs:
     - bash: npm install -g yarn
       displayName: "Install Yarn"
 
-    - bash: yarn
+    - bash: cd js; yarn
       displayName: 'Install JS dependencies'
 
     - script: |
