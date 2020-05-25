@@ -1,22 +1,57 @@
 #pragma once
 
-#include <stdint.h>
 #include <deque>
-#include <nlohmann/json.hpp>
+#include <date.h>
+#include <aat/common.hpp>
 #include <aat/config/enums.hpp>
-#include <aat/core/instrument.hpp>
-#include <aat/core/exchange.hpp>
+#include <aat/core/instrument/instrument.hpp>
+#include <aat/core/exchange/exchange.hpp>
 
-// for convenience
-using json = nlohmann::json;
-using namespace aat::config;
+using aat::common;
+using aat::config;
 
 namespace aat {
 namespace core {
   struct Data {
-  public:
-    Data(std::uint64_t id, double timestamp, double volume, double price, Side side, DataType type,
-      Instrument instrument, ExchangeType exchange = NullExchange, double filled = 0.0)
+   public:
+    Data(double volume, double price, Side side, DataType type, Instrument instrument,
+      ExchangeType exchange = NullExchange, double filled = 0.0)
+      : id(0)
+      , timestamp(datetime::now())
+      , volume(volume)
+      , price(price)
+      , side(side)
+      , type(type)
+      , instrument(instrument)
+      , exchange(exchange)
+      , filled(filled) {}
+
+    Data(timestamp_t timestamp, double volume, double price, Side side, DataType type, Instrument instrument,
+      ExchangeType exchange = NullExchange, double filled = 0.0)
+      : id(0)
+      , timestamp(timestamp)
+      , volume(volume)
+      , price(price)
+      , side(side)
+      , type(type)
+      , instrument(instrument)
+      , exchange(exchange)
+      , filled(filled) {}
+
+    Data(uint_t id, double volume, double price, Side side, DataType type, Instrument instrument,
+      ExchangeType exchange = NullExchange, double filled = 0.0)
+      : id(id)
+      , timestamp(datetime::now())
+      , volume(volume)
+      , price(price)
+      , side(side)
+      , type(type)
+      , instrument(instrument)
+      , exchange(exchange)
+      , filled(filled) {}
+
+    Data(uint_t id, timestamp_t timestamp, double volume, double price, Side side, DataType type, Instrument instrument,
+      ExchangeType exchange = NullExchange, double filled = 0.0)
       : id(id)
       , timestamp(timestamp)
       , volume(volume)
@@ -29,12 +64,12 @@ namespace core {
 
     bool operator==(const Data& other);
     bool operator<(const Data& other);
-    std::string toString() const;
+    str_t toString() const;
     json toJson() const;
     json perspectiveSchema() const;
 
-    std::uint64_t id;
-    double timestamp;
+    uint_t id;
+    timestamp_t timestamp;
     double volume;
     double price;
     Side side;
@@ -44,5 +79,5 @@ namespace core {
     double filled;
   };
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

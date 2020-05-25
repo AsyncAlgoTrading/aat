@@ -17,22 +17,40 @@ debug: ## build debug build of the package
 	DEBUG=1 python3 setup.py build
 
 js:  ## build the js assets
-	cd js && yarn build
+	cd js; yarn build
 
 install: ## install the package
 	python3 -m pip install .
 
-tests: ## Clean and Make unit tests
+tests: testpy  ## Make unit tests
+
+testpy: ## Make unit tests
 	python3 -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch
 
-lint: ## run linter
+testjs:  ## Make js tests
+	cd js; yarn test
+
+lint: lintpy lintjs lintcpp  ## run all linters
+
+lintpy: ## run python linter
 	python3 -m flake8 aat setup.py
 
-fix:  ## run autopep8/tslint fix
+lintjs: ## run js linter
+	cd js; yarn lint
+	
+lintcpp: ## run cpp linter
+	cpplint --linelength=120 --recursive cpp/
+
+fix: fixpy fixjs fixcpp  ## run all fixers
+
+fixpy:  ## run autopep8 fix
 	python3 -m autopep8 --in-place -r -a -a aat/ setup.py
 
 fixcpp:  ## run clang-format
 	clang-format -i -style=file `find ./cpp -name "*.*pp"`
+
+fixjs:  ## run clang-format
+	cd js; yarn fix
 
 annotate: ## MyPy type annotation check
 	python3 -m mypy aat

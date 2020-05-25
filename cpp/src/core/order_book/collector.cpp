@@ -147,5 +147,5 @@ namespace core {
     return price_levels.size();
   }
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

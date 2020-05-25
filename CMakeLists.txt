@@ -66,6 +66,11 @@ function (build_dep name cmake_file)
 
     include_directories(${CMAKE_BINARY_DIR}/${name}-src/extras/${name}/include)
     include_directories(${CMAKE_BINARY_DIR}/${name}-src/include)
+
+    if(${name} STREQUAL "date")
+        include_directories(${CMAKE_BINARY_DIR}/${name}-src/include/date)
+    endif()
+
     include_directories(${CMAKE_BINARY_DIR}/${name}-src)
 endfunction()
 ##############################
@@ -189,6 +194,7 @@ find_package(Boost)
 
 build_dep("json" "${AAT_CMAKE_MODULE_PATH}/Json.txt.in")
 build_dep("json-pybind" "${AAT_CMAKE_MODULE_PATH}/Json_pybind.txt.in")
+build_dep("date" "${AAT_CMAKE_MODULE_PATH}/date.txt.in")
 
 if(MACOS)
     # on mac, use the vanilla pybind11 finder
@@ -261,10 +267,10 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 include_directories("${CMAKE_SOURCE_DIR}/cpp/include")
 
 set(SOURCE_FILES
-    ${CMAKE_SOURCE_DIR}/cpp/src/binding.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/src/config/enums.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/src/core/instrument.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/src/core/exchange.cpp
+${CMAKE_SOURCE_DIR}/cpp/src/config/enums.cpp
+${CMAKE_SOURCE_DIR}/cpp/src/config/parser.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/instrument/instrument.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/exchange/exchange.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/models/data.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/models/event.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/models/order.cpp
@@ -272,6 +278,7 @@ set(SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/cpp/src/core/order_book/price_level.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/order_book/collector.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/order_book/order_book.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/python/binding.cpp
 )
 
 ########################

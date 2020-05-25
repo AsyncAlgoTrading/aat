@@ -1,6 +1,6 @@
 #include <sstream>
 #include <aat/config/enums.hpp>
-#include <aat/core/exchange.hpp>
+#include <aat/core/exchange/exchange.hpp>
 
 namespace aat {
 namespace core {
@@ -9,5 +9,5 @@ namespace core {
     return name;
   }
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

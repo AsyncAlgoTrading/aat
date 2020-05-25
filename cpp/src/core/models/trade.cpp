@@ -4,7 +4,7 @@
 
 namespace aat {
 namespace core {
-  std::string
+  str_t
   Trade::toString() const {
     std::stringstream ss;
     ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << exchange.toString() << ">";
@@ -37,5 +37,5 @@ namespace core {
     return ret;
   }
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

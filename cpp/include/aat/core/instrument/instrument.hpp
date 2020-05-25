@@ -1,38 +1,38 @@
 #pragma once
 
-#include <string.h>
+#include <aat/common.hpp>
 #include <aat/config/enums.hpp>
 
-using namespace aat::config;
+using aat::config;
 
 namespace aat {
 namespace core {
 
   class Instrument {
-  public:
-    Instrument(const py::object& name)
-      : name(name.cast<std::string>())
+   public:
+    explicit Instrument(const py::object& name)
+      : name(name.cast<str_t>())
       , type(InstrumentType::EQUITY) {}
 
     Instrument(const py::object& name, InstrumentType type)
-      : name(name.cast<std::string>())
+      : name(name.cast<str_t>())
       , type(type) {}
 
-    Instrument(const std::string& name, InstrumentType type)
+    Instrument(const str_t& name, InstrumentType type)
       : name(name)
       , type(type) {}
 
-    Instrument(const std::string& name)
+    explicit Instrument(const str_t& name)
       : name(name)
       , type(InstrumentType::EQUITY) {}
 
     bool operator==(const Instrument& other);
-    std::string toString() const;
+    str_t toString() const;
 
-  private:
-    std::string name;
+   private:
+    str_t name;
     InstrumentType type;
   };
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

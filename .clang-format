@@ -1,7 +1,7 @@
 ---
 Language:        Cpp
 # BasedOnStyle:  WebKit
-AccessModifierOffset: -2
+AccessModifierOffset: -1
 AlignAfterOpenBracket: false
 AlignConsecutiveAssignments: false
 # AlignConsecutiveMacros: true
@@ -54,7 +54,7 @@ SpaceAfterCStyleCast: false
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: ControlStatements
 SpaceInEmptyParentheses: false
-SpacesBeforeTrailingComments: 1
+SpacesBeforeTrailingComments: 2
 SpacesInAngles:  false
 SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false

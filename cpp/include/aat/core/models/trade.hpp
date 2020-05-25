@@ -1,21 +1,19 @@
 #pragma once
 
-#include <stdint.h>
 #include <deque>
-#include <nlohmann/json.hpp>
+#include <aat/common.hpp>
 #include <aat/config/enums.hpp>
-#include <aat/core/instrument.hpp>
+#include <aat/core/instrument/instrument.hpp>
 #include <aat/core/models/data.hpp>
 #include <aat/core/models/order.hpp>
 
-// for convenience
-using json = nlohmann::json;
-using namespace aat::config;
+using aat::common;
+using aat::config;
 
 namespace aat {
 namespace core {
   struct Trade : public Data {
-    Trade(std::uint64_t id, double timestamp, double volume, double price, Side side, Instrument instrument,
+    Trade(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
       ExchangeType exchange = NullExchange, double filled = 0.0, std::deque<Order*> maker_orders = std::deque<Order*>(),
       Order* taker_order = nullptr)
       : Data(id, timestamp, volume, price, side, DataType::TRADE, instrument, exchange, filled)
@@ -35,7 +33,7 @@ namespace core {
     transactionCost() const {
       return 0.0;
     }
-    std::string toString() const;
+    str_t toString() const;
     json toJson() const;
     json perspectiveSchema() const;
 
@@ -45,5 +43,5 @@ namespace core {
     double _transaction_cost;
   };
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

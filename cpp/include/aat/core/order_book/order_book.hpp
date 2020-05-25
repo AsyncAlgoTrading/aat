@@ -7,7 +7,7 @@
 
 #include <aat/core/order_book/price_level.hpp>
 #include <aat/core/order_book/collector.hpp>
-#include <aat/core/exchange.hpp>
+#include <aat/core/exchange/exchange.hpp>
 #include <aat/core/models/event.hpp>
 #include <aat/core/models/order.hpp>
 
@@ -17,10 +17,10 @@ namespace aat {
 namespace core {
 
   class OrderBook {
-  public:
-    OrderBook(Instrument& instrument);
-    OrderBook(Instrument& instrument, ExchangeType& exchange);
-    OrderBook(Instrument& instrument, ExchangeType& exchange, std::function<void(Event*)> callback);
+   public:
+    explicit OrderBook(const Instrument& instrument);
+    OrderBook(const Instrument& instrument, const ExchangeType& exchange);
+    OrderBook(const Instrument& instrument, const ExchangeType& exchange, std::function<void(Event*)> callback);
 
     void setCallback(std::function<void(Event*)> callback);
 
@@ -36,10 +36,10 @@ namespace core {
 
     std::string toString() const;
 
-  private:
+   private:
     void clearOrders(Order* order, std::uint64_t amount);
     double getTop(Side side, std::uint64_t cleared);
-    bool insort(std::vector<double>& levels, double value);
+    bool insort(const std::vector<double>& levels, double value);
 
     std::function<void(Event*)> callback;
     Collector collector;
@@ -52,5 +52,5 @@ namespace core {
     std::unordered_map<double, PriceLevel*> buys;
     std::unordered_map<double, PriceLevel*> sells;
   };
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

@@ -16,9 +16,9 @@ namespace core {
   class PriceLevel;
 
   class Collector {
-  public:
+   public:
     Collector();
-    Collector(std::function<void(Event*)> callback);
+    explicit Collector(std::function<void(Event*)> callback);
 
     void reset();
     void setCallback(std::function<void(Event*)> callback);
@@ -39,7 +39,7 @@ namespace core {
     std::deque<PriceLevel*> getPriceLevels() const;
     std::uint64_t getClearedLevels() const;
 
-  private:
+   private:
     void _accumulate(Order* order);
 
     double price;
@@ -50,5 +50,5 @@ namespace core {
     std::deque<PriceLevel*> price_levels;
   };
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

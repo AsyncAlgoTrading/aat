@@ -14,7 +14,7 @@ namespace core {
     return price < other.price;
   }
 
-  std::string
+  str_t
   Data::toString() const {
     std::stringstream ss;
     ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << DataType_to_string(type) << "-"
@@ -26,7 +26,7 @@ namespace core {
   Data::toJson() const {
     json ret;
     ret["id"] = id;
-    ret["timestamp"] = timestamp;
+    ret["timestamp"] = format_timestamp(timestamp);
     ret["volume"] = volume;
     ret["price"] = price;
     ret["side"] = Side_to_string(side);
@@ -50,5 +50,5 @@ namespace core {
     return ret;
   }
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

@@ -1,9 +1,14 @@
 #pragma once
 
 #include <exception>
+#include <stdint.h>
 #include <string>
 #include <pybind11/pybind11.h>
+#include <nlohmann/json.hpp>
+#include <date.h>
+
 namespace py = pybind11;
+using json = nlohmann::json;
 
 #define ENUM_TO_STRING(type)                                                                                           \
   inline std::string type##_to_string(type typ) { return type##_names[static_cast<int>(typ)]; }
@@ -16,11 +21,11 @@ namespace py = pybind11;
   }
 
 class AATCPPException : public std::exception {
-private:
+ private:
   std::string msg = "";
 
-public:
-  AATCPPException(std::string msg)
+ public:
+  explicit AATCPPException(std::string msg)
     : msg(msg) {}
 
   const char*
@@ -28,3 +33,18 @@ public:
     return msg.c_str();
   }
 };
+
+namespace aat {
+namespace common {
+  typedef std::uint64_t uint_t;
+  typedef std::string str_t;
+
+  typedef std::chrono::system_clock datetime;
+  typedef std::chrono::system_clock::time_point timestamp_t;
+
+  str_t
+  format_timestamp(timestamp_t t) {
+    return date::format("%F %T", t);
+  }
+}  // namespace common
+}  // namespace aat

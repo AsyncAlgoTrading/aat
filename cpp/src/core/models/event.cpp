@@ -4,7 +4,7 @@
 
 namespace aat {
 namespace core {
-  std::string
+  str_t
   Event::toString() const {
     std::stringstream ss;
     ss << "<" << EventType_to_string(type) << "-" << target->toString() << ">";
@@ -19,5 +19,5 @@ namespace core {
     return ret;
   }
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

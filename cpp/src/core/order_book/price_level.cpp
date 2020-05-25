@@ -2,7 +2,7 @@
 
 namespace aat {
 namespace core {
-  using namespace aat::config;
+  using aat::config;
 
   PriceLevel::PriceLevel(double price, Collector& collector)
     : price(price)
@@ -10,8 +10,7 @@ namespace core {
     , orders()
     , orders_staged()
     , stop_orders()
-    , stop_orders_staged() {
-  }
+    , stop_orders_staged() {}
 
   double
   PriceLevel::getVolume() const {
@@ -49,7 +48,7 @@ namespace core {
       throw AATCPPException("Order note found in price level!");
     }
     // remove order
-    orders.erase(std::find(orders.begin(), orders.end(), order)); // FIXME c++
+    orders.erase(std::find(orders.begin(), orders.end(), order));  // FIXME c++
 
     // trigger cancel event
     collector.pushCancel(order);
@@ -184,5 +183,5 @@ namespace core {
     stop_orders_staged.clear();
   }
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

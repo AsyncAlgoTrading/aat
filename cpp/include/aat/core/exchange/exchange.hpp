@@ -1,30 +1,31 @@
 #pragma once
 
 #include <stdint.h>
+#include <string>
 #include <deque>
 #include <nlohmann/json.hpp>
 #include <aat/config/enums.hpp>
-#include <aat/core/instrument.hpp>
+#include <aat/core/instrument/instrument.hpp>
 
 // for convenience
 using json = nlohmann::json;
-using namespace aat::config;
+using aat::config;
 
 namespace aat {
 namespace core {
 
   class ExchangeType {
-  public:
-    ExchangeType(std::string name)
+   public:
+    explicit ExchangeType(std::string name)
       : name(name) {}
 
     std::string toString() const;
 
-  private:
+   private:
     std::string name;
   };
 
   static ExchangeType NullExchange = ExchangeType("");
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

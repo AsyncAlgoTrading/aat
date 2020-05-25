@@ -5,7 +5,7 @@
 namespace aat {
 namespace core {
 
-  Order::Order(std::uint64_t id, double timestamp, double volume, double price, Side side, Instrument instrument,
+  Order::Order(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
     ExchangeType exchange, double filled, OrderType order_type, OrderFlag flag, Order* stop_target, double notional)
     : Data(id, timestamp, volume, price, side, DataType::ORDER, instrument, exchange, filled)
     , order_type(order_type)
@@ -25,7 +25,7 @@ namespace core {
     }
   }
 
-  std::string
+  str_t
   Order::toString() const {
     std::stringstream ss;
     ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << exchange.toString() << "-"
@@ -37,7 +37,7 @@ namespace core {
   Order::toJson() const {
     json ret;
     ret["id"] = id;
-    ret["timestamp"] = timestamp;
+    ret["timestamp"] = format_timestamp(timestamp);
     ret["volume"] = volume;
     ret["price"] = price;
     ret["side"] = Side_to_string(side);
@@ -59,5 +59,5 @@ namespace core {
     return ret;
   }
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

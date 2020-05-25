@@ -1,5 +1,5 @@
 #include <sstream>
-#include <aat/core/instrument.hpp>
+#include <aat/core/instrument/instrument.hpp>
 
 namespace aat {
 namespace core {
@@ -16,5 +16,5 @@ namespace core {
     return ss.str();
   }
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

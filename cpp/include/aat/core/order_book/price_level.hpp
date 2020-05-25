@@ -1,6 +1,7 @@
 #pragma once
 #include <deque>
 #include <string>
+#include <vector>
 #include <pybind11/pybind11.h>
 
 #include <aat/core/order_book/collector.hpp>
@@ -15,8 +16,8 @@ namespace core {
   class Collector;
 
   class PriceLevel {
-  public:
-    PriceLevel(double price, Collector& collector);
+   public:
+    PriceLevel(double price, const Collector& collector);
 
     double
     getPrice() const {
@@ -26,7 +27,7 @@ namespace core {
 
     void add(Order* order);
     Order* remove(Order* order);
-    Order* cross(Order* taker_order, std::vector<Order*>& secondaries);
+    Order* cross(Order* taker_order, const std::vector<Order*>& secondaries);
 
     void clear();
     void commit();
@@ -37,7 +38,7 @@ namespace core {
       return orders.size();
     }
 
-  private:
+   private:
     double price;
     Collector& collector;
     std::deque<Order*> orders{};
@@ -45,5 +46,5 @@ namespace core {
     std::vector<Order*> stop_orders;
     std::vector<Order*> stop_orders_staged;
   };
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

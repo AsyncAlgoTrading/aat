@@ -1,31 +1,29 @@
 #pragma once
 
-#include <stdint.h>
 #include <deque>
-#include <nlohmann/json.hpp>
+#include <aat/common.hpp>
 #include <aat/config/enums.hpp>
-#include <aat/core/instrument.hpp>
+#include <aat/core/instrument/instrument.hpp>
 #include <aat/core/models/data.hpp>
 
-// for convenience
-using json = nlohmann::json;
-using namespace aat::config;
+using aat::common;
+using aat::config;
 
 namespace aat {
 namespace core {
   class Event {
-  public:
+   public:
     Event(EventType type, Data* target)
       : type(type)
       , target(target) {}
 
-    std::string toString() const;
+    str_t toString() const;
     json toJson() const;
 
-  protected:
+   protected:
     EventType type;
     Data* target;
   };
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

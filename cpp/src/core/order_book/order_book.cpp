@@ -370,7 +370,7 @@ namespace core {
     int i = 0;
 
     py::print("buy_level_size:", buy_levels.size());
-    for (auto iter=buy_levels.end()-1; iter>buy_levels.begin(); --iter) {
+    for (auto iter = buy_levels.end() - 1; iter > buy_levels.begin(); --iter) {
       if ((i++) < 5) {
         // append to list
         // py::print(*iter);
@@ -398,5 +398,5 @@ namespace core {
     return ss.str();
   }
 
-} // namespace core
-} // namespace aat
+}  // namespace core
+}  // namespace aat

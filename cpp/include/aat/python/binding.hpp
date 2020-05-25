@@ -1,6 +1,9 @@
 #pragma once
 
+#include <deque>
 #include <iostream>
+#include <vector>
+#include <string>
 #include <pybind11/pybind11.h>
 #include <pybind11_json/pybind11_json.hpp>
 
@@ -19,7 +22,7 @@ PYBIND11_MODULE(binding, m) {
   /*
    * Enums
    */
-  using namespace aat::config;
+  using aat::config;
   py::enum_<Side>(m, "Side", py::arithmetic()).value("BUY", Side::BUY).value("SELL", Side::SELL).export_values();
 
   py::enum_<EventType>(m, "EventType", py::arithmetic())
@@ -59,7 +62,7 @@ PYBIND11_MODULE(binding, m) {
     .value("IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL)
     .export_values();
 
-  using namespace aat::core;
+  using aat::core;
   py::class_<OrderBook>(m, "OrderBookCpp")
     .def(py::init<Instrument&>())
     .def(py::init<Instrument&, ExchangeType&>())
@@ -91,7 +94,7 @@ PYBIND11_MODULE(binding, m) {
     .def(py::init<std::uint64_t, double, double, double, Side, DataType, Instrument, ExchangeType, double>())
     .def("__repr__", &Data::toString)
     .def("__eq__", &Data::operator==)
-    .def("__lt__", &Data::operator<)
+    .def("__lt__", &Data::operator<) //NOLINT
     .def("toJson", &Data::toJson)
     .def("perspectiveSchema", &Data::perspectiveSchema);
 
