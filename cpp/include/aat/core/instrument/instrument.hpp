@@ -3,7 +3,8 @@
 #include <aat/common.hpp>
 #include <aat/config/enums.hpp>
 
-using aat::config;
+using namespace aat::common;
+using namespace aat::config;
 
 namespace aat {
 namespace core {

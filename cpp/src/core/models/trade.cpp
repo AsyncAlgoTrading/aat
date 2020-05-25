@@ -1,6 +1,9 @@
 #include <sstream>
+#include <aat/common.hpp>
 #include <aat/config/enums.hpp>
 #include <aat/core/models/trade.hpp>
+
+using namespace aat::common;
 
 namespace aat {
 namespace core {
@@ -15,7 +18,7 @@ namespace core {
   Trade::toJson() const {
     json ret;
     ret["id"] = id;
-    ret["timestamp"] = timestamp;
+    ret["timestamp"] = format_timestamp(timestamp);
     ret["volume"] = volume;
     ret["price"] = price;
     ret["side"] = Side_to_string(side);

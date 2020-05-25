@@ -9,7 +9,8 @@
 
 // for convenience
 using json = nlohmann::json;
-using aat::config;
+using namespace aat::common;
+using namespace aat::config;
 
 namespace aat {
 namespace core {

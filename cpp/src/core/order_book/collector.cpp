@@ -1,4 +1,7 @@
+#include <aat/common.hpp>
 #include <aat/core/order_book/collector.hpp>
+
+using namespace aat::common;
 
 namespace aat {
 namespace core {
@@ -71,7 +74,7 @@ namespace core {
     }
 
     push(new Event(EventType::TRADE,
-      new Trade(0, 0.0, volume, price, taker_order->side, taker_order->instrument, taker_order->exchange,
+      new Trade(0, datetime::now(), volume, price, taker_order->side, taker_order->instrument, taker_order->exchange,
         taker_order->filled, orders, taker_order)));
   }
 

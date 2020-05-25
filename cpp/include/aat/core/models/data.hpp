@@ -7,8 +7,8 @@
 #include <aat/core/instrument/instrument.hpp>
 #include <aat/core/exchange/exchange.hpp>
 
-using aat::common;
-using aat::config;
+using namespace aat::common;
+using namespace aat::config;
 
 namespace aat {
 namespace core {

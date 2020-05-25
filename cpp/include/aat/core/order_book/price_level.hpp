@@ -17,7 +17,7 @@ namespace core {
 
   class PriceLevel {
    public:
-    PriceLevel(double price, const Collector& collector);
+    PriceLevel(double price, Collector& collector); //NOLINT
 
     double
     getPrice() const {
@@ -27,7 +27,7 @@ namespace core {
 
     void add(Order* order);
     Order* remove(Order* order);
-    Order* cross(Order* taker_order, const std::vector<Order*>& secondaries);
+    Order* cross(Order* taker_order, std::vector<Order*>& secondaries); //NOLINT
 
     void clear();
     void commit();

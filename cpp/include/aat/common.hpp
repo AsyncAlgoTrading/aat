@@ -42,7 +42,7 @@ namespace common {
   typedef std::chrono::system_clock datetime;
   typedef std::chrono::system_clock::time_point timestamp_t;
 
-  str_t
+  inline str_t
   format_timestamp(timestamp_t t) {
     return date::format("%F %T", t);
   }

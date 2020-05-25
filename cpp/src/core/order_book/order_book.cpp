@@ -2,17 +2,17 @@
 
 namespace aat {
 namespace core {
-  OrderBook::OrderBook(Instrument& instrument)
+  OrderBook::OrderBook(const Instrument& instrument)
     : instrument(instrument)
     , exchange(NullExchange)
     , callback(nullptr) {}
 
-  OrderBook::OrderBook(Instrument& instrument, ExchangeType& exchange)
+  OrderBook::OrderBook(const Instrument& instrument, const ExchangeType& exchange)
     : instrument(instrument)
     , exchange(exchange)
     , callback(nullptr) {}
 
-  OrderBook::OrderBook(Instrument& instrument, ExchangeType& exchange, std::function<void(Event*)> callback)
+  OrderBook::OrderBook(const Instrument& instrument, const ExchangeType& exchange, std::function<void(Event*)> callback)
     : instrument(instrument)
     , exchange(exchange)
     , callback(callback) {}

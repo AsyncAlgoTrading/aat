@@ -7,6 +7,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11_json/pybind11_json.hpp>
 
+#include <aat/common.hpp>
 #include <aat/config/enums.hpp>
 #include <aat/core/models/data.hpp>
 #include <aat/core/models/event.hpp>
@@ -15,6 +16,7 @@
 #include <aat/core/order_book/order_book.hpp>
 
 namespace py = pybind11;
+using namespace aat::common;
 
 PYBIND11_MODULE(binding, m) {
   m.doc() = "C++ bindings";
@@ -22,7 +24,7 @@ PYBIND11_MODULE(binding, m) {
   /*
    * Enums
    */
-  using aat::config;
+  using namespace aat::config;
   py::enum_<Side>(m, "Side", py::arithmetic()).value("BUY", Side::BUY).value("SELL", Side::SELL).export_values();
 
   py::enum_<EventType>(m, "EventType", py::arithmetic())
@@ -62,7 +64,7 @@ PYBIND11_MODULE(binding, m) {
     .value("IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL)
     .export_values();
 
-  using aat::core;
+  using namespace aat::core;
   py::class_<OrderBook>(m, "OrderBookCpp")
     .def(py::init<Instrument&>())
     .def(py::init<Instrument&, ExchangeType&>())
@@ -91,10 +93,13 @@ PYBIND11_MODULE(binding, m) {
     .def("__eq__", &Instrument::operator==);
 
   py::class_<Data>(m, "DataCpp")
-    .def(py::init<std::uint64_t, double, double, double, Side, DataType, Instrument, ExchangeType, double>())
+    .def(py::init<uint_t, timestamp_t, double, double, Side, DataType, Instrument, ExchangeType, double>())
+    .def(py::init<timestamp_t, double, double, Side, DataType, Instrument, ExchangeType, double>())
+    .def(py::init<uint_t, double, double, Side, DataType, Instrument, ExchangeType, double>())
+    .def(py::init<double, double, Side, DataType, Instrument, ExchangeType, double>())
     .def("__repr__", &Data::toString)
     .def("__eq__", &Data::operator==)
-    .def("__lt__", &Data::operator<) //NOLINT
+    .def("__lt__", &Data::operator<)  // NOLINT
     .def("toJson", &Data::toJson)
     .def("perspectiveSchema", &Data::perspectiveSchema);
 
@@ -104,14 +109,22 @@ PYBIND11_MODULE(binding, m) {
     .def("toJson", &Event::toJson);
 
   py::class_<Order>(m, "OrderCpp")
-    .def(py::init<std::uint64_t, double, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag,
+    .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag,
       Order*, double>())
+    .def(py::init<timestamp_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag, Order*,
+      double>())
+    .def(
+      py::init<uint_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag, Order*, double>())
+    .def(py::init<double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag, Order*, double>())
     .def("__repr__", &Order::toString)
     .def("toJson", &Order::toJson)
     .def("perspectiveSchema", &Order::perspectiveSchema);
 
   py::class_<Trade>(m, "TradeCpp")
-    .def(py::init<std::uint64_t, double, double, double, Side, Instrument, ExchangeType, double, std::deque<Order*>,
+    .def(py::init<double, double, Side, Instrument, ExchangeType, double, std::deque<Order*>, Order*>())
+    .def(py::init<uint_t, double, double, Side, Instrument, ExchangeType, double, std::deque<Order*>, Order*>())
+    .def(py::init<timestamp_t, double, double, Side, Instrument, ExchangeType, double, std::deque<Order*>, Order*>())
+    .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double, std::deque<Order*>,
       Order*>())
     .def("__repr__", &Trade::toString)
     .def("slippage", &Trade::slippage)

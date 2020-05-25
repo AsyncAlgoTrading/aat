@@ -1,9 +1,10 @@
 #include <aat/core/order_book/price_level.hpp>
 
+using namespace aat::common;
+using namespace aat::config;
+
 namespace aat {
 namespace core {
-  using aat::config;
-
   PriceLevel::PriceLevel(double price, Collector& collector)
     : price(price)
     , collector(collector)

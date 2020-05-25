@@ -7,8 +7,11 @@
 #include <pybind11/stl_bind.h>
 #include <aat/common.hpp>
 
+using namespace aat::common;
+
 namespace aat {
 namespace config {
+
   enum class Side { NONE = 0, BUY = 1, SELL = 2 };
 
   enum class EventType {

@@ -39,12 +39,12 @@ namespace core {
    private:
     void clearOrders(Order* order, std::uint64_t amount);
     double getTop(Side side, std::uint64_t cleared);
-    bool insort(const std::vector<double>& levels, double value);
+    bool insort(std::vector<double>& levels, double value); //NOLINT
 
     std::function<void(Event*)> callback;
     Collector collector;
-    Instrument& instrument;
-    ExchangeType& exchange;
+    const Instrument& instrument;
+    const ExchangeType& exchange;
 
     std::vector<double> buy_levels;
     std::vector<double> sell_levels;

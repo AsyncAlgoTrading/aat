@@ -11,11 +11,11 @@
 #include <aat/core/models/trade.hpp>
 #include <aat/core/order_book/order_book.hpp>
 
-namespace py = pybind11;
+using namespace aat::common;
+using namespace aat::config;
 
 namespace aat {
 namespace python {
-  using aat::core;
   Data
   make_data()
 
