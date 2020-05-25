@@ -31,39 +31,50 @@ class ServerApplication(tornado.web.Application):
                  **kwargs):
         logging.getLogger('tornado.access').disabled = False
 
-    # Perspectives
-    manager = PerspectiveManager()
+        basepath = "/"
+        wspath = "/api/v1/ws"
 
-    # Accounts
-    accounts = Table([a.to_dict(True) for ex in trading_engine.exchanges.values() for a in ex.accounts().values()])
-    manager.host_table("accounts", accounts)
+        context = {'basepath': basepath,
+                   'wspath': wspath}
 
-    cookie_secret = generate_cookie_secret() if not cookie_secret else cookie_secret
+        # SQLAlchemy Login Configuration
+        sqlalchemy_login_config = SQLAlchemyLoginManagerOptions(
+            port=port,
+            UserClass=User,
+            APIKeyClass=APIKey,
+        )
 
-    handlers = (extra_handlers or []) + [
-        (r"/api/v1/ws", PerspectiveTornadoHandler, {"manager": manager, "check_origin": True}),
-    ]
+        settings = {"cookie_secret": cookie_secret,
+                    "login_url": basepath + "login",
+                    "debug": debug}
+        settings.update(custom_settings)
 
-    context = {}
+        extra_handlers = extra_handlers or []
+        for route, handler, h_kwargs in extra_handlers:
+            if 'trading_engine' in h_kwargs:
+                h_kwargs['trading_engine'] = trading_engine
 
-    return make_application(
-        port=port,
-        debug=debug,
-        assets_dir=root,
-        static_dir=static,
-        cookie_secret=cookie_secret,
-        basepath=basepath,
-        apipath=apipath,
-        wspath=wspath,
-        sqlalchemy_sessionmaker=sessionmaker,
-        UserSQLClass=User,
-        APIKeySQLClass=APIKey,
-        user_id_field='id',
-        apikey_id_field='id',
-        user_apikeys_field='apikeys',
-        apikey_user_field='user',
-        user_admin_field='admin',
-        user_admin_value=True,
-        extra_handlers=handlers,
-        extra_context=context,
-    )
+        default_handlers = [
+            (r"/api/v1/login", LoginHandler, context),
+            (r"/api/v1/logout", LogoutHandler, context),
+            (r"/api/v1/register", RegisterHandler, context),
+            (r"/api/v1/apikeys", APIKeyHandler, context),
+            (r"/api/v1/ws", PerspectiveTornadoHandler, {"manager": trading_engine.perspective_manager, "check_origin": True}),
+        ]
+
+        for handler in extra_handlers:
+            override = False
+            for i, default in enumerate(default_handlers):
+                if default[0] == handler[0]:
+                    # override default handler
+                    override = True
+                    d = default[2]
+                    d.update(handler[2])
+                    default_handlers[i] = (handler[0], handler[1], d)
+            if not override:
+                default_handlers.append(handler)
+
+        super(ServerApplication, self).__init__(default_handlers,
+                                                login_manager=SQLAlchemyLoginManager(trading_engine.sessionmaker,
+                                                                                     sqlalchemy_login_config),
+                                                **settings)
