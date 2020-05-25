@@ -1,7 +1,13 @@
-from perspective import Table  # type: ignore
 from typing import Tuple
 from .models import Event, Order, Trade
 from .handler import EventHandler
+
+try:
+    from perspective import Table  # type: ignore
+except ImportError:
+    # ignore missing table
+    from mock import MagicMock
+    Table = MagicMock()
 
 
 class TableHandler(EventHandler):
