@@ -53,10 +53,6 @@ jobs:
       displayName: 'Lint JS'
 
     - script: |
-        make lintcpp
-      displayName: 'Lint C++'
-
-    - script: |
         make tests
       displayName: 'Test'
 
