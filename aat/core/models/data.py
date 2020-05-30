@@ -1,18 +1,35 @@
+import logging
 from pydantic import BaseModel, validator
 from datetime import datetime
 from typing import Mapping, Union, Type
+
 from ...config import Side, DataType
 from ..instrument import Instrument
 from ..exchange import ExchangeType
 
+try:
+    from aat.binding import DataCpp
+    _CPP = True
+    _base = object
 
-class Data(BaseModel):
+except ImportError:
+    logging.critical("Could not load C++ extension")
+    _CPP = False
+    _base = BaseModel
+
+
+class Data(_base):
+    def __new__(cls, *args, **kwargs):
+        if _CPP:
+            return DataCpp(*args, **kwargs)
+        return super(Data, cls).__new__(cls)
+
     class Config:
         arbitrary_types_allowed = True
 
     # internal
     id: int = 0
-    timestamp: int = None
+    timestamp: datetime = None
 
     # public
     volume: float
@@ -33,8 +50,8 @@ class Data(BaseModel):
     def __eq__(self, other) -> bool:
         assert isinstance(other, Data)
         return (self.price == other.price) and \
-               (self.instrument == other.instrument) and \
-               (self.side == other.side)
+            (self.instrument == other.instrument) and \
+            (self.side == other.side)
 
     def __str__(self):
         return f'<{self.instrument}-{self.volume}@{self.price}-{self.type}-{self.exchange}-{self.side}>'

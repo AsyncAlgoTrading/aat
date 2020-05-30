@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/chrono.h>
 #include <pybind11_json/pybind11_json.hpp>
 
 #include <aat/common.hpp>
@@ -107,9 +109,6 @@ PYBIND11_MODULE(binding, m) {
    ******************************/
   py::class_<Data>(m, "DataCpp")
     .def(py::init<uint_t, timestamp_t, double, double, Side, DataType, Instrument, ExchangeType, double>())
-    .def(py::init<timestamp_t, double, double, Side, DataType, Instrument, ExchangeType, double>())
-    .def(py::init<uint_t, double, double, Side, DataType, Instrument, ExchangeType, double>())
-    .def(py::init<double, double, Side, DataType, Instrument, ExchangeType, double>())
     .def("__repr__", &Data::toString)
     .def("__eq__", &Data::operator==)
     .def("__lt__", &Data::operator<)  // NOLINT
@@ -124,19 +123,11 @@ PYBIND11_MODULE(binding, m) {
   py::class_<Order>(m, "OrderCpp")
     .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag,
       Order*, double>())
-    .def(py::init<timestamp_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag, Order*,
-      double>())
-    .def(
-      py::init<uint_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag, Order*, double>())
-    .def(py::init<double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag, Order*, double>())
     .def("__repr__", &Order::toString)
     .def("toJson", &Order::toJson)
     .def("perspectiveSchema", &Order::perspectiveSchema);
 
   py::class_<Trade>(m, "TradeCpp")
-    .def(py::init<double, double, Side, Instrument, ExchangeType, double, std::deque<Order*>, Order*>())
-    .def(py::init<uint_t, double, double, Side, Instrument, ExchangeType, double, std::deque<Order*>, Order*>())
-    .def(py::init<timestamp_t, double, double, Side, Instrument, ExchangeType, double, std::deque<Order*>, Order*>())
     .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double, std::deque<Order*>,
       Order*>())
     .def("__repr__", &Trade::toString)
@@ -149,5 +140,5 @@ PYBIND11_MODULE(binding, m) {
    * Helpers
    ******************************/
   using namespace aat::python;
-  m.def("make_data", &make_data);
+
 }

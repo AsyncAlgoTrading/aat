@@ -3,8 +3,19 @@ from typing import Mapping, Union, Type
 from .data import Data
 from ...config import DataType, OrderFlag, OrderType, Side
 
+try:
+    from aat.binding import OrderCpp
+    _CPP = True
+except ImportError:
+    _CPP = False
+
 
 class Order(Data):
+    def __new__(cls, *args, **kwargs):
+        if _CPP:
+            return OrderCpp(*args, **kwargs)
+        return super(Order, cls).__new__(cls)
+
     # for convenience
     Types = OrderType
     Sides = Side

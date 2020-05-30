@@ -22,7 +22,7 @@ js:  ## build the js assets
 install: ## install the package
 	python3 -m pip install .
 
-tests: testpy  ## Make unit tests
+tests: build testpy  ## Make unit tests
 
 testpy: ## Make unit tests
 	python3 -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch

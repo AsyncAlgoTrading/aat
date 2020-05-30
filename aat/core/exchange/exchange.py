@@ -1,7 +1,16 @@
-# from ..binding import ExchangeType
+try:
+    from ...binding import ExchangeTypeCpp
+    _CPP = True
+except ImportError:
+    _CPP = False
 
 
 class ExchangeType(object):
+    def __new__(cls, *args, **kwargs):
+        if _CPP:
+            return ExchangeTypeCpp(*args, **kwargs)
+        return super(ExchangeType, cls).__new__(cls)
+
     def __init__(self, name):
         self._name = name
 

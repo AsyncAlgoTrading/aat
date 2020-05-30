@@ -8,13 +8,13 @@ def _seed(ob, instrument, flag=OrderFlag.NONE):
     while x < 10.0:
         side = Side.BUY if x <= 5 else Side.SELL
         ob.add(Order(id=1,
-                     timestamp=datetime.now().timestamp(),
+                     timestamp=datetime.now(),
                      volume=1.0,
                      price=x,
                      side=side,
-                     type=DataType.ORDER,
-                     order_type=OrderType.LIMIT,
-                     flag=flag,
                      instrument=instrument,
-                     exchange=ExchangeType("")))
+                     exchange=ExchangeType(""),
+                     filled=0.0,
+                     order_type=OrderType.LIMIT,
+                     flag=flag))
         x += .5

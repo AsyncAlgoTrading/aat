@@ -1,8 +1,18 @@
-# from ..binding import Instrument
+try:
+    from ...binding import InstrumentCpp
+    _CPP = True
+except ImportError:
+    _CPP = False
+
 from ...config import InstrumentType
 
 
 class Instrument(object):
+    def __new__(cls, *args, **kwargs):
+        if _CPP:
+            return InstrumentCpp(*args, **kwargs)
+        return super(Instrument, cls).__new__(cls)
+
     def __init__(self, name, type=InstrumentType.EQUITY):
         self._name = name
         self._type = type

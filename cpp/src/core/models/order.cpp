@@ -7,20 +7,6 @@ using namespace aat::common;
 
 namespace aat {
 namespace core {
-  Order::Order(double volume, double price, Side side, Instrument instrument, ExchangeType exchange, double filled,
-    OrderType order_type, OrderFlag flag, Order* stop_target, double notional)
-    : Order(
-      0, datetime::now(), volume, price, side, instrument, exchange, filled, order_type, flag, stop_target, notional) {}
-
-  Order::Order(uint_t id, double volume, double price, Side side, Instrument instrument, ExchangeType exchange,
-    double filled, OrderType order_type, OrderFlag flag, Order* stop_target, double notional)
-    : Order(id, datetime::now(), volume, price, side, instrument, exchange, filled, order_type, flag, stop_target,
-      notional) {}
-
-  Order::Order(timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
-    ExchangeType exchange, double filled, OrderType order_type, OrderFlag flag, Order* stop_target, double notional)
-    : Order(0, timestamp, volume, price, side, instrument, exchange, filled, order_type, flag, stop_target, notional) {}
-
   Order::Order(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
     ExchangeType exchange, double filled, OrderType order_type, OrderFlag flag, Order* stop_target, double notional)
     : Data(id, timestamp, volume, price, side, DataType::ORDER, instrument, exchange, filled)

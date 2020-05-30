@@ -13,20 +13,6 @@ using namespace aat::config;
 namespace aat {
 namespace core {
   struct Trade : public Data {
-    Trade(double volume, double price, Side side, Instrument instrument, ExchangeType exchange = NullExchange,
-      double filled = 0.0, std::deque<Order*> maker_orders = std::deque<Order*>(), Order* taker_order = nullptr)
-      : Trade(0, datetime::now(), volume, price, side, instrument, exchange, filled, maker_orders, taker_order) {}
-
-    Trade(uint_t id, double volume, double price, Side side, Instrument instrument,
-      ExchangeType exchange = NullExchange, double filled = 0.0, std::deque<Order*> maker_orders = std::deque<Order*>(),
-      Order* taker_order = nullptr)
-      : Trade(id, datetime::now(), volume, price, side, instrument, exchange, filled, maker_orders, taker_order) {}
-
-    Trade(timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
-      ExchangeType exchange = NullExchange, double filled = 0.0, std::deque<Order*> maker_orders = std::deque<Order*>(),
-      Order* taker_order = nullptr)
-      : Trade(0, timestamp, volume, price, side, instrument, exchange, filled, maker_orders, taker_order) {}
-
     Trade(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
       ExchangeType exchange = NullExchange, double filled = 0.0, std::deque<Order*> maker_orders = std::deque<Order*>(),
       Order* taker_order = nullptr)

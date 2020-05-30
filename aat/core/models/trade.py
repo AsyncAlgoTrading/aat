@@ -5,8 +5,20 @@ from .data import Data
 from .order import Order
 from ...config import DataType, Side
 
+try:
+    from aat.binding import TradeCpp
+    _CPP = True
+except ImportError:
+    _CPP = False
+
 
 class Trade(Data):
+    def __new__(cls, *args, **kwargs):
+        if _CPP:
+            return TradeCpp(*args, **kwargs)
+        return super(Trade, cls).__new__(cls)
+
+
     # for convenience
     Types = DataType
 

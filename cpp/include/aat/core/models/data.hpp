@@ -14,30 +14,6 @@ namespace aat {
 namespace core {
   struct Data {
    public:
-    Data(double volume, double price, Side side, DataType type, Instrument instrument,
-      ExchangeType exchange = NullExchange, double filled = 0.0)
-      : id(0)
-      , timestamp(datetime::now())
-      , volume(volume)
-      , price(price)
-      , side(side)
-      , type(type)
-      , instrument(instrument)
-      , exchange(exchange)
-      , filled(filled) {}
-
-    Data(timestamp_t timestamp, double volume, double price, Side side, DataType type, Instrument instrument,
-      ExchangeType exchange = NullExchange, double filled = 0.0)
-      : id(0)
-      , timestamp(timestamp)
-      , volume(volume)
-      , price(price)
-      , side(side)
-      , type(type)
-      , instrument(instrument)
-      , exchange(exchange)
-      , filled(filled) {}
-
     Data(uint_t id, double volume, double price, Side side, DataType type, Instrument instrument,
       ExchangeType exchange = NullExchange, double filled = 0.0)
       : id(id)
