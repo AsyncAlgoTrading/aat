@@ -27,7 +27,7 @@ namespace core {
       : name(name)
       , type(InstrumentType::EQUITY) {}
 
-    bool operator==(const Instrument& other);
+    bool operator==(const Instrument& other) const;
     str_t toString() const;
 
    private:

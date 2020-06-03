@@ -2,6 +2,13 @@ from .collector import _Collector
 from .price_level import _PriceLevel
 from .utils import _insort
 from ...config import Side, OrderFlag, OrderType
+from ...common import _in_cpp
+
+try:
+    from aat.binding import OrderBookCpp
+    _CPP = _in_cpp()
+except ImportError:
+    _CPP = False
 
 
 class OrderBook(object):
@@ -43,6 +50,11 @@ class OrderBook(object):
         exchange_name (str): name of the exchange
         callback (Function): callback on events
     '''
+    def __new__(cls, *args, **kwargs):
+        if _CPP:
+            return OrderBookCpp(*args, **kwargs)
+        return super(OrderBook, cls).__new__(cls)
+
 
     def __init__(self,
                  instrument,
@@ -286,10 +298,10 @@ class OrderBook(object):
         Args:
 
         Returns:
-            value (dict): returns {'bid': tuple, 'ask': tuple}
+            value (dict): returns {BUY: tuple, SELL: tuple}
         '''
-        return {'bid': (self._buy_levels[-1], self._buys[self._buy_levels[-1]].volume()) if len(self._buy_levels) > 0 else (0, 0),
-                'ask': (self._sell_levels[0], self._sells[self._sell_levels[0]].volume()) if len(self._sell_levels) > 0 else (float('inf'), 0)}
+        return {Side.BUY: [self._buy_levels[-1], self._buys[self._buy_levels[-1]].volume()] if len(self._buy_levels) > 0 else [0, 0],
+                Side.SELL: [self._sell_levels[0], self._sells[self._sell_levels[0]].volume()] if len(self._sell_levels) > 0 else [float('inf'), 0]}
 
     def spread(self):
         '''return the spread
@@ -300,7 +312,7 @@ class OrderBook(object):
             value (float): spread between bid and ask
         '''
         tob = self.topOfBook()
-        return tob['ask'] - tob['bid']
+        return tob[Side.SELL] - tob[Side.BUY]
 
     def level(self, level=0, price=None):
         '''return book level
@@ -313,11 +325,11 @@ class OrderBook(object):
         '''
         # collect bids and asks at `level`
         if price:
-            bid = self._buys[price] if price in self._buy_levels else None
-            ask = self._sells[price] if price in self._sell_levels else None
+            bid = self._buys[price] if price in self._buy_levels else [0.0, 0.0]
+            ask = self._sells[price] if price in self._sell_levels else [0.0, 0.0]
         else:
-            bid = (self._buy_levels[-level], self._buys[self._buy_levels[-level]].volume()) if len(self._buy_levels) > level else None
-            ask = (self._sell_levels[level], self._sells[self._sell_levels[level]].volume()) if len(self._sell_levels) > level else None
+            bid = [self._buy_levels[-level-1], self._buys[self._buy_levels[-level-1]].volume()] if len(self._buy_levels) > level else [0.0, 0.0]
+            ask = [self._sell_levels[level], self._sells[self._sell_levels[level]].volume()] if len(self._sell_levels) > level else [0.0, 0.0]
         return ask, bid
 
     def levels(self, levels=0):
@@ -331,15 +343,16 @@ class OrderBook(object):
         if levels <= 0:
             return self.topOfBook()
 
-        ret = self.topOfBook()
-        ret['bid'] = [ret['bid']]
-        ret['ask'] = [ret['ask']]
+        ret = {}
+        ret[Side.BUY] = []
+        ret[Side.SELL] = []
         for _ in range(levels):
             ask, bid = self.level(_)
             if ask:
-                ret['ask'].append(ask)
+                ret[Side.SELL].append(ask)
+
             if bid:
-                ret['bid'].append(bid)
+                ret[Side.BUY].append(bid)
         return ret
 
     def __iter__(self):
@@ -391,7 +404,7 @@ class OrderBook(object):
                 if count == 0:
                     # double orig and restart
                     orig = orig * 2
-                    count = orig
+                    count = orig 
                 # append to last list
                 if self._buys[level]:
                     buys[-1].append(self._buys[level])

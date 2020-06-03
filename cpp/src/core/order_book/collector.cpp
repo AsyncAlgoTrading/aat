@@ -10,7 +10,7 @@ namespace core {
     , price(0.0)
     , volume(0.0) {}
 
-  Collector::Collector(std::function<void(Event*)> callback)
+  Collector::Collector(std::function<void(std::shared_ptr<Event>)> callback)
     : callback(callback)
     , price(0.0)
     , volume(0.0) {}
@@ -25,46 +25,46 @@ namespace core {
   }
 
   void
-  Collector::setCallback(std::function<void(Event*)> callback) {
+  Collector::setCallback(std::function<void(std::shared_ptr<Event>)> callback) {
     this->callback = callback;
   }
 
   void
-  Collector::push(Event* event) {
+  Collector::push(std::shared_ptr<Event> event) {
     events.push_back(event);
   }
 
   void
-  Collector::pushOpen(Order* order) {
-    push(new Event(EventType::OPEN, order));
+  Collector::pushOpen(std::shared_ptr<Order> order) {
+    push(std::make_shared<Event>(EventType::OPEN, order));
   }
 
   void
-  Collector::pushFill(Order* order, bool accumulate) {
+  Collector::pushFill(std::shared_ptr<Order> order, bool accumulate) {
     if (accumulate) {
       _accumulate(order);
     }
-    push(new Event(EventType::FILL, order));
+    push(std::make_shared<Event>(EventType::FILL, order));
   }
 
   void
-  Collector::pushChange(Order* order, bool accumulate) {
+  Collector::pushChange(std::shared_ptr<Order> order, bool accumulate) {
     if (accumulate) {
       _accumulate(order);
     }
-    push(new Event(EventType::CHANGE, order));
+    push(std::make_shared<Event>(EventType::CHANGE, order));
   }
 
   void
-  Collector::pushCancel(Order* order, bool accumulate) {
+  Collector::pushCancel(std::shared_ptr<Order> order, bool accumulate) {
     if (accumulate) {
       _accumulate(order);
     }
-    push(new Event(EventType::CANCEL, order));
+    push(std::make_shared<Event>(EventType::CANCEL, order));
   }
 
   void
-  Collector::pushTrade(Order* taker_order) {
+  Collector::pushTrade(std::shared_ptr<Order> taker_order) {
     if (orders.size() == 0) {
       throw AATCPPException("No maker orders provied!");
     }
@@ -73,13 +73,13 @@ namespace core {
       throw AATCPPException("No Trade occurred");
     }
 
-    push(new Event(EventType::TRADE,
-      new Trade(0, datetime::now(), volume, price, taker_order->side, taker_order->instrument, taker_order->exchange,
+    push(std::make_shared<Event>(EventType::TRADE,
+      std::make_shared<Trade>(0, datetime::now(), volume, price, taker_order->side, taker_order->instrument, taker_order->exchange,
         taker_order->filled, orders, taker_order)));
   }
 
   void
-  Collector::_accumulate(Order* order) {
+  Collector::_accumulate(std::shared_ptr<Order> order) {
     price = (volume + order->filled > 0) ? ((price * volume + order->price * order->filled) / (volume + order->filled))
                                          : 0.0;
     volume += order->filled;
@@ -87,22 +87,22 @@ namespace core {
   }
 
   std::uint64_t
-  Collector::clearLevel(PriceLevel* price_level) {
+  Collector::clearLevel(std::shared_ptr<PriceLevel> price_level) {
     price_levels.push_back(price_level);
-    return price_level->size();
+    return price_levels.size();
   }
 
   void
   Collector::commit() {
     // flush the event queue
     while (events.size()) {
-      Event* ev = events.front();
+      std::shared_ptr<Event> ev = events.front();
       events.pop_front();
       if (callback)
         callback(ev);
     }
 
-    for (PriceLevel* pl : price_levels)
+    for (std::shared_ptr<PriceLevel> pl : price_levels)
       pl->commit();
 
     reset();
@@ -110,7 +110,7 @@ namespace core {
 
   void
   Collector::revert() {
-    for (PriceLevel* pl : price_levels)
+    for (std::shared_ptr<PriceLevel> pl : price_levels)
       pl->revert();
     reset();
   }
@@ -130,17 +130,17 @@ namespace core {
     return volume;
   }
 
-  std::deque<Order*>
+  std::deque<std::shared_ptr<Order>>
   Collector::getOrders() const {
     return orders;
   }
 
-  std::deque<Event*>
+  std::deque<std::shared_ptr<Event>>
   Collector::getEvents() const {
     return events;
   }
 
-  std::deque<PriceLevel*>
+  std::deque<std::shared_ptr<PriceLevel>>
   Collector::getPriceLevels() const {
     return price_levels;
   }

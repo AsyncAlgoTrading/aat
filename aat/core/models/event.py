@@ -1,10 +1,11 @@
 from pydantic import BaseModel
 from typing import Any
 from ...config import EventType
+from ...common import _in_cpp
 
 try:
     from aat.binding import EventCpp
-    _CPP = True
+    _CPP = _in_cpp()
 except ImportError:
     _CPP = False
 

@@ -4,18 +4,23 @@ from typing import Mapping, Type, Union
 from .data import Data
 from .order import Order
 from ...config import DataType, Side
+from ...common import _in_cpp
 
 try:
     from aat.binding import TradeCpp
-    _CPP = True
+    _CPP = _in_cpp()
 except ImportError:
     _CPP = False
+
+def _make_cpp_trade(id, timestamp, volume, price, side, instrument, exchange, filled=0.0, maker_orders=None, taker_order=None):
+    '''helper method to ensure all arguments are setup'''
+    return TradeCpp(id, timestamp, volume, price, side, instrument, exchange, filled, maker_orders or deque(), taker_order)
 
 
 class Trade(Data):
     def __new__(cls, *args, **kwargs):
         if _CPP:
-            return TradeCpp(*args, **kwargs)
+            return _make_cpp_trade(*args, **kwargs)
         return super(Trade, cls).__new__(cls)
 
 

@@ -18,36 +18,36 @@ namespace core {
   class Collector {
    public:
     Collector();
-    explicit Collector(std::function<void(Event*)> callback);
+    explicit Collector(std::function<void(std::shared_ptr<Event>)> callback);
 
     void reset();
-    void setCallback(std::function<void(Event*)> callback);
-    void push(Event* event);
-    void pushOpen(Order* order);
-    void pushFill(Order* order, bool accumulate = false);
-    void pushChange(Order* order, bool accumulate = false);
-    void pushCancel(Order* order, bool accumulate = false);
-    void pushTrade(Order* taker_order);
-    std::uint64_t clearLevel(PriceLevel* price_level);
+    void setCallback(std::function<void(std::shared_ptr<Event>)> callback);
+    void push(std::shared_ptr<Event> event);
+    void pushOpen(std::shared_ptr<Order> order);
+    void pushFill(std::shared_ptr<Order> order, bool accumulate = false);
+    void pushChange(std::shared_ptr<Order> order, bool accumulate = false);
+    void pushCancel(std::shared_ptr<Order> order, bool accumulate = false);
+    void pushTrade(std::shared_ptr<Order> taker_order);
+    std::uint64_t clearLevel(std::shared_ptr<PriceLevel> price_level);
     void commit();
     void revert();
     void clear();
     double getPrice() const;
     double getVolume() const;
-    std::deque<Order*> getOrders() const;
-    std::deque<Event*> getEvents() const;
-    std::deque<PriceLevel*> getPriceLevels() const;
+    std::deque<std::shared_ptr<Order>> getOrders() const;
+    std::deque<std::shared_ptr<Event>> getEvents() const;
+    std::deque<std::shared_ptr<PriceLevel>> getPriceLevels() const;
     std::uint64_t getClearedLevels() const;
 
    private:
-    void _accumulate(Order* order);
+    void _accumulate(std::shared_ptr<Order> order);
 
     double price;
     double volume;
-    std::function<void(Event*)> callback;
-    std::deque<Event*> events;
-    std::deque<Order*> orders;
-    std::deque<PriceLevel*> price_levels;
+    std::function<void(std::shared_ptr<Event>)> callback;
+    std::deque<std::shared_ptr<Event>> events;
+    std::deque<std::shared_ptr<Order>> orders;
+    std::deque<std::shared_ptr<PriceLevel>> price_levels;
   };
 
 }  // namespace core

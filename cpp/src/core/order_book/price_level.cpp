@@ -16,20 +16,20 @@ namespace core {
   double
   PriceLevel::getVolume() const {
     double sum = 0.0;
-    for (Order* order : orders) {
+    for (std::shared_ptr<Order> order : orders) {
       sum += (order->volume - order->filled);
     }
     return sum;
   }
 
   void
-  PriceLevel::add(Order* order) {
+  PriceLevel::add(std::shared_ptr<Order> order) {
     // append order to deque
     if (order->order_type == OrderType::STOP) {
-      if (orders.size() > 0 && std::find(orders.begin(), orders.end(), order) != orders.end()) {
+      if (orders.size() > 0 && std::find(orders.begin(), orders.end(), order->stop_target) != orders.end()) {
         return;
       }
-      orders.push_back(order);
+      stop_orders.push_back(order->stop_target);
     } else {
       if (orders.size() > 0 && std::find(orders.begin(), orders.end(), order) != orders.end()) {
         collector.pushChange(order);
@@ -41,8 +41,8 @@ namespace core {
     }
   }
 
-  Order*
-  PriceLevel::remove(Order* order) {
+  std::shared_ptr<Order>
+  PriceLevel::remove(std::shared_ptr<Order> order) {
     // check if order is in level
     if (order->price != price || std::find(orders.begin(), orders.end(), order) == orders.end()) {
       // something is wrong
@@ -58,8 +58,8 @@ namespace core {
     return order;
   }
 
-  Order*
-  PriceLevel::cross(Order* taker_order, std::vector<Order*>& secondaries) {
+  std::shared_ptr<Order>
+  PriceLevel::cross(std::shared_ptr<Order> taker_order, std::vector<std::shared_ptr<Order>>& secondaries) {
     if (taker_order->order_type == OrderType::STOP) {
       add(taker_order);
       return nullptr;
@@ -67,7 +67,7 @@ namespace core {
 
     if (taker_order->filled >= taker_order->volume) {
       // already filled
-      for (Order* order : stop_orders)
+      for (std::shared_ptr<Order> order : stop_orders)
         secondaries.push_back(order);
       return nullptr;
     }
@@ -77,7 +77,7 @@ namespace core {
       double to_fill = taker_order->volume - taker_order->filled;
 
       // pop maker order from list
-      Order* maker_order = orders.front();
+      std::shared_ptr<Order> maker_order = orders.front();
       orders.pop_front();
 
       // add to staged in case we need to revert
@@ -122,7 +122,7 @@ namespace core {
           // push back in deque
           orders.push_front(maker_order);
 
-          for (Order* order : stop_orders)
+          for (std::shared_ptr<Order> order : stop_orders)
             secondaries.push_back(order);
           return nullptr;
         } else {
@@ -147,13 +147,13 @@ namespace core {
       collector.pushTrade(taker_order);
 
       // return nothing to signify to stop
-      for (Order* order : stop_orders)
+      for (std::shared_ptr<Order> order : stop_orders)
         secondaries.push_back(order);
       return nullptr;
     }
 
     // return order, this level is cleared and the order still has volume
-    for (Order* order : stop_orders)
+    for (std::shared_ptr<Order> order : stop_orders)
       secondaries.push_back(order);
     return taker_order;
   }

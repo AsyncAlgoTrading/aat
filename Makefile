@@ -27,6 +27,10 @@ tests: build testpy  ## Make unit tests
 testpy: ## Make unit tests
 	python3 -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch
 
+testpycpp: ## Make unit tests
+	# AAT_USE_CPP=1 python3 -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch --capture=no
+	AAT_USE_CPP=1 python3 -m pytest -s ./aat/tests
+
 testjs:  ## Make js tests
 	cd js; yarn test
 

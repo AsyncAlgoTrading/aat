@@ -2,18 +2,26 @@ from pydantic import validator
 from typing import Mapping, Union, Type
 from .data import Data
 from ...config import DataType, OrderFlag, OrderType, Side
+from ..exchange import ExchangeType
+from ...common import _in_cpp
+
 
 try:
     from aat.binding import OrderCpp
-    _CPP = True
+    _CPP = _in_cpp()
 except ImportError:
     _CPP = False
+
+
+def _make_cpp_order(id, timestamp, volume, price, side, instrument, exchange=ExchangeType(""), filled=0.0, order_type=OrderType.LIMIT, flag=OrderFlag.NONE, stop_target=None, notional=0.0):
+    '''helper method to ensure all arguments are setup'''
+    return OrderCpp(id, timestamp, volume, price, side, instrument, exchange, filled, order_type, flag, stop_target, notional)
 
 
 class Order(Data):
     def __new__(cls, *args, **kwargs):
         if _CPP:
-            return OrderCpp(*args, **kwargs)
+            return _make_cpp_order(*args, **kwargs)
         return super(Order, cls).__new__(cls)
 
     # for convenience

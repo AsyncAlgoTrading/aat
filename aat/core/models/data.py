@@ -6,11 +6,12 @@ from typing import Mapping, Union, Type
 from ...config import Side, DataType
 from ..instrument import Instrument
 from ..exchange import ExchangeType
+from ...common import _in_cpp
 
 try:
     from aat.binding import DataCpp
-    _CPP = True
-    _base = object
+    _CPP = _in_cpp()
+    _base = object if _CPP else BaseModel
 
 except ImportError:
     logging.critical("Could not load C++ extension")
@@ -18,10 +19,15 @@ except ImportError:
     _base = BaseModel
 
 
+def _make_cpp_data(id, timestamp, volume, price, side, instrument, exchange, filled=0.0):
+    '''helper method to ensure all arguments are setup'''
+    return DataCpp(id, timestamp, volume, price, side, instrument, exchange, filled)
+
+
 class Data(_base):
     def __new__(cls, *args, **kwargs):
         if _CPP:
-            return DataCpp(*args, **kwargs)
+            return _make_cpp_data(*args, **kwargs)
         return super(Data, cls).__new__(cls)
 
     class Config:
@@ -43,8 +49,9 @@ class Data(_base):
 
     @validator("timestamp", always=True)
     def _set_timestamp_if_unset(cls, v):
+        assert isinstance(v, datetime)
         if v is None:
-            return datetime.now().timestamp()
+            return datetime.now()
         return v
 
     def __eq__(self, other) -> bool:

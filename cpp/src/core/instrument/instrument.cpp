@@ -4,7 +4,7 @@ namespace aat {
 namespace core {
 
   bool
-  Instrument::operator==(const Instrument& other) {
+  Instrument::operator==(const Instrument& other) const {
     return this->name == other.name && this->type == other.type;
   }
 

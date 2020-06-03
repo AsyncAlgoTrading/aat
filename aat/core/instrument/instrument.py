@@ -1,10 +1,13 @@
+from ...config import InstrumentType
+from ...common import _in_cpp
+
 try:
     from ...binding import InstrumentCpp
-    _CPP = True
+    _CPP = _in_cpp()
 except ImportError:
     _CPP = False
 
-from ...config import InstrumentType
+
 
 
 class Instrument(object):

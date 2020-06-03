@@ -14,8 +14,8 @@ namespace aat {
 namespace core {
   struct Trade : public Data {
     Trade(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
-      ExchangeType exchange = NullExchange, double filled = 0.0, std::deque<Order*> maker_orders = std::deque<Order*>(),
-      Order* taker_order = nullptr)
+      ExchangeType exchange = NullExchange, double filled = 0.0, std::deque<std::shared_ptr<Order>> maker_orders = std::deque<std::shared_ptr<Order>>(),
+      std::shared_ptr<Order> taker_order = nullptr)
       : Data(id, timestamp, volume, price, side, DataType::TRADE, instrument, exchange, filled)
       , maker_orders(maker_orders)
       , taker_order(taker_order)
@@ -29,16 +29,20 @@ namespace core {
     slippage() const {
       return 0.0;
     }
+
     double
     transactionCost() const {
       return 0.0;
     }
+
     str_t toString() const;
+
     json toJson() const;
+
     json perspectiveSchema() const;
 
-    std::deque<Order*> maker_orders;
-    Order* taker_order;
+    std::deque<std::shared_ptr<Order>> maker_orders;
+    std::shared_ptr<Order> taker_order;
     double _slippage;
     double _transaction_cost;
   };

@@ -12,35 +12,35 @@ namespace core {
     , exchange(exchange)
     , callback(nullptr) {}
 
-  OrderBook::OrderBook(const Instrument& instrument, const ExchangeType& exchange, std::function<void(Event*)> callback)
+  OrderBook::OrderBook(const Instrument& instrument, const ExchangeType& exchange, std::function<void(std::shared_ptr<Event>)> callback)
     : instrument(instrument)
     , exchange(exchange)
     , callback(callback) {}
 
   void
-  OrderBook::setCallback(std::function<void(Event*)> callback) {
+  OrderBook::setCallback(std::function<void(std::shared_ptr<Event>)> callback) {
     collector.setCallback(callback);
   }
 
   void
-  OrderBook::add(Order* order) {
+  OrderBook::add(std::shared_ptr<Order> order) {
     // secondary triggered orders
-    std::vector<Order*> secondaries;
+    std::vector<std::shared_ptr<Order>> secondaries;
 
     // order is buy, so look at top of sell side
     double top = getTop(order->side, collector.getClearedLevels());
 
     // set levels to the right side
     std::vector<double>& levels = (order->side == Side::BUY) ? buy_levels : sell_levels;
-    std::unordered_map<double, PriceLevel*>& prices = (order->side == Side::BUY) ? buys : sells;
-    std::unordered_map<double, PriceLevel*>& prices_cross = (order->side == Side::BUY) ? sells : buys;
+    std::unordered_map<double, std::shared_ptr<PriceLevel>>& prices = (order->side == Side::BUY) ? buys : sells;
+    std::unordered_map<double, std::shared_ptr<PriceLevel>>& prices_cross = (order->side == Side::BUY) ? sells : buys;
 
     // check if crosses
     while (top > 0.0 && ((order->side == Side::BUY) ? order->price >= top : order->price <= top)) {
       // execute order against level
       // if returns trade, it cleared the level
       // else, order was fully executed
-      Order* trade = prices_cross[top]->cross(order, secondaries);
+      std::shared_ptr<Order> trade = prices_cross[top]->cross(order, secondaries);
       if (trade) {
         // clear sell level
         top = getTop(order->side, collector.clearLevel(prices_cross[top]));
@@ -79,7 +79,7 @@ namespace core {
           collector.commit();
 
           // execute secondaries
-          for (Order* secondary : secondaries)
+          for (std::shared_ptr<Order> secondary : secondaries)
             add(secondary);
         }
       } else {
@@ -100,13 +100,13 @@ namespace core {
             // limit order, put on books
             if (insort(levels, order->price)) {
               // new price level
-              prices[order->price] = new PriceLevel(order->price, collector);
+              prices[order->price] = std::make_shared<PriceLevel>(order->price, collector);
             }
             // add order to price level
             prices[order->price]->add(order);
 
             // execute secondaries
-            for (Order* secondary : secondaries)
+            for (std::shared_ptr<Order> secondary : secondaries)
               add(secondary);
           }
         } else if (order->flag == OrderFlag::ALL_OR_NONE) {
@@ -125,13 +125,13 @@ namespace core {
             // limit order, put on books
             if (insort(levels, order->price)) {
               // new price level
-              prices[order->price] = new PriceLevel(order->price, collector);
+              prices[order->price] = std::make_shared<PriceLevel>(order->price, collector);
             }
             // add order to price level
             prices[order->price]->add(order);
 
             // execute secondaries
-            for (Order* secondary : secondaries)
+            for (std::shared_ptr<Order> secondary : secondaries)
               add(secondary);
           }
         } else if (order->flag == OrderFlag::IMMEDIATE_OR_CANCEL) {
@@ -144,7 +144,7 @@ namespace core {
             collector.commit();
 
             // execute secondaries
-            for (Order* secondary : secondaries)
+            for (std::shared_ptr<Order> secondary : secondaries)
               add(secondary);
 
           } else {
@@ -154,13 +154,13 @@ namespace core {
             // limit order, put on books
             if (insort(levels, order->price)) {
               // new price level
-              prices[order->price] = new PriceLevel(order->price, collector);
+              prices[order->price] = std::make_shared<PriceLevel>(order->price, collector);
             }
             // add order to price level
             prices[order->price]->add(order);
 
             // execute secondaries
-            for (Order* secondary : secondaries)
+            for (std::shared_ptr<Order> secondary : secondaries)
               add(secondary);
           }
         } else {
@@ -173,14 +173,14 @@ namespace core {
           // limit order, put on books
           if (insort(levels, order->price)) {
             // new price level
-            prices[order->price] = new PriceLevel(order->price, collector);
+            prices[order->price] = std::make_shared<PriceLevel>(order->price, collector);
           }
-          py::print("putting on book", order->price, order->volume);
+
           // add order to price level
           prices[order->price]->add(order);
 
           // execute secondaries
-          for (Order* secondary : secondaries)
+          for (std::shared_ptr<Order> secondary : secondaries)
             add(secondary);
         }
       }
@@ -194,7 +194,7 @@ namespace core {
       collector.commit();
 
       // execute secondaries
-      for (Order* secondary : secondaries)
+      for (std::shared_ptr<Order> secondary : secondaries)
         add(secondary);
     }
 
@@ -203,11 +203,11 @@ namespace core {
   }
 
   void
-  OrderBook::cancel(Order* order) {
+  OrderBook::cancel(std::shared_ptr<Order> order) {
     double price = order->price;
     Side side = order->side;
     std::vector<double>& levels = (side == Side::BUY) ? buy_levels : sell_levels;
-    std::unordered_map<double, PriceLevel*>& prices = (side == Side::BUY) ? buys : sells;
+    std::unordered_map<double, std::shared_ptr<PriceLevel>>& prices = (side == Side::BUY) ? buys : sells;
 
     if (std::find(levels.begin(), levels.end(), price) == levels.end()) {
       throw AATCPPException("Orderbook out of sync");
@@ -218,6 +218,19 @@ namespace core {
     if (prices[price]->size() == 0) {
       levels.erase(std::remove(levels.begin(), levels.end(), price), levels.end());
     }
+  }
+
+  std::map<Side, std::vector<double>>
+  OrderBook::topOfBookMap() const {
+    std::vector<double> tob = topOfBook();
+  std::map<Side, std::vector<double>> ret;
+    ret[Side::BUY] = std::vector<double>();
+    ret[Side::SELL] = std::vector<double>();
+    ret[Side::BUY].push_back(tob[0]);
+    ret[Side::BUY].push_back(tob[1]);
+    ret[Side::SELL].push_back(tob[2]);
+    ret[Side::SELL].push_back(tob[3]);
+    return ret;
   }
 
   std::vector<double>
@@ -270,9 +283,9 @@ namespace core {
     return ret;
   }
 
-  std::vector<PriceLevel*>
+  std::vector<std::shared_ptr<PriceLevel>>
   OrderBook::level(double price) const {
-    std::vector<PriceLevel*> ret;
+    std::vector<std::shared_ptr<PriceLevel>> ret;
 
     if (std::find(buy_levels.begin(), buy_levels.end(), price) == buy_levels.end()) {
       ret.push_back(buys.at(price));
@@ -284,6 +297,29 @@ namespace core {
       ret.push_back(sells.at(price));
     } else {
       ret.push_back(nullptr);
+    }
+    return ret;
+  }
+
+  std::map<Side, std::vector<std::vector<double>>>
+  OrderBook::levelsMap(std::uint64_t levels) const {
+    std::map<Side, std::vector<std::vector<double>>> ret;
+
+    ret[Side::BUY] = std::vector<std::vector<double>>();
+    ret[Side::SELL] = std::vector<std::vector<double>>();
+  
+    for (auto i = 0; i < levels; ++i) {
+      auto _level = level((std::uint64_t)i);
+
+      // bid
+      ret[Side::BUY].push_back(std::vector<double>());
+      // ask
+      ret[Side::SELL].push_back(std::vector<double>());
+
+      ret[Side::BUY][i].push_back(_level[0]);
+      ret[Side::BUY][i].push_back(_level[1]);
+      ret[Side::SELL][i].push_back(_level[2]);
+      ret[Side::SELL][i].push_back(_level[3]);
     }
     return ret;
   }
@@ -307,7 +343,7 @@ namespace core {
   }
 
   void
-  OrderBook::clearOrders(Order* order, std::uint64_t amount) {
+  OrderBook::clearOrders(std::shared_ptr<Order> order, std::uint64_t amount) {
     if (order->side == Side::BUY) {
       sell_levels.erase(sell_levels.begin(), sell_levels.begin() + amount);
     } else {
@@ -345,7 +381,7 @@ namespace core {
 
     // show top 5 levels, then group next 5, 10, 20, etc
     // sells first
-    std::vector<PriceLevel*> sells_to_print;
+    std::vector<std::shared_ptr<PriceLevel>> sells_to_print;
     auto count = 5;
     auto orig = 5;
 
@@ -364,7 +400,7 @@ namespace core {
 
     // show top 5 levels, then group next 5, 10, 20, etc
     // buys second
-    std::vector<PriceLevel*> buys_to_print;
+    std::vector<std::shared_ptr<PriceLevel>> buys_to_print;
     count = 5;
     orig = 5;
     int i = 0;
@@ -383,7 +419,7 @@ namespace core {
     // sell list, then line, then buy list
 
     // format the sells on top, tabbed to the right, with price\tvolume
-    for (PriceLevel* price_level : sells_to_print) {
+    for (std::shared_ptr<PriceLevel> price_level : sells_to_print) {
       // TODO implement the rest from python in C++
       ss << "\t\t" << price_level->getPrice() << "\t\t" << price_level->getVolume() << std::endl;
     }
@@ -391,7 +427,7 @@ namespace core {
     ss << "-----------------------------------------------------\n";
 
     // format the buys on bottom, tabbed to the left, with volume\tprice so prices align
-    for (PriceLevel* price_level : buys_to_print) {
+    for (std::shared_ptr<PriceLevel> price_level : buys_to_print) {
       // TODO implement the rest from python in C++
       ss << price_level->getVolume() << "\t\t" << price_level->getPrice() << std::endl;
     }

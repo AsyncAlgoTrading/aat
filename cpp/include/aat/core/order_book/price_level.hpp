@@ -25,9 +25,9 @@ namespace core {
     }
     double getVolume() const;
 
-    void add(Order* order);
-    Order* remove(Order* order);
-    Order* cross(Order* taker_order, std::vector<Order*>& secondaries);  // NOLINT
+    void add(std::shared_ptr<Order> order);
+    std::shared_ptr<Order> remove(std::shared_ptr<Order> order);
+    std::shared_ptr<Order> cross(std::shared_ptr<Order> taker_order, std::vector<std::shared_ptr<Order>>& secondaries);  // NOLINT
 
     void clear();
     void commit();
@@ -41,10 +41,10 @@ namespace core {
    private:
     double price;
     Collector& collector;
-    std::deque<Order*> orders{};
-    std::deque<Order*> orders_staged;
-    std::vector<Order*> stop_orders;
-    std::vector<Order*> stop_orders_staged;
+    std::deque<std::shared_ptr<Order>> orders{};
+    std::deque<std::shared_ptr<Order>> orders_staged;
+    std::vector<std::shared_ptr<Order>> stop_orders;
+    std::vector<std::shared_ptr<Order>> stop_orders_staged;
   };
 }  // namespace core
 }  // namespace aat

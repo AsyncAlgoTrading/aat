@@ -48,10 +48,10 @@ namespace core {
     timestamp_t timestamp;
     double volume;
     double price;
-    Side side;
-    DataType type;
-    Instrument instrument;
-    ExchangeType exchange;
+    const Side side;
+    const DataType type;
+    const Instrument instrument;
+    const ExchangeType exchange;
     double filled;
   };
 

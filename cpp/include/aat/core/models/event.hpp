@@ -13,16 +13,15 @@ namespace aat {
 namespace core {
   class Event {
    public:
-    Event(EventType type, Data* target)
+    Event(EventType type, std::shared_ptr<Data> target)
       : type(type)
       , target(target) {}
 
     str_t toString() const;
     json toJson() const;
 
-   protected:
-    EventType type;
-    Data* target;
+    const EventType type;
+    std::shared_ptr<Data> target;
   };
 
 }  // namespace core

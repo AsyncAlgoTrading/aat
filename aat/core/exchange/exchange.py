@@ -1,6 +1,8 @@
+from ...common import _in_cpp
+
 try:
     from ...binding import ExchangeTypeCpp
-    _CPP = True
+    _CPP = _in_cpp()
 except ImportError:
     _CPP = False
 
