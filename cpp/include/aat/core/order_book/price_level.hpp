@@ -1,5 +1,6 @@
 #pragma once
 #include <deque>
+#include <memory>
 #include <string>
 #include <vector>
 #include <pybind11/pybind11.h>
@@ -27,7 +28,8 @@ namespace core {
 
     void add(std::shared_ptr<Order> order);
     std::shared_ptr<Order> remove(std::shared_ptr<Order> order);
-    std::shared_ptr<Order> cross(std::shared_ptr<Order> taker_order, std::vector<std::shared_ptr<Order>>& secondaries);  // NOLINT
+    std::shared_ptr<Order> cross(
+      std::shared_ptr<Order> taker_order, std::vector<std::shared_ptr<Order>>& secondaries);  // NOLINT
 
     void clear();
     void commit();

@@ -55,7 +55,6 @@ class OrderBook(object):
             return OrderBookCpp(*args, **kwargs)
         return super(OrderBook, cls).__new__(cls)
 
-
     def __init__(self,
                  instrument,
                  exchange_name='',
@@ -328,7 +327,7 @@ class OrderBook(object):
             bid = self._buys[price] if price in self._buy_levels else [0.0, 0.0]
             ask = self._sells[price] if price in self._sell_levels else [0.0, 0.0]
         else:
-            bid = [self._buy_levels[-level-1], self._buys[self._buy_levels[-level-1]].volume()] if len(self._buy_levels) > level else [0.0, 0.0]
+            bid = [self._buy_levels[-level - 1], self._buys[self._buy_levels[-level - 1]].volume()] if len(self._buy_levels) > level else [0.0, 0.0]
             ask = [self._sell_levels[level], self._sells[self._sell_levels[level]].volume()] if len(self._sell_levels) > level else [0.0, 0.0]
         return ask, bid
 
@@ -404,7 +403,7 @@ class OrderBook(object):
                 if count == 0:
                     # double orig and restart
                     orig = orig * 2
-                    count = orig 
+                    count = orig
                 # append to last list
                 if self._buys[level]:
                     buys[-1].append(self._buys[level])

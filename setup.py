@@ -89,7 +89,7 @@ class CMakeBuild(build_ext):
         for ext in self.extensions:
             try:
                 self.build_extension_cmake(ext)
-            except:
+            except BaseException:
                 print('WARNING!!! C++ extension could not be built')
 
     def build_extension_cmake(self, ext):

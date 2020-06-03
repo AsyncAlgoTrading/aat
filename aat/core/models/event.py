@@ -10,7 +10,6 @@ except ImportError:
     _CPP = False
 
 
-
 class Event(BaseModel):
     def __new__(cls, *args, **kwargs):
         if _CPP:

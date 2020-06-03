@@ -1,8 +1,10 @@
 #pragma once
 #include <deque>
+#include <map>
+#include <memory>
+#include <string>
 #include <vector>
 #include <unordered_map>
-#include <string>
 #include <pybind11/pybind11.h>
 
 #include <aat/common.hpp>
@@ -22,7 +24,8 @@ namespace core {
    public:
     explicit OrderBook(const Instrument& instrument);
     OrderBook(const Instrument& instrument, const ExchangeType& exchange);
-    OrderBook(const Instrument& instrument, const ExchangeType& exchange, std::function<void(std::shared_ptr<Event>)> callback);
+    OrderBook(
+      const Instrument& instrument, const ExchangeType& exchange, std::function<void(std::shared_ptr<Event>)> callback);
 
     void setCallback(std::function<void(std::shared_ptr<Event>)> callback);
 
@@ -36,8 +39,8 @@ namespace core {
 
     std::vector<double> level(uint_t level) const;
     std::vector<std::shared_ptr<PriceLevel>> level(double price) const;
-    
-    std::map<Side, std::vector<std::vector<double>>> levelsMap(uint_t levels) const; // For Binding
+
+    std::map<Side, std::vector<std::vector<double>>> levelsMap(uint_t levels) const;  // For Binding
     std::vector<std::vector<double>> levels(uint_t levels) const;
 
     str_t toString() const;

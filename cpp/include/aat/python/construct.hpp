@@ -9,8 +9,5 @@ using namespace aat::config;
 using namespace aat::core;
 
 namespace aat {
-namespace python {
-
-
-}  // namespace python
+namespace python {}  // namespace python
 }  // namespace aat

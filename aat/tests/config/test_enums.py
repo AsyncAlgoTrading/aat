@@ -1,5 +1,6 @@
 from aat.config import Side, EventType, DataType, InstrumentType, OrderType, OrderFlag
 
+
 class TestEnums:
     def test_side(self):
         assert Side.BUY.name == "BUY"

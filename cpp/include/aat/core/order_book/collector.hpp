@@ -1,8 +1,8 @@
 #pragma once
 #include <deque>
+#include <memory>
 #include <string>
 #include <pybind11/pybind11.h>
-
 #include <aat/core/order_book/price_level.hpp>
 #include <aat/core/models/event.hpp>
 #include <aat/core/models/order.hpp>

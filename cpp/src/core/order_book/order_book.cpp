@@ -12,7 +12,8 @@ namespace core {
     , exchange(exchange)
     , callback(nullptr) {}
 
-  OrderBook::OrderBook(const Instrument& instrument, const ExchangeType& exchange, std::function<void(std::shared_ptr<Event>)> callback)
+  OrderBook::OrderBook(
+    const Instrument& instrument, const ExchangeType& exchange, std::function<void(std::shared_ptr<Event>)> callback)
     : instrument(instrument)
     , exchange(exchange)
     , callback(callback) {}
@@ -223,7 +224,7 @@ namespace core {
   std::map<Side, std::vector<double>>
   OrderBook::topOfBookMap() const {
     std::vector<double> tob = topOfBook();
-  std::map<Side, std::vector<double>> ret;
+    std::map<Side, std::vector<double>> ret;
     ret[Side::BUY] = std::vector<double>();
     ret[Side::SELL] = std::vector<double>();
     ret[Side::BUY].push_back(tob[0]);
@@ -307,7 +308,7 @@ namespace core {
 
     ret[Side::BUY] = std::vector<std::vector<double>>();
     ret[Side::SELL] = std::vector<std::vector<double>>();
-  
+
     for (auto i = 0; i < levels; ++i) {
       auto _level = level((std::uint64_t)i);
 

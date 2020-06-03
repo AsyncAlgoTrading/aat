@@ -3,7 +3,9 @@ import os
 
 def _in_cpp():
     try:
-        from aat.binding import SideCpp, EventTypeCpp, DataTypeCpp, InstrumentTypeCpp, OrderTypeCpp, OrderFlagCpp, OrderBookCpp, ExchangeTypeCpp, InstrumentCpp, DataCpp, EventCpp, OrderCpp, TradeCpp
+        from aat.binding import (SideCpp, EventTypeCpp, DataTypeCpp, InstrumentTypeCpp,  # noqa: F401
+                                 OrderTypeCpp, OrderFlagCpp, OrderBookCpp, ExchangeTypeCpp,  # noqa: F401
+                                 InstrumentCpp, DataCpp, EventCpp, OrderCpp, TradeCpp)  # noqa: F401
     except ImportError:
         return False
 

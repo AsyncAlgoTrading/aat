@@ -2,8 +2,9 @@
 
 #include <deque>
 #include <iostream>
-#include <vector>
+#include <memory>
 #include <string>
+#include <vector>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/chrono.h>
@@ -122,9 +123,7 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("type", &Data::type)
     .def_readonly("instrument", &Data::instrument)
     .def_readonly("exchange", &Data::exchange)
-    .def_readwrite("filled", &Data::filled)
-  ;
-
+    .def_readwrite("filled", &Data::filled);
 
   py::class_<Event>(m, "EventCpp")
     .def(py::init<EventType, std::shared_ptr<Data>>())
@@ -133,8 +132,7 @@ PYBIND11_MODULE(binding, m) {
     .def("__repr__", &Event::toString)
     .def("toJson", &Event::toJson)
     .def_readonly("type", &Event::type)
-    .def_readonly("target", &Event::target)
-  ;
+    .def_readonly("target", &Event::target);
 
   py::class_<Order, Data, std::shared_ptr<Order>>(m, "OrderCpp")
     .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag,
@@ -154,12 +152,11 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("order_type", &Order::order_type)
     .def_readonly("flag", &Order::flag)
     .def_readonly("stop_target", &Order::stop_target)
-    .def_readwrite("notional", &Order::notional)
-  ;
+    .def_readwrite("notional", &Order::notional);
 
   py::class_<Trade, Data, std::shared_ptr<Trade>>(m, "TradeCpp")
-    .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double, std::deque<std::shared_ptr<Order>>,
-      std::shared_ptr<Order>>())
+    .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double,
+      std::deque<std::shared_ptr<Order>>, std::shared_ptr<Order>>())
     .def("__repr__", &Trade::toString)
     .def("slippage", &Trade::slippage)
     .def("transactionCost", &Trade::transactionCost)
@@ -175,13 +172,10 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("exchange", &Trade::exchange)
     .def_readwrite("filled", &Trade::filled)
     .def_readwrite("maker_orders", &Trade::maker_orders)
-    .def_readwrite("taker_order", &Trade::taker_order)
-
-  ;
+    .def_readwrite("taker_order", &Trade::taker_order);
 
   /*******************************
    * Helpers
    ******************************/
   using namespace aat::python;
-
 }

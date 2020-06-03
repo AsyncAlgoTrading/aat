@@ -1,5 +1,5 @@
 from datetime import datetime
-from aat.config import Side, DataType, OrderFlag, OrderType
+from aat.config import Side, OrderFlag, OrderType
 from aat.core import Order, ExchangeType
 
 

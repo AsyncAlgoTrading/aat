@@ -29,7 +29,7 @@ class TestMarketOrder:
         print(ob.topOfBook())
         assert ob.topOfBook() == {Side.BUY: [0, 0], Side.SELL: [5.5, 1.0]}
         print(ob.levels(3))
-        assert ob.levels(3) == {Side.BUY: [[0, 0], [0, 0], [0, 0]   ], Side.SELL: [[5.5, 1.0], [6.0, 1.0], [6.5, 1.0]]}
+        assert ob.levels(3) == {Side.BUY: [[0, 0], [0, 0], [0, 0]], Side.SELL: [[5.5, 1.0], [6.0, 1.0], [6.5, 1.0]]}
 
 
 class TestStopLoss:

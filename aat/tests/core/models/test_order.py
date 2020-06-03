@@ -1,12 +1,9 @@
 # type: ignore
 import pydantic
-import os
 import pytest
 from datetime import datetime
 from aat.common import _in_cpp
 from aat.core import Order, Instrument, ExchangeType
-import aat.core.models.order as acmo
-import aat.core.models.data as acmd
 
 _INSTRUMENT = Instrument('TE.ST')
 
@@ -35,4 +32,3 @@ class TestOrder:
                       instrument=_INSTRUMENT,
                   ),
                   instrument=_INSTRUMENT)
-

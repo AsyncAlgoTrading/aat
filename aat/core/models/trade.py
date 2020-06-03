@@ -12,6 +12,7 @@ try:
 except ImportError:
     _CPP = False
 
+
 def _make_cpp_trade(id, timestamp, volume, price, side, instrument, exchange, filled=0.0, maker_orders=None, taker_order=None):
     '''helper method to ensure all arguments are setup'''
     return TradeCpp(id, timestamp, volume, price, side, instrument, exchange, filled, maker_orders or deque(), taker_order)
@@ -22,7 +23,6 @@ class Trade(Data):
         if _CPP:
             return _make_cpp_trade(*args, **kwargs)
         return super(Trade, cls).__new__(cls)
-
 
     # for convenience
     Types = DataType

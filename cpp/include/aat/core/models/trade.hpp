@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deque>
+#include <memory>
 #include <aat/common.hpp>
 #include <aat/config/enums.hpp>
 #include <aat/core/instrument/instrument.hpp>
@@ -14,7 +15,8 @@ namespace aat {
 namespace core {
   struct Trade : public Data {
     Trade(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
-      ExchangeType exchange = NullExchange, double filled = 0.0, std::deque<std::shared_ptr<Order>> maker_orders = std::deque<std::shared_ptr<Order>>(),
+      ExchangeType exchange = NullExchange, double filled = 0.0,
+      std::deque<std::shared_ptr<Order>> maker_orders = std::deque<std::shared_ptr<Order>>(),
       std::shared_ptr<Order> taker_order = nullptr)
       : Data(id, timestamp, volume, price, side, DataType::TRADE, instrument, exchange, filled)
       , maker_orders(maker_orders)
