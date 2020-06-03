@@ -118,8 +118,8 @@ jobs:
       displayName: 'Test'
 
     - script: |
-      make testpycpp
-    displayName: 'Test C++'
+        make testpycpp
+      displayName: 'Test C++'
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()
