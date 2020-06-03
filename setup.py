@@ -87,7 +87,10 @@ class CMakeBuild(build_ext):
                 raise RuntimeError("CMake >= 3.1.0 is required on Windows")
 
         for ext in self.extensions:
-            self.build_extension_cmake(ext)
+            try:
+                self.build_extension_cmake(ext)
+            except:
+                print('WARNING!!! C++ extension could not be built')
 
     def build_extension_cmake(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
