@@ -66,6 +66,11 @@ function (build_dep name cmake_file)
 
     include_directories(${CMAKE_BINARY_DIR}/${name}-src/extras/${name}/include)
     include_directories(${CMAKE_BINARY_DIR}/${name}-src/include)
+
+    if(${name} STREQUAL "date")
+        include_directories(${CMAKE_BINARY_DIR}/${name}-src/include/date)
+    endif()
+
     include_directories(${CMAKE_BINARY_DIR}/${name}-src)
 endfunction()
 ##############################
@@ -167,7 +172,6 @@ endif()
 #########################
 # PYTHON BINDINGS BUILD #
 #########################
-include_directories("${AAT_PYTHON_SRC}/perspective/include")
 if(MANYLINUX)
     # Manylinux docker images have no shared libraries
     # The instead use a statically built python.
@@ -187,6 +191,10 @@ include_directories( ${Python_INCLUDE_DIRS} )
 
 # already found from before
 find_package(Boost)
+
+build_dep("json" "${AAT_CMAKE_MODULE_PATH}/Json.txt.in")
+build_dep("json-pybind" "${AAT_CMAKE_MODULE_PATH}/Json_pybind.txt.in")
+build_dep("date" "${AAT_CMAKE_MODULE_PATH}/date.txt.in")
 
 if(MACOS)
     # on mac, use the vanilla pybind11 finder
@@ -258,33 +266,46 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 include_directories("${CMAKE_SOURCE_DIR}/cpp/include")
 
+set(SOURCE_FILES
+${CMAKE_SOURCE_DIR}/cpp/src/config/enums.cpp
+${CMAKE_SOURCE_DIR}/cpp/src/config/parser.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/instrument/instrument.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/exchange/exchange.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/models/data.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/models/event.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/models/order.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/models/trade.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/order_book/price_level.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/order_book/collector.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/order_book/order_book.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/python/binding.cpp
+)
+
 ########################
 # Python extra targets #
 ########################
-add_library(binding SHARED
-    ${CMAKE_SOURCE_DIR}/cpp/src/binding.cpp
-    ${HEADER_FILES})
+add_library(binding SHARED ${SOURCE_FILES})
 set_target_properties(binding PROPERTIES
          LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat)
 target_link_libraries(binding ${PYTHON_LIBRARIES})
 
-add_library(_enums SHARED
-    ${CMAKE_SOURCE_DIR}/cpp/src/enums.cpp)
-set_target_properties(_enums PROPERTIES
-         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat)
+# add_library(_enums SHARED
+#     ${CMAKE_SOURCE_DIR}/cpp/src/enums.cpp)
+# set_target_properties(_enums PROPERTIES
+#          LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/aat)
 # target_link_libraries(_enums binding)
-target_link_libraries(_enums ${PYTHON_LIBRARIES})
+# target_link_libraries(_enums ${PYTHON_LIBRARIES})
 
 ## Copy in place for testing
 add_custom_command(TARGET binding POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:binding> ${CMAKE_SOURCE_DIR}/aat/)
-add_custom_command(TARGET _enums POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:_enums> ${CMAKE_SOURCE_DIR}/aat/)
+# add_custom_command(TARGET _enums POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:_enums> ${CMAKE_SOURCE_DIR}/aat/)
 ########################
 
 if(CPP_BUILD_STRICT AND NOT WIN32)
     target_compile_options(binding PRIVATE -Wall -Werror)
     target_compile_options(binding PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
-    target_compile_options(_enums PRIVATE -Wall -Werror)
-    target_compile_options(_enums PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
+    # target_compile_options(_enums PRIVATE -Wall -Werror)
+    # target_compile_options(_enums PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
 endif()
 
 

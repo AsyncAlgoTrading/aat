@@ -1,24 +1,14 @@
-CONFIG=./config/backtest_multi.cfg
-EXCHANGE=gdax
+CONFIG=./config/synthetic.cfg
 
 
-runconfig: build ## Clean and make target, run target
-	python3 -m aat --config=$(CONFIG)
+run:  build  ## Clean and make target, run target
+	python3 -m aat $(CONFIG)
 
-run:  clean build  ## Clean and make target, run target
-	python3 -m aat --live --verbose=$(VERBOSE) --exchange=$(EXCHANGE)
+runcpp:  build  ## Clean and make target, run target
+	AAT_USE_CPP=1 python3 -m aat $(CONFIG)
 
-sandbox: build  ## Clean and make target, run target
-	python3 -m aat --sandbox --verbose=$(VERBOSE) -exchange=$(EXCHANGE)
-
-backtest_config: ## Clean and make target, run backtest
-	python3 -m aat --config=./config/backtest_gemini.cfg
-
-backtest: ## Clean and make target, run backtest
-	python3 -m aat --backtest --verbose=$(VERBOSE) --exchange=$(EXCHANGE)
-
-backtest_inline:  ## Clean and make target, run backtest, plot in terminal
-	bash -c "export MPLBACKEND=\"module://itermplot\";	export ITERMPLOT=\"rv\"; python3 -m aat backtest $(VERBOSE) $(EXCHANGE)"
+rundebug:  debug  ## Clean and make debug target, run target
+	python3 -m aat $(CONFIG)
 
 buildext: ## build the package extensions
 	python3 setup.py build_ext
@@ -26,34 +16,62 @@ buildext: ## build the package extensions
 build: ## build the package
 	python3 setup.py build
 
+debug: ## build debug build of the package
+	DEBUG=1 python3 setup.py build
+
+js:  ## build the js assets
+	cd js; yarn build
+
 install: ## install the package
-	pip3 install .
+	python3 -m pip install .
 
-tests: ## Clean and Make unit tests
-	python3 -m pytest -v ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch
+tests: build testpy  ## Make unit tests
 
-test_verbose: ## run the tests with full output
-	@ python3 -m pytest -vv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch
+testpy: ## Make unit tests
+	python3 -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch
 
-lint: ## run linter
-	python3 -m flake8 aat 
+testpycpp: ## Make unit tests
+	# AAT_USE_CPP=1 python3 -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch --capture=no
+	AAT_USE_CPP=1 python3 -m pytest -s ./aat/tests
 
-fix:  ## run autopep8/tslint fix
-	python3 -m autopep8 --in-place -r -a -a aat/
+testjs:  ## Make js tests
+	cd js; yarn test
+
+lint: lintpy lintjs lintcpp  ## run all linters
+
+lintpy: ## run python linter
+	python3 -m flake8 aat setup.py
+
+lintjs: ## run js linter
+	cd js; yarn lint
+	
+lintcpp: ## run cpp linter
+	cpplint --linelength=120 --recursive cpp/
+
+fix: fixpy fixjs fixcpp  ## run all fixers
+
+fixpy:  ## run autopep8 fix
+	python3 -m autopep8 --in-place -r -a -a aat/ setup.py
+
+fixcpp:  ## run clang-format
+	clang-format -i -style=file `find ./cpp -name "*.*pp"`
+
+fixjs:  ## run clang-format
+	cd js; yarn fix
 
 annotate: ## MyPy type annotation check
-	mypy -s aat 
+	python3 -m mypy aat
 
 annotate_l: ## MyPy type annotation check - count only
-	mypy -s aat | wc -l 
+	python3 -m mypy -s aat | wc -l 
 
 docs:  ## Build the sphinx docs
 	make -C docs html
+	open ./docs/_build/html/index.html
 
 dist:  ## dist to pypi
 	rm -rf dist build
-	python3 setup.py sdist
-	python3 setup.py bdist_wheel
+	python3 setup.py sdist bdist_wheel
 	twine check dist/* && twine upload dist/*
 
 clean: ## clean the repository
@@ -71,4 +89,5 @@ help:
 print-%:
 	@echo '$*=$($*)'
 
-.PHONY: clean run runconfig sandbox backtest backtest_config test tests test_verbose help install docs data dist js build buildext boost
+.PHONY: run buildext build js install tests lint fix docs dist clean help fixcpp
+

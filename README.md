@@ -2,8 +2,7 @@
 AsyncAlgoTrading
 
 [![Build Status](https://dev.azure.com/tpaine154/aat/_apis/build/status/timkpaine.aat?branchName=master)](https://dev.azure.com/tpaine154/aat/_build/latest?definitionId=18&branchName=master)
-[![Coverage](https://img.shields.io/azure-devops/coverage/tpaine154/aat/18)](https://dev.azure.com/tpaine154/aat/_apis/build/status/timkpaine.aat?branchName=master)
-[![BCH compliance](https://bettercodehub.com/edge/badge/timkpaine/aat?branch=master)](https://bettercodehub.com/)
+[![Coverage](https://img.shields.io/azure-devops/coverage/tpaine154/aat/18/master)](https://dev.azure.com/tpaine154/aat/_apis/build/status/timkpaine.aat?branchName=master)
 [![License](https://img.shields.io/github/license/timkpaine/aat.svg)](https://pypi.python.org/pypi/aat)
 [![PyPI](https://img.shields.io/pypi/v/aat.svg)](https://pypi.python.org/pypi/aat)
 [![Docs](https://img.shields.io/readthedocs/aat.svg)](http://aat.readthedocs.io/en/latest/)
@@ -35,41 +34,51 @@ The execution engine is a simple passthrough to the underlying exchanges. It pro
 ## Backtest engine
 The backtest engine provides the ability to run the same stragegy offline against historical data.
 
-
 # Trading Strategy
-The core element of `aat` is the trading strategy interface. It is the union of the `Strategy` interface, which provides methods to buy and sell, with the `Callback` interface, which provides callbacks in response to data. Users subclass this class in order to implement their strategies
+The core element of `aat` is the trading strategy interface. It includes both data processing and order management functionality. Users subclass this class in order to implement their strategies
 
-## Callback
-```python3
-class Callback(metaclass=ABCMeta):
-    @abstractmethod
-    def onTrade(self, data: MarketData):
-        '''onTrade'''
-
-    @abstractmethod
-    def onOpen(self, data: MarketData):
-        '''onOpen'''
-
-    @abstractmethod
-    def onFill(self, resp: TradeResponse):
-        '''onFill'''
-
-    @abstractmethod
-    def onCancel(self, data: MarketData):
-        '''onCancel'''
-
-    @abstractmethod
-    def onChange(self, data: MarketData):
-        '''onChange'''
-
-    @abstractmethod
-    def onError(self, data: MarketData):
-        '''onError'''
-```
-
-## Strategy
+## Class
 ```python3
 class Strategy(metaclass=ABCMeta):
+    @abstractmethod
+    def onTrade(self, event: Event):
+        '''Called whenever a `Trade` event is received'''
+
+    def onOpen(self, event: Event):
+        '''Called whenever an Order `Open` event is received'''
+
+    def onFill(self, event: Event):
+        '''Called whenever an Order `Fill` event is received'''
+
+    def onCancel(self, event: Event):
+        '''Called whenever an Order `Cancel` event is received'''
+
+    def onChange(self, event: Event):
+        '''Called whenever an Order `Change` event is received'''
+
+    def onError(self, event: Event):
+        '''Called whenever an internal error occurs'''
+
+    def onStart(self):
+        '''Called once at engine initialization time'''
+        pass
+
+    def onExit(self):
+        '''Called once at engine exit time'''
+        pass
+
+    def onHalt(self, data):
+        '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
+        pass
+
+    def onContinue(self, data):
+        '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
+        pass
+
+    def onAnalyze(self, engine):
+        '''Called once after engine exit to analyze the results of a backtest'''
+        pass
+
     @abstractmethod
     def requestBuy(self,
                    callback: Callback,
@@ -126,19 +135,19 @@ class BuyAndHoldStrategy(TradingStrategy):
         pass
 ```
 
-Trading strategies have a number of required methods for handling messages:
+Trading strategies have only one required method handling messages:
 
 - onTrade: Called when a trade occurs
-- onChange: Called when an order is modified
-- onFill: Called when a strategy's trade executes
-- onCancel: Called when an order is cancelled
-- onError: Called when an error occurs
-- onOpen: Called when a new order occurs
 
 There are other optional callbacks for more granular processing:
-- onStart: Called when the program starts
+- onOpen: Called when a new order occurs
+- onFill: Called when a strategy's trade executes
+- onCancel: Called when an order is cancelled
+- onChange: Called when an order is modified
+- onError: Called when a system error occurs
 - onHalt: Called when trading is halted
 - onContinue: Called when trading continues
+- onStart: Called when the program starts
 - onExit: Called when the program shuts down
 
 There are also several optional callbacks for backtesting:
@@ -148,8 +157,8 @@ There are also several optional callbacks for backtesting:
 - onAnalyze
     - called after trading engine has processed all data, used to visualize algorithm performance
 
-# Setting up and running
-An instance of `TradingStrategy` class is able to run live or against a set of historical trade/quote data. When instantiating a `TradingEngine` object with a `TradingEngineConfig` object, the `TradingEngineConfig` has a `type` which can be set to:
+## Setting up and running
+An instance of `TradingStrategy` class is able to run live or against a set of historical trade/quote data. When instantiating a `TradingEngine` object, you can set a `type` attribute to be one of:
 
 - `live` - live trading against the exchange
 - `simulation` - live trading against the exchange, but with order entry disabled
@@ -158,7 +167,7 @@ An instance of `TradingStrategy` class is able to run live or against a set of h
 
 To test our strategy in any mode, we will need to setup exchange keys to get historical data, stream market data, and make new orders.
 
-## API Keys
+### API Keys
 You should creat API keys for exchanges you wish to trade on. For this example, we will assume a Coinbase Pro account with trading enabled. I usually put my keys in a set of shell scripts that are gitignored, so I don't post anything by accident. My scripts look something like:
 
 ```bash
@@ -170,36 +179,16 @@ export COINBASE_API_PASS=...
 Prior to running, I source the keys I need. 
 
 ### Sandboxes
-Currently only the Gemini sandbox is supported, the other exchanges have discontinued theirs. To run in sandbox, set `TradingEngineConfig.type` to Sandbox.
+Currently only the Gemini sandbox is supported, the other exchanges have discontinued theirs. To run in sandbox, set `TradingEngine.type` to Sandbox.
 
 ### Live Trading
-When you want to run live, set `TradingEngineConfig.type` to Live. You will want to become familiar with the risk and execution engines, as these control things like max drawdown, max risk accrual, execution eagerness, etc.
+When you want to run live, set `TradingEngine.type` to Live. You will want to become familiar with the risk and execution engines, as these control things like max drawdown, max risk accrual, execution eagerness, etc.
 
 ### Simulation Trading
-When you want to run an algorithm live, but don't yet trust that it can make money, set `TradingEngineConfig.type` to simulation. This will let it run against real money, but disallow order entry. You can then set things like slippage and transaction costs as you would in a backtest.
+When you want to run an algorithm live, but don't yet trust that it can make money, set `TradingEngine.type` to simulation. This will let it run against real money, but disallow order entry. You can then set things like slippage and transaction costs as you would in a backtest.
 
-## Testing
-Let's make sure everything worked out by running a sample strategy (that doesnt make and trades!) on the Coinbase Pro exchange:
-
-```bash
-python3 -m algocoin --simulation --exchanges=coinbase
-```
-
-You should see the following output:
-
-```bash
-python3 -m algocoin --simulation --exchanges=coinbase
-2019-06-01 17:54:17,468 CRITICAL -- MainProcess parser.py:151 --
-2019-06-01 17:54:17,469 CRITICAL -- MainProcess parser.py:152 -- Simulation trading
-2019-06-01 17:54:17,469 CRITICAL -- MainProcess parser.py:153 --
-2019-06-01 17:54:34,570 CRITICAL -- MainProcess trading.py:194 --
-2019-06-01 17:54:34,570 CRITICAL -- MainProcess trading.py:195 -- Server listening on port: 8081
-2019-06-01 17:54:34,571 CRITICAL -- MainProcess trading.py:196 --
-2019-06-01 17:54:34,998 CRITICAL -- MainProcess market_data.py:68 -- Starting algo trading: ExchangeType.COINBASE
-```
-
-## Config
-Because there are a variety of options, a config file is generally more usable. Here is an example configuration for backtesting the Buy-and-hold strategy above on CoinbasePro:
+### Testing
+Because there are a variety of options, a config file is generally the most usable interface for configuration. Here is an example configuration for backtesting the Buy-and-hold strategy above on CoinbasePro:
 
 ```bash
 > cat backtest.cfg
@@ -222,10 +211,10 @@ max_risk = 100.0
 total_funds = 10.0
 ```
 
-## Analyzing an algorithm
+### Analyzing an algorithm
 We can run the above config by running:
 ```bash
-python3 -m algocoin --config=./backtest.cfg
+python3 -m aat ./backtest.cfg
 ```
 
 We should see the following output:
@@ -356,69 +345,60 @@ We can see that our algorithm also implemented `slippage` and `transactionCost`,
         return resp
 ```
 
-# Extending
+## Extending
 Apart from writing new strategies, this library can be extended by adding new exchanges. These are pretty simple. For cryptocurrency exchanges, I rely heavily on `ccxt`, `asyncio`, and websocket libraries.
 
-## Example
+### Example
 Here is the coinbase exchange. Most of the code is to manage different websocket subscription options, and to convert between `aat`, `ccxt` and exchange-specific formatting of things like symbols, order types, etc. 
-
 ```python3
 class CoinbaseExchange(Exchange):
-    @lru_cache(None)
-    def subscription(self):
-        return [json.dumps({"type": "subscribe", "product_id": x.value[0].value + '-' + x.value[1].value}) for x in self.options().currency_pairs]
-
-    @lru_cache(None)
-    def heartbeat(self):
-        return json.dumps({"type": "heartbeat", "on": True})
-
-    def tickToData(self, jsn: dict) -> MarketData:
-        '''convert a jsn tick off the websocket to a MarketData struct'''
-        if jsn.get('type') == 'received':
-            return
-
-        s = jsn.get('type').upper()
-        reason = jsn.get('reason', '').upper()
-        if s == 'MATCH' or (s == 'DONE' and reason == 'FILLED'):
-            typ = TickType.TRADE
-        elif s in ('OPEN', 'DONE', 'CHANGE', 'HEARTBEAT'):
-            if reason == 'CANCELED':
-                typ = TickType.CANCEL
-            elif s == 'DONE':
-                typ = TickType.FILL
-            else:
-                typ = TickType_from_string(s.upper())
-        else:
-            typ = TickType.ERROR
-
-        order_id = jsn.get('order_id', jsn.get('maker_order_id', ''))
-        time = parse_date(jsn.get('time')) if jsn.get('time') else datetime.now()
-
-        if typ in (TickType.CANCEL, TickType.OPEN):
-            volume = float(jsn.get('remaining_size', 'nan'))
-        else:
-            volume = float(jsn.get('size', 'nan'))
-        price = float(jsn.get('price', 'nan'))
-
-        currency_pair = str_to_currency_pair_type(jsn.get('product_id')) if typ != TickType.ERROR else PairType.NONE
-
-        instrument = Instrument(underlying=currency_pair)
-
-        order_type = str_to_order_type(jsn.get('order_type', ''))
-        side = str_to_side(jsn.get('side', ''))
-        remaining_volume = float(jsn.get('remaining_size', 0.0))
-
-        sequence = int(jsn.get('sequence', -1))
-        ret = MarketData(order_id=order_id,
-                         time=time,
-                         volume=volume,
-                         price=price,
-                         type=typ,
-                         instrument=instrument,
-                         remaining=remaining_volume,
-                         side=side,
-                         exchange=self.exchange(),
-                         order_type=order_type,
-                         sequence=sequence)
-        return ret
 ```
+
+# Core Elements
+
+## TradingEngine
+
+## Data Classes
+
+### Data
+
+### Event
+
+## Instrument and Trade Models
+
+### Instrument
+
+### Trade
+
+## Exchange
+
+### Orderbook
+We implement a full limit-order book, supporting the following order types:
+
+#### Market
+Executes the entire volume. If price specified, will execute (price*volume) worth (e.g. relies on total price, not volume)
+
+#### Limit:
+Either puts the order on the book,  or crosses spread triggering a trade. By default puts remainder of unexecuted volume on book.
+
+#### Stop-Market
+When trade prices cross the target price, triggers a market order.
+
+#### Stop-Limit
+When trade prices cross the target price, triggers a limit order.
+
+#### Flags
+We support a number of order flags for Market and Limit orders:
+
+- No Flag: default behavior for the given order type
+- Fill-Or-Kill:
+    - Market Order: entire order must fill against current book, otherwise nothing fills
+    - Limit Order: entire order must fill against current book, otherwise nothing fills and order cancelled
+- All-Or-None:
+    - Market Order: entire order must fill against 1 order on the book, otherwise nothing fills
+    - Limit Order: entire order must fill against 1 order, otherwise nothing filled and order cancelled
+
+- Immediate-Or-Cancel:
+    - Market Order: same as fill or kill
+    - Limit Order: whenever this order executes, fill whatever fills and cancel remaining
+

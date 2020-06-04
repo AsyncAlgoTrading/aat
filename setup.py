@@ -19,7 +19,7 @@ except ImportError:
     try:
         from backports.shutil_which import which
     except ImportError:
-        which = lambda x: x  # just rely on path
+        def which(x): return x  # just rely on path
     import multiprocessing
     CPU_COUNT = multiprocessing.cpu_count()
 
@@ -29,47 +29,13 @@ PREFIX = sysconfig.get_config_vars()['prefix']
 name = 'aat'
 
 
-requires = [
-    'aiohttp>=3.5.4',
-    'aiostream>=0.3.1',
-    'ccxt>=1.18.529',
-    'cycler>=0.10.0',
-    'Jinja2>=2.10',
-    'matplotlib>=2.2.2',
-    'numpy>=1.14.5',
-    'pandas>=0.23.3',
-    'perspective-python>=0.1.6,<0.4.0',
-    'pyarrow>=0.11.1',
-    'scipy>=1.1.0',
-    'seaborn>=0.8.1',
-    'sphinx>=1.7.5',
-    'six>=1.10.0',
-    'requests>=2.13.0',
-    'tornado>=5.1',
-    'traitlets>=4.3.2',
-    'ujson>=1.35',
-    'uvloop>=0.12.2',
-    'websocket-client>=0.40.0',
-    'yarl==1.1.0',
-]
-
-requires_dev = [
-    'flake8>=3.7.8',
-    'mock',
-    'pybind11>=2.4.0',
-    'pytest>=4.3.0',
-    'pytest-cov>=2.6.1',
-    'Sphinx>=1.8.4',
-    'sphinx-markdown-builder>=0.5.2',
-] + requires
-
-
 def get_version(file, name='__version__'):
     path = os.path.realpath(file)
     version_ns = {}
     with io.open(path, encoding="utf8") as f:
         exec(f.read(), {}, version_ns)
     return version_ns[name]
+
 
 version = get_version(pjoin(here, name, '_version.py'))
 
@@ -78,6 +44,24 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 if sys.version_info.major < 3 or sys.version_info.minor < 7:
     raise Exception('Must be python3.7 or above')
+
+requires = [
+    'aiostream>=0.3.1',
+    'numpy>=1.11.0',
+    'perspective-python>=0.4.8',
+    'pydantic>=1.4',
+    'traitlets>=4.3.3',
+]
+
+requires_dev = [
+    'flake8>=3.7.9',
+    'mock>=3.0.5',
+    'pybind11>=2.4.3',
+    'pytest>=5.4.1',
+    'pytest-cov>=2.8.1',
+    'Sphinx>=1.8.4',
+    'sphinx-markdown-builder>=0.5.2',
+] + requires
 
 
 class CMakeExtension(Extension):
@@ -103,21 +87,24 @@ class CMakeBuild(build_ext):
                 raise RuntimeError("CMake >= 3.1.0 is required on Windows")
 
         for ext in self.extensions:
-            self.build_extension_cmake(ext)
+            try:
+                self.build_extension_cmake(ext)
+            except BaseException:
+                print('WARNING!!! C++ extension could not be built')
 
     def build_extension_cmake(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         cfg = 'Debug' if self.debug else 'Release'
 
         cmake_args = [
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + os.path.abspath('aat'),
+            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + os.path.abspath(os.path.join(extdir, 'aat')).replace('\\', '/'),
             '-DCMAKE_BUILD_TYPE=' + cfg,
             '-DCPP_BUILD_TESTS=0',
             '-DAAT_PYTHON_VERSION={}'.format(platform.python_version()),
-            '-DPYTHON_EXECUTABLE={}'.format(sys.executable),
-            '-DPython_ROOT_DIR={}'.format(PREFIX),
-            '-DPython_ROOT={}'.format(PREFIX),
-            '-DAAT_CMAKE_MODULE_PATH={folder}'.format(folder=os.path.join(ext.sourcedir, 'cmake')),
+            '-DPYTHON_EXECUTABLE={}'.format(sys.executable).replace('\\', '/'),
+            '-DPython_ROOT_DIR={}'.format(PREFIX).replace('\\', '/'),
+            '-DPython_ROOT={}'.format(PREFIX).replace('\\', '/'),
+            '-DAAT_CMAKE_MODULE_PATH={folder}'.format(folder=os.path.join(ext.sourcedir, 'cmake')).replace('\\', '/'),
         ]
 
         build_args = ['--config', cfg]
@@ -135,12 +122,14 @@ class CMakeBuild(build_ext):
 
         env = os.environ.copy()
         env["PYTHONPATH"] = os.path.pathsep.join((os.path.join(os.path.dirname(os.__file__), 'site-packages'), os.path.dirname(os.__file__)))
+        env['OSX_DEPLOYMENT_TARGET'] = '10.9'
 
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         subprocess.check_call([self.cmake_cmd, os.path.abspath(ext.sourcedir)] + cmake_args, cwd=self.build_temp, env=env, stderr=subprocess.STDOUT)
         subprocess.check_call([self.cmake_cmd, '--build', '.'] + build_args, cwd=self.build_temp, env=env, stderr=subprocess.STDOUT)
         print()  # Add an empty line for cleaner output
+
 
 setup(
     name=name,
@@ -153,9 +142,7 @@ setup(
     author_email='timothy.k.paine@gmail.com',
     license='Apache 2.0',
     install_requires=requires,
-    extras_require={
-        'dev': requires_dev,
-    },
+    extras_require={'dev': requires_dev},
     python_requires='>=3.7',
     classifiers=[
         'Development Status :: 3 - Alpha',
