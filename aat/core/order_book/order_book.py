@@ -1,6 +1,7 @@
 from .collector import _Collector
 from .price_level import _PriceLevel
 from .utils import _insort
+from ..exchange import ExchangeType
 from ...config import Side, OrderFlag, OrderType
 from ...common import _in_cpp
 
@@ -11,9 +12,9 @@ except ImportError:
     _CPP = False
 
 
-def _make_cpp_orderbook(instrument, exchange_name, callback=print):
+def _make_cpp_orderbook(instrument, exchange_name='', callback=lambda x: print(x)):
     '''helper method to ensure all arguments are setup'''
-    return OrderBookCpp(instrument, exchange_name, callback)
+    return OrderBookCpp(instrument, exchange_name or ExchangeType(''), callback)
 
 
 class OrderBook(object):
@@ -66,7 +67,7 @@ class OrderBook(object):
                  callback=print):
 
         self._instrument = instrument
-        self._exchange_name = exchange_name
+        self._exchange_name = exchange_name or ExchangeType('')
 
         # levels look like [10, 10.5, 11, 11.5]
         self._buy_levels = []
