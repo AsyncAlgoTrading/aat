@@ -3,7 +3,9 @@
 #include <stdint.h>
 #include <string>
 #include <deque>
+
 #include <nlohmann/json.hpp>
+
 #include <aat/common.hpp>
 #include <aat/config/enums.hpp>
 #include <aat/core/instrument/instrument.hpp>

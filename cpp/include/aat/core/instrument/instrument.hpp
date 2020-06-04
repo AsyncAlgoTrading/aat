@@ -11,14 +11,6 @@ namespace core {
 
   class Instrument {
    public:
-    explicit Instrument(const py::object& name)
-      : name(name.cast<str_t>())
-      , type(InstrumentType::EQUITY) {}
-
-    Instrument(const py::object& name, InstrumentType type)
-      : name(name.cast<str_t>())
-      , type(type) {}
-
     Instrument(const str_t& name, InstrumentType type)
       : name(name)
       , type(type) {}

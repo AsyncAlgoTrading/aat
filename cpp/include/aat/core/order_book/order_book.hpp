@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <pybind11/pybind11.h>
 
 #include <aat/common.hpp>
 #include <aat/core/order_book/price_level.hpp>
@@ -14,11 +13,30 @@
 #include <aat/core/models/event.hpp>
 #include <aat/core/models/order.hpp>
 
-namespace py = pybind11;
 using namespace aat::common;
 
 namespace aat {
 namespace core {
+  class OrderBook; // fwd declare
+
+  class OrderBookIterator {
+    public:
+      OrderBookIterator(const OrderBook& book, double price_level=0.0, int index_in_level=0, Side side=Side::SELL)
+      : order_book(book),
+        price_level(price_level),
+        index_in_level(index_in_level),
+        side(side) {}
+
+      OrderBookIterator& operator++();
+      std::shared_ptr<Order> operator*();
+      bool operator==(const OrderBookIterator& that);
+
+    private:
+      const OrderBook& order_book;
+      double price_level;
+      int index_in_level;
+      Side side;
+  };
 
   class OrderBook {
    public:
@@ -44,6 +62,13 @@ namespace core {
     std::vector<std::vector<double>> levels(uint_t levels) const;
 
     str_t toString() const;
+
+    // iterator
+    friend class OrderBookIterator;
+    typedef OrderBookIterator iterator;
+    iterator begin() const;
+    iterator end() const;
+
 
    private:
     void clearOrders(std::shared_ptr<Order> order, uint_t amount);

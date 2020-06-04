@@ -1,4 +1,5 @@
 #pragma once
+#define AAT_PYTHON
 
 #include <deque>
 #include <iostream>
@@ -7,7 +8,9 @@
 #include <vector>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 #include <pybind11/chrono.h>
+#include <pybind11/functional.h>
 #include <pybind11_json/pybind11_json.hpp>
 
 #include <aat/common.hpp>
@@ -17,10 +20,10 @@
 #include <aat/core/models/order.hpp>
 #include <aat/core/models/trade.hpp>
 #include <aat/core/order_book/order_book.hpp>
-#include <aat/python/construct.hpp>
 
 namespace py = pybind11;
 using namespace aat::common;
+
 
 PYBIND11_MODULE(binding, m) {
   m.doc() = "C++ bindings";
@@ -77,6 +80,8 @@ PYBIND11_MODULE(binding, m) {
     .def(py::init<Instrument&, ExchangeType&>())
     .def(py::init<Instrument&, ExchangeType&, std::function<void(std::shared_ptr<Event>)>>())
     .def("__repr__", &OrderBook::toString)
+    .def("__iter__", [](const OrderBook &o) { return py::make_iterator(o.begin(), o.end()); },
+                        py::keep_alive<0, 1>() ) /* Essential: keep object alive while iterator exists */
     .def("setCallback", &OrderBook::setCallback)
     .def("add", &OrderBook::add)
     .def("cancel", &OrderBook::cancel)
@@ -99,8 +104,6 @@ PYBIND11_MODULE(binding, m) {
    ******************************/
   py::class_<Instrument>(m, "InstrumentCpp")
     .def(py::init<const str_t&, InstrumentType&>())
-    .def(py::init<const py::object&, InstrumentType&>())
-    .def(py::init<const py::object&>())
     .def(py::init<const str_t&>())
     .def("__repr__", &Instrument::toString)
     .def("__eq__", &Instrument::operator==);
@@ -126,7 +129,7 @@ PYBIND11_MODULE(binding, m) {
     .def_readwrite("filled", &Data::filled);
 
   py::class_<Event>(m, "EventCpp")
-    .def(py::init<EventType, std::shared_ptr<Data>>())
+    .def(py::init<EventType, std::shared_ptr<Data>>(), py::arg("type").none(false), py::arg("target").none(true)) // allow None, convert to nullptr
     .def(py::init<EventType, std::shared_ptr<Trade>>())
     .def(py::init<EventType, std::shared_ptr<Order>>())
     .def("__repr__", &Event::toString)
@@ -177,5 +180,5 @@ PYBIND11_MODULE(binding, m) {
   /*******************************
    * Helpers
    ******************************/
-  using namespace aat::python;
+  // NONE
 }

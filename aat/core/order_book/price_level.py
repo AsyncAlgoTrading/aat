@@ -171,3 +171,11 @@ class _PriceLevel(object):
         '''iterate through orders'''
         for order in self._orders:
             yield order
+
+    def __len__(self):
+        '''get number of orders'''
+        return len(self._orders)
+
+    def __getitem__(self, index):
+        '''get item'''
+        return self._orders[index]

@@ -23,7 +23,7 @@ class Event(BaseModel):
 
     # timestamp: int
     type: EventType
-    target: Any
+    target: Any = None
 
     def __str__(self):
         return f'<{self.type}-{self.target}>'

@@ -1,4 +1,5 @@
 #include <sstream>
+
 #include <aat/core/exchange/exchange.hpp>
 
 namespace aat {

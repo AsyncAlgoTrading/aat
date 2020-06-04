@@ -2,6 +2,28 @@
 
 namespace aat {
 namespace core {
+
+
+  OrderBookIterator& OrderBookIterator::operator++() {
+    //TODO 
+
+    return *this;
+  }
+
+  std::shared_ptr<Order> OrderBookIterator::operator*() {
+    if(side == Side::SELL){
+      return (*(order_book.sells.at(price_level)))[index_in_level];
+    } else {
+      return (*(order_book.buys.at(price_level)))[index_in_level];
+    }
+  }
+
+  bool OrderBookIterator::operator==(const OrderBookIterator& that) {
+    // TODO
+    return false;
+  }
+
+
   OrderBook::OrderBook(const Instrument& instrument)
     : instrument(instrument)
     , exchange(NullExchange)
@@ -406,11 +428,9 @@ namespace core {
     orig = 5;
     int i = 0;
 
-    py::print("buy_level_size:", buy_levels.size());
     for (auto iter = buy_levels.end() - 1; iter > buy_levels.begin(); --iter) {
       if ((i++) < 5) {
         // append to list
-        // py::print(*iter);
         buys_to_print.push_back(buys.at(*iter));
       } else {
         // TODO implement the rest from python in C++
@@ -434,6 +454,16 @@ namespace core {
     }
     return ss.str();
   }
+
+  OrderBookIterator OrderBook::begin() const {
+    return OrderBookIterator(*this);
+  }
+
+
+  OrderBookIterator OrderBook::end() const {
+    return OrderBookIterator(*this, std::numeric_limits<double>::infinity(), -1, Side::BUY);
+  }
+
 
 }  // namespace core
 }  // namespace aat

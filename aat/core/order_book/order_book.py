@@ -11,6 +11,11 @@ except ImportError:
     _CPP = False
 
 
+def _make_cpp_orderbook(instrument, exchange_name, callback=print):
+    '''helper method to ensure all arguments are setup'''
+    return OrderBookCpp(instrument, exchange_name, callback)
+
+
 class OrderBook(object):
     '''A limit order book.
 
@@ -52,7 +57,7 @@ class OrderBook(object):
     '''
     def __new__(cls, *args, **kwargs):
         if _CPP:
-            return OrderBookCpp(*args, **kwargs)
+            return _make_cpp_orderbook(*args, **kwargs)
         return super(OrderBook, cls).__new__(cls)
 
     def __init__(self,

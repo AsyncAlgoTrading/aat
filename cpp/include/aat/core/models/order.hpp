@@ -2,6 +2,7 @@
 
 #include <deque>
 #include <memory>
+
 #include <aat/common.hpp>
 #include <aat/config/enums.hpp>
 #include <aat/core/instrument/instrument.hpp>

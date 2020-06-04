@@ -3,8 +3,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl_bind.h>
+
 #include <aat/common.hpp>
 
 using namespace aat::common;

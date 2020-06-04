@@ -1,4 +1,5 @@
 #include <sstream>
+
 #include <aat/config/enums.hpp>
 #include <aat/core/models/event.hpp>
 
@@ -7,7 +8,13 @@ namespace core {
   str_t
   Event::toString() const {
     sstream_t ss;
-    ss << "<" << EventType_to_string(type) << "-" << target->toString() << ">";
+    ss << "<" << EventType_to_string(type) << "-";
+    if(target){
+      ss << target->toString();
+     } else {
+       ss << "None";
+     }
+     ss << ">";
     return ss.str();
   }
 
@@ -15,7 +22,10 @@ namespace core {
   Event::toJson() const {
     json ret;
     ret["type"] = EventType_to_string(type);
-    ret["target"] = target->toJson();
+
+    if(target){
+      ret["target"] = target->toJson();
+    }
     return ret;
   }
 

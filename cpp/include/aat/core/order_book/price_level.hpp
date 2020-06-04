@@ -3,13 +3,10 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <pybind11/pybind11.h>
 
 #include <aat/core/order_book/collector.hpp>
 #include <aat/core/models/event.hpp>
 #include <aat/core/models/order.hpp>
-
-namespace py = pybind11;
 
 namespace aat {
 namespace core {
@@ -39,6 +36,8 @@ namespace core {
     size() const {
       return orders.size();
     }
+
+    std::shared_ptr<Order> operator[](int i){ return orders[i]; }
 
    private:
     double price;

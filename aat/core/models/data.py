@@ -49,9 +49,9 @@ class Data(_base):
 
     @validator("timestamp", always=True)
     def _set_timestamp_if_unset(cls, v):
-        assert isinstance(v, datetime)
         if v is None:
             return datetime.now()
+        assert isinstance(v, datetime)
         return v
 
     def __eq__(self, other) -> bool:

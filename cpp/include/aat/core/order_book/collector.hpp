@@ -2,13 +2,11 @@
 #include <deque>
 #include <memory>
 #include <string>
-#include <pybind11/pybind11.h>
+
 #include <aat/core/order_book/price_level.hpp>
 #include <aat/core/models/event.hpp>
 #include <aat/core/models/order.hpp>
 #include <aat/core/models/trade.hpp>
-
-namespace py = pybind11;
 
 namespace aat {
 namespace core {

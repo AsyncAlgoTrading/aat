@@ -43,11 +43,10 @@ class SyntheticExchange(Exchange):
                 side = Side.BUY if start <= mid else Side.SELL
                 increment = choice((.01, .05, .1, .2))
                 orderbook.add(Order(id=self._id,
-                                    timestamp=datetime.now().timestamp(),
+                                    timestamp=datetime.now(),
                                     volume=round(random() * 10, 0),
                                     price=start,
                                     side=side,
-                                    type=DataType.ORDER,
                                     instrument=instrument,
                                     exchange=self._exchange))
                 start = round(start + increment, 2)
@@ -65,7 +64,7 @@ class SyntheticExchange(Exchange):
 
         # set callbacks to the trading engine
         for orderbook in self._orderbooks.values():
-            orderbook.setCallback(self._events.append)
+            orderbook.setCallback(lambda event: self._events.append(event))
 
     async def tick(self):
 
@@ -99,25 +98,23 @@ class SyntheticExchange(Exchange):
             if do == 'buy':
                 # new buy order
                 # choose a price level
-                price = round(levels['ask'][0] - choice((.01, .05, .1, .2)), 2)
+                price = round(levels[Side.SELL][0] - choice((.01, .05, .1, .2)), 2)
                 orderbook.add(Order(id=self._id,
-                                    timestamp=datetime.now().timestamp(),
+                                    timestamp=datetime.now(),
                                     volume=volume,
                                     price=price,
                                     side=Side.BUY,
-                                    type=DataType.ORDER,
                                     instrument=instrument,
                                     exchange=self._exchange))
                 self._id += 1
             elif do == 'sell':
                 # new sell order
-                price = round(levels['bid'][0] - choice((.01, .05, .1, .2)), 2)
+                price = round(levels[Side.BUY][0] - choice((.01, .05, .1, .2)), 2)
                 orderbook.add(Order(id=self._id,
-                                    timestamp=datetime.now().timestamp(),
+                                    timestamp=datetime.now(),
                                     volume=volume,
                                     price=price,
                                     side=Side.SELL,
-                                    type=DataType.ORDER,
                                     instrument=instrument,
                                     exchange=self._exchange))
                 self._id += 1
@@ -127,25 +124,23 @@ class SyntheticExchange(Exchange):
                 volume = volume * 2
                 if side == 'buy':
                     # cross to buy
-                    price = round(levels['ask'][0] + choice((0.0, .01, .05)), 2)
+                    price = round(levels[Side.SELL][0] + choice((0.0, .01, .05)), 2)
                     orderbook.add(Order(id=self._id,
-                                        timestamp=datetime.now().timestamp(),
+                                        timestamp=datetime.now(),
                                         volume=volume,
                                         price=price,
                                         side=Side.BUY,
-                                        type=DataType.ORDER,
                                         instrument=instrument,
                                         exchange=self._exchange))
                     self._id += 1
                 else:
                     # cross to sell
-                    price = round(levels['bid'][0] - choice((0.0, .01, .05)), 2)
+                    price = round(levels[Side.BUY][0] - choice((0.0, .01, .05)), 2)
                     orderbook.add(Order(id=self._id,
-                                        timestamp=datetime.now().timestamp(),
+                                        timestamp=datetime.now(),
                                         volume=volume,
                                         price=price,
                                         side=Side.SELL,
-                                        type=DataType.ORDER,
                                         instrument=instrument,
                                         exchange=self._exchange))
                     self._id += 1
@@ -154,7 +149,7 @@ class SyntheticExchange(Exchange):
                 side = choice(('buy', 'sell'))
                 levels = orderbook.levels(5)
                 if side == 'buy' and levels:
-                    level = choice(levels['bid'])
+                    level = choice(levels[Side.BUY])
                     price_level = orderbook.level(price=level[0])[1]
                     if price_level is None:
                         continue
@@ -170,7 +165,7 @@ class SyntheticExchange(Exchange):
                             orderbook.add(order)
 
                 elif levels:
-                    level = choice(levels['ask'])
+                    level = choice(levels[Side.SELL])
                     orders = orderbook.level(price=level[0])[0]._orders
                     if orders:
                         order = choice(orders)

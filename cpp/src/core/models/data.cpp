@@ -1,4 +1,5 @@
 #include <sstream>
+
 #include <aat/config/enums.hpp>
 #include <aat/core/models/data.hpp>
 
