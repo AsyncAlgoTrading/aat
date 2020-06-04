@@ -6,7 +6,7 @@ from datetime import datetime
 from random import choice, random
 from ..exchange import Exchange
 from ...core import Instrument, OrderBook, Order, Event, ExchangeType
-from ...config import Side, DataType, EventType
+from ...config import Side, EventType
 
 
 def _getName(n=1):

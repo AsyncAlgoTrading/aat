@@ -9,12 +9,12 @@ namespace core {
   Event::toString() const {
     sstream_t ss;
     ss << "<" << EventType_to_string(type) << "-";
-    if(target){
+    if (target) {
       ss << target->toString();
-     } else {
-       ss << "None";
-     }
-     ss << ">";
+    } else {
+      ss << "None";
+    }
+    ss << ">";
     return ss.str();
   }
 
@@ -23,7 +23,7 @@ namespace core {
     json ret;
     ret["type"] = EventType_to_string(type);
 
-    if(target){
+    if (target) {
       ret["target"] = target->toJson();
     }
     return ret;

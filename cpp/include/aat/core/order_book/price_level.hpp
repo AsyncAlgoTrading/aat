@@ -37,7 +37,7 @@ namespace core {
       return orders.size();
     }
 
-    std::shared_ptr<Order> operator[](int i){ return orders[i]; }
+    std::shared_ptr<Order> operator[](int i) { return orders[i]; }
 
    private:
     double price;

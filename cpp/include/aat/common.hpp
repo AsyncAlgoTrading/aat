@@ -36,10 +36,10 @@ using json = nlohmann::json;
 namespace aat {
 namespace common {
   class AATCPPException : public std::exception {
-  private:
+   private:
     std::string msg = "";
 
-  public:
+   public:
     explicit AATCPPException(std::string msg)
       : msg(msg) {}
 

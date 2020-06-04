@@ -3,26 +3,26 @@
 namespace aat {
 namespace core {
 
-
-  OrderBookIterator& OrderBookIterator::operator++() {
-    //TODO 
+  OrderBookIterator&
+  OrderBookIterator::operator++() {
+    // TODO
 
     return *this;
   }
 
   std::shared_ptr<Order> OrderBookIterator::operator*() {
-    if(side == Side::SELL){
+    if (side == Side::SELL) {
       return (*(order_book.sells.at(price_level)))[index_in_level];
     } else {
       return (*(order_book.buys.at(price_level)))[index_in_level];
     }
   }
 
-  bool OrderBookIterator::operator==(const OrderBookIterator& that) {
+  bool
+  OrderBookIterator::operator==(const OrderBookIterator& that) {
     // TODO
     return false;
   }
-
 
   OrderBook::OrderBook(const Instrument& instrument)
     : instrument(instrument)
@@ -455,15 +455,15 @@ namespace core {
     return ss.str();
   }
 
-  OrderBookIterator OrderBook::begin() const {
+  OrderBookIterator
+  OrderBook::begin() const {
     return OrderBookIterator(*this);
   }
 
-
-  OrderBookIterator OrderBook::end() const {
+  OrderBookIterator
+  OrderBook::end() const {
     return OrderBookIterator(*this, std::numeric_limits<double>::infinity(), -1, Side::BUY);
   }
-
 
 }  // namespace core
 }  // namespace aat

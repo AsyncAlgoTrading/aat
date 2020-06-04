@@ -17,25 +17,26 @@ using namespace aat::common;
 
 namespace aat {
 namespace core {
-  class OrderBook; // fwd declare
+  class OrderBook;  // fwd declare
 
   class OrderBookIterator {
-    public:
-      OrderBookIterator(const OrderBook& book, double price_level=0.0, int index_in_level=0, Side side=Side::SELL)
-      : order_book(book),
-        price_level(price_level),
-        index_in_level(index_in_level),
-        side(side) {}
+   public:
+    explicit OrderBookIterator(
+      const OrderBook& book, double price_level = 0.0, int index_in_level = 0, Side side = Side::SELL)
+      : order_book(book)
+      , price_level(price_level)
+      , index_in_level(index_in_level)
+      , side(side) {}
 
-      OrderBookIterator& operator++();
-      std::shared_ptr<Order> operator*();
-      bool operator==(const OrderBookIterator& that);
+    OrderBookIterator& operator++();
+    std::shared_ptr<Order> operator*();
+    bool operator==(const OrderBookIterator& that);
 
-    private:
-      const OrderBook& order_book;
-      double price_level;
-      int index_in_level;
-      Side side;
+   private:
+    const OrderBook& order_book;
+    double price_level;
+    int index_in_level;
+    Side side;
   };
 
   class OrderBook {
@@ -68,7 +69,6 @@ namespace core {
     typedef OrderBookIterator iterator;
     iterator begin() const;
     iterator end() const;
-
 
    private:
     void clearOrders(std::shared_ptr<Order> order, uint_t amount);
