@@ -1,7 +1,19 @@
 from typing import Tuple
 from .models import Event, Order, Trade
 from .handler import EventHandler
-from perspective import Table  # type: ignore
+
+try:
+    from perspective import Table  # type: ignore
+except ImportError:
+    class Table(object):
+        def __init__(*args, **kwargs):
+            pass
+
+        def update(self, *args):
+            pass
+
+        def remove(self, *args):
+            pass
 
 
 class TableHandler(EventHandler):
