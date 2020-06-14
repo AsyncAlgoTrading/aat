@@ -1,38 +1,39 @@
+PYTHON=python3.7
 CONFIG=./config/synthetic.cfg
 
 
 run:  build  ## Clean and make target, run target
-	python3 -m aat $(CONFIG)
+	$(PYTHON) -m aat $(CONFIG)
 
 runcpp:  build  ## Clean and make target, run target
-	AAT_USE_CPP=1 python3 -m aat $(CONFIG)
+	AAT_USE_CPP=1 $(PYTHON) -m aat $(CONFIG)
 
 rundebug:  debug  ## Clean and make debug target, run target
-	python3 -m aat $(CONFIG)
+	$(PYTHON) -m aat $(CONFIG)
 
 buildext: ## build the package extensions
-	python3 setup.py build_ext
+	$(PYTHON) setup.py build_ext
 
 build: ## build the package
-	python3 setup.py build
+	$(PYTHON) setup.py build
 
 debug: ## build debug build of the package
-	DEBUG=1 python3 setup.py build
+	DEBUG=1 $(PYTHON) setup.py build
 
 js:  ## build the js assets
 	cd js; yarn build
 
 install: ## install the package
-	python3 -m pip install .
+	$(PYTHON) -m pip install .
 
 tests: build testpy  ## Make unit tests
 
 testpy: ## Make unit tests
-	python3 -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch
+	$(PYTHON) -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch
 
 testpycpp: ## Make unit tests
-	# AAT_USE_CPP=1 python3 -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch --capture=no
-	AAT_USE_CPP=1 python3 -m pytest -s ./aat/tests
+	# AAT_USE_CPP=1 $(PYTHON) -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch --capture=no
+	AAT_USE_CPP=1 $(PYTHON) -m pytest -s ./aat/tests
 
 testjs:  ## Make js tests
 	cd js; yarn test
@@ -40,7 +41,7 @@ testjs:  ## Make js tests
 lint: lintpy lintjs lintcpp  ## run all linters
 
 lintpy: ## run python linter
-	python3 -m flake8 aat setup.py
+	$(PYTHON) -m flake8 aat setup.py
 
 lintjs: ## run js linter
 	cd js; yarn lint
@@ -51,7 +52,7 @@ lintcpp: ## run cpp linter
 fix: fixpy fixjs fixcpp  ## run all fixers
 
 fixpy:  ## run autopep8 fix
-	python3 -m autopep8 --in-place -r -a -a aat/ setup.py
+	$(PYTHON) -m autopep8 --in-place -r -a -a aat/ setup.py
 
 fixcpp:  ## run clang-format
 	clang-format -i -style=file `find ./cpp -name "*.*pp"`
@@ -60,10 +61,10 @@ fixjs:  ## run clang-format
 	cd js; yarn fix
 
 annotate: ## MyPy type annotation check
-	python3 -m mypy aat
+	$(PYTHON) -m mypy aat
 
 annotate_l: ## MyPy type annotation check - count only
-	python3 -m mypy -s aat | wc -l 
+	$(PYTHON) -m mypy -s aat | wc -l 
 
 docs:  ## Build the sphinx docs
 	make -C docs html
@@ -71,7 +72,7 @@ docs:  ## Build the sphinx docs
 
 dist:  ## dist to pypi
 	rm -rf dist build
-	python3 setup.py sdist bdist_wheel
+	$(PYTHON) setup.py sdist bdist_wheel
 	twine check dist/* && twine upload dist/*
 
 clean: ## clean the repository
