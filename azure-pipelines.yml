@@ -169,6 +169,12 @@ jobs:
         python -m pip install --upgrade pip numpy pyarrow==0.15.1 cpplint
         pip install -e .[dev]
       displayName: 'Install Python Dependencies'
+      env:
+        # Set `BOOST_ROOT` manually, as `BOOST_ROOT` is removed in the VM:
+        # https://github.com/actions/virtual-environments/issues/687
+        BOOST_ROOT: "C:/hostedtoolcache/windows/Boost/1.69.0/"
+        BOOST_INCLUDEDIR: "C:/hostedtoolcache/windows/Boost/1.69.0/include"
+        BOOST_LIBRARYDIR: "C:/hostedtoolcache/windows/Boost/1.69.0/libs"
 
     - script: |
         make lintpy
