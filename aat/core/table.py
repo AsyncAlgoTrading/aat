@@ -16,7 +16,6 @@ except ImportError:
             pass
 
 
-
 class TableHandler(EventHandler):
     onData = None  # type: ignore
     onHalt = None  # type: ignore
