@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.7.2)
 project(aat)
 
 set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -141,22 +139,28 @@ endif()
 # VANILLA CPP BUILD #
 #####################
 if(CMAKE_BUILD_TYPE_LOWER STREQUAL debug)
-    set(OPT_FLAGS " \
+    set(FLAGS " \
         -O1 \
+        -DEBUG
         -g3 \
         ")
 else()
-    set(OPT_FLAGS " \
+    set(FLAGS " \
         -O3 \
+        -DNDEBUG
         -g0 \
         ")
 endif()
 
 set(CMAKE_CXX_FLAGS " \
     ${CMAKE_CXX_FLAGS} \
-    ${EXTENDED_FLAGS} \
     ${OPT_FLAGS} \
     ")
+set(CMAKE_C_FLAGS " \
+    ${CMAKE_C_FLAGS} \
+    ${OPT_FLAGS} \
+    ")
+
 
 message(WARNING "${BUILD_MESSAGE}")
 
@@ -197,25 +201,17 @@ build_dep("json-pybind" "${AAT_CMAKE_MODULE_PATH}/Json_pybind.txt.in")
 build_dep("date" "${AAT_CMAKE_MODULE_PATH}/date.txt.in")
 
 if(MACOS)
-    # on mac, use the vanilla pybind11 finder
-    find_package(pybind11)
-    if(pybind11_FOUND)
-        # Homebrew install pybind11
-        set(PYTHON_PYBIND_FOUND pybind11_FOUND)
-    else()
-        # see if python installed pybind11 is available
-        find_package(Pybind)
-        if(PYTHON_PYBIND_FOUND)
-            # Need to add extra flags due to pybind weirness
-            # https://github.com/pybind/pybind11/blob/7830e8509f2adc97ce9ee32bf99cd4b82089cc4c/tools/pybind11Tools.cmake#L103
-            set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
-        endif()
+    # see if python installed pybind11 is available
+    find_package(Pybind)
+    if(PYTHON_PYBIND_FOUND)
+        # Need to add extra flags due to pybind weirness
+        # https://github.com/pybind/pybind11/blob/7830e8509f2adc97ce9ee32bf99cd4b82089cc4c/tools/pybind11Tools.cmake#L103
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
     endif()
-
 else()
     # on linux or in docker, use our custom pybind finder to look 
     # for just the python installed pybind
-    find_package(Pybind)
+    find_package(Pybind11)
 endif()
 
 if(NOT PYTHON_PYBIND_FOUND)
@@ -237,7 +233,7 @@ include_directories( ${PYTHON_NUMPY_INCLUDE_DIR})
 #####################
 
 if (WIN32)
-    set(CMAKE_CXX_FLAGS " /EHsc")
+    set(CMAKE_CXX_FLAGS " /EHsc -DHAVE_SNPRINTF")
 else()
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
@@ -267,8 +263,8 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 include_directories("${CMAKE_SOURCE_DIR}/cpp/include")
 
 set(SOURCE_FILES
-${CMAKE_SOURCE_DIR}/cpp/src/config/enums.cpp
-${CMAKE_SOURCE_DIR}/cpp/src/config/parser.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/config/enums.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/config/parser.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/instrument/instrument.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/exchange/exchange.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/models/data.cpp

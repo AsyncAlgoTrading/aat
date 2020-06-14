@@ -132,49 +132,71 @@ jobs:
         codeCoverageTool: Cobertura
         summaryFileLocation: '$(System.DefaultWorkingDirectory)/*coverage.xml'
 
-# - job: 'Windows'
-#   pool:
-#     vmImage: 'vs2017-win2016'
+- job: 'Windows'
+  pool:
+    vmImage: 'vs2017-win2016'
 
-#   strategy:
-#     matrix:
-#       Python37:
-#         python.version: '3.7'
+  strategy:
+    matrix:
+      Python37:
+        python.version: '3.7'
 
-#   steps:
-#     - task: UsePythonVersion@0
-#       inputs:
-#         versionSpec: '$(python.version)'
-#       displayName: 'Use Python $(python.version)'
+  steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(python.version)'
+      displayName: 'Use Python $(python.version)'
 
-#     - script: |
-#         which python > python.txt
-#         set /p PYTHON=<python.txt
-#         ln -s %PYTHON% %PYTHON%$(python.version)
-#         python --version
-#         which python$(python.version)
-#       displayName: "Which python"
+    - script: |
+        which python > python.txt
+        set /p PYTHON=<python.txt
+        ln -s %PYTHON% %PYTHON%$(python.version)
+        python --version
+        which python$(python.version)
+      displayName: "Which python"
 
-#     - script: |
-#         python -m pip install --upgrade pip
-#         pip install -e .[dev]
-#       displayName: 'Install dependencies'
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '12.x'
 
-#     - script: |
-#         make lint
-#       displayName: 'Lint'
+    - bash: npm install -g yarn
+      displayName: "Install Yarn"
 
-#     - script: |
-#         make tests
-#       displayName: 'Test'
+    - bash: cd js; yarn
+      displayName: 'Install JS dependencies'
 
-#     - task: PublishTestResults@2
-#       condition: succeededOrFailed()
-#       inputs:
-#         testResultsFiles: 'python_junit.xml'
-#         testRunTitle: 'Publish test results for Python $(python.version) $(manylinux_flag)'
+    - script: |
+        python -m pip install --upgrade pip numpy pyarrow==0.15.1 cpplint
+        pip install -e .[dev]
+      displayName: 'Install Python Dependencies'
 
-#     - task: PublishCodeCoverageResults@1
-#       inputs: 
-#         codeCoverageTool: Cobertura
-#         summaryFileLocation: '$(System.DefaultWorkingDirectory)/*coverage.xml'
+    - script: |
+        make lintpy
+      displayName: 'Lint Python'
+
+    - script: |
+        make lintjs
+      displayName: 'Lint JS'
+
+    - script: |
+        make lintcpp
+      displayName: 'Lint C++'
+
+    - script: |
+        make tests
+      displayName: 'Test'
+
+    - script: |
+        make testpycpp
+      displayName: 'Test C++'
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFiles: 'python_junit.xml'
+        testRunTitle: 'Publish test results for Python $(python.version) $(manylinux_flag)'
+
+    - task: PublishCodeCoverageResults@1
+      inputs: 
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/*coverage.xml'
