@@ -6,7 +6,11 @@ from concurrent.futures import ThreadPoolExecutor
 from traitlets.config.application import Application  # type: ignore
 from traitlets import validate, TraitError, Unicode, Bool, List, Instance  # type: ignore
 from tornado.web import StaticFileHandler, RedirectHandler, Application as TornadoApplication
-from perspective import PerspectiveManager, PerspectiveTornadoHandler  # type: ignore
+
+try:
+    from perspective import PerspectiveManager, PerspectiveTornadoHandler  # type: ignore
+except ImportError:
+    PerspectiveManager, PerspectiveTornadoHandler = None, None  # type: ignore
 
 from .manager import Manager
 from ..execution import ExecutionManager
@@ -48,7 +52,8 @@ class TradingEngine(Application):
 
     api_application = Instance(klass=TornadoApplication)
     api_handlers = List(default_value=[])
-    table_manager = Instance(klass=PerspectiveManager, args=(), kwargs={})
+
+    table_manager = Instance(klass=PerspectiveManager or object, args=(), kwargs={})  # failover to object
 
     aliases = {
         'port': 'AAT.port',
@@ -108,9 +113,12 @@ class TradingEngine(Application):
         # install webserver
         if self.api:
             self.log.critical('Installing API handlers')
-            table_handler = TableHandler()
-            table_handler.installTables(self.table_manager)
-            self.registerHandler(table_handler)
+
+            if PerspectiveManager is not None:
+                table_handler = TableHandler()
+                table_handler.installTables(self.table_manager)
+                self.registerHandler(table_handler)
+
             self.api_handlers.append((r"/", RedirectHandler, {"url": "/index.html"}))
             self.api_handlers.append((r"/api/v1/ws", PerspectiveTornadoHandler, {"manager": self.table_manager, "check_origin": True}))
             self.api_handlers.append((r"/static/js/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'assets', 'static', 'js')}))
