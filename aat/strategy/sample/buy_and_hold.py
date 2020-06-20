@@ -21,13 +21,15 @@ class BuyAndHoldStrategy(Strategy):
             print("requesting buy : {}".format(req))
             await self.newOrder(req)
 
+        else:
+            print(self.positions())
+            print(self.risk())
+
     async def onError(self, event: Event) -> None:
         print("Error:", event)
 
     async def onBought(self, event: Event) -> None:
         print('bought {:.2f} @ {:.2f}'.format(event.target.volume, event.target.price))
-        import sys
-        sys.exit(0)
 
     async def onReject(self, event: Event) -> None:
         print('order rejected')

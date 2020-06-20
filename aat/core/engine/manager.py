@@ -27,6 +27,12 @@ class Manager(EventHandler):
     def trades(self):
         raise NotImplementedError()
 
+    def positions(self, instrument=None, exchange=None, side=None):
+        return self._risk_mgr.positions(instrument=instrument, exchange=exchange, side=side)
+
+    def risk(self, position=None):
+        return self._risk_mgr.risk(position=position)
+
     async def newOrder(self, order: Order, strategy):
         ret = await self._order_mgr.newOrder(order, strategy)
         return ret

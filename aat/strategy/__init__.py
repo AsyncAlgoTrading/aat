@@ -151,6 +151,12 @@ class Strategy(EventHandler):
             ret = [r for r in ret if r.side == side]
         return ret
 
+    def positions(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
+        return self._manager.positions(instrument=instrument, exchange=exchange, side=side)
+
+    def risk(self, position=None):
+        return self._manager.risk(position=position)
+
     #################
     # Other Methods #
     #################
