@@ -164,6 +164,7 @@ if(WIN32)
     foreach(warning 4244 4251 4267 4275 4290 4786 4305 4996)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd${warning}")
     endforeach(warning)
+    add_definitions(-DHAVE_SNPRINTF)
 else()
     include_directories("/usr/local/include")
 endif()
@@ -191,32 +192,11 @@ include_directories( ${Python_INCLUDE_DIRS} )
 
 # already found from before
 find_package(Boost)
+find_package(pybind11)
 
 build_dep("json" "${AAT_CMAKE_MODULE_PATH}/Json.txt.in")
 build_dep("json-pybind" "${AAT_CMAKE_MODULE_PATH}/Json_pybind.txt.in")
 build_dep("date" "${AAT_CMAKE_MODULE_PATH}/date.txt.in")
-
-if(MACOS)
-    # on mac, use the vanilla pybind11 finder
-    find_package(pybind11)
-    if(pybind11_FOUND)
-        # Homebrew install pybind11
-        set(PYTHON_PYBIND_FOUND pybind11_FOUND)
-    else()
-        # see if python installed pybind11 is available
-        find_package(Pybind)
-        if(PYTHON_PYBIND_FOUND)
-            # Need to add extra flags due to pybind weirness
-            # https://github.com/pybind/pybind11/blob/7830e8509f2adc97ce9ee32bf99cd4b82089cc4c/tools/pybind11Tools.cmake#L103
-            set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
-        endif()
-    endif()
-
-else()
-    # on linux or in docker, use our custom pybind finder to look 
-    # for just the python installed pybind
-    find_package(Pybind)
-endif()
 
 if(NOT PYTHON_PYBIND_FOUND)
     message("${Red}PyBind11 could not be located${ColorReset}")

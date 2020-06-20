@@ -49,6 +49,7 @@ requires = [
     'aiostream>=0.3.1',
     'numpy>=1.11.0',
     'perspective-python>=0.4.8',
+    'pybind11>=2',
     'pydantic>=1.4',
     'traitlets>=4.3.3',
 ]
