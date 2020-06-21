@@ -258,6 +258,7 @@ set(SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/cpp/src/core/models/data.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/models/event.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/models/order.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/core/models/position.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/models/trade.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/order_book/price_level.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/core/order_book/collector.cpp
