@@ -128,11 +128,6 @@ else()
     set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Building RELEASE${ColorReset}")
 endif()
 
-if(BUILD_DOCS)
-    set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Building Documentation${ColorReset}")
-else()
-    set(BUILD_MESSAGE "${BUILD_MESSAGE}\n${Cyan}Skipping Documentation${ColorReset}")
-endif()
 #######################
 
 #####################
@@ -193,6 +188,7 @@ else()
 endif()
 message("${Cyan}Using python ${PYTHON_INCLUDE_DIRS} ${Python_LIBRARIES} ${ColorReset}")
 include_directories( ${Python_INCLUDE_DIRS} )
+link_directories( ${Python_LIBRARY_DIRS} )
 
 # already found from before
 find_package(Boost)
@@ -292,34 +288,3 @@ if(CPP_BUILD_STRICT AND NOT WIN32)
     # target_compile_options(_enums PRIVATE -Wall -Werror)
     # target_compile_options(_enums PRIVATE $<$<CONFIG:DEBUG>:-fPIC -O0>)
 endif()
-
-
-########
-# Docs #
-########
-if(BUILD_DOCS)
-    add_custom_target(doxygen)
-    add_custom_command(TARGET doxygen
-        COMMAND doxygen doxygen.conf
-        WORKING_DIRECTORY docs
-        COMMENT "Build doxygen xml files used by sphinx/breathe."
-    )
-
-    add_custom_target(docs-html ALL)
-    add_custom_command(TARGET docs-html
-        COMMAND sphinx-build -b html . build/html
-            WORKING_DIRECTORY docs
-            COMMENT "Build html documentation"
-        )
-    add_dependencies(docs-html doxygen)
-
-    # add_custom_target(docs-markdown ALL)
-    # add_custom_command(TARGET docs-html
-    #   COMMAND sphinx-build -M markdown . build/
-    #       WORKING_DIRECTORY ../../docs
-    #       COMMENT "Build markdown documentation"
-    #   )
-    # add_dependencies(docs-html doxygen)
-
-endif()
-##########

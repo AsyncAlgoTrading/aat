@@ -13,10 +13,9 @@ except ImportError:
     PerspectiveManager, PerspectiveTornadoHandler = None, None  # type: ignore
 
 from .manager import Manager
-from ..execution import ExecutionManager
+from ..execution import OrderManager
 from ..handler import EventHandler, PrintHandler
 from ..models import Event, Error
-from ..order_entry import OrderManager
 from ..portfolio import PortfolioManager
 from ..risk import RiskManager
 from ..table import TableHandler
@@ -46,7 +45,6 @@ class TradingEngine(Application):
     order_manager = Instance(OrderManager, args=(), kwargs={})
     risk_manager = Instance(RiskManager, args=(), kwargs={})
     portfolio_manager = Instance(PortfolioManager, args=(), kwargs={})
-    execution_manager = Instance(ExecutionManager, args=(), kwargs={})
     exchanges = List(trait=Instance(klass=Exchange))
     event_handlers = List(trait=Instance(EventHandler), default_value=[])
 

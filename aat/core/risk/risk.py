@@ -1,6 +1,5 @@
-from ...config import Side
-from ..instrument import Instrument
-from ..exchange import ExchangeType
+from aat.config import Side
+from aat.core import Event, Order, Instrument, ExchangeType
 
 
 class RiskManager(object):
@@ -12,3 +11,35 @@ class RiskManager(object):
 
     def risk(self, position=None):
         return "risk"
+
+    async def newOrder(self, order: Order, strategy):
+        # TODO
+        pass
+
+    async def onTrade(self, event):
+        # TODO
+        pass
+
+    async def onCancel(self, event):
+        # TODO
+        pass
+
+    async def onOpen(self, event: Event):
+        # TODO
+        pass
+
+    async def onFill(self, event: Event):
+        # TODO
+        pass
+
+    async def onChange(self, event: Event):
+        # TODO
+        pass
+
+    async def onHalt(self, data):
+        # TODO
+        pass
+
+    async def onContinue(self, data):
+        # TODO
+        pass
