@@ -18,6 +18,7 @@
 #include <aat/core/models/data.hpp>
 #include <aat/core/models/event.hpp>
 #include <aat/core/models/order.hpp>
+#include <aat/core/models/position.hpp>
 #include <aat/core/models/trade.hpp>
 #include <aat/core/order_book/order_book.hpp>
 
@@ -177,6 +178,15 @@ PYBIND11_MODULE(binding, m) {
     .def_readwrite("filled", &Trade::filled)
     .def_readwrite("maker_orders", &Trade::maker_orders)
     .def_readwrite("taker_order", &Trade::taker_order);
+
+  py::class_<Position>(m, "PositionCpp")
+    .def(py::init<>())
+    .def("__repr__", &Position::toString)
+    .def("toJson", &Position::toJson)
+    .def("perspectiveSchema", &Position::perspectiveSchema)
+    .def_readwrite("size", &Position::size)
+    .def_readwrite("notional", &Position::notional)
+    .def_readwrite("pnl", &Position::pnl);
 
   /*******************************
    * Helpers

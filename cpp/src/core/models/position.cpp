@@ -21,5 +21,14 @@ namespace core {
     return ret;
   }
 
+  json
+  Position::perspectiveSchema() const {
+    json ret;
+    ret["size"] = "float";
+    ret["notional"] = "float";
+    ret["pnl"] = "float";
+    return ret;
+  }
+
 }  // namespace core
 }  // namespace aat

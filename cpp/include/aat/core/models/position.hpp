@@ -21,6 +21,7 @@ namespace core {
 
     str_t toString() const;
     json toJson() const;
+    json perspectiveSchema() const;
 
     double size;
     double notional;
