@@ -44,18 +44,28 @@ class OrderManager(object):
             if order.id in self._pending_orders:
                 action = True
                 _, strat = self._pending_orders[order.id]
+
+                # TODO cleaner?
+                event.target.my_order = order
+                event.target.id = order.id
                 break
 
         if event.target.taker_order.id in self._pending_orders:
             action = True
             order = event.target.taker_order
+
+            # TODO cleaner?
+            event.target.my_order = order
+            event.target.id = order.id
             _, strat = self._pending_orders[order.id]
 
         if action:
             if order.side == Order.Sides.SELL:
-                await self._manager._onSold(strat, event.target, order)
+                # TODO ugly private method
+                await self._manager._onSold(strat, event.target)
             else:
-                await self._manager._onBought(strat, event.target, order)
+                # TODO ugly private method
+                await self._manager._onBought(strat, event.target)
             del self._pending_orders[order.id]
 
     async def onCancel(self, event):
@@ -63,6 +73,7 @@ class OrderManager(object):
         if order.id in self._pending_orders:
             _, strat = self._pending_orders[order.id]
 
+            # TODO ugly private method
             await self._manager._onReject(strat, event)
             del self._pending_orders[order.id]
 
@@ -78,6 +89,10 @@ class OrderManager(object):
         # TODO
         pass
 
+    async def onData(self, event):
+        # TODO
+        pass
+
     async def onHalt(self, data):
         # TODO
         pass
@@ -86,11 +101,11 @@ class OrderManager(object):
         # TODO
         pass
 
-    async def onData(self, event):
+    async def onError(self, event):
         # TODO
         pass
 
-    async def onError(self, event):
+    async def onStart(self, event):
         # TODO
         pass
 
@@ -98,6 +113,17 @@ class OrderManager(object):
         # TODO
         pass
 
-    async def onStart(self, event):
+    #########################
+    # Order Entry Callbacks #
+    #########################
+    async def onBought(self, event: Event):
+        # TODO
+        pass
+
+    async def onSold(self, event: Event):
+        # TODO
+        pass
+
+    async def onRejected(self, event: Event):
         # TODO
         pass

@@ -180,7 +180,8 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("exchange", &Trade::exchange)
     .def_readwrite("filled", &Trade::filled)
     .def_readwrite("maker_orders", &Trade::maker_orders)
-    .def_readwrite("taker_order", &Trade::taker_order);
+    .def_readwrite("taker_order", &Trade::taker_order)
+    .def_readwrite("my_order", &Trade::my_order);
 
   // py::class_<Position>(m, "PositionCpp")
   //   .def(py::init<>())

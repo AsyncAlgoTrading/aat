@@ -28,10 +28,11 @@ class Manager(EventHandler):
         self._strategy_past_orders = {}
         self._strategy_trades = {}
 
-    #########################
-    # Order Entry Callbacks #
-    #########################
-    async def _onBought(self, strategy, trade: Trade, my_order: Order):
+    #####################
+    # Order Entry Hooks #
+    #####################
+    # TODO ugly private method
+    async def _onBought(self, strategy, trade: Trade):
         '''callback method for when/if your order executes.
 
         Args:
@@ -41,13 +42,14 @@ class Manager(EventHandler):
         self._strategy_trades[strategy].append(trade)
 
         # remove from list of open orders if done
-        if my_order and my_order.filled >= my_order.volume:
-            self._strategy_open_orders[strategy].remove(my_order)
+        if trade.my_order and trade.my_order.filled >= trade.my_order.volume:
+            self._strategy_open_orders[strategy].remove(trade.my_order)
 
         # push event to loop
-        self._engine.pushEvent(Event(type=Event.Types.BOUGHT, target=my_order))
+        self._engine.pushEvent(Event(type=Event.Types.BOUGHT, target=trade))
 
-    async def _onSold(self, strategy, trade: Trade, my_order: Order):
+    # TODO ugly private method
+    async def _onSold(self, strategy, trade: Trade):
         '''callback method for when/if your order executes.
 
         Args:
@@ -57,12 +59,13 @@ class Manager(EventHandler):
         self._strategy_trades[strategy].append(trade)
 
         # remove from list of open orders if done
-        if my_order and my_order.filled >= my_order.volume:
-            self._strategy_open_orders[strategy].remove(my_order)
+        if trade.my_order and trade.my_order.filled >= trade.my_order.volume:
+            self._strategy_open_orders[strategy].remove(trade.my_order)
 
         # push event to loop
-        self._engine.pushEvent(Event(type=Event.Types.SOLD, target=my_order))
+        self._engine.pushEvent(Event(type=Event.Types.SOLD, target=trade))
 
+    # TODO ugly private method
     async def _onReject(self, strategy, order: Order):
         '''callback method for if your order fails to execute
 
@@ -94,7 +97,7 @@ class Manager(EventHandler):
         self._strategy_past_orders[strategy].append(order)
 
         # TODO check risk
-        ret, approved = await self._risk_mgr.newOrder(order, strategy)
+        ret, approved = await self._risk_mgr.newOrder(strategy, order)
 
         # was this trade allowed?
         if approved:
@@ -235,4 +238,21 @@ class Manager(EventHandler):
         # TODO
         await self._risk_mgr.onStart(event)
         await self._order_mgr.onStart(event)
-    # **********************
+
+    #########################
+    # Order Entry Callbacks #
+    #########################
+    async def onBought(self, event: Event):
+        # TODO
+        await self._risk_mgr.onBought(event)
+        await self._order_mgr.onBought(event)
+
+    async def onSold(self, event: Event):
+        # TODO
+        await self._risk_mgr.onSold(event)
+        await self._order_mgr.onSold(event)
+
+    async def onRejected(self, event: Event):
+        # TODO
+        await self._risk_mgr.onRejected(event)
+        await self._order_mgr.onRejected(event)

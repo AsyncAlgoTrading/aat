@@ -22,6 +22,7 @@ namespace core {
       : Data(id, timestamp, volume, price, side, DataType::TRADE, instrument, exchange, filled)
       , maker_orders(maker_orders)
       , taker_order(taker_order)
+      , my_order(nullptr)
       , _slippage(0.0)
       , _transaction_cost(0.0) {
       // enforce that stop target match stop type
@@ -46,6 +47,8 @@ namespace core {
 
     std::deque<std::shared_ptr<Order>> maker_orders;
     std::shared_ptr<Order> taker_order;
+    std::shared_ptr<Order> my_order;  // FIXME
+
     double _slippage;
     double _transaction_cost;
   };

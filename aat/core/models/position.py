@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from typing import List
 from .trade import Trade
+from ..exchange import ExchangeType
+from ..instrument import Instrument
 from ...common import _in_cpp
 
 try:
@@ -19,11 +21,18 @@ class Position(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    # timestamp: int
     size: float = 0.0
     notional: float = 0.0
+    price: float = 0.0
+    instrument: Instrument
+    exchange: ExchangeType = ExchangeType('')
+
     pnl: float = 0.0
+    unrealizedPnl: float = 0.0
     trades: List[Trade] = []
 
+    def __repr__(self):
+        return self.__str__()
+
     def __str__(self):
-        return f'<{self.size}-{self.notional}>'
+        return f'P<{self.instrument}-{self.price}-{self.size}-{self.notional}-{self.pnl}-{self.unrealizedPnl}-{self.exchange}>'

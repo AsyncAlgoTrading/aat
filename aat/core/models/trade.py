@@ -31,6 +31,8 @@ class Trade(Data):
     maker_orders: deque
     taker_order: Order
 
+    # FIXME hide
+    my_order: Order = None
     _slippage: float = 0.0
     _transaction_cost: float = 0.0
 
@@ -75,7 +77,7 @@ class Trade(Data):
         return v
 
     def __str__(self):
-        return f'<{self.instrument}-{self.volume:.2f}@{self.price:.2f}-{self.exchange}>'
+        return f'T<{self.instrument}-{self.volume:.2f}@{self.price:.2f}-{self.exchange}>'
 
     def to_json(self) -> Mapping[str, Union[str, int, float]]:
         return \

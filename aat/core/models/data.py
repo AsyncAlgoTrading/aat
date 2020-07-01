@@ -3,10 +3,10 @@ from pydantic import BaseModel, validator
 from datetime import datetime
 from typing import Mapping, Union, Type
 
-from ...config import Side, DataType
-from ..instrument import Instrument
 from ..exchange import ExchangeType
+from ..instrument import Instrument
 from ...common import _in_cpp
+from ...config import Side, DataType
 
 try:
     from aat.binding import DataCpp
@@ -59,6 +59,9 @@ class Data(_base):
         return (self.price == other.price) and \
             (self.instrument == other.instrument) and \
             (self.side == other.side)
+
+    def __repr__(self):
+        return self.__str__()
 
     def __str__(self):
         return f'<{self.instrument}-{self.volume}@{self.price}-{self.type}-{self.exchange}-{self.side}>'

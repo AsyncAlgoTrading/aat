@@ -55,7 +55,7 @@ class Order(Data):
         return values['price'] * values['volume']
 
     def __str__(self):
-        return f'<{self.instrument}-{self.volume}@{self.price}-{self.exchange}-{self.side}>'
+        return f'O<{self.instrument}-{self.volume}@{self.price}-{self.exchange}-{self.side}>'
 
     def to_json(self) -> Mapping[str, Union[str, int, float]]:
         return \
