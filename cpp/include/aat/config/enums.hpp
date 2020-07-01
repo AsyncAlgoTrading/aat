@@ -14,17 +14,32 @@ namespace config {
   enum class Side { NONE = 0, BUY = 1, SELL = 2 };
 
   enum class EventType {
+    // Trade events
     TRADE = 0,
+
+    // Order events
     OPEN = 1,
     CANCEL = 2,
     CHANGE = 3,
     FILL = 4,
+
+    // Other data events
     DATA = 5,
+
+    // System events
     HALT = 6,
     CONTINUE = 7,
+
+    // Engine events
     ERROR = 8,
     START = 9,
-    EXIT = 10
+    EXIT = 10,
+
+    // Order Events
+    BOUGHT = 11,
+    SOLD = 12,
+    REJECTED = 13
+
   };
 
   enum class DataType {
@@ -67,6 +82,9 @@ namespace config {
     "ERROR",
     "START",
     "EXIT",
+    "BOUGHT",
+    "SOLD",
+    "REJECTED",
   };
 
   static const std::vector<str_t> DataType_names = {
@@ -109,6 +127,9 @@ namespace config {
     {"ERROR", EventType::ERROR},
     {"START", EventType::START},
     {"EXIT", EventType::EXIT},
+    {"BOUGHT", EventType::BOUGHT},
+    {"SOLD", EventType::SOLD},
+    {"REJECTED", EventType::REJECTED},
   };
 
   static std::unordered_map<str_t, DataType> _DataType_mapping = {

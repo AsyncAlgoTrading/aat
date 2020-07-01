@@ -1,37 +1,176 @@
 import sys
+import traceback
+from typing import Union
 
-
-from aat.core import Order
+from aat.config import Side
+from aat.core import Event, EventHandler, Trade, Order, Instrument, ExchangeType
 from ..handler import EventHandler
 
 
 class Manager(EventHandler):
     def __init__(self, trading_engine, trading_type, exchanges):
         '''The Manager sits between the strategies and the engine and manages state'''
-        self._risk_mgr = trading_engine.risk_manager
-        self._order_mgr = trading_engine.order_manager
+        # store trading engine
+        self._engine = trading_engine
 
+        # pull from trading engine class
+        self._risk_mgr = self._engine.risk_manager
+        self._order_mgr = self._engine.order_manager
+
+        # install self for callbacks
+        self._risk_mgr._setManager(self)
+        self._order_mgr._setManager(self)
+
+        # add exchanges for order manager
         for exc in exchanges:
             self._order_mgr.addExchange(exc)
+
+        # initialize order and trade tracking
+        self._strategy_open_orders = {}
+        self._strategy_past_orders = {}
+        self._strategy_trades = {}
+
+    #########################
+    # Order Entry Callbacks #
+    #########################
+    async def _onBought(self, strategy, trade: Trade, my_order: Order):
+        '''callback method for when/if your order executes.
+
+        Args:
+            order_or_trade (Union[Order, Trade]): the trade/s as your order completes, and/or a cancellation order
+        '''
+        # append to list of trades
+        self._strategy_trades[strategy].append(trade)
+
+        # remove from list of open orders if done
+        if my_order and my_order.filled >= my_order.volume:
+            self._strategy_open_orders[strategy].remove(my_order)
+
+        # push event to loop
+        self._engine.pushEvent(Event(type=Event.Types.BOUGHT, target=my_order))
+
+
+    async def _onSold(self, strategy, trade: Trade, my_order: Order):
+        '''callback method for when/if your order executes.
+
+        Args:
+            order_or_trade (Union[Order, Trade]): the trade/s as your order completes, and/or a cancellation order
+        '''
+        # append to list of trades
+        self._strategy_trades[strategy].append(trade)
+
+        # remove from list of open orders if done
+        if my_order and my_order.filled >= my_order.volume:
+            self._strategy_open_orders[strategy].remove(my_order)
+
+        # push event to loop
+        self._engine.pushEvent(Event(type=Event.Types.SOLD, target=my_order))
+
+    async def _onReject(self, strategy, order: Order):
+        '''callback method for if your order fails to execute
+
+        Args:
+            order (Order): the order you attempted to make
+        '''
+        # remove from list of open orders
+        self._strategy_open_orders[strategy].remove(order)
+
+        # push event to loop
+        self._engine.pushEvent(Event(type=Event.Types.REJECTED, target=order))
 
     # *********************
     # Order Entry Methods *
     # *********************
-    def orders(self):
-        raise NotImplementedError()
+    async def newOrder(self, strategy, order: Order):
+        '''helper method, defers to buy/sell'''
+        # ensure has list
+        if strategy not in self._strategy_open_orders: self._strategy_open_orders[strategy] = []
+        if strategy not in self._strategy_past_orders: self._strategy_past_orders[strategy] = []
+        if strategy not in self._strategy_trades: self._strategy_trades[strategy] = []
 
-    def pastOrders(self):
-        raise NotImplementedError()
+        # append to open orders list
+        self._strategy_open_orders[strategy].append(order)
+        # append to past orders list
+        self._strategy_past_orders[strategy].append(order)
 
-    def trades(self):
-        raise NotImplementedError()
-
-    async def newOrder(self, order: Order, strategy):
-        ret = await self._risk_mgr.newOrder(order, strategy)
         # TODO check risk
-        ret = await self._order_mgr.newOrder(order, strategy)
+        ret, approved = await self._risk_mgr.newOrder(order, strategy)
+
+        # was this trade allowed?
+        if approved:
+            # send to be executed
+            await self._order_mgr.newOrder(strategy, order)
+            return ret
+
+        # raise onReject
+        strategy.onReject(order)
+        return None
+
+    def orders(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
+        '''select all open orders
+
+        Args:
+            instrument (Instrument): filter open orders by instrument
+            exchange (ExchangeType): filter open orders by exchange
+            side (Side): filter open orders by side
+        Returns:
+            list (Order): list of open orders
+        ''' 
+        # ensure has list
+        if strategy not in self._strategy_open_orders: self._strategy_open_orders[strategy] = []
+
+        ret = self._strategy_open_orders[strategy].copy()
+        if instrument:
+            ret = [r for r in ret if r.instrument == instrument]
+        if exchange:
+            ret = [r for r in ret if r.exchange == exchange]
+        if side:
+            ret = [r for r in ret if r.side == side]
         return ret
-    # *********************
+
+    def pastOrders(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
+        '''select all past orders
+
+        Args:
+            instrument (Instrument): filter open orders by instrument
+            exchange (ExchangeType): filter open orders by exchange
+            side (Side): filter open orders by side
+        Returns:
+            list (Order): list of open orders
+        '''
+        # ensure has list
+        if strategy not in self._strategy_past_orders: self._strategy_past_orders[strategy] = []
+
+        ret = self._strategy_past_orders[strategy].copy()
+        if instrument:
+            ret = [r for r in ret if r.instrument == instrument]
+        if exchange:
+            ret = [r for r in ret if r.exchange == exchange]
+        if side:
+            ret = [r for r in ret if r.side == side]
+        return ret
+
+    def trades(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
+        '''select all past trades
+
+        Args:
+            instrument (Instrument): filter trades by instrument
+            exchange (ExchangeType): filter trades by exchange
+            side (Side): filter trades by side
+        Returns:
+            list (Trade): list of trades
+        '''
+        # ensure has list
+        if strategy not in self._strategy_trades: self._strategy_trades[strategy] = []
+
+        ret = self._strategy_trades[strategy].copy()
+        if instrument:
+            ret = [r for r in ret if r.instrument == instrument]
+        if exchange:
+            ret = [r for r in ret if r.exchange == exchange]
+        if side:
+            ret = [r for r in ret if r.side == side]
+        return ret
 
     # *********************
     # Risk Methods        *
@@ -41,12 +180,10 @@ class Manager(EventHandler):
 
     def risk(self, position=None):
         return self._risk_mgr.risk(position=position)
-    # **********************
 
     # **********************
     # EventHandler methods *
     # **********************
-
     async def onTrade(self, event):
         await self._risk_mgr.onTrade(event)
         await self._order_mgr.onTrade(event)
@@ -69,24 +206,30 @@ class Manager(EventHandler):
 
     async def onHalt(self, event):
         await self._risk_mgr.onHalt(event)
+        await self._order_mgr.onHalt(event)
 
     async def onContinue(self, event):
         await self._risk_mgr.onContinue(event)
+        await self._order_mgr.onContinue(event)
 
     async def onData(self, event):
         # TODO
-        pass
+        await self._risk_mgr.onData(event)
+        await self._order_mgr.onData(event)
 
     async def onError(self, event):
         # TODO
-        print('\n\nA Fatal Error has occurred')
-        print(event.target)
+        print('\n\nA Fatal Error has occurred:')
+        traceback.print_exception(type(event.target.exception), event.target.exception, event.target.exception.__traceback__)
         sys.exit(1)
 
     async def onExit(self, event):
         # TODO
-        pass
+        await self._risk_mgr.onExit(event)
+        await self._order_mgr.onExit(event)
 
     async def onStart(self, event):
         # TODO
-        pass
+        await self._risk_mgr.onStart(event)
+        await self._order_mgr.onStart(event)
+    # **********************

@@ -204,6 +204,11 @@ if(NOT PYTHON_PYBIND_FOUND)
 else()
     message("${Cyan}Found PyBind11 in ${PYTHON_PYBIND_INCLUDE_DIR}${ColorReset}")
     include_directories( ${PYTHON_PYBIND_INCLUDE_DIR} )
+    if(MACOS)
+        # Need to add extra flags due to pybind weirness
+        # https://github.com/pybind/pybind11/blob/7830e8509f2adc97ce9ee32bf99cd4b82089cc4c/tools/pybind11Tools.cmake#L103
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
+    endif()
 endif()
 
 find_package(NumPy)

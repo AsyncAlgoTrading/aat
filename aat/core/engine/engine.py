@@ -2,6 +2,7 @@ import asyncio
 import os
 import os.path
 from aiostream.stream import merge  # type: ignore
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from traitlets.config.application import Application  # type: ignore
 from traitlets import validate, TraitError, Unicode, Bool, List, Instance  # type: ignore
@@ -35,12 +36,14 @@ class TradingEngine(Application):
     name = 'AAT'
     description = 'async algorithmic trading engine'
 
+    # Configureable parameters
     verbose = Bool(default_value=True)
     api = Bool(default_value=True)
     port = Unicode(default_value='8080', help="Port to run on").tag(config=True)
     event_loop = Instance(klass=asyncio.events.AbstractEventLoop)
     executor = Instance(klass=ThreadPoolExecutor, args=(4,), kwargs={})
 
+    # Core components
     trading_type = Unicode(default_value='simulation')
     order_manager = Instance(OrderManager, args=(), kwargs={})
     risk_manager = Instance(RiskManager, args=(), kwargs={})
@@ -48,6 +51,7 @@ class TradingEngine(Application):
     exchanges = List(trait=Instance(klass=Exchange))
     event_handlers = List(trait=Instance(EventHandler), default_value=[])
 
+    # API application
     api_application = Instance(klass=TornadoApplication)
     api_handlers = List(default_value=[])
 
@@ -173,8 +177,15 @@ class TradingEngine(Application):
             return True
         return False
 
+    def pushEvent(self, event):
+        '''push non-exchange event into the queue'''
+        self._queued_events.append(event)
+
     async def run(self):
         '''run the engine'''
+        # setup future queue
+        self._queued_events = deque()
+
         # await all connections
         await asyncio.gather(*(asyncio.create_task(exch.connect()) for exch in self.exchanges))
 
@@ -182,8 +193,15 @@ class TradingEngine(Application):
         await self.tick(Event(type=EventType.START, target=None))
 
         async with merge(*(exch.tick() for exch in self.exchanges)).stream() as stream:
+            # stream through all events
             async for event in stream:
+                # tick exchange event to handlers
                 await self.tick(event)
+
+                # process any secondary events
+                while self._queued_events:
+                    event = self._queued_events.popleft()
+                    await self.tick(event)
 
     async def tick(self, event):
         '''send an event to all registered event handlers

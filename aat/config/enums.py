@@ -33,6 +33,11 @@ class EventType(BaseEnum):
     START = 'START'
     EXIT = 'EXIT'
 
+    # Order Events
+    BOUGHT = 'BOUGHT'
+    SOLD = 'SOLD'
+    REJECTED = 'REJECTED'
+
 
 class DataType(BaseEnum):
     ORDER = 'ORDER'

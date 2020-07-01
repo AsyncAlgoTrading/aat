@@ -10,7 +10,6 @@ class EventHandler(metaclass=ABCMeta):
     def _setManager(self, mgr):
         self._manager = mgr
 
-    # onAnalyze(self, engine):
     def _valid_callback(self, callback):
         if hasattr(self, callback) and not isabstract(callback) and not hasattr(getattr(self, callback), "_original"):
             return getattr(self, callback)
@@ -28,9 +27,16 @@ class EventHandler(metaclass=ABCMeta):
              EventType.CONTINUE: self._valid_callback('onContinue'),
              EventType.ERROR: self._valid_callback('onError'),
              EventType.START: self._valid_callback('onStart'),
-             EventType.EXIT: self._valid_callback('onExit')} \
+             EventType.EXIT: self._valid_callback('onExit'),
+             EventType.BOUGHT: self._valid_callback('onBought'),
+             EventType.SOLD: self._valid_callback('onSold'),
+             EventType.REJECTED: self._valid_callback('onRejected')} \
             .get(event_type, None)
 
+
+    #########################
+    # Event Handler Methods #
+    #########################
     @abstractmethod
     def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
@@ -41,11 +47,6 @@ class EventHandler(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def onFill(self, event: Event) -> None:
-        '''Called whenever an Order `Fill` event is received'''
-        pass
-
-    @abstractmethod
     def onCancel(self, event: Event) -> None:
         '''Called whenever an Order `Cancel` event is received'''
         pass
@@ -53,6 +54,25 @@ class EventHandler(metaclass=ABCMeta):
     @abstractmethod
     def onChange(self, event: Event) -> None:
         '''Called whenever an Order `Change` event is received'''
+        pass
+
+    @abstractmethod
+    def onFill(self, event: Event) -> None:
+        '''Called whenever an Order `Fill` event is received'''
+        pass
+
+    @abstractmethod
+    def onData(self, event: Event) -> None:
+        '''Called whenever other data is received'''
+
+    @abstractmethod
+    def onHalt(self, event: Event) -> None:
+        '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
+        pass
+
+    @abstractmethod
+    def onContinue(self, event: Event) -> None:
+        '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
         pass
 
     @abstractmethod
@@ -70,26 +90,33 @@ class EventHandler(metaclass=ABCMeta):
         '''Called once at engine exit time'''
         pass
 
-    @abstractmethod
-    def onHalt(self, event: Event) -> None:
-        '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
+    #########################
+    # Order Entry Callbacks #
+    #########################
+    def onBought(self, event: Event):
+        '''Called on my order bought'''
         pass
 
-    @abstractmethod
-    def onContinue(self, event: Event) -> None:
-        '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
+    def onSold(self, event: Event):
+        '''Called on my order sold'''
         pass
 
-    @abstractmethod
-    def onData(self, event: Event) -> None:
-        '''Called whenever other data is received'''
+    def onRejected(self, event: Event):
+        '''Called on my order rejected'''
+        pass
 
+    #################
+    # Other Methods #
+    #################
     def onAnalyze(self, engine):
         '''Called once after engine exit to analyze the results of a backtest'''
         pass
 
 
 class PrintHandler(EventHandler):
+    #########################
+    # Event Handler Methods #
+    #########################
     def onTrade(self, event: Event):
         '''Called whenever a `Trade` event is received'''
         print(event)
@@ -98,9 +125,6 @@ class PrintHandler(EventHandler):
         '''Called whenever an Order `Open` event is received'''
         print(event)
 
-    def onFill(self, event: Event):
-        '''Called whenever an Order `Fill` event is received'''
-        print(event)
 
     def onCancel(self, event: Event):
         '''Called whenever an Order `Cancel` event is received'''
@@ -108,6 +132,22 @@ class PrintHandler(EventHandler):
 
     def onChange(self, event: Event):
         '''Called whenever an Order `Change` event is received'''
+        print(event)
+
+    def onFill(self, event: Event):
+        '''Called whenever an Order `Fill` event is received'''
+        print(event)
+
+    def onData(self, event: Event):
+        '''Called whenever other data is received'''
+        print(event)
+
+    def onHalt(self, event: Event):
+        '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
+        print(event)
+
+    def onContinue(self, event: Event):
+        '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
         print(event)
 
     def onError(self, event: Event):
@@ -122,14 +162,3 @@ class PrintHandler(EventHandler):
         '''Called once at engine exit time'''
         print(event)
 
-    def onHalt(self, event: Event):
-        '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
-        print(event)
-
-    def onContinue(self, event: Event):
-        '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
-        print(event)
-
-    def onData(self, event: Event):
-        '''Called whenever other data is received'''
-        print(event)

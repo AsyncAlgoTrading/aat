@@ -17,7 +17,14 @@ class OrderManager(object):
         '''add an exchange'''
         self._exchanges[exchange.exchange()] = exchange
 
-    async def newOrder(self, order: Order, strategy):
+    def _setManager(self, manager):
+        '''install manager'''
+        self._manager = manager
+
+    # *********************
+    # Order Entry Methods *
+    # *********************
+    async def newOrder(self, strategy, order: Order):
         exchange = self._exchanges.get(order.exchange)
         if not exchange:
             raise Exception('Exchange not installed: {}'.format(order.exchange))
@@ -26,7 +33,11 @@ class OrderManager(object):
         self._pending_orders[order.id] = (order, strategy)
         return order
 
+    # **********************
+    # EventHandler methods *
+    # **********************
     async def onTrade(self, event):
+        '''Match trade with order'''
         action, strat, order = False, None, None
 
         for order in event.target.maker_orders:
@@ -41,12 +52,10 @@ class OrderManager(object):
             _, strat = self._pending_orders[order.id]
 
         if action:
-            # TODO add to event loop
-            event = Event(type=Event.Types.TRADE, target=order)
             if order.side == Order.Sides.SELL:
-                await strat.onSold(event)
+                await self._manager._onSold(strat, event.target, order)
             else:
-                await strat.onBought(event)
+                await self._manager._onBought(strat, event.target, order)
             del self._pending_orders[order.id]
 
     async def onCancel(self, event):
@@ -54,8 +63,7 @@ class OrderManager(object):
         if order.id in self._pending_orders:
             _, strat = self._pending_orders[order.id]
 
-            # TODO add to event loop
-            await strat.onReject(event)
+            await self._manager._onReject(strat, event)
             del self._pending_orders[order.id]
 
     async def onOpen(self, event: Event):
@@ -75,5 +83,21 @@ class OrderManager(object):
         pass
 
     async def onContinue(self, data):
+        # TODO
+        pass
+
+    async def onData(self, event):
+        # TODO
+        pass
+
+    async def onError(self, event):
+        # TODO
+        pass
+
+    async def onExit(self, event):
+        # TODO
+        pass
+
+    async def onStart(self, event):
         # TODO
         pass

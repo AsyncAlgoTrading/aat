@@ -25,9 +25,6 @@ class BuyAndHoldStrategy(Strategy):
             print(self.positions())
             print(self.risk())
 
-    async def onError(self, event: Event) -> None:
-        print("Error:", event)
-
     async def onBought(self, event: Event) -> None:
         print('bought {:.2f} @ {:.2f}'.format(event.target.volume, event.target.price))
 
