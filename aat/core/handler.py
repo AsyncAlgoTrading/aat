@@ -33,10 +33,10 @@ class EventHandler(metaclass=ABCMeta):
              EventType.REJECTED: self._valid_callback('onRejected')} \
             .get(event_type, None)
 
-
     #########################
     # Event Handler Methods #
     #########################
+
     @abstractmethod
     def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
@@ -125,7 +125,6 @@ class PrintHandler(EventHandler):
         '''Called whenever an Order `Open` event is received'''
         print(event)
 
-
     def onCancel(self, event: Event):
         '''Called whenever an Order `Cancel` event is received'''
         print(event)
@@ -161,4 +160,3 @@ class PrintHandler(EventHandler):
     def onExit(self, event: Event):
         '''Called once at engine exit time'''
         print(event)
-

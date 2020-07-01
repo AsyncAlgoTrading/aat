@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from typing import Union
 from ..config import Side
 from ..core import Event, EventHandler, Trade, Order, Instrument, ExchangeType
 
@@ -112,7 +111,6 @@ class Strategy(EventHandler):
         '''
         return await self._manager.newOrder(self, order)
 
-
     def orders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         '''select all open orders
 
@@ -122,7 +120,7 @@ class Strategy(EventHandler):
             side (Side): filter open orders by side
         Returns:
             list (Order): list of open orders
-        ''' 
+        '''
         return self._manager.orders(self, instrument, exchange, side)
 
     def pastOrders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
@@ -166,7 +164,7 @@ class Strategy(EventHandler):
         return self._manager.positions(instrument=instrument, exchange=exchange, side=side)
 
     def risk(self, position=None):
-        '''Get risk metrics 
+        '''Get risk metrics
 
         Args:
             position (Position): only get metrics on this position

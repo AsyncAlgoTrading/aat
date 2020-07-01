@@ -15,9 +15,9 @@ namespace core {
   class Position {
    public:
     Position()
-    : size(0.0),
-      notional(0.0),
-      pnl(0.0) {}
+      : size(0.0)
+      , notional(0.0)
+      , pnl(0.0) {}
 
     str_t toString() const;
     json toJson() const;

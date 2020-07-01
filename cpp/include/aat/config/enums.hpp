@@ -39,7 +39,6 @@ namespace config {
     BOUGHT = 11,
     SOLD = 12,
     REJECTED = 13
-
   };
 
   enum class DataType {

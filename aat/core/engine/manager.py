@@ -1,10 +1,8 @@
 import sys
 import traceback
-from typing import Union
 
 from aat.config import Side
 from aat.core import Event, EventHandler, Trade, Order, Instrument, ExchangeType
-from ..handler import EventHandler
 
 
 class Manager(EventHandler):
@@ -49,7 +47,6 @@ class Manager(EventHandler):
         # push event to loop
         self._engine.pushEvent(Event(type=Event.Types.BOUGHT, target=my_order))
 
-
     async def _onSold(self, strategy, trade: Trade, my_order: Order):
         '''callback method for when/if your order executes.
 
@@ -84,9 +81,12 @@ class Manager(EventHandler):
     async def newOrder(self, strategy, order: Order):
         '''helper method, defers to buy/sell'''
         # ensure has list
-        if strategy not in self._strategy_open_orders: self._strategy_open_orders[strategy] = []
-        if strategy not in self._strategy_past_orders: self._strategy_past_orders[strategy] = []
-        if strategy not in self._strategy_trades: self._strategy_trades[strategy] = []
+        if strategy not in self._strategy_open_orders:
+            self._strategy_open_orders[strategy] = []
+        if strategy not in self._strategy_past_orders:
+            self._strategy_past_orders[strategy] = []
+        if strategy not in self._strategy_trades:
+            self._strategy_trades[strategy] = []
 
         # append to open orders list
         self._strategy_open_orders[strategy].append(order)
@@ -115,9 +115,10 @@ class Manager(EventHandler):
             side (Side): filter open orders by side
         Returns:
             list (Order): list of open orders
-        ''' 
+        '''
         # ensure has list
-        if strategy not in self._strategy_open_orders: self._strategy_open_orders[strategy] = []
+        if strategy not in self._strategy_open_orders:
+            self._strategy_open_orders[strategy] = []
 
         ret = self._strategy_open_orders[strategy].copy()
         if instrument:
@@ -139,7 +140,8 @@ class Manager(EventHandler):
             list (Order): list of open orders
         '''
         # ensure has list
-        if strategy not in self._strategy_past_orders: self._strategy_past_orders[strategy] = []
+        if strategy not in self._strategy_past_orders:
+            self._strategy_past_orders[strategy] = []
 
         ret = self._strategy_past_orders[strategy].copy()
         if instrument:
@@ -161,7 +163,8 @@ class Manager(EventHandler):
             list (Trade): list of trades
         '''
         # ensure has list
-        if strategy not in self._strategy_trades: self._strategy_trades[strategy] = []
+        if strategy not in self._strategy_trades:
+            self._strategy_trades[strategy] = []
 
         ret = self._strategy_trades[strategy].copy()
         if instrument:
