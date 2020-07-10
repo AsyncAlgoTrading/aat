@@ -1,4 +1,3 @@
-from datetime import datetime
 from aat.config import Side
 from aat.core import Instrument, OrderBook, Order
 from .helpers import _seed

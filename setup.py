@@ -6,17 +6,6 @@ import os.path
 import os
 import sys
 import sysconfig
-try:
-    from shutil import which
-    CPU_COUNT = os.cpu_count()
-except ImportError:
-    # Python2
-    try:
-        from backports.shutil_which import which
-    except ImportError:
-        def which(x): return x  # just rely on path
-    import multiprocessing
-    CPU_COUNT = multiprocessing.cpu_count()
 
 pjoin = os.path.join
 here = os.path.abspath(os.path.dirname(__file__))

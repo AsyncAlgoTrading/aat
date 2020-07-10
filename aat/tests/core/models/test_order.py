@@ -1,7 +1,5 @@
 # type: ignore
-import pydantic
 import pytest
-from datetime import datetime
 from aat.common import _in_cpp
 from aat.core import Order, Instrument, ExchangeType
 

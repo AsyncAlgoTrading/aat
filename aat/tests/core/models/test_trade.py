@@ -1,7 +1,6 @@
 # type: ignore
 import os
 import pytest
-from datetime import datetime
 from collections import deque
 from aat.core import Trade, Order, Instrument, ExchangeType
 
