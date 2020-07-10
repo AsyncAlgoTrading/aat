@@ -1,16 +1,11 @@
 from setuptools import setup, find_packages, Extension
-from distutils.version import LooseVersion
 from codecs import open
-from setuptools.command.build_ext import build_ext
 import io
 import os
 import os.path
 import os
-import re
 import sys
 import sysconfig
-import platform
-import subprocess
 try:
     from shutil import which
     CPU_COUNT = os.cpu_count()
@@ -65,7 +60,7 @@ requires_dev = [
 ] + requires
 
 
-sources = [ 
+sources = [
     'aat/cpp/src/config/enums.cpp',
     'aat/cpp/src/config/parser.cpp',
     'aat/cpp/src/core/instrument/instrument.cpp',
