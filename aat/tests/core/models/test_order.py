@@ -13,17 +13,13 @@ class TestOrder:
         if _in_cpp():
             return
 
-        with pytest.raises(pydantic.ValidationError):
-            Order(id=1,
-                  timestamp=datetime.now(),
-                  volume=0.0,
+        with pytest.raises(AssertionError):
+            Order(volume=0.0,
                   price=5.0,
                   side=Order.Sides.SELL,
                   exchange=ExchangeType(''),
                   order_type=Order.Types.STOP,
                   stop_target=Order(
-                      id=1,
-                      timestamp=datetime.now(),
                       volume=0.5,
                       price=5.0,
                       side=Order.Sides.SELL,

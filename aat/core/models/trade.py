@@ -45,6 +45,8 @@ class Trade(Data):
         self.__timestamp = datetime.now()
         self.__type = DataType.TRADE
 
+        assert(isinstance(taker_order, Order))
+        assert(len(maker_orders) > 0)
         self.__maker_orders = maker_orders
         self.__taker_order = taker_order
 

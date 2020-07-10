@@ -16,9 +16,7 @@ class TestMarketOrder:
         assert ob.topOfBook()[Side.BUY] == [5.0, 1.0]
         assert ob.topOfBook()[Side.SELL] == [5.5, 1.0]
 
-        data = Order(id=1,
-                     timestamp=datetime.now(),
-                     volume=100.0,
+        data = Order(volume=100.0,
                      price=0.0,
                      side=Order.Sides.SELL,
                      order_type=Order.Types.MARKET,
@@ -44,15 +42,11 @@ class TestStopLoss:
         print(ob)
         assert ob.topOfBook() == {Side.BUY: [5.0, 1.0], Side.SELL: [5.5, 1.0]}
 
-        data = Order(id=1,
-                     timestamp=datetime.now(),
-                     volume=0.0,
+        data = Order(volume=0.0,
                      price=5.0,
                      side=Order.Sides.SELL,
                      order_type=Order.Types.STOP,
                      stop_target=Order(
-                         id=1,
-                         timestamp=datetime.now(),
                          volume=1.0,
                          price=4.0,
                          side=Order.Sides.SELL,
@@ -63,15 +57,11 @@ class TestStopLoss:
         print(ob)
         ob.add(data)
 
-        data = Order(id=1,
-                     timestamp=datetime.now(),
-                     volume=0.0,
+        data = Order(volume=0.0,
                      price=5.0,
                      side=Order.Sides.SELL,
                      order_type=Order.Types.STOP,
                      stop_target=Order(
-                         id=1,
-                         timestamp=datetime.now(),
                          volume=0.5,
                          price=5.0,
                          side=Order.Sides.SELL,
@@ -84,9 +74,7 @@ class TestStopLoss:
         print(ob.topOfBook())
         assert ob.topOfBook() == {Side.BUY: [5.0, 1.0], Side.SELL: [5.5, 1.0]}
 
-        data = Order(id=1,
-                     timestamp=datetime.now(),
-                     volume=0.5,
+        data = Order(volume=0.5,
                      price=5.0,
                      side=Order.Sides.SELL,
                      order_type=Order.Types.LIMIT,
@@ -108,15 +96,11 @@ class TestStopLoss:
         print(ob)
         assert ob.topOfBook() == {Side.BUY: [5.0, 1.0], Side.SELL: [5.5, 1.0]}
 
-        data = Order(id=1,
-                     timestamp=datetime.now(),
-                     volume=0.0,
+        data = Order(volume=0.0,
                      price=5.0,
                      side=Order.Sides.SELL,
                      order_type=Order.Types.STOP,
                      stop_target=Order(
-                         id=1,
-                         timestamp=datetime.now(),
                          volume=0.5,
                          price=4.5,
                          side=Order.Sides.SELL,
@@ -129,9 +113,7 @@ class TestStopLoss:
         print(ob.topOfBook())
         assert ob.topOfBook() == {Side.BUY: [5.0, 1.0], Side.SELL: [5.5, 1.0]}
 
-        data = Order(id=1,
-                     timestamp=datetime.now(),
-                     volume=0.5,
+        data = Order(volume=0.5,
                      price=5.0,
                      side=Order.Sides.SELL,
                      order_type=Order.Types.LIMIT,

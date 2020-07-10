@@ -62,7 +62,7 @@ class Order(object):
         assert isinstance(notional, (int, float))
         assert isinstance(order_type, OrderType)
         assert isinstance(flag, OrderFlag)
-        assert stop_target is None or (isinstance(stop_target, Order) and order_type == OrderType.STOP)
+        assert stop_target is None or (isinstance(stop_target, Order) and order_type == OrderType.STOP and stop_target.order_type != OrderType.STOP)
         self.__volume = volume
         self.__price = price
         self.__side = side
