@@ -2,7 +2,6 @@ import asyncio
 import numpy as np  # type: ignore
 import string
 from collections import deque
-from datetime import datetime
 from random import choice, random
 from ..exchange import Exchange
 from ...core import Instrument, OrderBook, Order, Event, ExchangeType
@@ -42,13 +41,15 @@ class SyntheticExchange(Exchange):
             while start < end:
                 side = Side.BUY if start <= mid else Side.SELL
                 increment = choice((.01, .05, .1, .2))
-                orderbook.add(Order(id=self._id,
-                                    timestamp=datetime.now(),
-                                    volume=round(random() * 10, 0),
-                                    price=start,
-                                    side=side,
-                                    instrument=instrument,
-                                    exchange=self._exchange))
+                order = Order(volume=round(random() * 10, 0),
+                              price=start,
+                              side=side,
+                              instrument=instrument,
+                              exchange=self._exchange)
+                order.id = self._id
+
+                orderbook.add(order)
+
                 start = round(start + increment, 2)
                 self._id += 1
 
@@ -99,24 +100,24 @@ class SyntheticExchange(Exchange):
                 # new buy order
                 # choose a price level
                 price = round(levels[Side.SELL][0] - choice((.01, .05, .1, .2)), 2)
-                orderbook.add(Order(id=self._id,
-                                    timestamp=datetime.now(),
-                                    volume=volume,
-                                    price=price,
-                                    side=Side.BUY,
-                                    instrument=instrument,
-                                    exchange=self._exchange))
+                order = Order(volume=volume,
+                              price=price,
+                              side=Side.BUY,
+                              instrument=instrument,
+                              exchange=self._exchange)
+                order.id = self._id
+                orderbook.add(order)
                 self._id += 1
             elif do == 'sell':
                 # new sell order
                 price = round(levels[Side.BUY][0] - choice((.01, .05, .1, .2)), 2)
-                orderbook.add(Order(id=self._id,
-                                    timestamp=datetime.now(),
-                                    volume=volume,
-                                    price=price,
-                                    side=Side.SELL,
-                                    instrument=instrument,
-                                    exchange=self._exchange))
+                order = Order(volume=volume,
+                              price=price,
+                              side=Side.SELL,
+                              instrument=instrument,
+                              exchange=self._exchange)
+                order.id = self._id
+                orderbook.add(order)
                 self._id += 1
             elif do == 'cross':
                 # cross the spread
@@ -125,25 +126,26 @@ class SyntheticExchange(Exchange):
                 if side == 'buy':
                     # cross to buy
                     price = round(levels[Side.SELL][0] + choice((0.0, .01, .05)), 2)
-                    orderbook.add(Order(id=self._id,
-                                        timestamp=datetime.now(),
-                                        volume=volume,
-                                        price=price,
-                                        side=Side.BUY,
-                                        instrument=instrument,
-                                        exchange=self._exchange))
+                    order = Order(volume=volume,
+                                  price=price,
+                                  side=Side.BUY,
+                                  instrument=instrument,
+                                  exchange=self._exchange)
+                    order.id = self._id
+                    orderbook.add(order)
                     self._id += 1
                 else:
                     # cross to sell
                     price = round(levels[Side.BUY][0] - choice((0.0, .01, .05)), 2)
-                    orderbook.add(Order(id=self._id,
-                                        timestamp=datetime.now(),
-                                        volume=volume,
-                                        price=price,
-                                        side=Side.SELL,
-                                        instrument=instrument,
-                                        exchange=self._exchange))
+                    order = Order(volume=volume,
+                                  price=price,
+                                  side=Side.BUY,
+                                  instrument=instrument,
+                                  exchange=self._exchange)
+                    order.id = self._id
+                    orderbook.add(order)
                     self._id += 1
+
             elif do == 'cancel' or do == 'change':
                 # cancel an existing order
                 side = choice(('buy', 'sell'))
@@ -162,7 +164,10 @@ class SyntheticExchange(Exchange):
                             orderbook.cancel(order)
                         else:
                             order.volume = max(order.volume + choice((-1, -.5, .5, 1)), 1.0)
-                            orderbook.add(order)
+                            if order.volume > 0:
+                                orderbook.change(order)
+                            else:
+                                orderbook.cancel(order)
 
                 elif levels:
                     level = choice(levels[Side.SELL])
@@ -173,7 +178,10 @@ class SyntheticExchange(Exchange):
                             orderbook.cancel(order)
                         else:
                             order.volume = max(order.volume + choice((-1, -.5, .5, 1)), 1.0)
-                            orderbook.add(order)
+                            if order.volume > 0:
+                                orderbook.change(order)
+                            else:
+                                orderbook.cancel(order)
 
             # print current state if running in verbose mode
             if self._verbose:

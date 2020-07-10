@@ -50,6 +50,8 @@ namespace core {
 
     void add(std::shared_ptr<Order> order);
     void cancel(std::shared_ptr<Order> order);
+    void change(std::shared_ptr<Order> order);
+    std::shared_ptr<Order> find(std::shared_ptr<Order> order);
 
     std::map<Side, std::vector<double>> topOfBookMap() const;  // For Binding
     std::vector<double> topOfBook() const;

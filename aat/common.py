@@ -1,4 +1,5 @@
 import os
+import itertools
 
 
 def _in_cpp():
@@ -10,3 +11,7 @@ def _in_cpp():
         return False
 
     return os.environ.get('AAT_USE_CPP', '').lower() in ('1', 'ON')
+
+
+__c = itertools.count()
+def _gen_id(): return next(__c)  # noqa: E731

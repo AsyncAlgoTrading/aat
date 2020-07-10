@@ -7,7 +7,7 @@ class BuyAndHoldStrategy(Strategy):
 
     async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
-        print('Trade:\n\t{}\n\tSlippage:{}\n\tTxnCost:{}'.format(event, event.target.slippage(), event.target.transactionCost()))
+        print('Trade:\n{}'.format(event))
 
         # no past trades, no current orders
         if not self.orders(event.target.instrument) and not self.trades(event.target.instrument):

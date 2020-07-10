@@ -42,6 +42,39 @@ namespace core {
   }
 
   std::shared_ptr<Order>
+  PriceLevel::find(std::shared_ptr<Order> order) {
+    // check if order is in level
+    if (order->price != price) {
+      return nullptr;
+    }
+
+    for(auto o: orders){
+      if (o->id == order->id) {
+        return o;
+      }
+    }
+
+    return nullptr;
+  }
+
+  std::shared_ptr<Order>
+  PriceLevel::modify(std::shared_ptr<Order> order) {
+    // check if order is in level
+    if (order->price != price || std::find(orders.begin(), orders.end(), order) == orders.end()) {
+      // something is wrong
+      throw AATCPPException("Order note found in price level!");
+    }
+    // remove order
+    orders.erase(std::find(orders.begin(), orders.end(), order));  // FIXME c++
+
+    // trigger cancel event
+    collector.pushCancel(order);
+
+    // return the order
+    return order;
+  }
+
+  std::shared_ptr<Order>
   PriceLevel::remove(std::shared_ptr<Order> order) {
     // check if order is in level
     if (order->price != price || std::find(orders.begin(), orders.end(), order) == orders.end()) {

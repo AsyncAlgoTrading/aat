@@ -52,6 +52,8 @@ PYBIND11_MODULE(binding, m) {
     .export_values();
 
   py::enum_<DataType>(m, "DataTypeCpp", py::arithmetic())
+    .value("DATA", DataType::DATA)
+    .value("ERROR", DataType::ERROR)
     .value("ORDER", DataType::ORDER)
     .value("TRADE", DataType::TRADE)
     .export_values();

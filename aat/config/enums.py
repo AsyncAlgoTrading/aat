@@ -40,6 +40,9 @@ class EventType(BaseEnum):
 
 
 class DataType(BaseEnum):
+    DATA = 'DATA'
+    ERROR = 'ERROR'
+
     ORDER = 'ORDER'
     TRADE = 'TRADE'
 

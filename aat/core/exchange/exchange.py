@@ -17,4 +17,4 @@ class ExchangeType(object):
         self._name = name
 
     def __repr__(self):
-        return self._name
+        return self._name if self._name else "No Exchange"

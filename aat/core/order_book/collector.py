@@ -1,4 +1,3 @@
-from datetime import datetime
 from collections import deque
 from ..models import Event, Trade
 from ...config import EventType
@@ -68,14 +67,8 @@ class _Collector(object):
         if taker_order.filled <= 0:
             raise Exception('No trade occurred')
         self.push(Event(type=EventType.TRADE,
-                        target=Trade(timestamp=datetime.now().timestamp(),
-                                     instrument=taker_order.instrument,
-                                     price=self.price(),
-                                     volume=self.volume(),
-                                     side=taker_order.side,
-                                     maker_orders=self.orders().copy(),
-                                     taker_order=taker_order,
-                                     exchange=taker_order.exchange)))
+                        target=Trade(maker_orders=self.orders().copy(),
+                                     taker_order=taker_order)))
 
     def accumulate(self, order):
         # fixme price change/volume down?

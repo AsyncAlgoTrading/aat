@@ -42,8 +42,10 @@ namespace config {
   };
 
   enum class DataType {
-    ORDER = 0,
-    TRADE = 1,
+    DATA = 0,
+    ERROR = 1,
+    ORDER = 2,
+    TRADE = 3,
   };
 
   enum class InstrumentType {
@@ -87,6 +89,8 @@ namespace config {
   };
 
   static const std::vector<str_t> DataType_names = {
+    "DATA",
+    "ERROR",
     "ORDER",
     "TRADE",
   };
@@ -132,6 +136,8 @@ namespace config {
   };
 
   static std::unordered_map<str_t, DataType> _DataType_mapping = {
+    {"DATA", DataType::DATA},
+    {"ERROR", DataType::ERROR},
     {"ORDER", DataType::ORDER},
     {"TRADE", DataType::TRADE},
   };

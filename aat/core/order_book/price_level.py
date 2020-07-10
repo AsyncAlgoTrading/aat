@@ -31,11 +31,39 @@ class _PriceLevel(object):
                 self._orders.append(order)
                 self._collector.pushOpen(order)
 
+    def find(self, order):
+        # check if order is in level
+        if order.price != self._price:
+            # order not here/not here anymore
+            return None
+
+        for o in self._orders:
+            if o.id == order.id:
+                return o
+
+    def modify(self, order):
+        # check if order is in level
+        if order.price != self._price or order.id not in (o.id for o in self._orders):
+            # something is wrong
+            raise Exception(f'Order not found in price level {self._price}: {order}')
+
+        # modify order
+        for o in self._orders:
+            if o.id == order.id:
+                # only allowed to modify volume
+                o.volume = order.volume
+
+        # trigger cancel event
+        self._collector.pushChange(order)
+
+        # return the order
+        return order
+
     def remove(self, order):
         # check if order is in level
         if order.price != self._price or order not in self._orders:
             # something is wrong
-            raise Exception(f'Order not found in price leve {self._price}: {order}')
+            raise Exception(f'Order not found in price level {self._price}: {order}')
 
         # remove order
         self._orders.remove(order)

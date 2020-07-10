@@ -226,6 +226,21 @@ namespace core {
   }
 
   void
+  OrderBook::change(std::shared_ptr<Order> order) {
+    double price = order->price;
+    Side side = order->side;
+    std::vector<double>& levels = (side == Side::BUY) ? buy_levels : sell_levels;
+    std::unordered_map<double, std::shared_ptr<PriceLevel>>& prices = (side == Side::BUY) ? buys : sells;
+
+    if (std::find(levels.begin(), levels.end(), price) == levels.end()) {
+      throw AATCPPException("Orderbook out of sync");
+    }
+
+    // modify order in price level
+    prices[price]->modify(order);
+  }
+
+  void
   OrderBook::cancel(std::shared_ptr<Order> order) {
     double price = order->price;
     Side side = order->side;
@@ -235,6 +250,7 @@ namespace core {
     if (std::find(levels.begin(), levels.end(), price) == levels.end()) {
       throw AATCPPException("Orderbook out of sync");
     }
+    // remove order from price level
     prices[price]->remove(order);
 
     // delete level if no more volume
@@ -242,6 +258,22 @@ namespace core {
       levels.erase(std::remove(levels.begin(), levels.end(), price), levels.end());
     }
   }
+
+  std::shared_ptr<Order>
+  OrderBook::find(std::shared_ptr<Order> order) {
+    double price = order->price;
+    Side side = order->side;
+    std::vector<double>& levels = (side == Side::BUY) ? buy_levels : sell_levels;
+    std::unordered_map<double, std::shared_ptr<PriceLevel>>& prices = (side == Side::BUY) ? buys : sells;
+
+    if (std::find(levels.begin(), levels.end(), price) == levels.end()) {
+      return nullptr;
+    }
+
+    // find in price level
+    return prices[price]->find(order);
+  }
+
 
   std::map<Side, std::vector<double>>
   OrderBook::topOfBookMap() const {
