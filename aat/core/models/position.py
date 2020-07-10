@@ -1,5 +1,3 @@
-from typing import List
-from .trade import Trade
 from ..exchange import ExchangeType
 from ..instrument import Instrument
 from ...common import _in_cpp
@@ -107,7 +105,6 @@ class Position(object):
     @property
     def trades(self):
         return self.__trades
-
 
     def __repr__(self):
         return f'Position(price={self.price}, size={self.size}, notinoal={self.notional}, pnl={self.pnl}, unrealizedPnl={self.unrealizedPnl}, instrument={self.instrument}, exchange={self.exchange})'
