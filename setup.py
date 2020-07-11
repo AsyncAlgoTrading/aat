@@ -65,7 +65,7 @@ sources = [
 ]
 
 extension = Extension('aat.binding',
-                      define_macros=[],
+                      define_macros=[('HAVE_SNPRINTF', '1')],
                       include_dirs=['aat/cpp/include',
                                     'aat/cpp/third/date/',
                                     'aat/cpp/third/pybind11/',
