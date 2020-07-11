@@ -11,7 +11,8 @@ namespace core {
   str_t
   Trade::toString() const {
     sstream_t ss;
-    ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << exchange.toString() << ">";
+    ss << "Trade( id=" << id << ", timestamp=" << format_timestamp(timestamp) << 
+    ", maker_orders=" << maker_orders.size() << ", taker_order=" << taker_order->toString() << ")";
     return ss.str();
   }
 
@@ -20,11 +21,13 @@ namespace core {
     json ret;
     ret["id"] = id;
     ret["timestamp"] = format_timestamp(timestamp);
-    ret["volume"] = volume;
-    ret["price"] = price;
-    ret["side"] = Side_to_string(side);
-    ret["instrument"] = instrument.toString();
-    ret["exchange"] = exchange.toString();
+    ret["taker_order"] = taker_order->toJson();
+
+    std::vector<json> orders;
+    for(auto order: maker_orders) {
+      orders.push_back(order->toJson());
+    }
+    ret["maker_orders"] = orders;
     return ret;
   }
 
@@ -33,11 +36,8 @@ namespace core {
     json ret;
     ret["id"] = "int";
     ret["timestamp"] = "int";
-    ret["volume"] = "float";
-    ret["price"] = "float";
-    ret["side"] = "str";
-    ret["instrument"] = "str";
-    ret["exchange"] = "str";
+
+    // FIXME
     return ret;
   }
 

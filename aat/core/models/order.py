@@ -155,7 +155,7 @@ class Order(object):
         self.__filled = filled
 
     def __repr__(self):
-        return f'Order( instrument={self.instrument}, {self.volume}@{self.price}, exchange={self.exchange}, side={self.side})'
+        return f'Order( instrument={self.instrument}, {self.volume}@{self.price}, side={self.side}, exchange={self.exchange})'
 
     def __eq__(self, other) -> bool:
         assert isinstance(other, Order)
@@ -169,12 +169,12 @@ class Order(object):
     def to_json(self) -> Mapping[str, Union[str, int, float]]:
         return \
             {'id': self.id,
-                'timestamp': self.timestamp,
-                'volume': self.volume,
-                'price': self.price,
-                'side': self.side.value,
-                'instrument': str(self.instrument),
-                'exchange': str(self.exchange)}
+             'timestamp': self.timestamp,
+             'volume': self.volume,
+             'price': self.price,
+             'side': self.side.value,
+             'instrument': str(self.instrument),
+             'exchange': str(self.exchange)}
 
     @staticmethod
     def perspectiveSchema() -> Mapping[str, Type]:

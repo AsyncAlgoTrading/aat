@@ -144,7 +144,7 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("type", &Event::type)
     .def_readonly("target", &Event::target);
 
-  py::class_<Order, Data, std::shared_ptr<Order>>(m, "OrderCpp")
+  py::class_<Order, std::shared_ptr<Order>>(m, "OrderCpp")
     .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag,
       std::shared_ptr<Order>, double>())
     .def("__repr__", &Order::toString)
@@ -164,7 +164,7 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("stop_target", &Order::stop_target)
     .def_readwrite("notional", &Order::notional);
 
-  py::class_<Trade, Data, std::shared_ptr<Trade>>(m, "TradeCpp")
+  py::class_<Trade, std::shared_ptr<Trade>>(m, "TradeCpp")
     .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double,
       std::deque<std::shared_ptr<Order>>, std::shared_ptr<Order>>())
     .def("__repr__", &Trade::toString)

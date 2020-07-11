@@ -7,19 +7,15 @@ namespace aat {
 namespace core {
   bool
   Data::operator==(const Data& other) {
-    return (price == other.price && instrument == other.instrument && side == other.side);
-  }
-
-  bool
-  Data::operator<(const Data& other) {
-    return price < other.price;
+    return id == other.id;
   }
 
   str_t
   Data::toString() const {
     sstream_t ss;
-    ss << "<" << instrument.toString() << "-" << volume << "@" << price << "-" << DataType_to_string(type) << "-"
-       << exchange.toString() << "-" << Side_to_string(side) << ">";
+    ss << "Data( id=" << id << ", timestamp=" << format_timestamp(timestamp) <<
+    ", instrument=" << instrument.toString() << ", exchange=" << exchange.toString()
+    << ")";
     return ss.str();
   }
 
@@ -28,9 +24,6 @@ namespace core {
     json ret;
     ret["id"] = id;
     ret["timestamp"] = format_timestamp(timestamp);
-    ret["volume"] = volume;
-    ret["price"] = price;
-    ret["side"] = Side_to_string(side);
     ret["type"] = DataType_to_string(type);
     ret["instrument"] = instrument.toString();
     ret["exchange"] = exchange.toString();
@@ -42,9 +35,6 @@ namespace core {
     json ret;
     ret["id"] = "int";
     ret["timestamp"] = "int";
-    ret["volume"] = "float";
-    ret["price"] = "float";
-    ret["side"] = "str";
     ret["type"] = "str";
     ret["instrument"] = "str";
     ret["exchange"] = "str";

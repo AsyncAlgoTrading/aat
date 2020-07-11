@@ -15,45 +15,33 @@ namespace aat {
 namespace core {
   struct Data {
    public:
-    Data(uint_t id, double volume, double price, Side side, DataType type, Instrument instrument,
-      ExchangeType exchange = NullExchange, double filled = 0.0)
+    Data(uint_t id, Instrument instrument, ExchangeType exchange = NullExchange)
       : id(id)
       , timestamp(datetime::now())
-      , volume(volume)
-      , price(price)
-      , side(side)
-      , type(type)
+      , type(DataType::DATA)
       , instrument(instrument)
       , exchange(exchange)
-      , filled(filled) {}
+      , data(nullptr) {}
 
-    Data(uint_t id, timestamp_t timestamp, double volume, double price, Side side, DataType type, Instrument instrument,
-      ExchangeType exchange = NullExchange, double filled = 0.0)
+    Data(uint_t id, timestamp_t timestamp, Instrument instrument, ExchangeType exchange = NullExchange)
       : id(id)
       , timestamp(timestamp)
-      , volume(volume)
-      , price(price)
-      , side(side)
-      , type(type)
+      , type(DataType::DATA)
       , instrument(instrument)
       , exchange(exchange)
-      , filled(filled) {}
+      , data(nullptr) {}
 
     bool operator==(const Data& other);
-    bool operator<(const Data& other);
     str_t toString() const;
     json toJson() const;
     json perspectiveSchema() const;
 
     uint_t id;
     timestamp_t timestamp;
-    double volume;
-    double price;
-    const Side side;
     const DataType type;
     const Instrument instrument;
     const ExchangeType exchange;
-    double filled;
+    void *data;
   };
 
 }  // namespace core

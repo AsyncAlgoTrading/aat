@@ -6,7 +6,7 @@
 #include <aat/common.hpp>
 #include <aat/config/enums.hpp>
 #include <aat/core/instrument/instrument.hpp>
-#include <aat/core/models/data.hpp>
+#include <aat/core/exchange/exchange.hpp>
 #include <aat/core/models/order.hpp>
 
 using namespace aat::common;
@@ -14,12 +14,13 @@ using namespace aat::config;
 
 namespace aat {
 namespace core {
-  struct Trade : public Data {
-    Trade(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
-      ExchangeType exchange = NullExchange, double filled = 0.0,
+  struct Trade {
+    Trade(uint_t id, timestamp_t timestamp,
       std::deque<std::shared_ptr<Order>> maker_orders = std::deque<std::shared_ptr<Order>>(),
       std::shared_ptr<Order> taker_order = nullptr)
-      : Data(id, timestamp, volume, price, side, DataType::TRADE, instrument, exchange, filled)
+      : id(id)
+      , timestamp(timestamp)
+      , type(DataType::TRADE)
       , maker_orders(maker_orders)
       , taker_order(taker_order)
       , my_order(nullptr)
@@ -40,11 +41,13 @@ namespace core {
     }
 
     str_t toString() const;
-
     json toJson() const;
-
     json perspectiveSchema() const;
 
+    uint_t id;
+    timestamp_t timestamp;
+    const DataType type;
+    
     std::deque<std::shared_ptr<Order>> maker_orders;
     std::shared_ptr<Order> taker_order;
     std::shared_ptr<Order> my_order;  // FIXME

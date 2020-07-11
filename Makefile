@@ -12,9 +12,9 @@ rundebug:  debug  ## Clean and make debug target, run target
 	$(PYTHON) -m aat $(CONFIG)
 
 buildext: ## build the package extensions
-	$(PYTHON) setup.py build_ext
+	$(PYTHON) setup.py build_ext -j8
 
-build: ## build the package
+build: build_ext  ## build the package
 	$(PYTHON) setup.py build
 
 debug: ## build debug build of the package
