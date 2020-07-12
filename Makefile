@@ -14,7 +14,7 @@ rundebug:  debug  ## Clean and make debug target, run target
 buildext: ## build the package extensions
 	$(PYTHON) setup.py build_ext -j8 --inplace
 
-build: build_ext  ## build the package
+build: buildext  ## build the package
 	$(PYTHON) setup.py build
 
 debug: ## build debug build of the package
