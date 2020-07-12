@@ -152,7 +152,7 @@ PYBIND11_MODULE(binding, m) {
       py::arg("notional").none(false),
       py::arg("order_type").none(false),
       py::arg("flag").none(false),
-      py::arg("stop_target").none(true),
+      py::arg("stop_target").none(true)
     )
     .def("__repr__", &Order::toString)
     .def("toJson", &Order::toJson)
