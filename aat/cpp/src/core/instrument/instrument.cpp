@@ -11,7 +11,7 @@ namespace core {
   str_t
   Instrument::toString() const {
     sstream_t ss;
-    ss << "(" << name << "-" << InstrumentType_to_string(type) << ")";
+    ss << "Instrument(" << name << "-" << InstrumentType_to_string(type) << ")";
     return ss.str();
   }
 

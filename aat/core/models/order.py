@@ -14,9 +14,9 @@ except ImportError:
     _CPP = False
 
 
-def _make_cpp_order(id, timestamp, volume, price, side, instrument, exchange=ExchangeType(""), filled=0.0, notional=0.0, order_type=OrderType.LIMIT, flag=OrderFlag.NONE, stop_target=None):
+def _make_cpp_order(volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.LIMIT, flag=OrderFlag.NONE, stop_target=None):
     '''helper method to ensure all arguments are setup'''
-    return OrderCpp(id, timestamp, volume, price, side, instrument, exchange, filled, order_type, flag, stop_target, notional)
+    return OrderCpp(0, datetime.now(), volume, price, side, instrument, exchange, notional, order_type, flag, stop_target)
 
 
 class Order(object):
@@ -47,7 +47,7 @@ class Order(object):
         return super(Order, cls).__new__(cls)
 
     def __init__(self, volume, price, side, instrument=None, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.LIMIT, flag=OrderFlag.NONE, stop_target=None):
-        self.__id = -1  # on construction, provide no ID until exchange assigns one
+        self.__id = 0  # on construction, provide no ID until exchange assigns one
         self.__timestamp = datetime.now()
         self.__type = DataType.ORDER
 

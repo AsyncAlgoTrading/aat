@@ -8,6 +8,9 @@ def _in_cpp():
                                  OrderTypeCpp, OrderFlagCpp, OrderBookCpp, ExchangeTypeCpp,  # noqa: F401
                                  InstrumentCpp, DataCpp, EventCpp, OrderCpp, TradeCpp)  # noqa: F401
     except ImportError:
+        if os.environ.get('AAT_USE_CPP', '') in ('1', 'ON'):
+            # raise if being told to use c++
+            raise
         return False
 
     return os.environ.get('AAT_USE_CPP', '').lower() in ('1', 'ON')

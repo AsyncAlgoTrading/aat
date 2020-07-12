@@ -6,7 +6,10 @@ namespace aat {
 namespace core {
   str_t
   ExchangeType::toString() const {
-    return name;
+    if (name != "") {
+      return name;
+    }
+    return "No Exchange";
   }
 
 }  // namespace core
