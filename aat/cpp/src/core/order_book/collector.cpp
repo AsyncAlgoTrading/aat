@@ -74,8 +74,7 @@ namespace core {
     }
 
     push(std::make_shared<Event>(EventType::TRADE,
-      std::make_shared<Trade>(0, datetime::now(), volume, price, taker_order->side, taker_order->instrument,
-        taker_order->exchange, taker_order->filled, orders, taker_order)));
+      std::make_shared<Trade>(0, datetime::now(), orders, taker_order)));
   }
 
   void

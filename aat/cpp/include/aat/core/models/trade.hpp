@@ -7,6 +7,7 @@
 #include <aat/config/enums.hpp>
 #include <aat/core/instrument/instrument.hpp>
 #include <aat/core/exchange/exchange.hpp>
+#include <aat/core/models/data.hpp>
 #include <aat/core/models/order.hpp>
 
 using namespace aat::common;
@@ -14,7 +15,7 @@ using namespace aat::config;
 
 namespace aat {
 namespace core {
-  struct Trade {
+  struct Trade: public _EventTarget {
     Trade(uint_t id, timestamp_t timestamp,
       std::deque<std::shared_ptr<Order>> maker_orders = std::deque<std::shared_ptr<Order>>(),
       std::shared_ptr<Order> taker_order = nullptr)
@@ -40,9 +41,9 @@ namespace core {
       return 0.0;
     }
 
-    str_t toString() const;
-    json toJson() const;
-    json perspectiveSchema() const;
+    virtual str_t toString() const;
+    virtual json toJson() const;
+    virtual json perspectiveSchema() const;
 
     uint_t id;
     timestamp_t timestamp;

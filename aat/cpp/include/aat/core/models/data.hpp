@@ -13,7 +13,15 @@ using namespace aat::config;
 
 namespace aat {
 namespace core {
-  struct Data {
+  struct _EventTarget {
+    virtual ~_EventTarget(){};
+    virtual str_t toString() const = 0;
+    virtual json toJson() const = 0;
+    virtual json perspectiveSchema() const = 0;
+
+  };
+
+  struct Data: public _EventTarget {
    public:
     Data(uint_t id, Instrument instrument, ExchangeType exchange = NullExchange)
       : id(id)
@@ -32,9 +40,9 @@ namespace core {
       , data(nullptr) {}
 
     bool operator==(const Data& other);
-    str_t toString() const;
-    json toJson() const;
-    json perspectiveSchema() const;
+    virtual str_t toString() const;
+    virtual json toJson() const;
+    virtual json perspectiveSchema() const;
 
     uint_t id;
     timestamp_t timestamp;

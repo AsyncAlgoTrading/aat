@@ -15,7 +15,7 @@ namespace aat {
 namespace core {
   class Event {
    public:
-    Event(EventType type, std::shared_ptr<Data> target)
+    Event(EventType type, std::shared_ptr<_EventTarget> target)
       : type(type)
       , target(target) {}
 
@@ -23,7 +23,7 @@ namespace core {
     json toJson() const;
 
     const EventType type;
-    std::shared_ptr<Data> target;
+    std::shared_ptr<_EventTarget> target;
   };
 
 }  // namespace core

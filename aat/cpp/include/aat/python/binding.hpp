@@ -118,21 +118,16 @@ PYBIND11_MODULE(binding, m) {
    * Models
    ******************************/
   py::class_<Data, std::shared_ptr<Data>>(m, "DataCpp")
-    .def(py::init<uint_t, timestamp_t, double, double, Side, DataType, Instrument, ExchangeType, double>())
+    .def(py::init<uint_t, timestamp_t, Instrument, ExchangeType>())
     .def("__repr__", &Data::toString)
     .def("__eq__", &Data::operator==)
-    .def("__lt__", &Data::operator<)  // NOLINT
     .def("toJson", &Data::toJson)
     .def("perspectiveSchema", &Data::perspectiveSchema)
     .def_readwrite("id", &Data::id)
     .def_readwrite("timestamp", &Data::timestamp)
-    .def_readwrite("volume", &Data::volume)
-    .def_readwrite("price", &Data::price)
-    .def_readonly("side", &Data::side)
     .def_readonly("type", &Data::type)
     .def_readonly("instrument", &Data::instrument)
-    .def_readonly("exchange", &Data::exchange)
-    .def_readwrite("filled", &Data::filled);
+    .def_readonly("exchange", &Data::exchange);
 
   py::class_<Event>(m, "EventCpp")
     .def(py::init<EventType, std::shared_ptr<Data>>(), py::arg("type").none(false),
@@ -146,7 +141,7 @@ PYBIND11_MODULE(binding, m) {
 
   py::class_<Order, std::shared_ptr<Order>>(m, "OrderCpp")
     .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag,
-      std::shared_ptr<Order>, double>())
+      std::shared_ptr<Order>>())
     .def("__repr__", &Order::toString)
     .def("toJson", &Order::toJson)
     .def("perspectiveSchema", &Order::perspectiveSchema)
@@ -165,8 +160,7 @@ PYBIND11_MODULE(binding, m) {
     .def_readwrite("notional", &Order::notional);
 
   py::class_<Trade, std::shared_ptr<Trade>>(m, "TradeCpp")
-    .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double,
-      std::deque<std::shared_ptr<Order>>, std::shared_ptr<Order>>())
+    .def(py::init<uint_t, timestamp_t, std::deque<std::shared_ptr<Order>>, std::shared_ptr<Order>>())
     .def("__repr__", &Trade::toString)
     .def("slippage", &Trade::slippage)
     .def("transactionCost", &Trade::transactionCost)
@@ -174,13 +168,7 @@ PYBIND11_MODULE(binding, m) {
     .def("perspectiveSchema", &Trade::perspectiveSchema)
     .def_readwrite("id", &Trade::id)
     .def_readwrite("timestamp", &Trade::timestamp)
-    .def_readwrite("volume", &Trade::volume)
-    .def_readwrite("price", &Trade::price)
-    .def_readonly("side", &Trade::side)
     .def_readonly("type", &Trade::type)
-    .def_readonly("instrument", &Trade::instrument)
-    .def_readonly("exchange", &Trade::exchange)
-    .def_readwrite("filled", &Trade::filled)
     .def_readwrite("maker_orders", &Trade::maker_orders)
     .def_readwrite("taker_order", &Trade::taker_order)
     .def_readwrite("my_order", &Trade::my_order);
