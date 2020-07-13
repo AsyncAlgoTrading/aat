@@ -1,6 +1,6 @@
 from abc import abstractmethod
-from .market_data import _MarketData
-from .order_entry import _OrderEntry
+from .base.market_data import _MarketData
+from .base.order_entry import _OrderEntry
 
 
 _EXCHANGES = {}
