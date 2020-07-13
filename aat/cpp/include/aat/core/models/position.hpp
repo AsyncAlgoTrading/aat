@@ -17,7 +17,8 @@ namespace core {
     Position()
       : size(0.0)
       , notional(0.0)
-      , pnl(0.0) {}
+      , pnl(0.0)
+      , unrealizedPnl(0.0) {}
 
     str_t toString() const;
     json toJson() const;
@@ -26,6 +27,9 @@ namespace core {
     double size;
     double notional;
     double pnl;
+    double unrealizedPnl;
+    std::deque<double> pnl_history;
+    std::deque<double> unrealizedPnl_history;
     std::deque<std::shared_ptr<Trade>> trades;
   };
 
