@@ -13,9 +13,8 @@ namespace core {
   str_t
   Data::toString() const {
     sstream_t ss;
-    ss << "Data( id=" << id << ", timestamp=" << format_timestamp(timestamp) <<
-    ", instrument=" << instrument.toString() << ", exchange=" << exchange.toString()
-    << ")";
+    ss << "Data( id=" << id << ", timestamp=" << format_timestamp(timestamp) << ", instrument=" << instrument.toString()
+       << ", exchange=" << exchange.toString() << ")";
     return ss.str();
   }
 

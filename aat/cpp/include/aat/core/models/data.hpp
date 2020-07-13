@@ -14,14 +14,13 @@ using namespace aat::config;
 namespace aat {
 namespace core {
   struct _EventTarget {
-    virtual ~_EventTarget(){};
+    virtual ~_EventTarget() {}
     virtual str_t toString() const = 0;
     virtual json toJson() const = 0;
     virtual json perspectiveSchema() const = 0;
-
   };
 
-  struct Data: public _EventTarget {
+  struct Data : public _EventTarget {
    public:
     Data(uint_t id, Instrument instrument, ExchangeType exchange = NullExchange)
       : id(id)
@@ -49,7 +48,7 @@ namespace core {
     const DataType type;
     const Instrument instrument;
     const ExchangeType exchange;
-    void *data;
+    void* data;
   };
 
 }  // namespace core

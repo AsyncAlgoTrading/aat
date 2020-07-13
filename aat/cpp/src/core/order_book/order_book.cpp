@@ -3,8 +3,7 @@
 namespace aat {
 namespace core {
 
-  OrderBookIterator&
-  OrderBookIterator::operator++() {
+  OrderBookIterator& OrderBookIterator::operator++() {
     // TODO
 
     return *this;
@@ -273,7 +272,6 @@ namespace core {
     // find in price level
     return prices[price]->find(order);
   }
-
 
   std::map<Side, std::vector<double>>
   OrderBook::topOfBookMap() const {

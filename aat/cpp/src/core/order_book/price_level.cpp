@@ -48,7 +48,7 @@ namespace core {
       return nullptr;
     }
 
-    for(auto o: orders){
+    for (auto o : orders) {
       if (o->id == order->id) {
         return o;
       }

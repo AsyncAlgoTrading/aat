@@ -15,7 +15,7 @@ using namespace aat::config;
 
 namespace aat {
 namespace core {
-  struct Trade: public _EventTarget {
+  struct Trade : public _EventTarget {
     Trade(uint_t id, timestamp_t timestamp,
       std::deque<std::shared_ptr<Order>> maker_orders = std::deque<std::shared_ptr<Order>>(),
       std::shared_ptr<Order> taker_order = nullptr)
@@ -48,7 +48,7 @@ namespace core {
     uint_t id;
     timestamp_t timestamp;
     const DataType type;
-    
+
     std::deque<std::shared_ptr<Order>> maker_orders;
     std::shared_ptr<Order> taker_order;
     std::shared_ptr<Order> my_order;  // FIXME

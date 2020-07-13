@@ -8,23 +8,20 @@ using namespace aat::common;
 
 namespace aat {
 namespace core {
-    Order::Order(uint_t id, timestamp_t timestamp,
-      double volume, double price, Side side,
-      Instrument instrument, ExchangeType exchange,
-      double notional, OrderType order_type,
-      OrderFlag flag, std::shared_ptr<Order> stop_target)
+  Order::Order(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
+    ExchangeType exchange, double notional, OrderType order_type, OrderFlag flag, std::shared_ptr<Order> stop_target)
     : id(id)
     , timestamp(timestamp)
-    , volume(volume)
-    , price(price)
-    , side(side)
     , type(DataType::ORDER)
     , instrument(instrument)
     , exchange(exchange)
-    , notional(notional)
+    , volume(volume)
+    , price(price)
+    , side(side)
     , order_type(order_type)
     , flag(flag)
     , stop_target(stop_target)
+    , notional(notional)
     , filled(0.0) {
     // enforce that stop target match stop type
     if (order_type == OrderType::STOP) {
@@ -42,10 +39,8 @@ namespace core {
   str_t
   Order::toString() const {
     sstream_t ss;
-    ss << "Order( instrument=" << instrument.toString() << 
-    ", " << volume << "@" << price <<
-    ", side=" << Side_to_string(side) <<
-    ", exchange=" << exchange.toString() << ")";
+    ss << "Order( instrument=" << instrument.toString() << ", " << volume << "@" << price
+       << ", side=" << Side_to_string(side) << ", exchange=" << exchange.toString() << ")";
     return ss.str();
   }
 

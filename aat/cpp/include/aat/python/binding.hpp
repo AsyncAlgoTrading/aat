@@ -85,8 +85,7 @@ PYBIND11_MODULE(binding, m) {
     .def(py::init<Instrument&, ExchangeType&>())
     .def(py::init<Instrument&, ExchangeType&, std::function<void(std::shared_ptr<Event>)>>())
     .def("__repr__", &OrderBook::toString)
-    .def(
-      "__iter__", [](const OrderBook& o) { return py::make_iterator(o.begin(), o.end()); },
+    .def("__iter__", [](const OrderBook& o) { return py::make_iterator(o.begin(), o.end()); },
       py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
     .def("setCallback", &OrderBook::setCallback)
     .def("add", &OrderBook::add)
@@ -130,8 +129,7 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("exchange", &Data::exchange);
 
   py::class_<Event>(m, "EventCpp")
-    .def(py::init<EventType, std::shared_ptr<Data>>(),
-      py::arg("type").none(false),
+    .def(py::init<EventType, std::shared_ptr<Data>>(), py::arg("type").none(false),
       py::arg("target").none(true))  // allow None, convert to nullptr
     .def(py::init<EventType, std::shared_ptr<Trade>>())
     .def(py::init<EventType, std::shared_ptr<Order>>())
@@ -141,19 +139,12 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("target", &Event::target);
 
   py::class_<Order, std::shared_ptr<Order>>(m, "OrderCpp")
-    .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag, std::shared_ptr<Order>>(),
-      py::arg("id").none(false),
-      py::arg("timestamp").none(false),
-      py::arg("volume").none(false),
-      py::arg("price").none(false),
-      py::arg("side").none(false),
-      py::arg("instrument").none(false),
-      py::arg("exchange").none(false),
-      py::arg("notional").none(false),
-      py::arg("order_type").none(false),
-      py::arg("flag").none(false),
-      py::arg("stop_target").none(true)
-    )
+    .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag,
+           std::shared_ptr<Order>>(),
+      py::arg("id").none(false), py::arg("timestamp").none(false), py::arg("volume").none(false),
+      py::arg("price").none(false), py::arg("side").none(false), py::arg("instrument").none(false),
+      py::arg("exchange").none(false), py::arg("notional").none(false), py::arg("order_type").none(false),
+      py::arg("flag").none(false), py::arg("stop_target").none(true))
     .def("__repr__", &Order::toString)
     .def("toJson", &Order::toJson)
     .def("perspectiveSchema", &Order::perspectiveSchema)

@@ -11,8 +11,8 @@ namespace core {
   str_t
   Trade::toString() const {
     sstream_t ss;
-    ss << "Trade( id=" << id << ", timestamp=" << format_timestamp(timestamp) << 
-    ", maker_orders=" << maker_orders.size() << ", taker_order=" << taker_order->toString() << ")";
+    ss << "Trade( id=" << id << ", timestamp=" << format_timestamp(timestamp)
+       << ", maker_orders=" << maker_orders.size() << ", taker_order=" << taker_order->toString() << ")";
     return ss.str();
   }
 
@@ -24,7 +24,7 @@ namespace core {
     ret["taker_order"] = taker_order->toJson();
 
     std::vector<json> orders;
-    for(auto order: maker_orders) {
+    for (auto order : maker_orders) {
       orders.push_back(order->toJson());
     }
     ret["maker_orders"] = orders;

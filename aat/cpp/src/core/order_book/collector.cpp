@@ -73,8 +73,7 @@ namespace core {
       throw AATCPPException("No Trade occurred");
     }
 
-    push(std::make_shared<Event>(EventType::TRADE,
-      std::make_shared<Trade>(0, datetime::now(), orders, taker_order)));
+    push(std::make_shared<Event>(EventType::TRADE, std::make_shared<Trade>(0, datetime::now(), orders, taker_order)));
   }
 
   void
