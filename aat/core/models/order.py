@@ -57,7 +57,10 @@ class Order(object):
         self.__exchange = exchange
 
         assert isinstance(volume, (int, float))
+        assert volume < float('inf') and (volume > 0 or order_type == OrderType.STOP)
+        assert (volume > 0.0) and (volume < float('inf'))
         assert isinstance(price, (int, float))
+        assert price < float('inf')
         assert isinstance(side, Side)
         assert isinstance(notional, (int, float))
         assert isinstance(order_type, OrderType)
@@ -142,6 +145,7 @@ class Order(object):
     @volume.setter
     def volume(self, volume):
         assert isinstance(volume, (int, float))
+        assert volume < float('inf') and (volume > 0 or self.order_type == OrderType.STOP)
         assert volume > self.filled
         self.__volume = volume
 

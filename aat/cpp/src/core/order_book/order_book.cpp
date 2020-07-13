@@ -361,7 +361,7 @@ namespace core {
     ret[Side::BUY] = std::vector<std::vector<double>>();
     ret[Side::SELL] = std::vector<std::vector<double>>();
 
-    for (auto i = 0; i < levels; ++i) {
+    for (int i = 0; i < levels; ++i) {
       auto _level = level((std::uint64_t)i);
 
       // bid

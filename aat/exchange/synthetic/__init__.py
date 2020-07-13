@@ -16,9 +16,11 @@ def _getName(n=1):
 class SyntheticExchange(Exchange):
     _inst = 0
 
-    def __init__(self, verbose=False, **kwargs):
+    def __init__(self, trading_type=None, verbose=False, **kwargs):
         super().__init__(ExchangeType('synthetic{}'.format(SyntheticExchange._inst)))
+        self._trading_type = trading_type
         self._verbose = verbose
+        self._sleep = 0.1 if trading_type in ("live", "simulation") else 0.0
         self._id = 0
         self._events = deque()
         self._pending_orders = deque()
@@ -41,7 +43,7 @@ class SyntheticExchange(Exchange):
             while start < end:
                 side = Side.BUY if start <= mid else Side.SELL
                 increment = choice((.01, .05, .1, .2))
-                order = Order(volume=round(random() * 10, 0),
+                order = Order(volume=round(random() * 10, 0) + 1,
                               price=start,
                               side=side,
                               instrument=instrument,
@@ -79,13 +81,13 @@ class SyntheticExchange(Exchange):
             while self._pending_orders:
                 order = self._pending_orders.popleft()
                 self._orderbooks[order.instrument].add(order)
-                await asyncio.sleep(.1)
+                await asyncio.sleep(self._sleep)
 
             while self._events:
                 event = self._events.popleft()
                 yield event
-                await asyncio.sleep(.1)
-            await asyncio.sleep(.1)
+                await asyncio.sleep(self._sleep)
+            await asyncio.sleep(self._sleep)
             # choose a random symbol
             symbol = choice(list(self._instruments.keys()))
             instrument = self._instruments[symbol]
@@ -94,7 +96,7 @@ class SyntheticExchange(Exchange):
             # add a new buy order, a new sell order, or a cross
             do = choice(('buy', 'sell', 'cross', 'cancel', 'change'))
             levels = orderbook.topOfBook()
-            volume = round(random() * 5, 0)
+            volume = round(random() * 5, 0) + 1
 
             if do == 'buy':
                 # new buy order
@@ -163,22 +165,31 @@ class SyntheticExchange(Exchange):
                         if do == 'cancel':
                             orderbook.cancel(order)
                         else:
-                            order.volume = max(order.volume + choice((-1, -.5, .5, 1)), 1.0)
-                            if order.volume > 0:
+                            new_volume = max(order.volume + choice((-1, -.5, .5, 1)), 1.0)
+                            if new_volume > order.filled:
+                                order.volume = new_volume
                                 orderbook.change(order)
                             else:
                                 orderbook.cancel(order)
 
                 elif levels:
                     level = choice(levels[Side.SELL])
-                    orders = orderbook.level(price=level[0])[0]._orders
+                    price_level = orderbook.level(price=level[0])[0]
+                    print(level)
+                    print(orderbook.level(price=level[0]))
+                    print('\t{}'.format(price_level))
+                    if price_level is None:
+                        continue
+
+                    orders = price_level._orders
                     if orders:
                         order = choice(orders)
                         if do == 'cancel':
                             orderbook.cancel(order)
                         else:
-                            order.volume = max(order.volume + choice((-1, -.5, .5, 1)), 1.0)
-                            if order.volume > 0:
+                            new_volume = max(order.volume + choice((-1, -.5, .5, 1)), 1.0)
+                            if new_volume > order.filled:
+                                order.volume = new_volume
                                 orderbook.change(order)
                             else:
                                 orderbook.cancel(order)

@@ -74,7 +74,7 @@ extension = Extension('aat.binding',
                                     ],
                       libraries=[],
                       library_dirs=[],
-                      extra_compile_args=['-std=c++1y'] if os.name != 'nt' else ['/std:c++14'],
+                      extra_compile_args=['-Wall'] + (['-std=c++1y'] if os.name != 'nt' else ['/std:c++14']),
                       sources=sources)
 
 setup(

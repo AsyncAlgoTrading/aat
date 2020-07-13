@@ -77,10 +77,10 @@ namespace core {
     double getTop(Side side, uint_t cleared);
     bool insort(std::vector<double>& levels, double value);  // NOLINT
 
-    std::function<void(std::shared_ptr<Event>)> callback;
     Collector collector;
     const Instrument& instrument;
     const ExchangeType& exchange;
+    std::function<void(std::shared_ptr<Event>)> callback;
 
     std::vector<double> buy_levels;
     std::vector<double> sell_levels;

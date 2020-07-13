@@ -40,9 +40,9 @@ namespace core {
    private:
     void _accumulate(std::shared_ptr<Order> order);
 
+    std::function<void(std::shared_ptr<Event>)> callback;
     double price;
     double volume;
-    std::function<void(std::shared_ptr<Event>)> callback;
     std::deque<std::shared_ptr<Event>> events;
     std::deque<std::shared_ptr<Order>> orders;
     std::deque<std::shared_ptr<PriceLevel>> price_levels;

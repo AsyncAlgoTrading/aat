@@ -366,9 +366,9 @@ class OrderBook(object):
             value (tuple): returns ask or bid if Side specified, otherwise ask,bid
         '''
         # collect bids and asks at `level`
-        if price:
-            bid = self._buys[price] if price in self._buy_levels else [0.0, 0.0]
-            ask = self._sells[price] if price in self._sell_levels else [0.0, 0.0]
+        if price is not None:
+            bid = self._buys[price] if price in self._buy_levels else None
+            ask = self._sells[price] if price in self._sell_levels else None
         else:
             bid = [self._buy_levels[-level - 1], self._buys[self._buy_levels[-level - 1]].volume()] if len(self._buy_levels) > level else [0.0, 0.0]
             ask = [self._sell_levels[level], self._sells[self._sell_levels[level]].volume()] if len(self._sell_levels) > level else [0.0, 0.0]

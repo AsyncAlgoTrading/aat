@@ -40,14 +40,14 @@ def getStrategies(strategies: List) -> List:
     return strategy_instances
 
 
-def getExchanges(exchanges: List, verbose: bool = False) -> List:
+def getExchanges(exchanges: List, trading_type, verbose: bool = False) -> List:
     exchange_instances = []
     for exchange in exchanges:
         mod, clazz_and_args = exchange.split(':')
         clazz, args = clazz_and_args.split(',') if ',' in clazz_and_args else clazz_and_args, ()
         mod = importlib.import_module(mod)
         clazz = getattr(mod, clazz)
-        exchange_instances.append(clazz(*args, verbose=verbose))
+        exchange_instances.append(clazz(*args, trading_type=trading_type, verbose=verbose))
     return exchange_instances
 
 

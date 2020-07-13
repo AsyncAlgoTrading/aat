@@ -81,7 +81,7 @@ class TradingEngine(Application):
         self.api = bool(int(config.get('general', {}).get('api', self.api)))
 
         self.trading_type = config.get('general', {}).get('trading_type', 'simulation')
-        self.exchanges = getExchanges(config.get('exchange', {}).get('exchanges', []), verbose=self.verbose)
+        self.exchanges = getExchanges(config.get('exchange', {}).get('exchanges', []), trading_type=self.trading_type, verbose=self.verbose)
         self.manager = Manager(self, self.trading_type, self.exchanges)
 
         # set event loop to use uvloop
