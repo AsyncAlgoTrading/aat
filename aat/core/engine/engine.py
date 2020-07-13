@@ -203,6 +203,8 @@ class TradingEngine(Application):
                     event = self._queued_events.popleft()
                     await self.tick(event)
 
+        await self.tick(Event(type=EventType.EXIT, target=None))
+
     async def tick(self, event):
         '''send an event to all registered event handlers
 

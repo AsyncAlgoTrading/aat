@@ -17,7 +17,9 @@ class Position(object):
         "__instrument",
         "__exchange",
         "__pnl",
+        "__pnl_history",
         "__unrealizedPnl",
+        "__unrealizedPnl_history",
         "__trades",
     ]
 
@@ -40,7 +42,9 @@ class Position(object):
         self.__price = price
 
         self.__pnl = 0.0
+        self.__pnl_history = [0.0]
         self.__unrealizedPnl = 0.0
+        self.__unrealizedPnl_history = [0.0]
         self.__trades = trades
 
     # ******** #
@@ -53,6 +57,14 @@ class Position(object):
     @property
     def exchange(self):
         return self.__exchange
+
+    @property
+    def pnlHistory(self):
+        return self.__pnl_history
+
+    @property
+    def unrealizedPnlHistory(self):
+        return self.__unrealizedPnl_history
 
     # ***********#
     # Read/write #
@@ -92,6 +104,7 @@ class Position(object):
     def pnl(self, pnl):
         assert isinstance(pnl, (int, float))
         self.__pnl = pnl
+        self.__pnl_history.append(pnl)
 
     @property
     def unrealizedPnl(self):
@@ -101,6 +114,7 @@ class Position(object):
     def unrealizedPnl(self, unrealizedPnl):
         assert isinstance(unrealizedPnl, (int, float))
         self.__unrealizedPnl = unrealizedPnl
+        self.__unrealizedPnl_history.append(unrealizedPnl)
 
     @property
     def trades(self):

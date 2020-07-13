@@ -42,3 +42,9 @@ class BuyAndHoldStrategy(Strategy):
         txncost = trade.price * trade.volume * .0025  # 0.0025 max fee
         trade.addTransactionCost(txncost)
         return trade
+
+    async def onExit(self, event: Event) -> None:
+        print('Finishing...')
+        import matplotlib.pyplot as plt
+        plt.plot(self.positions()[0].unrealizedPnlHistory)
+        plt.show()

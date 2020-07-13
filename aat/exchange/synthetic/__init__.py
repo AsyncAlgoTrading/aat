@@ -26,6 +26,8 @@ class SyntheticExchange(Exchange):
         self._pending_orders = deque()
         SyntheticExchange._inst += 1
 
+        self._backtest_count = 0
+
     def _seed(self, symbols=None):
         self._instruments = {symbol: Instrument(symbol) for symbol in symbols or _getName(1)}
         self._orderbooks = {Instrument(symbol): OrderBook(instrument=i, exchange_name=self._exchange, callback=lambda x: None) for symbol, i in self._instruments.items()}
@@ -78,6 +80,11 @@ class SyntheticExchange(Exchange):
 
         # loop forever
         while True:
+            if self._trading_type == 'backtest':
+                self._backtest_count += 1
+                if self._backtest_count >= 10000:
+                    return
+
             while self._pending_orders:
                 order = self._pending_orders.popleft()
                 self._orderbooks[order.instrument].add(order)
@@ -94,7 +101,7 @@ class SyntheticExchange(Exchange):
             orderbook = self._orderbooks[instrument]
 
             # add a new buy order, a new sell order, or a cross
-            do = choice(('buy', 'sell', 'cross', 'cancel', 'change'))
+            do = choice(['buy', 'sell', 'change'] * 20 + ['cross'] + ['cancel'] * 10)
             levels = orderbook.topOfBook()
             volume = round(random() * 5, 0) + 1
 
@@ -175,9 +182,6 @@ class SyntheticExchange(Exchange):
                 elif levels:
                     level = choice(levels[Side.SELL])
                     price_level = orderbook.level(price=level[0])[0]
-                    print(level)
-                    print(orderbook.level(price=level[0]))
-                    print('\t{}'.format(price_level))
                     if price_level is None:
                         continue
 
