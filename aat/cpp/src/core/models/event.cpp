@@ -8,13 +8,13 @@ namespace core {
   str_t
   Event::toString() const {
     sstream_t ss;
-    ss << "<" << EventType_to_string(type) << "-";
+    ss << "Event+(type=" << EventType_to_string(type) << ", target=";
     if (target) {
       ss << target->toString();
     } else {
       ss << "None";
     }
-    ss << ">";
+    ss << ")";
     return ss.str();
   }
 

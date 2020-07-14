@@ -177,9 +177,13 @@ class Strategy(EventHandler):
     #################
     # Other Methods #
     #################
-    async def onAnalyze(self, engine):
-        '''Called once after engine exit to analyze the results of a backtest'''
-        pass
+    def instruments(self, type=None, exchange=None):
+        '''Return list of all available instruments'''
+        return Instrument._instrumentdb.instruments(type=type, exchange=exchange)
+
+    def subscribe(self, instrument=None):
+        '''Subscribe to market data for the given instrument'''
+        return self._manager.subscribe(instrument=instrument, strategy=self)
 
     def slippage(self, trade: Trade):
         '''method to inject slippage when backtesting

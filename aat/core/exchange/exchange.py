@@ -8,13 +8,34 @@ except ImportError:
 
 
 class ExchangeType(object):
+    __slots__ = [
+        "__name"
+    ]
+
     def __new__(cls, *args, **kwargs):
         if _CPP:
             return ExchangeTypeCpp(*args, **kwargs)
         return super(ExchangeType, cls).__new__(cls)
 
     def __init__(self, name):
-        self._name = name
+        assert isinstance(name, str)
+        self.__name = name
 
-    def __repr__(self):
-        return self._name if self._name else "No Exchange"
+    # ******** #
+    # Readonly #
+    # ******** #
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    def __eq__(self, other) -> bool:
+        return self.name == other.name
+
+    def __bool__(self) -> bool:
+        return bool(self.__name)
+
+    def __hash__(self):
+        return hash(str(self))
+
+    def __repr__(self) -> str:
+        return "Exchange({})".format(self.__name) if self.__name else "No Exchange"

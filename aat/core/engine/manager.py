@@ -1,11 +1,11 @@
 import sys
 import traceback
 
-from aat.config import Side
+from aat.config import Side, InstrumentType
 from aat.core import Event, EventHandler, Trade, Order, Instrument, ExchangeType
 
 
-class Manager(EventHandler):
+class StrategyManager(EventHandler):
     def __init__(self, trading_engine, trading_type, exchanges):
         '''The Manager sits between the strategies and the engine and manages state'''
         # store trading engine
@@ -23,15 +23,26 @@ class Manager(EventHandler):
         for exc in exchanges:
             self._order_mgr.addExchange(exc)
 
+        # initialize event subscriptions
+        self._data_subscriptions = {}
+
         # initialize order and trade tracking
         self._strategy_open_orders = {}
         self._strategy_past_orders = {}
         self._strategy_trades = {}
 
+    # ********************* #
+    # Engine facing methods #
+    # ********************* #
+
+    # *********************** #
+    # Strategy facing methods #
+    # *********************** #
     #####################
     # Order Entry Hooks #
     #####################
     # TODO ugly private method
+
     async def _onBought(self, strategy, trade: Trade):
         '''callback method for when/if your order executes.
 
@@ -256,3 +267,23 @@ class Manager(EventHandler):
         # TODO
         await self._risk_mgr.onRejected(event)
         await self._order_mgr.onRejected(event)
+
+    #################
+    # Other Methods #
+    #################
+    def instruments(self, type: InstrumentType = None, exchange=None):
+        '''Return list of all available instruments'''
+        return Instrument._instrumentdb.instruments(type=type, exchange=exchange)
+
+    def subscribe(self, instrument=None, strategy=None):
+        '''Subscribe to market data for the given instrument'''
+        if strategy not in self._data_subscriptions:
+            self._data_subscriptions[strategy] = []
+        self._data_subscriptions[strategy].append(instrument)
+
+    def dataSubscriptions(self, handler, event):
+        '''does handler subscribe to the data for event'''
+        if handler not in self._data_subscriptions:
+            # subscribe all by default
+            return True
+        return event.target.instrument in self._data_subscriptions[handler]
