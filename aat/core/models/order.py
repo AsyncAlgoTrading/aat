@@ -58,7 +58,7 @@ class Order(object):
 
         assert isinstance(volume, (int, float))
         assert volume < float('inf') and (volume > 0 or order_type == OrderType.STOP)
-        assert (volume > 0.0) and (volume < float('inf'))
+        assert order_type == OrderType.STOP or ((volume > 0.0) and (volume < float('inf')))
         assert isinstance(price, (int, float))
         assert price < float('inf')
         assert isinstance(side, Side)
