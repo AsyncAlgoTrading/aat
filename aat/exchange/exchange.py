@@ -40,3 +40,15 @@ class Exchange(_MarketData, _OrderEntry):
 
         For OrderEntry-only, can just return None
         '''
+    # ****************** #
+    # Inherited  methods #
+
+    # From _MarketData
+    #
+    # async def tick(self):
+
+    # From _OrderEntry
+    # 
+    # async def newOrder(self, order: Order):
+    # def accounts(self) -> List:
+    # ************************** #

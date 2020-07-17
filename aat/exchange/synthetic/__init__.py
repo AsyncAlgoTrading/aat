@@ -63,6 +63,9 @@ class SyntheticExchange(Exchange):
             ret += '--------------------\t' + str(ticker) + '\t--------------------\n' + str(orderbook)
         return ret
 
+    # *************** #
+    # General methods #
+    # *************** #
     async def connect(self):
         '''nothing to connect to'''
         self._seed()
@@ -71,6 +74,9 @@ class SyntheticExchange(Exchange):
         for orderbook in self._orderbooks.values():
             orderbook.setCallback(lambda event: self._events.append(event))
 
+    # ******************* #
+    # Market Data Methods #
+    # ******************* #
     async def tick(self):
 
         # first return all seeded orders
@@ -202,6 +208,9 @@ class SyntheticExchange(Exchange):
             if self._verbose:
                 print(self)
 
+    # ******************* #
+    # Order Entry Methods #
+    # ******************* #
     async def newOrder(self, order: Order):
         order.id = self._id
         self._id += 1
