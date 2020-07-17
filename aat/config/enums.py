@@ -48,12 +48,13 @@ class DataType(BaseEnum):
 
 
 class InstrumentType(BaseEnum):
-    CURRENCY = 'CURRENCY'
-    # PAIR = 'PAIR'
+    OTHER = 'OTHER'
     EQUITY = 'EQUITY'
-    # BOND = 'BOND'
-    # OPTION = 'OPTION'
-    # FUTURE = 'FUTURE'
+    BOND = 'BOND'
+    OPTION = 'OPTION'
+    FUTURE = 'FUTURE'
+    CURRENCY = 'CURRENCY'
+    PAIR = 'PAIR'
 
 
 class OrderType(BaseEnum):

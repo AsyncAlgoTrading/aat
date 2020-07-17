@@ -5,6 +5,9 @@ class BuyAndHoldStrategy(Strategy):
     def __init__(self, *args, **kwargs) -> None:
         super(BuyAndHoldStrategy, self).__init__(*args, **kwargs)
 
+    async def onStart(self, event: Event) -> None:
+        self.subscribe(self.instruments()[0])
+
     async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
         print('Trade:\n{}'.format(event))

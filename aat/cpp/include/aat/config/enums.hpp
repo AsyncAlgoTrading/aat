@@ -49,8 +49,13 @@ namespace config {
   };
 
   enum class InstrumentType {
-    CURRENCY = 0,
+    OTHER = 0,
     EQUITY = 1,
+    BOND = 2,
+    OPTION = 3,
+    FUTURE = 4,
+    CURRENCY = 5,
+    PAIR = 6
   };
 
   enum class OrderType {
@@ -96,8 +101,13 @@ namespace config {
   };
 
   static const std::vector<str_t> InstrumentType_names = {
-    "CURRENCY",
+    "OTHER",
     "EQUITY",
+    "BOND",
+    "OPTION",
+    "FUTURE",
+    "CURRENCY",
+    "PAIR"
   };
 
   static const std::vector<str_t> OrderType_names = {
@@ -143,8 +153,13 @@ namespace config {
   };
 
   static std::unordered_map<str_t, InstrumentType> _InstrumentType_mapping = {
-    {"CURRENCY", InstrumentType::CURRENCY},
+    {"OTHER", InstrumentType::OTHER},
     {"EQUITY", InstrumentType::EQUITY},
+    {"BOND", InstrumentType::BOND},
+    {"OPTION", InstrumentType::OPTION},
+    {"FUTURE", InstrumentType::FUTURE},
+    {"CURRENCY", InstrumentType::CURRENCY},
+    {"PAIR", InstrumentType::PAIR}
   };
 
   static std::unordered_map<str_t, OrderType> _OrderType_mapping = {

@@ -29,7 +29,7 @@ class SyntheticExchange(Exchange):
         self._backtest_count = 0
 
     def _seed(self, symbols=None):
-        self._instruments = {symbol: Instrument(symbol) for symbol in symbols or _getName(1)}
+        self._instruments = {symbol: Instrument(symbol) for symbol in symbols or _getName(5)}
         self._orderbooks = {Instrument(symbol): OrderBook(instrument=i, exchange_name=self._exchange, callback=lambda x: None) for symbol, i in self._instruments.items()}
         self._seedOrders()
 
@@ -73,6 +73,10 @@ class SyntheticExchange(Exchange):
         # set callbacks to the trading engine
         for orderbook in self._orderbooks.values():
             orderbook.setCallback(lambda event: self._events.append(event))
+
+    async def instruments(self):
+        '''nothing to connect to'''
+        return self._instruments
 
     # ******************* #
     # Market Data Methods #

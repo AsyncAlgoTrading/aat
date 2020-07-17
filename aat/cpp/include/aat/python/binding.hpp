@@ -102,7 +102,10 @@ PYBIND11_MODULE(binding, m) {
   py::class_<ExchangeType>(m, "ExchangeTypeCpp")
     .def(py::init<const str_t&>())
     .def("__init__", [](py::object obj) { return ExchangeType(obj.cast<str_t>()); })
-    .def("__repr__", &ExchangeType::toString);
+    .def("__repr__", &ExchangeType::toString)
+    .def("__bool__", &ExchangeType::operator bool)
+    .def("__eq__", &ExchangeType::operator==)
+    .def_readonly("type", &ExchangeType::name);
 
   /*******************************
    * Instrument
@@ -111,7 +114,10 @@ PYBIND11_MODULE(binding, m) {
     .def(py::init<const str_t&, InstrumentType&>())
     .def(py::init<const str_t&>())
     .def("__repr__", &Instrument::toString)
-    .def("__eq__", &Instrument::operator==);
+    .def("__eq__", &Instrument::operator==)
+    .def_readonly("type", &Instrument::name)
+    .def_readonly("type", &Instrument::type)
+    .def_readonly("type", &Instrument::exchanges);
 
   /*******************************
    * Models

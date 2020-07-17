@@ -39,7 +39,7 @@ namespace core {
   str_t
   Order::toString() const {
     sstream_t ss;
-    ss << "Order( instrument=" << instrument.toString() << ", " << volume << "@" << price
+    ss << "Order+( instrument=" << instrument.toString() << ", " << volume << "@" << price
        << ", side=" << Side_to_string(side) << ", exchange=" << exchange.toString() << ")";
     return ss.str();
   }
