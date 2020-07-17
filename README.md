@@ -61,78 +61,52 @@ class Strategy(metaclass=ABCMeta):
 
     def onStart(self):
         '''Called once at engine initialization time'''
-        pass
 
     def onExit(self):
         '''Called once at engine exit time'''
-        pass
 
     def onHalt(self, data):
         '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
-        pass
 
     def onContinue(self, data):
         '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
-        pass
-
-    def onAnalyze(self, engine):
-        '''Called once after engine exit to analyze the results of a backtest'''
-        pass
-
-    @abstractmethod
-    def requestBuy(self,
-                   callback: Callback,
-                   data: MarketData):
-        '''requestBuy'''
-
-    @abstractmethod
-    def requestSell(self,
-                    callback: Callback,
-                    data: MarketData):
-        '''requestSell'''
 ```
 
 ## Example Strategy
 Here is a simple trading strategy that buys once and holds. 
 
 ```python3
-from aat.strategy import TradingStrategy
-from aat.structs import MarketData, TradeRequest, TradeResponse
-from aat.enums import Side, OrderType
-from aat.logging import STRAT as slog, ERROR as elog
+from aat import Strategy, Event, Order, Trade, Side
 
-class BuyAndHoldStrategy(TradingStrategy):
-    def __init__(self) -> None:
-        super(BuyAndHoldStrategy, self).__init__()
-        self.bought = None
+class BuyAndHoldStrategy(Strategy):
+    def __init__(self, *args, **kwargs) -> None:
+        super(BuyAndHoldStrategy, self).__init__(*args, **kwargs)
 
-    def onFill(self, res: TradeResponse) -> None:
-        self.bought = res
-        log.info('d->g:bought %.2f @ %.2f' % (res.volume, res.price))
+    async def onStart(self, event: Event) -> None:
+        '''subscribe to one of the available instruments'''
+        self.subscribe(self.instruments()[0])
 
-    def onTrade(self, data: MarketData) -> bool:
-        if self.bought is None:
-            req = TradeRequest(side=Side.BUY,
-                               volume=1,
-                               instrument=data.instrument,
-                               order_type=OrderType.MARKET,
-                               exchange=data.exchange,
-                               price=data.price,
-                               time=data.time)
-            log.info("requesting buy : %s", req)
-            self.requestBuy(req)
-            self.bought = 'pending'
-    def onError(self, e) -> None:
-        elog.critical(e)
+    async def onTrade(self, event: Event) -> None:
+        '''Called whenever a `Trade` event is received'''
 
-    def onChange(self, data: MarketData) -> None:
-        pass
+        # no past trades, no current orders
+        if not self.orders(event.target.instrument) and not self.trades(event.target.instrument):
+            req = Order(side=Side.BUY,
+                        price=event.target.price + 10,
+                        volume=1,
+                        instrument=event.target.instrument,
+                        order_type=Order.Types.MARKET,
+                        exchange=event.target.exchange)
+            print("requesting buy : {}".format(req))
+            await self.newOrder(req)
 
-    def onCancel(self, data: MarketData) -> None:
-        pass
+    async def onBought(self, event: Event) -> None:
+        print('bought {:.2f} @ {:.2f}'.format(event.target.volume, event.target.price))
 
-    def onOpen(self, data: MarketData) -> None:
-        pass
+    async def onReject(self, event: Event) -> None:
+        print('order rejected')
+        import sys
+        sys.exit(0)
 ```
 
 Trading strategies have only one required method handling messages:
@@ -140,6 +114,7 @@ Trading strategies have only one required method handling messages:
 - onTrade: Called when a trade occurs
 
 There are other optional callbacks for more granular processing:
+
 - onOpen: Called when a new order occurs
 - onFill: Called when a strategy's trade executes
 - onCancel: Called when an order is cancelled
@@ -150,12 +125,28 @@ There are other optional callbacks for more granular processing:
 - onStart: Called when the program starts
 - onExit: Called when the program shuts down
 
+There are several callbacks for order entry:
+- onBought:
+- onSold:
+- onRejected:
+
+There are several methods for order entry and data subscriptions:
+
+- subscribe: subscribe to an instrument/exchange data
+- instruments: get available instruments
+- newOrder: submit a new order
+- buy  (alias of newOrder): submit a new order
+- sell (alias of newOrder): submit a new order
+- orders: get open orders
+- pastOrders: get past orders
+- trades: get past trades
+- positions: get position informatino
+- risk: get risk information
+
 There are also several optional callbacks for backtesting:
 
 - slippage
 - transactionCost
-- onAnalyze
-    - called after trading engine has processed all data, used to visualize algorithm performance
 
 ## Setting up and running
 An instance of `TradingStrategy` class is able to run live or against a set of historical trade/quote data. When instantiating a `TradingEngine` object, you can set a `type` attribute to be one of:
@@ -166,6 +157,11 @@ An instance of `TradingStrategy` class is able to run live or against a set of h
 - `backtest` - offline trading against historical OHLCV data
 
 To test our strategy in any mode, we will need to setup exchange keys to get historical data, stream market data, and make new orders.
+
+### Synthetic Exchange
+We provide a sythetic exchange for testing
+
+TODO more docs
 
 ### API Keys
 You should creat API keys for exchanges you wish to trade on. For this example, we will assume a Coinbase Pro account with trading enabled. I usually put my keys in a set of shell scripts that are gitignored, so I don't post anything by accident. My scripts look something like:
@@ -188,161 +184,27 @@ When you want to run live, set `TradingEngine.type` to Live. You will want to be
 When you want to run an algorithm live, but don't yet trust that it can make money, set `TradingEngine.type` to simulation. This will let it run against real money, but disallow order entry. You can then set things like slippage and transaction costs as you would in a backtest.
 
 ### Testing
-Because there are a variety of options, a config file is generally the most usable interface for configuration. Here is an example configuration for backtesting the Buy-and-hold strategy above on CoinbasePro:
+Because there are a variety of options, a config file is generally the most usable interface for configuration. Here is an example configuration for backtesting the Buy-and-hold strategy above on a synthetic exchange:
 
 ```bash
 > cat backtest.cfg
 [general]
-verbose=1
-print=0
-TradingType=backtest
+verbose=0
+api=0
+trading_type=backtest
 
 [exchange]
-exchanges=coinbase
-currency_pairs=BTC/USD
+exchanges=
+    aat.exchange:SyntheticExchange
 
 [strategy]
-strategies =
-    aat.strategies.buy_and_hold.BuyAndHoldStrategy
+strategies = 
+    aat.strategy.sample.buy_and_hold:BuyAndHoldStrategy
 
 [risk]
 max_drawdown = 100.0
 max_risk = 100.0
 total_funds = 10.0
-```
-
-### Analyzing an algorithm
-We can run the above config by running:
-```bash
-python3 -m aat ./backtest.cfg
-```
-
-We should see the following output:
-```bash
-2019-06-01 17:58:40,173 INFO -- MainProcess utils.py:247 -- running in verbose mode!
-2019-06-01 17:58:40,174 CRITICAL -- MainProcess parser.py:165 --
-2019-06-01 17:58:40,174 CRITICAL -- MainProcess parser.py:166 -- Backtesting
-2019-06-01 17:58:40,174 CRITICAL -- MainProcess parser.py:167 --
-2019-06-01 17:58:40,176 CRITICAL -- MainProcess trading.py:106 -- Registering strategy: <class 'aat.strategies.buy_and_hold.BuyAndHoldStrategy'>
-2019-06-01 17:58:40,177 INFO -- MainProcess backtest.py:25 -- Starting....
-2019-06-01 17:58:41,338 INFO -- MainProcess buy_and_hold.py:28 -- requesting buy : <BTC/USD-Side.BUY:1.0@8567.06-OrderType.MARKET-ExchangeType.COINBASE>
-2019-06-01 17:58:41,339 INFO -- MainProcess risk.py:59 -- Requesting 1.000000 @ 8567.060000
-2019-06-01 17:58:41,339 INFO -- MainProcess risk.py:80 -- Risk check passed for partial order: <BTC/USD-Side.BUY:1.0@8567.06-OrderType.MARKET-ExchangeType.COINBASE>
-2019-06-01 17:58:41,339 INFO -- MainProcess trading.py:244 -- Risk check passed
-2019-06-01 17:58:41,339 INFO -- MainProcess trading.py:292 -- Slippage BT- <BTC/USD-Side.BUY:1.0@8567.916706-TradeResult.FILLED-ExchangeType.COINBASE>
-2019-06-01 17:58:41,340 INFO -- MainProcess trading.py:295 -- TXN cost BT- <BTC/USD-Side.BUY:1.0@8589.336497765-TradeResult.FILLED-ExchangeType.COINBASE>
-2019-06-01 17:58:41,340 INFO -- MainProcess buy_and_hold.py:14 -- d->g:bought 1.00 @ 8589.34
-2019-06-01 17:58:41,340 INFO -- MainProcess backtest.py:42 -- <BTC/USD-1.29050038@8567.06-TickType.TRADE-ExchangeType.COINBASE>
-...
-2019-06-01 17:58:41,474 INFO -- MainProcess backtest.py:42 -- <BTC/USD-2.35773043@8595.0-TickType.TRADE-ExchangeType.COINBASE>
-2019-06-01 17:58:41,474 INFO -- MainProcess backtest.py:33 -- Backtest done, running analysis.
-```
-
-This will call our `onAnalyze` function, which in this case is implemented to plot some performance characteristics with `matplotlib`.
-
-```python3
-        import pandas
-        import numpy as np
-        import matplotlib, matplotlib.pyplot as plt
-        import seaborn as sns
-        matplotlib.rc('font', **{'size': 5})
-
-        # extract data from trading engine
-        portfolio_value = engine.portfolio_value()
-        requests = engine.query().query_tradereqs()
-        responses = engine.query().query_traderesps()
-        trades = pandas.DataFrame([{'time': x.time, 'price': x.price} for x in engine.query().query_trades(instrument=requests[0].instrument, page=None)])
-        trades.set_index(['time'], inplace=True)
-
-        # format into pandas
-        pd = pandas.DataFrame(portfolio_value, columns=['time', 'value', 'pnl'])
-        pd.set_index(['time'], inplace=True)
-
-        # setup charting
-        sns.set_style('darkgrid')
-        fig = plt.figure()
-        ax1 = fig.add_subplot(311)
-        ax2 = fig.add_subplot(312)
-        ax3 = fig.add_subplot(313)
-
-        # plot algo performance
-        pd.plot(ax=ax1, y=['value'], legend=False, fontsize=5, rot=0)
-
-        # plot up/down chart
-        pd['pos'] = pd['pnl']
-        pd['neg'] = pd['pnl']
-        pd['pos'][pd['pos'] <= 0] = np.nan
-        pd['neg'][pd['neg'] > 0] = np.nan
-        pd.plot(ax=ax2, y=['pos', 'neg'], kind='area', stacked=False, color=['green', 'red'], legend=False, linewidth=0, fontsize=5, rot=0)
-
-        # annotate with key data
-        ax1.set_title('Performance')
-        ax1.set_ylabel('Portfolio value($)')
-        for xy in [portfolio_value[0][:2]] + [portfolio_value[-1][:2]]:
-            ax1.annotate('$%s' % xy[1], xy=xy, textcoords='data')
-            ax3.annotate('$%s' % xy[1], xy=xy, textcoords='data')
-
-        # plot trade intent/trade action
-        ax3.set_ylabel('Intent/Action')
-        ax3.set_xlabel('Date')
-
-        ax3.plot(trades)
-        ax3.plot([x.time for x in requests if x.side == Side.BUY],
-                 [x.price for x in requests if x.side == Side.BUY],
-                 '2', color='y')
-        ax3.plot([x.time for x in requests if x.side == Side.SELL],
-                 [x.price for x in requests if x.side == Side.SELL],
-                 '1', color='y')
-        ax3.plot([x.time for x in responses if x.side == Side.BUY],  # FIXME
-                 [x.price for x in responses if x.side == Side.BUY],
-                 '^', color='g')
-        ax3.plot([x.time for x in responses if x.side == Side.SELL],  # FIXME
-                 [x.price for x in responses if x.side == Side.SELL],
-                 'v', color='r')
-
-        # set same limits
-        y_bot, y_top = ax1.get_ylim()
-        x_bot, x_top = ax1.get_xlim()
-        ax3.set_ylim(y_bot, y_top)
-        ax1.set_xlim(x_bot, x_top)
-        ax2.set_xlim(x_bot, x_top)
-        ax3.set_xlim(x_bot, x_top)
-        dif = (x_top-x_bot)*.01
-        ax1.set_xlim(x_bot-dif, x_top+dif)
-        ax2.set_xlim(x_bot-dif, x_top+dif)
-        ax3.set_xlim(x_bot-dif, x_top+dif)
-        plt.show()
-```
-
-[![](docs/img/bt.png)]()
-
-
-We can see that our algorithm also implemented `slippage` and `transactionCost`, resulting in a worse execution price:
-
-```python3
-    def slippage(self, resp: TradeResponse) -> TradeResponse:
-        slippage = resp.price * .0001  # .01% price impact
-        if resp.side == Side.BUY:
-            # price moves against (up)
-            resp.slippage = slippage
-            resp.price += slippage
-        else:
-            # price moves against (down)
-            resp.slippage = -slippage
-            resp.price -= slippage
-        return resp
-
-    def transactionCost(self, resp: TradeResponse) -> TradeResponse:
-        txncost = resp.price * resp.volume * .0025  # gdax is 0.0025 max fee
-        if resp.side == Side.BUY:
-            # price moves against (up)
-            resp.transaction_cost = txncost
-            resp.price += txncost
-        else:
-            # price moves against (down)
-            resp.transaction_cost = -txncost
-            resp.price -= txncost
-        return resp
 ```
 
 ## Extending

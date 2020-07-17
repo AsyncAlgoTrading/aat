@@ -48,7 +48,7 @@ class Exchange(_MarketData, _OrderEntry):
     # async def tick(self):
 
     # From _OrderEntry
-    # 
+    #
     # async def newOrder(self, order: Order):
     # def accounts(self) -> List:
     # ************************** #

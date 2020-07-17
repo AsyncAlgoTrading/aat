@@ -10,7 +10,6 @@ class _API(EWrapper, EClient):
         EClient.__init__(self, self)
 
 
-
 class InteractiveBrokersExchange(Exchange):
     '''Interactive Brokers Exchange'''
 
@@ -26,7 +25,7 @@ class InteractiveBrokersExchange(Exchange):
 
         For OrderEntry-only, can just return None
         '''
-        self._api.connect('127.0.0.1', 7497, random.randint(0, 10000))
+        self._api.connect('127.0.0.1', 7497, randint(0, 10000))
 
     # ******************* #
     # Market Data Methods #

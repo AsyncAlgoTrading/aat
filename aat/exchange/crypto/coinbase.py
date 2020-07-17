@@ -31,5 +31,4 @@ class CoinbaseProExchange(Exchange):
         '''submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id'''
 
 
-
 Exchange.registerExchange('coinbase', CoinbaseProExchange)
