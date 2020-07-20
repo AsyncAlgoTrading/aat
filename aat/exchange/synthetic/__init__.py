@@ -1,4 +1,5 @@
 import asyncio
+import os
 import numpy as np  # type: ignore
 import string
 from collections import deque
@@ -234,7 +235,7 @@ class SyntheticExchange(Exchange):
 Exchange.registerExchange('synthetic', SyntheticExchange)
 
 
-def main(port=5000):
+def _main(port=5000):
     import websockets
     import ujson
 
@@ -263,3 +264,12 @@ def main(port=5000):
     start_server = websockets.serve(handle, "0.0.0.0", port)
     print('listening on %d' % port)
     return start_server
+
+def main():
+    try:
+        import uvloop
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        asyncio.get_event_loop().run_until_complete(_main(int(os.environ.get('PORT', '5000'))))
+        asyncio.get_event_loop().run_forever()
+    except KeyboardInterrupt:
+        print('terminating...')
