@@ -1,3 +1,4 @@
+from typing import Mapping, Union
 from ...config import EventType
 from ...common import _in_cpp
 
@@ -39,3 +40,8 @@ class Event(object):
 
     def __repr__(self):
         return f'Event(type={self.type}, target={self.target})'
+
+    def to_json(self) -> Mapping[str, Union[str, int, float]]:
+        return \
+            {'type': self.type.value,
+             'target': self.target.to_json()}

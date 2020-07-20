@@ -78,6 +78,15 @@ class SyntheticExchange(Exchange):
         '''nothing to connect to'''
         return self._instruments
 
+    # ************ #
+    # Get snapshot #
+    # ************ #
+    def snapshot(self):
+        # first return all seeded orders
+        for _, orderbook in self._orderbooks.items():
+            for order in orderbook:
+                yield Event(type=EventType.OPEN, target=order)
+
     # ******************* #
     # Market Data Methods #
     # ******************* #
@@ -223,3 +232,34 @@ class SyntheticExchange(Exchange):
 
 
 Exchange.registerExchange('synthetic', SyntheticExchange)
+
+
+def main(port=5000):
+    import websockets
+    import ujson
+
+    async def handle(websocket, *args, **kwargs):
+        exchange = SyntheticExchange()
+        await exchange.connect()
+        await exchange.instruments()
+
+        while True:
+            for item in exchange.snapshot():
+                print('sending {}'.format(item))
+                await websocket.send(ujson.dumps(item.to_json()))
+
+            async for item in exchange.tick():
+                print('sending {}'.format(item))
+                await websocket.send(ujson.dumps(item.to_json()))
+                try:
+                    data = await asyncio.wait_for(websocket.recv(), timeout=.1)
+                    order = Order.from_json(ujson.loads(data))
+                    print(order)
+                    ret = await exchange.newOrder(order)
+                    await websocket.send(ujson.dumps(ret.to_json()))
+                except asyncio.TimeoutError:
+                    pass
+
+    start_server = websockets.serve(handle, "0.0.0.0", port)
+    print('listening on %d' % port)
+    return start_server

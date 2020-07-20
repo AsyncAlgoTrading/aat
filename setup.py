@@ -104,6 +104,8 @@ setup(
     entry_points={
         'console_scripts': [
             'aat=aat:main',
+            'aat-synthetic-server=aat.exchange.synthetic:main',
+
         ],
     },
     ext_modules=[extension]
