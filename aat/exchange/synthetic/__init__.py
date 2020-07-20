@@ -1,5 +1,4 @@
 import asyncio
-import os
 import numpy as np  # type: ignore
 import string
 from collections import deque
@@ -91,12 +90,12 @@ class SyntheticExchange(Exchange):
     # ******************* #
     # Market Data Methods #
     # ******************* #
-    async def tick(self):
-
-        # first return all seeded orders
-        for _, orderbook in self._orderbooks.items():
-            for order in orderbook:
-                yield Event(type=EventType.OPEN, target=order)
+    async def tick(self, snapshot=False):
+        # first return all seeded orders if snapshot is false
+        if snapshot is False:
+            for _, orderbook in self._orderbooks.items():
+                for order in orderbook:
+                    yield Event(type=EventType.OPEN, target=order)
 
         # loop forever
         while True:
@@ -113,8 +112,10 @@ class SyntheticExchange(Exchange):
             while self._events:
                 event = self._events.popleft()
                 yield event
-                await asyncio.sleep(self._sleep)
+                # await asyncio.sleep(self._sleep)
+
             await asyncio.sleep(self._sleep)
+
             # choose a random symbol
             symbol = choice(list(self._instruments.keys()))
             instrument = self._instruments[symbol]
@@ -233,44 +234,3 @@ class SyntheticExchange(Exchange):
 
 
 Exchange.registerExchange('synthetic', SyntheticExchange)
-
-
-def _main(port=5000):
-    import websockets
-    import ujson
-
-    async def handle(websocket, *args, **kwargs):
-        exchange = SyntheticExchange()
-        await exchange.connect()
-        await exchange.instruments()
-
-        while True:
-            for item in exchange.snapshot():
-                print('sending {}'.format(item))
-                await websocket.send(ujson.dumps(item.to_json()))
-
-            async for item in exchange.tick():
-                print('sending {}'.format(item))
-                await websocket.send(ujson.dumps(item.to_json()))
-                try:
-                    data = await asyncio.wait_for(websocket.recv(), timeout=.1)
-                    order = Order.from_json(ujson.loads(data))
-                    print(order)
-                    ret = await exchange.newOrder(order)
-                    await websocket.send(ujson.dumps(ret.to_json()))
-                except asyncio.TimeoutError:
-                    pass
-
-    start_server = websockets.serve(handle, "0.0.0.0", port)
-    print('listening on %d' % port)
-    return start_server
-
-
-def main():
-    try:
-        import uvloop
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-        asyncio.get_event_loop().run_until_complete(_main(int(os.environ.get('PORT', '5000'))))
-        asyncio.get_event_loop().run_forever()
-    except KeyboardInterrupt:
-        print('terminating...')

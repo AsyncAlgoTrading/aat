@@ -133,7 +133,7 @@ class Trade(Data):
             {'id': self.id,
              'timestamp': self.timestamp,
              'taker_order': self.taker_order.to_json(),
-             'maker_orders': [order.to_json() for order in self.maker_orders()]}
+             'maker_orders': [order.to_json() for order in self.maker_orders]}
 
     @staticmethod
     def perspectiveSchema() -> Mapping[str, Type]:
