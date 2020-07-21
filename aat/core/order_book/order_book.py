@@ -6,7 +6,7 @@ from ...config import Side, OrderFlag, OrderType
 from ...common import _in_cpp
 
 try:
-    from aat.binding import OrderBookCpp
+    from aat.binding import OrderBookCpp  # type: ignore
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
@@ -356,7 +356,7 @@ class OrderBook(object):
         tob = self.topOfBook()
         return tob[Side.SELL] - tob[Side.BUY]
 
-    def level(self, level=0, price=None):
+    def level(self, level: int = 0, price: float = None):
         '''return book level
 
         Args:

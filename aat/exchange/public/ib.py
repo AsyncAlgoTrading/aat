@@ -1,6 +1,6 @@
 from random import randint
-from ibapi.client import EClient
-from ibapi.wrapper import EWrapper
+from ibapi.client import EClient  # type: ignore
+from ibapi.wrapper import EWrapper  # type: ignore
 from ..exchange import Exchange
 from ...core import ExchangeType
 

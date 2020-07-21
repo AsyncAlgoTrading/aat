@@ -2,7 +2,7 @@ import asyncio
 import os
 import websockets
 import ujson
-import uvloop
+import uvloop  # type: ignore
 from aat.exchange.synthetic import SyntheticExchange
 from aat.core import Order
 

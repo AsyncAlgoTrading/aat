@@ -8,7 +8,7 @@ from ...common import _in_cpp, _gen_id
 from ...config import DataType
 
 try:
-    from aat.binding import DataCpp
+    from aat.binding import DataCpp  # type: ignore
     _CPP = _in_cpp()
 
 except ImportError:
@@ -76,7 +76,7 @@ class Data(object):
         assert isinstance(other, Data)
         return self.id == other.id
 
-    def to_json(self) -> Mapping[str, Union[str, int]]:
+    def to_json(self) -> Mapping[str, Union[str, int, float]]:
         return \
             {'id': self.id,
              'timestamp': self.timestamp,

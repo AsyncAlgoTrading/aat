@@ -4,7 +4,7 @@ from ...config import InstrumentType
 from ...common import _in_cpp
 
 try:
-    from ...binding import InstrumentCpp
+    from ...binding import InstrumentCpp  # type: ignore
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False

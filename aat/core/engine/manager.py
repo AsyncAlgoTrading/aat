@@ -1,8 +1,11 @@
 import sys
 import traceback
 
-from aat.config import Side, InstrumentType
-from aat.core import Event, EventHandler, Trade, Order, Instrument, ExchangeType
+from ..models import Event, Order, Trade
+from ..instrument import Instrument
+from ..exchange import ExchangeType
+from ..handler import EventHandler
+from ...config import Side, InstrumentType
 
 
 class StrategyManager(EventHandler):

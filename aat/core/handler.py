@@ -1,13 +1,18 @@
 from abc import ABCMeta, abstractmethod
 from inspect import isabstract
+from typing import TYPE_CHECKING
 from .models import Event
 from ..config import EventType
 
+if TYPE_CHECKING:
+    # Circular import
+    from .engine.manager import StrategyManager
+
 
 class EventHandler(metaclass=ABCMeta):
-    _manager = None
+    _manager: 'StrategyManager'
 
-    def _setManager(self, mgr):
+    def _setManager(self, mgr: 'StrategyManager'):
         self._manager = mgr
 
     def _valid_callback(self, callback):
@@ -38,79 +43,76 @@ class EventHandler(metaclass=ABCMeta):
     #########################
 
     @abstractmethod
-    def onTrade(self, event: Event) -> None:
+    async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
 
     @abstractmethod
-    def onOpen(self, event: Event) -> None:
+    async def onOpen(self, event: Event) -> None:
         '''Called whenever an Order `Open` event is received'''
         pass
 
     @abstractmethod
-    def onCancel(self, event: Event) -> None:
+    async def onCancel(self, event: Event) -> None:
         '''Called whenever an Order `Cancel` event is received'''
         pass
 
     @abstractmethod
-    def onChange(self, event: Event) -> None:
+    async def onChange(self, event: Event) -> None:
         '''Called whenever an Order `Change` event is received'''
         pass
 
     @abstractmethod
-    def onFill(self, event: Event) -> None:
+    async def onFill(self, event: Event) -> None:
         '''Called whenever an Order `Fill` event is received'''
         pass
 
     @abstractmethod
-    def onData(self, event: Event) -> None:
+    async def onData(self, event: Event) -> None:
         '''Called whenever other data is received'''
 
     @abstractmethod
-    def onHalt(self, event: Event) -> None:
+    async def onHalt(self, event: Event) -> None:
         '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
         pass
 
     @abstractmethod
-    def onContinue(self, event: Event) -> None:
+    async def onContinue(self, event: Event) -> None:
         '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
         pass
 
     @abstractmethod
-    def onError(self, event: Event) -> None:
+    async def onError(self, event: Event) -> None:
         '''Called whenever an internal error occurs'''
         pass
 
     @abstractmethod
-    def onStart(self, event: Event) -> None:
+    async def onStart(self, event: Event) -> None:
         '''Called once at engine initialization time'''
         pass
 
     @abstractmethod
-    def onExit(self, event: Event) -> None:
+    async def onExit(self, event: Event) -> None:
         '''Called once at engine exit time'''
         pass
 
     #########################
     # Order Entry Callbacks #
     #########################
-    def onBought(self, event: Event):
+    async def onBought(self, event: Event):
         '''Called on my order bought'''
         pass
 
-    def onSold(self, event: Event):
+    async def onSold(self, event: Event):
         '''Called on my order sold'''
         pass
 
-    def onRejected(self, event: Event):
+    async def onRejected(self, event: Event):
         '''Called on my order rejected'''
         pass
 
     #################
     # Other Methods #
     #################
-    def onAnalyze(self, engine):
-        '''Called once after engine exit to analyze the results of a backtest'''
-        pass
 
 
 class PrintHandler(EventHandler):

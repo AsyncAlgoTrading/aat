@@ -8,7 +8,7 @@ from ...config import DataType, OrderFlag, OrderType, Side
 
 
 try:
-    from aat.binding import OrderCpp
+    from aat.binding import OrderCpp  # type: ignore
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
@@ -91,39 +91,39 @@ class Order(object):
         return self.__timestamp
 
     @property
-    def type(self):
+    def type(self) -> OrderType:
         return self.__type
 
     @property
-    def instrument(self):
+    def instrument(self) -> Instrument:
         return self.__instrument
 
     @property
-    def exchange(self):
+    def exchange(self) -> ExchangeType:
         return self.__exchange
 
     @property
-    def price(self):
+    def price(self) -> float:
         return self.__price
 
     @property
-    def side(self):
+    def side(self) -> Side:
         return self.__side
 
     @property
-    def notional(self):
+    def notional(self) -> float:
         return self.__notional
 
     @property
-    def order_type(self):
+    def order_type(self) -> OrderType:
         return self.__order_type
 
     @property
-    def flag(self):
+    def flag(self) -> OrderFlag:
         return self.__flag
 
     @property
-    def stop_target(self):
+    def stop_target(self) -> Union['Order', None]:
         return self.__stop_target
 
     # ***********#
@@ -134,31 +134,31 @@ class Order(object):
         return self.__id
 
     @id.setter
-    def id(self, id):
+    def id(self, id: int) -> None:
         assert isinstance(id, int)
         self.__id = id
 
     @property
-    def volume(self):
+    def volume(self) -> float:
         return self.__volume
 
     @volume.setter
-    def volume(self, volume):
+    def volume(self, volume: float) -> None:
         assert isinstance(volume, (int, float))
         assert volume < float('inf') and (volume > 0 or self.order_type == OrderType.STOP)
         assert volume > self.filled
         self.__volume = volume
 
     @property
-    def filled(self):
+    def filled(self) -> float:
         return self.__filled
 
     @filled.setter
-    def filled(self, filled):
+    def filled(self, filled: float) -> None:
         assert isinstance(filled, (int, float))
         self.__filled = filled
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'Order( instrument={self.instrument}, {self.volume}@{self.price}, side={self.side}, exchange={self.exchange})'
 
     def __eq__(self, other) -> bool:

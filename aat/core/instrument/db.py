@@ -1,13 +1,18 @@
+from typing import Mapping, Tuple, TYPE_CHECKING
 from ..exchange import ExchangeType
 from ...config import InstrumentType
+
+if TYPE_CHECKING:
+    # Circular import
+    from . import Instrument
 
 
 class InstrumentDB(object):
     '''instrument registration'''
 
     def __init__(self):
-        self._name_map = {}
-        self._map = {}
+        self._name_map: Mapping[str, 'Instrument'] = {}
+        self._map: Mapping[Tuple[str, InstrumentType], 'Instrument'] = {}
 
     def add(self, instrument):
         if instrument.name in self._name_map:
@@ -23,9 +28,9 @@ class InstrumentDB(object):
 
         ret = list(self._map.values())
         if type:
-            ret = [r for r in ret if ret.type == type]
+            ret = [r for r in ret if r.type == type]
         if exchange:
-            ret = [r for r in ret if ret.exchange == exchange]
+            ret = [r for r in ret if exchange in r.exchanges]
         return ret
 
     def get(self, name="", type: InstrumentType = InstrumentType.EQUITY, exchange: ExchangeType = ExchangeType("")):

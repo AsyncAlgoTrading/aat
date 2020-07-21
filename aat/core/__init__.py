@@ -6,7 +6,7 @@ from .order_book import OrderBook  # noqa: F401
 from .table import TableHandler  # noqa: F401
 
 try:
-    from ..binding import InstrumentCpp, DataCpp, EventCpp, OrderCpp, TradeCpp, OrderBookCpp  # noqa: F401
+    from ..binding import InstrumentCpp, DataCpp, EventCpp, OrderCpp, TradeCpp, OrderBookCpp  # type: ignore # noqa: F401
 except ImportError:
     pass
 

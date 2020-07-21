@@ -1,13 +1,12 @@
 from collections import deque
 from datetime import datetime
-from typing import Mapping, Type, Union
-from .data import Data
+from typing import Mapping, Type, Union, List, Dict
 from .order import Order
-from ...config import DataType
+from ...config import DataType, Side
 from ...common import _in_cpp
 
 try:
-    from aat.binding import TradeCpp
+    from aat.binding import TradeCpp  # type: ignore
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
@@ -18,7 +17,7 @@ def _make_cpp_trade(id, timestamp, maker_orders=None, taker_order=None):
     return TradeCpp(id, timestamp, maker_orders or deque(), taker_order)
 
 
-class Trade(Data):
+class Trade(object):
     __slots__ = [
         "__id",
         "__timestamp",
@@ -83,7 +82,7 @@ class Trade(Data):
         return self.taker_order.exchange
 
     @property
-    def side(self):
+    def side(self) -> Side:
         return self.taker_order.side
 
     @property
@@ -98,29 +97,29 @@ class Trade(Data):
         return self.__id
 
     @id.setter
-    def id(self, id):
+    def id(self, id: int) -> None:
         assert isinstance(id, int)
         self.__id = id
 
     @property
-    def maker_orders(self):
+    def maker_orders(self) -> List[Order]:
         # no setter
         return self.__maker_orders
 
     @property
-    def taker_order(self):
+    def taker_order(self) -> Order:
         return self.__taker_order
 
     @property
-    def my_order(self):
+    def my_order(self) -> Order:
         return self.__my_order
 
     @my_order.setter
-    def my_order(self, order):
+    def my_order(self, order: Order) -> None:
         assert isinstance(order, Order)
         self.__my_order = order
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'Trade( id={self.id}, timestamp{self.timestamp}, maker_orders={len(self.maker_orders)}, taker_order={self.taker_order})'
 
     def __eq__(self, other) -> bool:
@@ -129,11 +128,25 @@ class Trade(Data):
             self.timestamp == other.timestamp
 
     def to_json(self) -> Mapping[str, Union[str, int, float]]:
-        return \
-            {'id': self.id,
-             'timestamp': self.timestamp,
-             'taker_order': self.taker_order.to_json(),
-             'maker_orders': [order.to_json() for order in self.maker_orders]}
+        '''convert trade to flat json'''
+
+        # Typings here to enforce flatness of json
+        taker_order: Dict[str, Union[str, int, float]] = \
+            {'taker_order.' + k: v for k, v in self.taker_order.to_json().items()}
+
+        maker_orders: List[Dict[str, Union[str, int, float]]] = \
+            [{'maker_order{}.' + k: v for k, v in order.to_json().items()} for i, order in enumerate(self.maker_orders)]
+
+        ret: Dict[str, Union[str, int, float]] = \
+            {'id': self.id, 'timestamp': self.timestamp}
+
+        # update with taker order dict
+        ret.update(taker_order)
+
+        # update with maker order dicts
+        for maker_order in maker_orders:
+            ret.update(maker_order)
+        return ret
 
     @staticmethod
     def perspectiveSchema() -> Mapping[str, Type]:

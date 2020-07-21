@@ -3,7 +3,7 @@ from ..instrument import Instrument
 from ...common import _in_cpp
 
 try:
-    from aat.binding import PositionCpp
+    from aat.binding import PositionCpp  # type: ignore
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False

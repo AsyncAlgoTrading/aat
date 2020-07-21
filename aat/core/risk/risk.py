@@ -1,5 +1,5 @@
 from aat.config import Side
-from aat.core import Event, Order, Instrument, ExchangeType, Position
+from aat.core import Event, Order, Trade, Instrument, ExchangeType, Position
 
 
 class RiskManager(object):
@@ -12,7 +12,7 @@ class RiskManager(object):
         '''install manager'''
         self._manager = manager
 
-    def newPosition(self, trade):
+    def newPosition(self, trade: Trade):
         if trade.id in self._active_positions:
             # update position
             cur_pos = self._active_positions[trade.id]
@@ -76,11 +76,12 @@ class RiskManager(object):
     # **********************
     # EventHandler methods *
     # **********************
-    async def onTrade(self, event):
+    async def onTrade(self, event: Event):
+        trade: Trade = event.target  # type: ignore
         # TODO
-        if event.target.instrument in self._instrument_positions_map:
-            pos = self._instrument_positions_map[event.target.instrument]
-            pos.unrealizedPnl = pos.size * (event.target.price - pos.price)
+        if trade.instrument in self._instrument_positions_map:
+            pos = self._instrument_positions_map[trade.instrument]
+            pos.unrealizedPnl = pos.size * (trade.price - pos.price)
 
     async def onCancel(self, event):
         # TODO
@@ -98,27 +99,27 @@ class RiskManager(object):
         # TODO
         pass
 
-    async def onData(self, event):
+    async def onData(self, event: Event):
         # TODO
         pass
 
-    async def onHalt(self, data):
+    async def onHalt(self, event: Event):
         # TODO
         pass
 
-    async def onContinue(self, data):
+    async def onContinue(self, event: Event):
         # TODO
         pass
 
-    async def onError(self, event):
+    async def onError(self, event: Event):
         # TODO
         pass
 
-    async def onStart(self, event):
+    async def onStart(self, event: Event):
         # TODO
         pass
 
-    async def onExit(self, event):
+    async def onExit(self, event: Event):
         # TODO
         pass
 
@@ -126,12 +127,15 @@ class RiskManager(object):
     # Order Entry Callbacks #
     #########################
     async def onBought(self, event: Event):
-        self._active_orders.remove(event.target.my_order)
-        self.newPosition(event.target)
+        trade: Trade = event.target  # type: ignore
+        self._active_orders.remove(trade.my_order)
+        self.newPosition(trade)
 
     async def onSold(self, event: Event):
-        self._active_orders.remove(event.target.my_order)
-        self.newPosition(event.target)
+        trade: Trade = event.target  # type: ignore
+        self._active_orders.remove(trade.my_order)
+        self.newPosition(trade)
 
     async def onRejected(self, event: Event):
-        self._active_orders.remove(event.target.my_order)
+        trade: Trade = event.target  # type: ignore
+        self._active_orders.remove(trade.my_order)

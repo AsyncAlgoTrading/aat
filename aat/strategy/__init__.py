@@ -11,53 +11,53 @@ class Strategy(EventHandler):
     # Event Handler Methods #
     #########################
     @abstractmethod
-    async def onTrade(self, event: Event):
+    async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
 
-    async def onOpen(self, event: Event):
+    async def onOpen(self, event: Event) -> None:
         '''Called whenever an Order `Open` event is received'''
         pass
 
-    async def onCancel(self, event: Event):
+    async def onCancel(self, event: Event) -> None:
         '''Called whenever an Order `Cancel` event is received'''
         pass
 
-    async def onChange(self, event: Event):
+    async def onChange(self, event: Event) -> None:
         '''Called whenever an Order `Change` event is received'''
         pass
 
-    async def onFill(self, event: Event):
+    async def onFill(self, event: Event) -> None:
         '''Called whenever an Order `Fill` event is received'''
         pass
 
-    async def onData(self, event: Event):
+    async def onData(self, event: Event) -> None:
         '''Called whenever other data is received'''
         pass
 
-    async def onHalt(self, data):
+    async def onHalt(self, event: Event) -> None:
         '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
         pass
 
-    async def onContinue(self, data):
+    async def onContinue(self, event: Event) -> None:
         '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
         pass
 
-    async def onError(self, event: Event):
+    async def onError(self, event: Event) -> None:
         '''Called whenever an internal error occurs'''
         pass
 
-    async def onStart(self):
+    async def onStart(self, event: Event) -> None:
         '''Called once at engine initialization time'''
         pass
 
-    async def onExit(self):
+    async def onExit(self, event: Event) -> None:
         '''Called once at engine exit time'''
         pass
 
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onBought(self, trade: Trade):
+    async def onBought(self, event: Event):
         '''callback method for if your order executes.
 
         Args:
@@ -65,7 +65,7 @@ class Strategy(EventHandler):
         '''
         pass
 
-    async def onSold(self, trade: Trade = None):
+    async def onSold(self, event: Event):
         '''callback method for if your order executes.
 
         Args:
@@ -73,7 +73,7 @@ class Strategy(EventHandler):
         '''
         pass
 
-    async def onRejected(self, order: Order):
+    async def onRejected(self, event: Event):
         '''callback method for if your order fails to execute
 
         Args:
@@ -221,5 +221,3 @@ setattr(Strategy.onExit, '_original', 1)
 setattr(Strategy.onBought, '_original', 1)
 setattr(Strategy.onSold, '_original', 1)
 setattr(Strategy.onRejected, '_original', 1)
-
-setattr(Strategy.onAnalyze, '_original', 1)

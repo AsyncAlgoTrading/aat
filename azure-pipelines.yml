@@ -52,20 +52,24 @@ jobs:
         make lintjs
       displayName: 'Lint JS'
 
-    # - script: |
-    #     make tests
-    #   displayName: 'Test'
+    - script: |
+        make tests
+      displayName: 'Test'
 
-    # - task: PublishTestResults@2
-    #   condition: succeededOrFailed()
-    #   inputs:
-    #     testResultsFiles: 'python_junit.xml'
-    #     testRunTitle: 'Publish test results for Python $(python.version) $(manylinux_flag)'
+    - script: |
+        make annotate
+      displayName: 'Type Annotate'
 
-    # - task: PublishCodeCoverageResults@1
-    #   inputs: 
-    #     codeCoverageTool: Cobertura
-    #     summaryFileLocation: '$(System.DefaultWorkingDirectory)/*coverage.xml'
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFiles: 'python_junit.xml'
+        testRunTitle: 'Publish test results for Python $(python.version) $(manylinux_flag)'
+
+    - task: PublishCodeCoverageResults@1
+      inputs: 
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/*coverage.xml'
 
 - job: 'Mac'
   pool:
@@ -116,6 +120,10 @@ jobs:
     - script: |
         make tests
       displayName: 'Test'
+
+    - script: |
+        make annotate
+      displayName: 'Type Annotate'
 
     - script: |
         make testpycpp
@@ -193,6 +201,10 @@ jobs:
     - script: |
         make tests
       displayName: 'Test'
+
+    - script: |
+        make annotate
+      displayName: 'Type Annotate'
 
     - script: |
         make testpycpp

@@ -1,7 +1,7 @@
 from ...common import _in_cpp
 
 try:
-    from ...binding import ExchangeTypeCpp
+    from ...binding import ExchangeTypeCpp  # type: ignore
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
