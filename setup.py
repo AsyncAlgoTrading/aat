@@ -40,6 +40,7 @@ requires = [
 requires_dev = [
     'flake8>=3.7.9',
     'mock>=3.0.5',
+    'mypy>=0.782',
     'pybind11>=2.4.3',
     'pytest>=5.4.1',
     'pytest-cov>=2.8.1',
