@@ -12,9 +12,9 @@ rundebug:  debug  ## Clean and make debug target, run target
 	$(PYTHON) -m aat $(CONFIG)
 
 buildext: ## build the package extensions
-	$(PYTHON) setup.py build_ext
+	$(PYTHON) setup.py build_ext -j8 --inplace
 
-build: ## build the package
+build: buildext  ## build the package
 	$(PYTHON) setup.py build
 
 debug: ## build debug build of the package
@@ -47,7 +47,7 @@ lintjs: ## run js linter
 	cd js; yarn lint
 	
 lintcpp: ## run cpp linter
-	cpplint --linelength=120 --recursive cpp/
+	cpplint --linelength=120 --recursive aat/cpp/{src,include}
 
 fix: fixpy fixjs fixcpp  ## run all fixers
 
@@ -55,7 +55,7 @@ fixpy:  ## run autopep8 fix
 	$(PYTHON) -m autopep8 --in-place -r -a -a aat/ setup.py
 
 fixcpp:  ## run clang-format
-	clang-format -i -style=file `find ./cpp -name "*.*pp"`
+	clang-format -i -style=file `find ./aat/cpp/{src,include} -name "*.*pp"`
 
 fixjs:  ## run clang-format
 	cd js; yarn fix

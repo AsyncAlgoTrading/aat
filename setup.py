@@ -1,27 +1,11 @@
 from setuptools import setup, find_packages, Extension
-from distutils.version import LooseVersion
 from codecs import open
-from setuptools.command.build_ext import build_ext
 import io
 import os
 import os.path
 import os
-import re
 import sys
 import sysconfig
-import platform
-import subprocess
-try:
-    from shutil import which
-    CPU_COUNT = os.cpu_count()
-except ImportError:
-    # Python2
-    try:
-        from backports.shutil_which import which
-    except ImportError:
-        def which(x): return x  # just rely on path
-    import multiprocessing
-    CPU_COUNT = multiprocessing.cpu_count()
 
 pjoin = os.path.join
 here = os.path.abspath(os.path.dirname(__file__))
@@ -49,13 +33,14 @@ requires = [
     'aiostream>=0.3.1',
     'numpy>=1.11.0',
     'perspective-python>=0.4.8',
-    'pydantic>=1.4',
+    'pybind11>=2',
     'traitlets>=4.3.3',
 ]
 
 requires_dev = [
     'flake8>=3.7.9',
     'mock>=3.0.5',
+    'mypy>=0.782',
     'pybind11>=2.4.3',
     'pytest>=5.4.1',
     'pytest-cov>=2.8.1',
@@ -64,72 +49,34 @@ requires_dev = [
 ] + requires
 
 
-class CMakeExtension(Extension):
-    def __init__(self, name, sourcedir=''):
-        Extension.__init__(self, name, sources=[])
-        self.sourcedir = os.path.abspath(sourcedir)
+sources = [
+    'aat/cpp/src/config/enums.cpp',
+    'aat/cpp/src/config/parser.cpp',
+    'aat/cpp/src/core/instrument/instrument.cpp',
+    'aat/cpp/src/core/exchange/exchange.cpp',
+    'aat/cpp/src/core/models/data.cpp',
+    'aat/cpp/src/core/models/event.cpp',
+    'aat/cpp/src/core/models/order.cpp',
+    'aat/cpp/src/core/models/position.cpp',
+    'aat/cpp/src/core/models/trade.cpp',
+    'aat/cpp/src/core/order_book/price_level.cpp',
+    'aat/cpp/src/core/order_book/collector.cpp',
+    'aat/cpp/src/core/order_book/order_book.cpp',
+    'aat/cpp/src/python/binding.cpp',
+]
 
-
-class CMakeBuild(build_ext):
-    def run(self):
-        self.cmake_cmd = which('cmake')
-        try:
-            out = subprocess.check_output([self.cmake_cmd, '--version'])
-        except OSError:
-            raise RuntimeError(
-                "CMake must be installed to build the following extensions: " +
-                ", ".join(e.name for e in self.extensions))
-
-        if platform.system() == "Windows":
-            cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)',
-                                                   out.decode()).group(1))
-            if cmake_version < '3.1.0':
-                raise RuntimeError("CMake >= 3.1.0 is required on Windows")
-
-        for ext in self.extensions:
-            try:
-                self.build_extension_cmake(ext)
-            except BaseException:
-                print('WARNING!!! C++ extension could not be built')
-
-    def build_extension_cmake(self, ext):
-        extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-        cfg = 'Debug' if self.debug else 'Release'
-
-        cmake_args = [
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + os.path.abspath(os.path.join(extdir, 'aat')).replace('\\', '/'),
-            '-DCMAKE_BUILD_TYPE=' + cfg,
-            '-DCPP_BUILD_TESTS=0',
-            '-DAAT_PYTHON_VERSION={}'.format(platform.python_version()),
-            '-DPYTHON_EXECUTABLE={}'.format(sys.executable).replace('\\', '/'),
-            '-DPython_ROOT_DIR={}'.format(PREFIX).replace('\\', '/'),
-            '-DPython_ROOT={}'.format(PREFIX).replace('\\', '/'),
-            '-DAAT_CMAKE_MODULE_PATH={folder}'.format(folder=os.path.join(ext.sourcedir, 'cmake')).replace('\\', '/'),
-        ]
-
-        build_args = ['--config', cfg]
-
-        if platform.system() == "Windows":
-            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(
-                cfg.upper(),
-                extdir)]
-            if sys.maxsize > 2**32:
-                cmake_args += ['-A', 'x64']
-            build_args += ['--', '/m']
-        else:
-            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '-j2' if os.environ.get('DOCKER', '') else '-j{}'.format(CPU_COUNT)]
-
-        env = os.environ.copy()
-        env["PYTHONPATH"] = os.path.pathsep.join((os.path.join(os.path.dirname(os.__file__), 'site-packages'), os.path.dirname(os.__file__)))
-        env['OSX_DEPLOYMENT_TARGET'] = '10.9'
-
-        if not os.path.exists(self.build_temp):
-            os.makedirs(self.build_temp)
-        subprocess.check_call([self.cmake_cmd, os.path.abspath(ext.sourcedir)] + cmake_args, cwd=self.build_temp, env=env, stderr=subprocess.STDOUT)
-        subprocess.check_call([self.cmake_cmd, '--build', '.'] + build_args, cwd=self.build_temp, env=env, stderr=subprocess.STDOUT)
-        print()  # Add an empty line for cleaner output
-
+extension = Extension('aat.binding',
+                      define_macros=[('HAVE_SNPRINTF', '1')],
+                      include_dirs=['aat/cpp/include',
+                                    'aat/cpp/third/date/',
+                                    'aat/cpp/third/pybind11/',
+                                    'aat/cpp/third/pybind11_json/',
+                                    'aat/cpp/third/nlohmann_json/',
+                                    ],
+                      libraries=[],
+                      library_dirs=[],
+                      extra_compile_args=['-Wall'] + (['-std=c++1y'] if os.name != 'nt' else ['/std:c++14']),
+                      sources=sources)
 
 setup(
     name=name,
@@ -158,8 +105,9 @@ setup(
     entry_points={
         'console_scripts': [
             'aat=aat:main',
+            'aat-synthetic-server=aat.exchange.synthetic.server:main',
+
         ],
     },
-    ext_modules=[CMakeExtension('aat')],
-    cmdclass=dict(build_ext=CMakeBuild),
+    ext_modules=[extension]
 )

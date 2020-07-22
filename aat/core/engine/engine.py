@@ -2,6 +2,7 @@ import asyncio
 import os
 import os.path
 from aiostream.stream import merge  # type: ignore
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from traitlets.config.application import Application  # type: ignore
 from traitlets import validate, TraitError, Unicode, Bool, List, Instance  # type: ignore
@@ -12,11 +13,10 @@ try:
 except ImportError:
     PerspectiveManager, PerspectiveTornadoHandler = None, None  # type: ignore
 
-from .manager import Manager
-from ..execution import ExecutionManager
+from .manager import StrategyManager
+from ..execution import OrderManager
 from ..handler import EventHandler, PrintHandler
 from ..models import Event, Error
-from ..order_entry import OrderManager
 from ..portfolio import PortfolioManager
 from ..risk import RiskManager
 from ..table import TableHandler
@@ -36,20 +36,22 @@ class TradingEngine(Application):
     name = 'AAT'
     description = 'async algorithmic trading engine'
 
+    # Configureable parameters
     verbose = Bool(default_value=True)
     api = Bool(default_value=True)
     port = Unicode(default_value='8080', help="Port to run on").tag(config=True)
     event_loop = Instance(klass=asyncio.events.AbstractEventLoop)
     executor = Instance(klass=ThreadPoolExecutor, args=(4,), kwargs={})
 
+    # Core components
     trading_type = Unicode(default_value='simulation')
     order_manager = Instance(OrderManager, args=(), kwargs={})
     risk_manager = Instance(RiskManager, args=(), kwargs={})
     portfolio_manager = Instance(PortfolioManager, args=(), kwargs={})
-    execution_manager = Instance(ExecutionManager, args=(), kwargs={})
     exchanges = List(trait=Instance(klass=Exchange))
     event_handlers = List(trait=Instance(EventHandler), default_value=[])
 
+    # API application
     api_application = Instance(klass=TornadoApplication)
     api_handlers = List(default_value=[])
 
@@ -74,13 +76,23 @@ class TradingEngine(Application):
         return proposal['value']
 
     def __init__(self, **config):
+        # get port for API access
         self.port = config.get('general', {}).get('port', self.port)
+
+        # run in verbose mode (print all events)
         self.verbose = bool(int(config.get('general', {}).get('verbose', self.verbose)))
+
+        # enable API access?
         self.api = bool(int(config.get('general', {}).get('api', self.api)))
 
+        # Trading type
         self.trading_type = config.get('general', {}).get('trading_type', 'simulation')
-        self.exchanges = getExchanges(config.get('exchange', {}).get('exchanges', []), verbose=self.verbose)
-        self.manager = Manager(self, self.trading_type, self.exchanges)
+
+        # Load exchange instances
+        self.exchanges = getExchanges(config.get('exchange', {}).get('exchanges', []), trading_type=self.trading_type, verbose=self.verbose)
+
+        # instantiate the Strategy Manager
+        self.manager = StrategyManager(self, self.trading_type, self.exchanges)
 
         # set event loop to use uvloop
         if uvloop:
@@ -90,7 +102,7 @@ class TradingEngine(Application):
         self.event_loop = asyncio.get_event_loop()
 
         # setup subscriptions
-        self._subscriptions = {m: [] for m in EventType.__members__.values()}
+        self._handler_subscriptions = {m: [] for m in EventType.__members__.values()}
 
         # install event handlers
         strategies = getStrategies(config.get('strategy', {}).get('strategies', []))
@@ -148,8 +160,7 @@ class TradingEngine(Application):
                 # get callback, could be none if not implemented
                 cb = handler.callback(type)
                 if cb:
-                    self.registerCallback(type, cb)
-
+                    self.registerCallback(type, cb, handler)
             handler._setManager(self.manager)
             return handler
         return None
@@ -159,33 +170,51 @@ class TradingEngine(Application):
             return await self.event_loop.run_in_executor(self.executor, function, event)
         return _wrapper
 
-    def registerCallback(self, event_type, callback):
+    def registerCallback(self, event_type, callback, handler=None):
         '''register a callback for a given event type
 
         Args:
             event_type (EventType): event type enum value to register
             callback (function): function to call on events of `event_type`
+            handler (EventHandler): class holding the callback (optional)
         Returns:
             value (bool): True if registered (new), else False
         '''
-        if callback not in self._subscriptions[event_type]:
+        if (callback, handler) not in self._handler_subscriptions[event_type]:
             if not asyncio.iscoroutinefunction(callback):
                 callback = self._make_async(callback)
-            self._subscriptions[event_type].append(callback)
+            self._handler_subscriptions[event_type].append((callback, handler))
             return True
         return False
 
+    def pushEvent(self, event):
+        '''push non-exchange event into the queue'''
+        self._queued_events.append(event)
+
     async def run(self):
         '''run the engine'''
+        # setup future queue
+        self._queued_events = deque()
+
         # await all connections
         await asyncio.gather(*(asyncio.create_task(exch.connect()) for exch in self.exchanges))
+        await asyncio.gather(*(asyncio.create_task(exch.instruments()) for exch in self.exchanges))
 
         # send start event to all callbacks
         await self.tick(Event(type=EventType.START, target=None))
 
         async with merge(*(exch.tick() for exch in self.exchanges)).stream() as stream:
+            # stream through all events
             async for event in stream:
+                # tick exchange event to handlers
                 await self.tick(event)
+
+                # process any secondary events
+                while self._queued_events:
+                    event = self._queued_events.popleft()
+                    await self.tick(event)
+
+        await self.tick(Event(type=EventType.EXIT, target=None))
 
     async def tick(self, event):
         '''send an event to all registered event handlers
@@ -193,9 +222,14 @@ class TradingEngine(Application):
         Arguments:
             event (Event): event to send
         '''
-        for handler in self._subscriptions[event.type]:
+        for callback, handler in self._handler_subscriptions[event.type]:
+            # TODO make cleaner? move to somewhere not in critical path?
+            if event.type in (EventType.TRADE, EventType.OPEN, EventType.CHANGE, EventType.CANCEL, EventType.DATA) and \
+               not self.manager.dataSubscriptions(handler, event):
+                continue
+
             try:
-                await handler(event)
+                await callback(event)
             except KeyboardInterrupt:
                 raise
             except SystemExit:
@@ -204,7 +238,7 @@ class TradingEngine(Application):
                 if event.type == EventType.ERROR:
                     # don't infinite error
                     raise
-                await self.tick(Event(type=EventType.ERROR, target=Error(target=event, handler=handler, exception=e)))
+                await self.tick(Event(type=EventType.ERROR, target=Error(target=event, handler=handler, callback=callback, exception=e)))
                 await asyncio.sleep(1)
 
     def start(self):

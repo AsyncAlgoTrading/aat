@@ -1,6 +1,6 @@
 from abc import abstractmethod
-from .market_data import _MarketData
-from .order_entry import _OrderEntry
+from .base.market_data import _MarketData
+from .base.order_entry import _OrderEntry
 
 
 _EXCHANGES = {}
@@ -40,3 +40,15 @@ class Exchange(_MarketData, _OrderEntry):
 
         For OrderEntry-only, can just return None
         '''
+    # ****************** #
+    # Inherited  methods #
+
+    # From _MarketData
+    #
+    # async def tick(self):
+
+    # From _OrderEntry
+    #
+    # async def newOrder(self, order: Order):
+    # def accounts(self) -> List:
+    # ************************** #

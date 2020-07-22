@@ -1,78 +1,85 @@
 import logging
-from pydantic import BaseModel, validator
 from datetime import datetime
 from typing import Mapping, Union, Type
 
-from ...config import Side, DataType
-from ..instrument import Instrument
 from ..exchange import ExchangeType
-from ...common import _in_cpp
+from ..instrument import Instrument
+from ...common import _in_cpp, _gen_id
+from ...config import DataType
 
 try:
-    from aat.binding import DataCpp
+    from aat.binding import DataCpp  # type: ignore
     _CPP = _in_cpp()
-    _base = object if _CPP else BaseModel
 
 except ImportError:
     logging.critical("Could not load C++ extension")
     _CPP = False
-    _base = BaseModel
 
 
-def _make_cpp_data(id, timestamp, volume, price, side, instrument, exchange, filled=0.0):
+def _make_cpp_data(id, timestamp, instrument, exchange, data):
     '''helper method to ensure all arguments are setup'''
-    return DataCpp(id, timestamp, volume, price, side, instrument, exchange, filled)
+    return DataCpp(id, timestamp, instrument, exchange, data)
 
 
-class Data(_base):
+class Data(object):
+    __slots__ = [
+        "__id",
+        "__timestamp",
+        "__type",
+        "__instrument",
+        "__exchange",
+        "__data"
+    ]
+
     def __new__(cls, *args, **kwargs):
         if _CPP:
             return _make_cpp_data(*args, **kwargs)
         return super(Data, cls).__new__(cls)
 
-    class Config:
-        arbitrary_types_allowed = True
+    def __init__(self, instrument=None, exchange=ExchangeType("")):
+        self.__id = _gen_id()
+        self.__timestamp = datetime.now()
 
-    # internal
-    id: int = 0
-    timestamp: datetime = None
+        assert instrument is None or isinstance(instrument, Instrument)
+        assert isinstance(exchange, ExchangeType)
+        self.__type = DataType.DATA
+        self.__instrument = instrument
+        self.__exchange = exchange
 
-    # public
-    volume: float
-    price: float
-    side: Side
-    type: DataType
-    instrument: Instrument
-    exchange: ExchangeType = ExchangeType('')
+    # ******** #
+    # Readonly #
+    # ******** #
+    @property
+    def id(self) -> int:
+        return self.__id
 
-    filled: float = 0.0
+    @property
+    def timestamp(self) -> int:
+        return self.__timestamp
 
-    @validator("timestamp", always=True)
-    def _set_timestamp_if_unset(cls, v):
-        if v is None:
-            return datetime.now()
-        assert isinstance(v, datetime)
-        return v
+    @property
+    def type(self):
+        return self.__type
+
+    @property
+    def instrument(self):
+        return self.__instrument
+
+    @property
+    def exchange(self):
+        return self.__exchange
+
+    def __repr__(self) -> str:
+        return f'Data( id={self.id}, timestamp={self.timestamp}, instrument={self.instrument}, exchange={self.exchange})'
 
     def __eq__(self, other) -> bool:
         assert isinstance(other, Data)
-        return (self.price == other.price) and \
-            (self.instrument == other.instrument) and \
-            (self.side == other.side)
-
-    def __str__(self):
-        return f'<{self.instrument}-{self.volume}@{self.price}-{self.type}-{self.exchange}-{self.side}>'
-
-    def __lt__(self, other) -> bool:
-        return self.price < other.price
+        return self.id == other.id
 
     def to_json(self) -> Mapping[str, Union[str, int, float]]:
         return \
             {'id': self.id,
              'timestamp': self.timestamp,
-             'volume': self.volume,
-             'price': self.price,
-             'side': self.side.value,
              'type': self.type.value,
              'instrument': str(self.instrument),
              'exchange': str(self.exchange)}
@@ -82,9 +89,6 @@ class Data(_base):
         return {
             "id": int,
             "timestamp": int,
-            "volume": float,
-            "price": float,
-            "side": str,
             "type": str,
             "instrument": str,
             "exchange": str,

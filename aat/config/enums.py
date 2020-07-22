@@ -33,19 +33,28 @@ class EventType(BaseEnum):
     START = 'START'
     EXIT = 'EXIT'
 
+    # Order Events
+    BOUGHT = 'BOUGHT'
+    SOLD = 'SOLD'
+    REJECTED = 'REJECTED'
+
 
 class DataType(BaseEnum):
+    DATA = 'DATA'
+    ERROR = 'ERROR'
+
     ORDER = 'ORDER'
     TRADE = 'TRADE'
 
 
 class InstrumentType(BaseEnum):
-    CURRENCY = 'CURRENCY'
-    # PAIR = 'PAIR'
+    OTHER = 'OTHER'
     EQUITY = 'EQUITY'
-    # BOND = 'BOND'
-    # OPTION = 'OPTION'
-    # FUTURE = 'FUTURE'
+    BOND = 'BOND'
+    OPTION = 'OPTION'
+    FUTURE = 'FUTURE'
+    CURRENCY = 'CURRENCY'
+    PAIR = 'PAIR'
 
 
 class OrderType(BaseEnum):

@@ -52,20 +52,24 @@ jobs:
         make lintjs
       displayName: 'Lint JS'
 
-    # - script: |
-    #     make tests
-    #   displayName: 'Test'
+    - script: |
+        make tests
+      displayName: 'Test'
 
-    # - task: PublishTestResults@2
-    #   condition: succeededOrFailed()
-    #   inputs:
-    #     testResultsFiles: 'python_junit.xml'
-    #     testRunTitle: 'Publish test results for Python $(python.version) $(manylinux_flag)'
+    - script: |
+        make annotate
+      displayName: 'Type Annotate'
 
-    # - task: PublishCodeCoverageResults@1
-    #   inputs: 
-    #     codeCoverageTool: Cobertura
-    #     summaryFileLocation: '$(System.DefaultWorkingDirectory)/*coverage.xml'
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFiles: 'python_junit.xml'
+        testRunTitle: 'Publish test results for Python $(python.version) $(manylinux_flag)'
+
+    - task: PublishCodeCoverageResults@1
+      inputs: 
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/*coverage.xml'
 
 - job: 'Mac'
   pool:
@@ -116,6 +120,10 @@ jobs:
     - script: |
         make tests
       displayName: 'Test'
+
+    - script: |
+        make annotate
+      displayName: 'Type Annotate'
 
     - script: |
         make testpycpp
@@ -172,9 +180,11 @@ jobs:
       env:
         # Set `BOOST_ROOT` manually, as `BOOST_ROOT` is removed in the VM:
         # https://github.com/actions/virtual-environments/issues/687
-        BOOST_ROOT: "C:/hostedtoolcache/windows/Boost/1.69.0/"
-        BOOST_INCLUDEDIR: "C:/hostedtoolcache/windows/Boost/1.69.0/include"
-        BOOST_LIBRARYDIR: "C:/hostedtoolcache/windows/Boost/1.69.0/libs"
+        # 06/18/2020 - seems like boost got moved to `x86_64` inside
+        # the boost folder, which broke builds for a bit.
+        BOOST_ROOT: "C:/hostedtoolcache/windows/Boost/1.69.0/x86_64/"
+        BOOST_INCLUDEDIR: "C:/hostedtoolcache/windows/Boost/1.69.0/x86_64/include"
+        BOOST_LIBRARYDIR: "C:/hostedtoolcache/windows/Boost/1.69.0/x86_64/libs"
 
     - script: |
         make lintpy
@@ -191,6 +201,10 @@ jobs:
     - script: |
         make tests
       displayName: 'Test'
+
+    - script: |
+        make annotate
+      displayName: 'Type Annotate'
 
     - script: |
         make testpycpp

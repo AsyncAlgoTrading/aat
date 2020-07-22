@@ -6,7 +6,7 @@ from ...config import Side, OrderFlag, OrderType
 from ...common import _in_cpp
 
 try:
-    from aat.binding import OrderBookCpp
+    from aat.binding import OrderBookCpp  # type: ignore
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
@@ -278,6 +278,25 @@ class OrderBook(object):
         # clear the collector
         self._collector.clear()
 
+    def change(self, order):
+        '''modify an order on the order book, potentially triggering events:
+            EventType.CHANGE: the change event for this
+        Args:
+            order (Data): order to submit to orderbook
+        '''
+        assert order.volume > 0.0  # otherwise use cancel
+
+        price = order.price
+        side = order.side
+        levels = self._buy_levels if side == Side.BUY else self._sell_levels
+        prices = self._buys if side == Side.BUY else self._sells
+
+        if price not in levels:
+            raise Exception('Orderbook out of sync')
+
+        # modify order in price level
+        prices[price].modify(order)
+
     def cancel(self, order):
         '''remove an order from the order book, potentially triggering events:
             EventType.CANCEL: the cancel event for this
@@ -291,11 +310,29 @@ class OrderBook(object):
 
         if price not in levels:
             raise Exception('Orderbook out of sync')
+
+        # remove order from price level
         prices[price].remove(order)
 
         # delete level if no more volume
         if not prices[price]:
             levels.remove(price)
+
+    def find(self, order):
+        '''find an order in the order book
+        Args:
+            order (Data): order to find in orderbook
+        '''
+        price = order.price
+        side = order.side
+        levels = self._buy_levels if side == Side.BUY else self._sell_levels
+        prices = self._buys if side == Side.BUY else self._sells
+
+        if price not in levels:
+            return None
+
+        # find order from price level
+        return prices[price].find(order)
 
     def topOfBook(self):
         '''return top of both sides
@@ -319,7 +356,7 @@ class OrderBook(object):
         tob = self.topOfBook()
         return tob[Side.SELL] - tob[Side.BUY]
 
-    def level(self, level=0, price=None):
+    def level(self, level: int = 0, price: float = None):
         '''return book level
 
         Args:
@@ -329,9 +366,9 @@ class OrderBook(object):
             value (tuple): returns ask or bid if Side specified, otherwise ask,bid
         '''
         # collect bids and asks at `level`
-        if price:
-            bid = self._buys[price] if price in self._buy_levels else [0.0, 0.0]
-            ask = self._sells[price] if price in self._sell_levels else [0.0, 0.0]
+        if price is not None:
+            bid = self._buys[price] if price in self._buy_levels else None
+            ask = self._sells[price] if price in self._sell_levels else None
         else:
             bid = [self._buy_levels[-level - 1], self._buys[self._buy_levels[-level - 1]].volume()] if len(self._buy_levels) > level else [0.0, 0.0]
             ask = [self._sell_levels[level], self._sells[self._sell_levels[level]].volume()] if len(self._sell_levels) > level else [0.0, 0.0]

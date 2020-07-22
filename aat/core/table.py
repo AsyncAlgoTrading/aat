@@ -5,7 +5,7 @@ from .handler import EventHandler
 try:
     from perspective import Table  # type: ignore
 except ImportError:
-    class Table(object):
+    class Table(object):  # type: ignore
         def __init__(*args, **kwargs):
             pass
 

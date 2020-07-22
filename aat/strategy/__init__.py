@@ -1,64 +1,84 @@
 from abc import abstractmethod
-from typing import Union
 from ..config import Side
 from ..core import Event, EventHandler, Trade, Order, Instrument, ExchangeType
 
 
 class Strategy(EventHandler):
     def __init__(self, *args, **kwargs):
-        self._strategy_open_orders = []
-        self._strategy_past_orders = []
-        self._strategy_trades = []
+        super().__init__(*args, **kwargs)
 
     #########################
     # Event Handler Methods #
     #########################
     @abstractmethod
-    def onTrade(self, event: Event):
+    async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
 
-    def onOpen(self, event: Event):
+    async def onOpen(self, event: Event) -> None:
         '''Called whenever an Order `Open` event is received'''
         pass
 
-    def onFill(self, event: Event):
-        '''Called whenever an Order `Fill` event is received'''
-        pass
-
-    def onCancel(self, event: Event):
+    async def onCancel(self, event: Event) -> None:
         '''Called whenever an Order `Cancel` event is received'''
         pass
 
-    def onChange(self, event: Event):
+    async def onChange(self, event: Event) -> None:
         '''Called whenever an Order `Change` event is received'''
         pass
 
-    def onError(self, event: Event):
-        '''Called whenever an internal error occurs'''
+    async def onFill(self, event: Event) -> None:
+        '''Called whenever an Order `Fill` event is received'''
         pass
 
-    def onStart(self):
-        '''Called once at engine initialization time'''
-        pass
-
-    def onExit(self):
-        '''Called once at engine exit time'''
-        pass
-
-    def onHalt(self, data):
-        '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
-        pass
-
-    def onContinue(self, data):
-        '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
-        pass
-
-    def onData(self, event: Event):
+    async def onData(self, event: Event) -> None:
         '''Called whenever other data is received'''
         pass
 
-    def onAnalyze(self, engine):
-        '''Called once after engine exit to analyze the results of a backtest'''
+    async def onHalt(self, event: Event) -> None:
+        '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
+        pass
+
+    async def onContinue(self, event: Event) -> None:
+        '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
+        pass
+
+    async def onError(self, event: Event) -> None:
+        '''Called whenever an internal error occurs'''
+        pass
+
+    async def onStart(self, event: Event) -> None:
+        '''Called once at engine initialization time'''
+        pass
+
+    async def onExit(self, event: Event) -> None:
+        '''Called once at engine exit time'''
+        pass
+
+    #########################
+    # Order Entry Callbacks #
+    #########################
+    async def onBought(self, event: Event):
+        '''callback method for if your order executes.
+
+        Args:
+            trade (Trade): the trade/s as your order completes
+        '''
+        pass
+
+    async def onSold(self, event: Event):
+        '''callback method for if your order executes.
+
+        Args:
+            trade (Trade): the trade/s as your order completes
+        '''
+        pass
+
+    async def onRejected(self, event: Event):
+        '''callback method for if your order fails to execute
+
+        Args:
+            order (Order): the order you attempted to make
+        '''
         pass
 
     #######################
@@ -66,8 +86,8 @@ class Strategy(EventHandler):
     #######################
     async def newOrder(self, order: Order):
         '''helper method, defers to buy/sell'''
-        self._strategy_open_orders.append(order)
-        return await self._manager.newOrder(order, self)
+        # defer to execution
+        return await self._manager.newOrder(self, order)
 
     async def buy(self, order: Order):
         '''submit a buy order. Note that this is merely a request for an order, it provides no guarantees that the order will
@@ -78,9 +98,7 @@ class Strategy(EventHandler):
         Returns:
             None
         '''
-        # TODO move me
-        self._strategy_open_orders.append(order)
-        return await self._manager.newOrder(order, self)
+        return await self._manager.newOrder(self, order)
 
     async def sell(self, order: Order):
         '''submit a sell order. Note that this is merely a request for an order, it provides no guarantees that the order will
@@ -91,69 +109,81 @@ class Strategy(EventHandler):
         Returns:
             None
         '''
-        # TODO move me
-        self._strategy_open_orders.append(order)
-        return await self._manager.newOrder(order, self)
-
-    def onBought(self, order_or_trade: Union[Order, Trade], my_order: Order = None):
-        '''callback method for when/if your order executes.
-
-        Args:
-            order_or_trade (Union[Order, Trade]): the trade/s as your order completes, and/or a cancellation order
-        '''
-        # TODO move me
-        self._strategy_trades.append(order_or_trade)
-
-    def onSold(self, order_or_trade: Union[Order, Trade] = None, my_order: Order = None):
-        '''callback method for when/if your order executes.
-
-        Args:
-            order_or_trade (Union[Order, Trade]): the trade/s as your order completes, and/or a cancellation order
-        '''
-        # TODO move me
-        self._strategy_trades.append(order_or_trade)
-
-    def onReject(self, order: Order):
-        '''callback method for if your order fails to execute
-
-        Args:
-            order (Order): the order you attempted to make
-        '''
-        self._strategy_open_orders.remove(order)
+        return await self._manager.newOrder(self, order)
 
     def orders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
-        ret = self._strategy_open_orders.copy()
-        if instrument:
-            ret = [r for r in ret if r.instrument == instrument]
-        if exchange:
-            ret = [r for r in ret if r.exchange == exchange]
-        if side:
-            ret = [r for r in ret if r.side == side]
-        return ret
+        '''select all open orders
+
+        Args:
+            instrument (Instrument): filter open orders by instrument
+            exchange (ExchangeType): filter open orders by exchange
+            side (Side): filter open orders by side
+        Returns:
+            list (Order): list of open orders
+        '''
+        return self._manager.orders(self, instrument, exchange, side)
 
     def pastOrders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
-        ret = self._strategy_past_orders.copy()
-        if instrument:
-            ret = [r for r in ret if r.instrument == instrument]
-        if exchange:
-            ret = [r for r in ret if r.exchange == exchange]
-        if side:
-            ret = [r for r in ret if r.side == side]
-        return ret
+        '''select all past orders
+
+        Args:
+            instrument (Instrument): filter open orders by instrument
+            exchange (ExchangeType): filter open orders by exchange
+            side (Side): filter open orders by side
+        Returns:
+            list (Order): list of open orders
+        '''
+        return self._manager.pastOrders(self, instrument, exchange, side)
 
     def trades(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
-        ret = self._strategy_trades.copy()
-        if instrument:
-            ret = [r for r in ret if r.instrument == instrument]
-        if exchange:
-            ret = [r for r in ret if r.exchange == exchange]
-        if side:
-            ret = [r for r in ret if r.side == side]
-        return ret
+        '''select all past trades
+
+        Args:
+            instrument (Instrument): filter trades by instrument
+            exchange (ExchangeType): filter trades by exchange
+            side (Side): filter trades by side
+        Returns:
+            list (Trade): list of trades
+        '''
+        return self._manager.trades(self, instrument, exchange, side)
+
+    ################
+    # Risk Methods #
+    ################
+    def positions(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
+        '''select all positions
+
+        Args:
+            instrument (Instrument): filter positions by instrument
+            exchange (ExchangeType): filter positions by exchange
+            side (Side): filter positions by side
+        Returns:
+            list (Position): list of positions
+        '''
+        # TODO move me to manager
+        return self._manager.positions(instrument=instrument, exchange=exchange, side=side)
+
+    def risk(self, position=None):
+        '''Get risk metrics
+
+        Args:
+            position (Position): only get metrics on this position
+        Returns:
+            dict: metrics
+        '''
+        # TODO move me to manager
+        return self._manager.risk(position=position)
 
     #################
     # Other Methods #
     #################
+    def instruments(self, type=None, exchange=None):
+        '''Return list of all available instruments'''
+        return Instrument._instrumentdb.instruments(type=type, exchange=exchange)
+
+    def subscribe(self, instrument=None):
+        '''Subscribe to market data for the given instrument'''
+        return self._manager.subscribe(instrument=instrument, strategy=self)
 
     def slippage(self, trade: Trade):
         '''method to inject slippage when backtesting
@@ -178,13 +208,16 @@ class Strategy(EventHandler):
 
 setattr(Strategy.onTrade, '_original', 1)
 setattr(Strategy.onOpen, '_original', 1)
-setattr(Strategy.onFill, '_original', 1)
 setattr(Strategy.onCancel, '_original', 1)
 setattr(Strategy.onChange, '_original', 1)
+setattr(Strategy.onFill, '_original', 1)
+setattr(Strategy.onData, '_original', 1)
+setattr(Strategy.onHalt, '_original', 1)
+setattr(Strategy.onContinue, '_original', 1)
 setattr(Strategy.onError, '_original', 1)
 setattr(Strategy.onStart, '_original', 1)
 setattr(Strategy.onExit, '_original', 1)
-setattr(Strategy.onHalt, '_original', 1)
-setattr(Strategy.onContinue, '_original', 1)
-setattr(Strategy.onData, '_original', 1)
-setattr(Strategy.onAnalyze, '_original', 1)
+
+setattr(Strategy.onBought, '_original', 1)
+setattr(Strategy.onSold, '_original', 1)
+setattr(Strategy.onRejected, '_original', 1)

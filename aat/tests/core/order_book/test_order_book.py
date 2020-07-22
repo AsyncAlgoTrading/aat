@@ -1,4 +1,3 @@
-from datetime import datetime
 from aat.config import Side
 from aat.core import Instrument, OrderBook, Order
 from .helpers import _seed
@@ -20,9 +19,7 @@ class TestOrderBook:
         assert ob.topOfBook()[Side.BUY] == [5.0, 1.0]
         assert ob.topOfBook()[Side.SELL] == [5.5, 1.0]
 
-        data = Order(id=1,
-                     timestamp=datetime.now(),
-                     volume=5.0,
+        data = Order(volume=5.0,
                      price=4.5,
                      side=Order.Sides.SELL,
                      instrument=_INSTRUMENT)
@@ -33,9 +30,7 @@ class TestOrderBook:
         print(ob.levels(3))
         assert ob.levels(3) == {Side.BUY: [[4.0, 1.0], [3.5, 1.0], [3.0, 1.0]], Side.SELL: [[4.5, 3.0], [5.5, 1.0], [6.0, 1.0]]}
 
-        data = Order(id=1,
-                     timestamp=datetime.now(),
-                     volume=4.0,
+        data = Order(volume=4.0,
                      price=5.5,
                      side=Order.Sides.BUY,
                      instrument=_INSTRUMENT)
@@ -54,9 +49,7 @@ class TestOrderBook:
         assert ob.topOfBook()[Side.BUY] == [5.0, 1.0]
         assert ob.topOfBook()[Side.SELL] == [5.5, 1.0]
 
-        data = Order(id=1,
-                     timestamp=datetime.now(),
-                     volume=100.0,
+        data = Order(volume=100.0,
                      price=0.0,
                      side=Order.Sides.SELL,
                      instrument=_INSTRUMENT)
