@@ -55,6 +55,13 @@ class InstrumentType(BaseEnum):
     FUTURE = 'FUTURE'
     CURRENCY = 'CURRENCY'
     PAIR = 'PAIR'
+    SPREAD = 'SPREAD'
+    FUTURESOPTION = 'FUTURESOPTION'
+    MUTUALFUND = 'MUTUALFUND'
+    COMMODITIES = 'COMMODITIES'
+
+    # Non-tradeable
+    INDEX = 'INDEX'
 
 
 class OrderType(BaseEnum):
