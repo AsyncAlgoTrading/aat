@@ -123,6 +123,10 @@ class StrategyManager(EventHandler):
         strategy.onReject(order)
         return None
 
+    async def cancel(self, strategy, order: Order):
+        '''cancel an open order'''
+        await self._order_mgr.cancel(strategy, order)
+
     def orders(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         '''select all open orders
 

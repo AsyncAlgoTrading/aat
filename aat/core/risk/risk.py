@@ -137,5 +137,5 @@ class RiskManager(object):
         self.newPosition(trade)
 
     async def onRejected(self, event: Event):
-        trade: Trade = event.target  # type: ignore
-        self._active_orders.remove(trade.my_order)
+        order: Order = event.target  # type: ignore
+        self._active_orders.remove(order)
