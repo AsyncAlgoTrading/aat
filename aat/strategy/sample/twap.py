@@ -15,6 +15,7 @@ class TimeWeightedAveragePrice(Strategy):
             side (str): Buy/Sell side
             price_limit (int): price limit above trade price
         '''
+        print(args)
         super(TimeWeightedAveragePrice, self).__init__()
         self.delay = int(args[0])
         self.target_volume = int(args[1])
@@ -67,7 +68,7 @@ class TimeWeightedAveragePrice(Strategy):
 
     async def onReject(self, event: Event) -> None:
         print('order rejected')
-        trade: Trade = event.target
+        trade: Trade = event.target  # type: ignore
         self.volume_ordered -= trade.volume
         import sys
         sys.exit(0)

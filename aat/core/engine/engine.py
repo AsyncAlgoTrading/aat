@@ -105,8 +105,7 @@ class TradingEngine(Application):
         self._handler_subscriptions = {m: [] for m in EventType.__members__.values()}
 
         # install event handlers
-        strategies = getStrategies(config.get('strategy', {}).get('strategies', []),
-                                   config.get('args', {}).get('args', []))
+        strategies = getStrategies(config.get('strategy', {}).get('strategies', []))
         for strategy in strategies:
             self.log.critical("Installing strategy: {}".format(strategy))
             self.registerHandler(strategy)
