@@ -15,7 +15,6 @@ class TimeWeightedAveragePrice(Strategy):
             side (str): Buy/Sell side
             price_limit (int): price limit above trade price
         '''
-        print(args)
         super(TimeWeightedAveragePrice, self).__init__()
         self.delay = int(args[0])
         self.target_volume = int(args[1])

@@ -32,7 +32,6 @@ def _config_to_dict(filename: str) -> Dict[str, Dict[str, Union[str, List[str], 
 def getStrategies(strategies: List) -> List:
     strategy_instances = []
     for strategy in strategies:
-        print(strategy)
         if type(strategy) == list:
             mod, clazz = strategy[0].split(':')
             args = strategy[1:]
