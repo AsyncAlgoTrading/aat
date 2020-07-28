@@ -103,12 +103,12 @@ class Instrument(object):
 
         # Optional Fields
         self.__brokerExchange = kwargs.get("brokerExchange")
-        self.__currency = kwargs.get("__currency")
-        self.__underlying = kwargs.get("__underlying")
-        self.__leg1 = kwargs.get("__leg1")
-        self.__leg2 = kwargs.get("__leg2")
-        self.__leg1_side = kwargs.get("__leg1_side")
-        self.__leg2_side = kwargs.get("__leg2_side")
+        self.__currency = kwargs.get("currency")
+        self.__underlying = kwargs.get("underlying")
+        self.__leg1 = kwargs.get("leg1")
+        self.__leg2 = kwargs.get("leg2")
+        self.__leg1_side = kwargs.get("leg1_side")
+        self.__leg2_side = kwargs.get("leg2_side")
 
         # Optional Fields Validation
         assert isinstance(self.__brokerExchange, (None.__class__, str))
@@ -136,6 +136,37 @@ class Instrument(object):
     @property
     def exchanges(self):
         return self.__exchanges
+
+    # ******** #
+    # Optional #
+    # ******** #
+    @property
+    def brokerExchange(self):
+        return self.__brokerExchange
+
+    @property
+    def currency(self):
+        return self.__currency
+
+    @property
+    def underlying(self):
+        return self.__underlying
+
+    @property
+    def leg1(self):
+        return self.__leg1
+
+    @property
+    def leg2(self):
+        return self.__leg2
+
+    @property
+    def leg1_side(self):
+        return self.__leg1_side
+
+    @property
+    def leg2_side(self):
+        return self.__leg2_side
 
     def __eq__(self, other):
         return self.name == other.name and self.type == other.type

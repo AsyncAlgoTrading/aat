@@ -20,7 +20,12 @@ class InstrumentDB(object):
         self._name_map[instrument.name] = instrument
         self._map[instrument.name, instrument.type] = instrument
 
-    def instruments(self, name="", type: InstrumentType = InstrumentType.EQUITY, exchange: ExchangeType = ExchangeType("")):
+    def instruments(self,
+                    name="",
+                    type: InstrumentType = InstrumentType.EQUITY,
+                    exchange: ExchangeType = ExchangeType(""),
+                    *args,
+                    **kwargs):
         if not name and not type and not exchange:
             return list(self._map.values())
         elif name:
@@ -33,5 +38,10 @@ class InstrumentDB(object):
             ret = [r for r in ret if exchange in r.exchanges]
         return ret
 
-    def get(self, name="", type: InstrumentType = InstrumentType.EQUITY, exchange: ExchangeType = ExchangeType("")):
+    def get(self,
+            name="",
+            type: InstrumentType = InstrumentType.EQUITY,
+            exchange: ExchangeType = ExchangeType(""),
+            *args,
+            **kwargs):
         return self._name_map[name]
