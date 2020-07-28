@@ -1,7 +1,7 @@
 from typing import List
 from .db import InstrumentDB
 from ..exchange import ExchangeType
-from ...config import InstrumentType
+from ...config import InstrumentType, Side
 from ...common import _in_cpp
 
 try:
@@ -18,7 +18,14 @@ class Instrument(object):
     __slots__ = [
         "__name",
         "__type",
-        "__exchanges"
+        "__exchanges",
+        "__brokerExchange",
+        "__currency",
+        "__underlying",
+        "__leg1",
+        "__leg2",
+        "__leg1_side",
+        "__leg2_side",
     ]
 
     def __new__(cls, *args, **kwargs):
@@ -51,15 +58,15 @@ class Instrument(object):
             exchange (ExchangeType): the exchange the instrument can be traded
                                      through
         Kwargs:
-            brokerExchange (Instrument): Underlying exchange to use (e.g. not aat.exchange,
-                                         but real exchange in cases where aat is wrapping a
-                                         broker like IB, TDA, etc)
+            brokerExchange (str): Underlying exchange to use (e.g. not aat.exchange,
+                                  but real exchange in cases where aat is wrapping a
+                                  broker like IB, TDA, etc)
                 Applies to: All
 
             currency (Instrument): Underlying currency
                 Applies to: All
 
-            underlying (Instrument):
+            underlying (Instrument): the underlying asset
                 Applies to: OPTION, FUTURE, FUTURESOPTION
 
             leg1 (Instrument):
@@ -76,10 +83,13 @@ class Instrument(object):
 
 
         '''
+
+        # Validation
         assert isinstance(name, str)
         assert isinstance(type, InstrumentType)
         assert isinstance(exchange, ExchangeType) or not exchange
 
+        # Required fields
         self.__name = name
         self.__type = type
 
@@ -90,6 +100,24 @@ class Instrument(object):
             self.__exchanges = [exchange]
         else:
             self.__exchanges = []
+
+        # Optional Fields
+        self.__brokerExchange = kwargs.get("brokerExchange")
+        self.__currency = kwargs.get("__currency")
+        self.__underlying = kwargs.get("__underlying")
+        self.__leg1 = kwargs.get("__leg1")
+        self.__leg2 = kwargs.get("__leg2")
+        self.__leg1_side = kwargs.get("__leg1_side")
+        self.__leg2_side = kwargs.get("__leg2_side")
+
+        # Optional Fields Validation
+        assert isinstance(self.__brokerExchange, (None.__class__, str))
+        assert isinstance(self.__currency, (None.__class__, Instrument))
+        assert isinstance(self.__underlying, (None.__class__, Instrument))
+        assert isinstance(self.__leg1, (None.__class__, Instrument))
+        assert isinstance(self.__leg2, (None.__class__, Instrument))
+        assert isinstance(self.__leg1_side, (None.__class__, Side))
+        assert isinstance(self.__leg2_side, (None.__class__, Side))
 
         # install into instrumentdb, noop if already there
         self._instrumentdb.add(self)
