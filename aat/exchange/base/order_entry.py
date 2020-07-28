@@ -17,9 +17,11 @@ class _OrderEntry(metaclass=ABCMeta):
 
         For MarketData-only, can just return None
         '''
+        raise NotImplementedError()
 
     async def cancelOrder(self, order: Order):
         '''cancel a previously submitted order to the exchange.
 
         For MarketData-only, can just return None
         '''
+        raise NotImplementedError()

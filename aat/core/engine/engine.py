@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import os
 import os.path
 from aiostream.stream import merge  # type: ignore
@@ -203,7 +204,7 @@ class TradingEngine(Application):
         # send start event to all callbacks
         await self.tick(Event(type=EventType.START, target=None))
 
-        async with merge(*(exch.tick() for exch in self.exchanges)).stream() as stream:
+        async with merge(*(exch.tick() for exch in self.exchanges if inspect.isasyncgenfunction(exch.tick))).stream() as stream:
             # stream through all events
             async for event in stream:
                 # tick exchange event to handlers

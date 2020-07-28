@@ -87,10 +87,6 @@ class Order(object):
     # Readonly #
     # ******** #
     @property
-    def timestamp(self) -> int:
-        return self.__timestamp
-
-    @property
     def type(self) -> OrderType:
         return self.__type
 
@@ -137,6 +133,15 @@ class Order(object):
     def id(self, id: int) -> None:
         assert isinstance(id, int)
         self.__id = id
+
+    @property
+    def timestamp(self) -> int:
+        return self.__timestamp
+
+    @timestamp.setter
+    def timestamp(self, timestamp: datetime) -> None:
+        assert isinstance(timestamp, datetime)
+        self.__timestamp = timestamp
 
     @property
     def volume(self) -> float:
