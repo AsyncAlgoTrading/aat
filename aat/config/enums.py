@@ -53,7 +53,6 @@ class InstrumentType(BaseEnum):
     BOND = 'BOND'
     OPTION = 'OPTION'
     FUTURE = 'FUTURE'
-    CURRENCY = 'CURRENCY'
     PAIR = 'PAIR'
     SPREAD = 'SPREAD'
     FUTURESOPTION = 'FUTURESOPTION'
@@ -61,6 +60,7 @@ class InstrumentType(BaseEnum):
     COMMODITIES = 'COMMODITIES'
 
     # Non-tradeable
+    CURRENCY = 'CURRENCY'
     INDEX = 'INDEX'
 
 
