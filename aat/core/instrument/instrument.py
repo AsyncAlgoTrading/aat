@@ -1,3 +1,4 @@
+from typing import List
 from .db import InstrumentDB
 from ..exchange import ExchangeType
 from ...config import InstrumentType
@@ -12,6 +13,7 @@ except ImportError:
 
 class Instrument(object):
     _instrumentdb = InstrumentDB()
+    __exchanges: List[ExchangeType]
 
     __slots__ = [
         "__name",
@@ -40,10 +42,12 @@ class Instrument(object):
         '''construct a new instrument instance
 
         Args:
-            name (str): the asset's common name, relative to whatever 
+            name (str): the asset's common name, relative to whatever
                         the exchange's standard is
+
             type (InstrumentType): the instrument type, dictates the required
                                    extra kwargs
+
             exchange (ExchangeType): the exchange the instrument can be traded
                                      through
         Kwargs:
@@ -51,12 +55,24 @@ class Instrument(object):
                                          but real exchange in cases where aat is wrapping a
                                          broker like IB, TDA, etc)
                 Applies to: All
+
+            currency (Instrument): Underlying currency
+                Applies to: All
+
             underlying (Instrument):
                 Applies to: OPTION, FUTURE, FUTURESOPTION
+
             leg1 (Instrument):
                 Applies to: PAIR, SPREAD
+
             leg2 (Instrument):
                 Applies to: PAIR, SPREAD
+
+            leg1_side (Side):
+                Applies to: SPREAD
+
+            leg2_side (Side):
+                Applies to: SPREAD
 
 
         '''
