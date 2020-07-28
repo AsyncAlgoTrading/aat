@@ -13,13 +13,14 @@ except ImportError:
 
 class Instrument(object):
     _instrumentdb = InstrumentDB()
+
     __exchanges: List[ExchangeType]
     __type: InstrumentType
     __brokerExchange: Optional[str]
-    __currency: Optional[Instrument]
-    __underlying: Optional[Instrument]
-    __leg1: Optional[Instrument]
-    __leg2: Optional[Instrument]
+    __currency: Optional['Instrument']
+    __underlying: Optional['Instrument']
+    __leg1: Optional['Instrument']
+    __leg2: Optional['Instrument']
     __leg1_side: Optional[Side]
     __leg2_side: Optional[Side]
 
@@ -43,6 +44,7 @@ class Instrument(object):
         if _CPP:
             # construct with C++
             instrument = InstrumentCpp(*args, **kwargs)
+
         else:
             # pure python
             instrument = super(Instrument, cls).__new__(cls)
