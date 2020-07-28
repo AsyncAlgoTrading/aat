@@ -95,10 +95,16 @@ class Instrument(object):
 
         # FIXME ugly
         if exchange and hasattr(self, "_Instrument__exchanges") and exchange not in self.__exchanges:
+            # append this exchange to list of available
             self.__exchanges.append(exchange)
         elif exchange:
+            # create new list with this one
             self.__exchanges = [exchange]
+        elif hasattr(self, "_Instrument__exchanges"):
+            # do nothing
+            pass
         else:
+            # no exchange known and no exchange provided
             self.__exchanges = []
 
         # Optional Fields

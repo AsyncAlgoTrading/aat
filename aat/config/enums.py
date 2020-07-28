@@ -6,6 +6,13 @@ class BaseEnum(Enum):
         return f'{self.value}'
 
 
+class TradingType(BaseEnum):
+    LIVE = 'LIVE'
+    SIMULATION = 'SIMULATION'
+    SANDBOX = 'SANDBOX'
+    BACKTEST = 'BACKTEST'
+
+
 class Side(BaseEnum):
     BUY = 'BUY'
     SELL = 'SELL'

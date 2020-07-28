@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import os
 import os.path
+
 from aiostream.stream import merge  # type: ignore
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
@@ -21,7 +22,7 @@ from ..models import Event, Error
 from ..portfolio import PortfolioManager
 from ..risk import RiskManager
 from ..table import TableHandler
-from ...config import EventType, getStrategies, getExchanges
+from ...config import TradingType, EventType, getStrategies, getExchanges
 from ...exchange import Exchange
 # from aat.strategy import Strategy
 from ...ui import ServerApplication
@@ -45,7 +46,7 @@ class TradingEngine(Application):
     executor = Instance(klass=ThreadPoolExecutor, args=(4,), kwargs={})
 
     # Core components
-    trading_type = Unicode(default_value='simulation')
+    trading_type = Instance(klass=TradingType, default_value=TradingType.SIMULATION)
     order_manager = Instance(OrderManager, args=(), kwargs={})
     risk_manager = Instance(RiskManager, args=(), kwargs={})
     portfolio_manager = Instance(PortfolioManager, args=(), kwargs={})
@@ -65,7 +66,7 @@ class TradingEngine(Application):
 
     @validate('trading_type')
     def _validate_trading_type(self, proposal):
-        if proposal['value'] not in ('live', 'simulation', 'backtest'):
+        if proposal['value'] not in (TradingType.LIVE, TradingType.SIMULATION, TradingType.SANDBOX, TradingType.BACKTEST):
             raise TraitError(f'Invalid trading type: {proposal["value"]}')
         return proposal['value']
 
@@ -87,7 +88,7 @@ class TradingEngine(Application):
         self.api = bool(int(config.get('general', {}).get('api', self.api)))
 
         # Trading type
-        self.trading_type = config.get('general', {}).get('trading_type', 'simulation')
+        self.trading_type = TradingType(config.get('general', {}).get('trading_type', 'simulation').upper())
 
         # Load exchange instances
         self.exchanges = getExchanges(config.get('exchange', {}).get('exchanges', []), trading_type=self.trading_type, verbose=self.verbose)
