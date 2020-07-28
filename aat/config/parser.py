@@ -29,11 +29,11 @@ def _config_to_dict(filename: str) -> Dict[str, Dict[str, Union[str, List[str], 
     return ret
 
 
-def getStrategies(strategies: List) -> List:
+def getStrategies(strategies: List, arguments: List) -> List:
     strategy_instances = []
-    for strategy in strategies:
-        mod, clazz_and_args = strategy.split(':')
-        clazz, args = clazz_and_args.split(',') if ',' in clazz_and_args else clazz_and_args, ()
+    for i, strategy in enumerate(strategies):
+        mod, clazz = strategy.split(':')
+        args = () if not arguments else arguments[i]
         mod = importlib.import_module(mod)
         clazz = getattr(mod, clazz)
         strategy_instances.append(clazz(*args))
