@@ -181,6 +181,10 @@ class Strategy(EventHandler):
         '''Return list of all available instruments'''
         return Instrument._instrumentdb.instruments(type=type, exchange=exchange)
 
+    def exchanges(self, instrument_type=None):
+        '''Return list of all available exchanges'''
+        return list(set(__ for _ in Instrument._instrumentdb.instruments(type=instrument_type) for __ in _.exchanges))
+
     def subscribe(self, instrument=None):
         '''Subscribe to market data for the given instrument'''
         return self._manager.subscribe(instrument=instrument, strategy=self)

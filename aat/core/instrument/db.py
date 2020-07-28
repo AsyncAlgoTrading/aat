@@ -34,7 +34,4 @@ class InstrumentDB(object):
         return ret
 
     def get(self, name="", type: InstrumentType = InstrumentType.EQUITY, exchange: ExchangeType = ExchangeType("")):
-        ret = self._name_map[name]
-        if exchange not in ret.exchanges:
-            ret.exchanges.append(exchange)
-        return ret
+        return self._name_map[name]

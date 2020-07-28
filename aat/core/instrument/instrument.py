@@ -38,7 +38,14 @@ class Instrument(object):
         assert isinstance(exchange, ExchangeType) or not exchange
         self.__name = name
         self.__type = type
-        self.__exchanges = [] if exchange else [exchange]
+
+        # FIXME ugly
+        if exchange and hasattr(self, "_Instrument__exchanges") and exchange not in self.__exchanges:
+            self.__exchanges.append(exchange)
+        elif exchange:
+            self.__exchanges = [exchange]
+        else:
+            self.__exchanges = []
 
         # install into instrumentdb, noop if already there
         self._instrumentdb.add(self)

@@ -5,7 +5,7 @@ class _MarketData(metaclass=ABCMeta):
     '''internal only class to represent the streaming-source
     side of a data source'''
 
-    def instruments(self):
+    async def instruments(self):
         '''get list of available instruments'''
         return []
 
