@@ -28,7 +28,7 @@ namespace core {
       , _slippage(0.0)
       , _transaction_cost(0.0) {
       // enforce that stop target match stop type
-      assert(maker_orders.size() > 0);
+      // assert(maker_orders.size() > 0);  // not necessarily
     }
 
     double

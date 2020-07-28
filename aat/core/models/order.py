@@ -170,6 +170,7 @@ class Order(object):
         assert isinstance(other, Order)
         return self.id == other.id and \
             self.instrument == other.instrument and \
+            self.exchange == other.exchange and \
             self.price == other.price and \
             self.volume == other.volume and \
             self.notional == other.notional and \

@@ -39,7 +39,6 @@ class OrderManager(object):
     async def onTrade(self, event):
         '''Match trade with order'''
         action, strat, order = False, None, None
-
         for order in event.target.maker_orders:
             if order.id in self._pending_orders:
                 action = True

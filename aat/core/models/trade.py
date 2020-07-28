@@ -45,7 +45,7 @@ class Trade(object):
         self.__type = DataType.TRADE
 
         assert(isinstance(taker_order, Order))
-        assert(len(maker_orders) > 0)
+        # assert(len(maker_orders) > 0)  # not necessarily
         self.__maker_orders = maker_orders
         self.__taker_order = taker_order
 

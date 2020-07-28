@@ -5,7 +5,7 @@ from collections import deque
 from random import choice, random
 from ..exchange import Exchange
 from ...core import Instrument, OrderBook, Order, Event, ExchangeType
-from ...config import Side, EventType
+from ...config import TradingType, Side, EventType
 
 
 def _getName(n=1):
@@ -20,7 +20,7 @@ class SyntheticExchange(Exchange):
         super().__init__(ExchangeType('synthetic{}'.format(SyntheticExchange._inst)))
         self._trading_type = trading_type
         self._verbose = verbose
-        self._sleep = 0.1 if trading_type in ("live", "simulation") else 0.0
+        self._sleep = 0.1 if trading_type in (TradingType.LIVE, TradingType.SIMULATION, TradingType.SANDBOX) else 0.0
         self._id = 0
         self._events = deque()
         self._pending_orders = deque()
@@ -99,7 +99,7 @@ class SyntheticExchange(Exchange):
 
         # loop forever
         while True:
-            if self._trading_type == 'backtest':
+            if self._trading_type == TradingType.BACKTEST:
                 self._backtest_count += 1
                 if self._backtest_count >= 10000:
                     return

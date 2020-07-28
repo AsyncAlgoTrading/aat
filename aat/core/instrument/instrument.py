@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from .db import InstrumentDB
 from ..exchange import ExchangeType
 from ...config import InstrumentType, Side
@@ -14,6 +14,14 @@ except ImportError:
 class Instrument(object):
     _instrumentdb = InstrumentDB()
     __exchanges: List[ExchangeType]
+    __type: InstrumentType
+    __brokerExchange: Optional[str]
+    __currency: Optional[Instrument]
+    __underlying: Optional[Instrument]
+    __leg1: Optional[Instrument]
+    __leg2: Optional[Instrument]
+    __leg1_side: Optional[Side]
+    __leg2_side: Optional[Side]
 
     __slots__ = [
         "__name",
@@ -90,8 +98,12 @@ class Instrument(object):
         assert isinstance(exchange, ExchangeType) or not exchange
 
         # Required fields
-        self.__name = name
-        self.__type = type
+        self.__name = name  # noop if already exists
+
+        if hasattr(self, "_Instrument__type"):
+            assert self.__type == type
+        else:
+            self.__type = type
 
         # FIXME ugly
         if exchange and hasattr(self, "_Instrument__exchanges") and exchange not in self.__exchanges:
@@ -108,13 +120,40 @@ class Instrument(object):
             self.__exchanges = []
 
         # Optional Fields
-        self.__brokerExchange = kwargs.get("brokerExchange")
-        self.__currency = kwargs.get("currency")
-        self.__underlying = kwargs.get("underlying")
-        self.__leg1 = kwargs.get("leg1")
-        self.__leg2 = kwargs.get("leg2")
-        self.__leg1_side = kwargs.get("leg1_side")
-        self.__leg2_side = kwargs.get("leg2_side")
+        if hasattr(self, "_Instrument__brokerExchange"):
+            assert kwargs.get('brokerExchange') is None or self.__brokerExchange == kwargs.get("brokerExchange")
+        else:
+            self.__brokerExchange = kwargs.get("brokerExchange")
+
+        if hasattr(self, "_Instrument__currency"):
+            assert kwargs.get('currency') is None or self.__currency == kwargs.get("currency")
+        else:
+            self.__currency = kwargs.get("currency")
+
+        if hasattr(self, "_Instrument__underlying"):
+            assert kwargs.get('underlying') is None or self.__underlying == kwargs.get("underlying")
+        else:
+            self.__underlying = kwargs.get("underlying")
+
+        if hasattr(self, "_Instrument__leg1"):
+            assert kwargs.get('leg1') is None or self.__leg1 == kwargs.get("leg1")
+        else:
+            self.__leg1 = kwargs.get("leg1")
+
+        if hasattr(self, "_Instrument__leg2"):
+            assert kwargs.get('leg2') is None or self.__leg2 == kwargs.get("leg2")
+        else:
+            self.__leg2 = kwargs.get("leg2")
+
+        if hasattr(self, "_Instrument__leg1_side"):
+            assert kwargs.get('leg1_side') is None or self.__leg1_side == kwargs.get("leg1_side")
+        else:
+            self.__leg1_side = kwargs.get("leg1_side")
+
+        if hasattr(self, "_Instrument__leg2_side"):
+            assert kwargs.get('leg2_side') is None or self.__leg2_side == kwargs.get("leg2_side")
+        else:
+            self.__leg2_side = kwargs.get("leg2_side")
 
         # Optional Fields Validation
         assert isinstance(self.__brokerExchange, (None.__class__, str))
