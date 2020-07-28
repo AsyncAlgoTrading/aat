@@ -5,40 +5,12 @@ from ibapi.contract import Contract  # type: ignore
 from ibapi.order import Order  # type: ignore
 from queue import Queue
 from ..exchange import Exchange
-from ...config import InstrumentType, Side, OrderType
+# from ...config import InstrumentType, Side, OrderType
 from ...core import ExchangeType
 
 
-IB_SECURITY_TYPE = {
-    InstrumentType.OTHER: "",
-    InstrumentType.EQUITY: "STK",
-    InstrumentType.BOND: "BOND",
-    InstrumentType.OPTION: "OPT",
-    InstrumentType.FUTURE: "FUT",
-    InstrumentType.CURRENCY: "CASH",
-    InstrumentType.PAIR: "CASH",
-    InstrumentType.SPREAD: "BAG",
-    InstrumentType.FUTURESOPTION: "FOP",
-    InstrumentType.MUTUALFUND: "FUND",
-    InstrumentType.COMMODITIES: "CMDTY",
-
-    # Non Tradeable
-    InstrumentType.INDEX: "IND",
-}
-
-IB_ORDER_TYPE = {
-    OrderType.MARKET: "MKT",
-    OrderType.LIMIT: "LMT",
-    OrderType.STOP: "STP",
-}
-
-IB_SIDE_TYPE = {
-    Side.BUY: "BUY",
-    Side.SELL: "SELL",
-}
-
-
 def _constructContractAndOrder(order):
+    '''Construct an IB contract and order from an Order object'''
     contract = Contract()
     order = Order()
 
