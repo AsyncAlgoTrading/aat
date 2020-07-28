@@ -32,10 +32,38 @@ class Instrument(object):
 
         return instrument
 
-    def __init__(self, name, type: InstrumentType = InstrumentType.EQUITY, exchange: ExchangeType = ExchangeType("")):
+    def __init__(self,
+                 name: str,
+                 type: InstrumentType = InstrumentType.EQUITY,
+                 exchange: ExchangeType = ExchangeType(""),
+                 **kwargs):
+        '''construct a new instrument instance
+
+        Args:
+            name (str): the asset's common name, relative to whatever 
+                        the exchange's standard is
+            type (InstrumentType): the instrument type, dictates the required
+                                   extra kwargs
+            exchange (ExchangeType): the exchange the instrument can be traded
+                                     through
+        Kwargs:
+            brokerExchange (Instrument): Underlying exchange to use (e.g. not aat.exchange,
+                                         but real exchange in cases where aat is wrapping a
+                                         broker like IB, TDA, etc)
+                Applies to: All
+            underlying (Instrument):
+                Applies to: OPTION, FUTURE, FUTURESOPTION
+            leg1 (Instrument):
+                Applies to: PAIR, SPREAD
+            leg2 (Instrument):
+                Applies to: PAIR, SPREAD
+
+
+        '''
         assert isinstance(name, str)
         assert isinstance(type, InstrumentType)
         assert isinstance(exchange, ExchangeType) or not exchange
+
         self.__name = name
         self.__type = type
         self.__exchanges = [] if exchange else [exchange]
