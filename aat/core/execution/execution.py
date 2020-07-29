@@ -73,7 +73,7 @@ class OrderManager(object):
             _, strat = self._pending_orders[order.id]
 
             # TODO ugly private method
-            await self._manager._onReject(strat, event)
+            await self._manager._onReject(strat, order)
             del self._pending_orders[order.id]
 
     async def onOpen(self, event: Event):
