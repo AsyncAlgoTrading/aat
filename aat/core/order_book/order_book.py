@@ -102,6 +102,9 @@ class OrderBook(object):
         Args:
             order (Data): order to submit to orderbook
         '''
+        if order is None:
+            return
+
         # secondary triggered orders
         secondaries = []
 
