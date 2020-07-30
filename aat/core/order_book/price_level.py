@@ -107,8 +107,6 @@ class _PriceLevel(object):
             # remaining in maker_order
             maker_remaining = maker_order.volume - maker_order.filled
 
-            print('taker', taker_order.volume, taker_order.filled)
-            print('maker_remaining', maker_remaining, 'to_fill', to_fill)
             if maker_remaining > to_fill:
                 # handle fill or kill/all or nothing
                 if maker_order.flag in (OrderFlag.FILL_OR_KILL, OrderFlag.ALL_OR_NONE):

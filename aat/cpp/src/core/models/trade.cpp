@@ -11,8 +11,7 @@ namespace core {
   str_t
   Trade::toString() const {
     sstream_t ss;
-    ss << "Trade+( id=" << id << ", timestamp=" << format_timestamp(timestamp)
-       << volume << "@" << price
+    ss << "Trade+( id=" << id << ", timestamp=" << format_timestamp(timestamp) << volume << "@" << price
        << ", maker_orders=" << maker_orders.size() << ", taker_order=" << taker_order->toString() << ")";
     return ss.str();
   }

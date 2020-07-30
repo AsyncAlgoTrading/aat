@@ -53,7 +53,7 @@ namespace core {
 
     double volume;
     double price;
-    
+
     std::deque<std::shared_ptr<Order>> maker_orders;
     std::shared_ptr<Order> taker_order;
     std::shared_ptr<Order> my_order;  // FIXME

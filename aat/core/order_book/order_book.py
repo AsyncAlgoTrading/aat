@@ -138,7 +138,6 @@ class OrderBook(object):
                 self._collector.clearLevel(prices_cross[top])
             break
 
-
         # if order remaining, check rules/push to book
         if order.filled < order.volume:
             if order.order_type == OrderType.MARKET:
@@ -189,6 +188,9 @@ class OrderBook(object):
                         # add order to price level
                         prices[order.price].add(order)
 
+                        # reset order volume/filled
+                        order.rebase()
+
                         # execute secondaries
                         for secondary in secondaries:
                             self.add(secondary)
@@ -214,6 +216,9 @@ class OrderBook(object):
 
                         # add order to price level
                         prices[order.price].add(order)
+
+                        # reset order volume/filled
+                        order.rebase()
 
                         # execute secondaries
                         for secondary in secondaries:
@@ -246,6 +251,9 @@ class OrderBook(object):
                         # add order to price level
                         prices[order.price].add(order)
 
+                        # reset order volume/filled
+                        order.rebase()
+
                         # execute secondaries
                         for secondary in secondaries:
                             self.add(secondary)
@@ -264,6 +272,9 @@ class OrderBook(object):
 
                     # add order to price level
                     prices[order.price].add(order)
+
+                    # reset order volume/filled
+                    order.rebase()
 
                     # execute secondaries
                     for secondary in secondaries:

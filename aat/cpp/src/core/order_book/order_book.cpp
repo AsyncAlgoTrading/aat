@@ -3,7 +3,8 @@
 namespace aat {
 namespace core {
 
-  OrderBookIterator& OrderBookIterator::operator++() {
+  OrderBookIterator&
+  OrderBookIterator::operator++() {
     // TODO
 
     return *this;
@@ -127,6 +128,9 @@ namespace core {
             // add order to price level
             prices[order->price]->add(order);
 
+            // reset order volume/filled
+            order->rebase();
+
             // execute secondaries
             for (std::shared_ptr<Order> secondary : secondaries)
               add(secondary);
@@ -151,6 +155,9 @@ namespace core {
             }
             // add order to price level
             prices[order->price]->add(order);
+
+            // reset order volume/filled
+            order->rebase();
 
             // execute secondaries
             for (std::shared_ptr<Order> secondary : secondaries)
@@ -181,6 +188,9 @@ namespace core {
             // add order to price level
             prices[order->price]->add(order);
 
+            // reset order volume/filled
+            order->rebase();
+
             // execute secondaries
             for (std::shared_ptr<Order> secondary : secondaries)
               add(secondary);
@@ -200,6 +210,9 @@ namespace core {
 
           // add order to price level
           prices[order->price]->add(order);
+
+          // reset order volume/filled
+          order->rebase();
 
           // execute secondaries
           for (std::shared_ptr<Order> secondary : secondaries)

@@ -10,9 +10,9 @@ class BuyAndHoldStrategy(Strategy):
 
     async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
-        print(event)
 
         trade: Trade = event.target  # type: ignore
+        print('trade {:.2f} @ {:.2f}'.format(trade.volume, trade.price))
 
         # no past trades, no current orders
         if not self.orders(trade.instrument) and not self.trades(trade.instrument):
@@ -28,7 +28,8 @@ class BuyAndHoldStrategy(Strategy):
             await self.newOrder(req)
 
         else:
-            print(self.positions())
+            pass
+            # print(self.positions())
             # print(self.risk())
 
     async def onBought(self, event: Event) -> None:
@@ -50,10 +51,10 @@ class BuyAndHoldStrategy(Strategy):
 
     async def onExit(self, event: Event) -> None:
         print('Finishing...')
-        # import matplotlib.pyplot as plt  # type: ignore
-        # import numpy as np
+        import matplotlib.pyplot as plt  # type: ignore
+        import numpy as np  # type: ignore
 
-        # pnl_history = np.array(self.positions()[0].unrealizedPnlHistory).T
+        pnl_history = np.array(self.positions()[0].unrealizedPnlHistory).T
 
-        # plt.plot(pnl_history[1], pnl_history[0])
-        # plt.show()
+        plt.plot(pnl_history[1], pnl_history[0])
+        plt.show()

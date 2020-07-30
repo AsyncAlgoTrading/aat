@@ -11,12 +11,7 @@ using namespace aat::common;
 namespace aat {
 namespace config {
 
-  enum class TradingType {
-    LIVE = 0,
-    SIMULATION = 1,
-    SANDBOX = 2,
-    BACKTEST = 3
-  };
+  enum class TradingType { LIVE = 0, SIMULATION = 1, SANDBOX = 2, BACKTEST = 3 };
 
   enum class Side { NONE = 0, BUY = 1, SELL = 2 };
 
@@ -55,15 +50,7 @@ namespace config {
     TRADE = 3,
   };
 
-  enum class InstrumentType {
-    OTHER = 0,
-    EQUITY = 1,
-    BOND = 2,
-    OPTION = 3,
-    FUTURE = 4,
-    CURRENCY = 5,
-    PAIR = 6
-  };
+  enum class InstrumentType { OTHER = 0, EQUITY = 1, BOND = 2, OPTION = 3, FUTURE = 4, CURRENCY = 5, PAIR = 6 };
 
   enum class OrderType {
     LIMIT = 0,
@@ -115,15 +102,8 @@ namespace config {
     "TRADE",
   };
 
-  static const std::vector<str_t> InstrumentType_names = {
-    "OTHER",
-    "EQUITY",
-    "BOND",
-    "OPTION",
-    "FUTURE",
-    "CURRENCY",
-    "PAIR"
-  };
+  static const std::vector<str_t> InstrumentType_names
+    = {"OTHER", "EQUITY", "BOND", "OPTION", "FUTURE", "CURRENCY", "PAIR"};
 
   static const std::vector<str_t> OrderType_names = {
     "LIMIT",
@@ -175,15 +155,9 @@ namespace config {
     {"TRADE", DataType::TRADE},
   };
 
-  static std::unordered_map<str_t, InstrumentType> _InstrumentType_mapping = {
-    {"OTHER", InstrumentType::OTHER},
-    {"EQUITY", InstrumentType::EQUITY},
-    {"BOND", InstrumentType::BOND},
-    {"OPTION", InstrumentType::OPTION},
-    {"FUTURE", InstrumentType::FUTURE},
-    {"CURRENCY", InstrumentType::CURRENCY},
-    {"PAIR", InstrumentType::PAIR}
-  };
+  static std::unordered_map<str_t, InstrumentType> _InstrumentType_mapping = {{"OTHER", InstrumentType::OTHER},
+    {"EQUITY", InstrumentType::EQUITY}, {"BOND", InstrumentType::BOND}, {"OPTION", InstrumentType::OPTION},
+    {"FUTURE", InstrumentType::FUTURE}, {"CURRENCY", InstrumentType::CURRENCY}, {"PAIR", InstrumentType::PAIR}};
 
   static std::unordered_map<str_t, OrderType> _OrderType_mapping = {
     {"LIMIT", OrderType::LIMIT},

@@ -123,7 +123,6 @@ class TradingEngine(Application):
         if not self.event_handlers:
             self.log.critical('Warning! No event handlers set')
 
-
         # install print handler if verbose
         if self.verbose:
             self.log.critical('Installing print handler')

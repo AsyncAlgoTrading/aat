@@ -1,5 +1,4 @@
 from collections import deque
-from datetime import datetime
 from typing import Mapping, Type, Union, List, Dict
 from .order import Order
 from ...config import DataType, Side
@@ -143,7 +142,7 @@ class Trade(object):
 
         ret: Dict[str, Union[str, int, float]] = \
             {'id': self.id, 'timestamp': self.timestamp,
-            'price': self.price, 'volume': self.volume}
+             'price': self.price, 'volume': self.volume}
 
         # update with taker order dict
         ret.update(taker_order)

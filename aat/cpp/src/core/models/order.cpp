@@ -36,6 +36,12 @@ namespace core {
     }
   }
 
+  void
+  Order::rebase() {
+    volume = volume - filled;
+    filled = 0.0;
+  }
+
   str_t
   Order::toString() const {
     sstream_t ss;

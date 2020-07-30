@@ -14,6 +14,9 @@ class _Collector(object):
         # queue of orders that are included in the trade
         self._orders = deque()
 
+        # the taker order
+        self._taker_order = None
+
         # price levels to clear, if we commit
         self._price_levels = deque()
 
@@ -29,7 +32,7 @@ class _Collector(object):
         self._volume = 0.0
         self._price_levels.clear()
         self._orders.clear()
-
+        self._taker_order = None
 
     def setCallback(self, callback):
         self._callback = callback
@@ -70,9 +73,6 @@ class _Collector(object):
             raise Exception('No trade occurred')
 
         if taker_order.volume < self.volume():
-            print(taker_order, taker_order.filled)
-            print(self.orders(), [x.filled for x in self.orders()])
-            print(self.volume())
             raise Exception('Accumulation error occurred')
 
         self.push(Event(type=EventType.TRADE,
@@ -80,6 +80,8 @@ class _Collector(object):
                                      price=self.price(),
                                      maker_orders=self.orders().copy(),
                                      taker_order=taker_order)))
+
+        self._taker_order = taker_order
 
     def accumulate(self, order):
         # FIXME price change/volume down?
@@ -100,17 +102,13 @@ class _Collector(object):
         for pl in self._price_levels:
             pl.commit()
 
-        for order in self._orders:
-            if order.volume > order.filled:
-                # reset
-                print('resetting order ', order, order.volume, order.filled)
-                volume = order.volume - order.filled
-                order.filled = 0
-                order.volume = volume
-            elif order.volume == order.filled:
-                print('resetting order ', order, order.volume, order.filled)
-                order.filled = 0
-                # order.volume = 0
+        # reset order volume/filled
+        for order in self.orders():
+            order.rebase()
+
+        # reset order volume/filled
+        if self.taker_order():
+            self.taker_order().rebase()
 
         self.reset()
 
@@ -138,6 +136,9 @@ class _Collector(object):
 
     def orders(self):
         return self._orders
+
+    def taker_order(self):
+        return self._taker_order
 
     def events(self):
         return self._event_queue

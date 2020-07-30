@@ -46,6 +46,8 @@ class Exchange(_MarketData, _OrderEntry):
     # From _MarketData
     #
     # async def tick(self):
+    # def instruments(self):
+    # def subscribe(self, instrument):
 
     # From _OrderEntry
     #

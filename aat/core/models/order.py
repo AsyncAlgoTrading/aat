@@ -177,6 +177,10 @@ class Order(object):
             self.notional == other.notional and \
             self.filled == other.filled
 
+    def rebase(self) -> None:
+        self.__volume = self.__volume - self.__filled
+        self.__filled = 0.0
+
     def to_json(self) -> Mapping[str, Union[str, int, float]]:
         return \
             {'id': self.id,

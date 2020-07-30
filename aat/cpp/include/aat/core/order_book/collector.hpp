@@ -32,6 +32,7 @@ namespace core {
     void clear();
     double getPrice() const;
     double getVolume() const;
+    std::shared_ptr<Order> getTakerOrder() const;
     std::deque<std::shared_ptr<Order>> getOrders() const;
     std::deque<std::shared_ptr<Event>> getEvents() const;
     std::deque<std::shared_ptr<PriceLevel>> getPriceLevels() const;
@@ -44,6 +45,7 @@ namespace core {
     double price;
     double volume;
     std::deque<std::shared_ptr<Event>> events;
+    std::shared_ptr<Order> taker_order;
     std::deque<std::shared_ptr<Order>> orders;
     std::deque<std::shared_ptr<PriceLevel>> price_levels;
   };

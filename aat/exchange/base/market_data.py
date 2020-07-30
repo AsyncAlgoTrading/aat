@@ -9,5 +9,8 @@ class _MarketData(metaclass=ABCMeta):
         '''get list of available instruments'''
         return []
 
+    def subscribe(self, instrument):
+        '''subscribe to market data for a given instrument'''
+
     async def tick(self):
         '''return data from exchange'''

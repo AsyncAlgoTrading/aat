@@ -50,7 +50,7 @@ class SyntheticExchange(Exchange):
             while start < end:
                 side = Side.BUY if start <= mid else Side.SELL
                 increment = choice((.01, .02, .03, .04, .05))
-                order = Order(volume=round(random() * 10, 0) + 1,
+                order = Order(volume=round(random() * 10, 0) + 3,
                               price=start,
                               side=side,
                               instrument=instrument,
@@ -68,7 +68,7 @@ class SyntheticExchange(Exchange):
     def _jumptime(self, order):
         if self._trading_type == TradingType.BACKTEST:
             order.timestamp = self._time
-            self._time += timedelta(seconds=randint(1, 10))
+            self._time += timedelta(seconds=randint(25, 30))
 
     def __repr__(self):
         ret = ''
@@ -135,14 +135,14 @@ class SyntheticExchange(Exchange):
             orderbook = self._orderbooks[instrument]
 
             # add a new buy order, a new sell order, or a cross
-            do = choice(['buy', 'sell', 'change'] * 20 + ['cross'] + ['cancel'] * 10)
+            do = choice(['buy', 'sell'] + ['change'] * 5 + ['cross'] + ['cancel'] * 2)
             levels = orderbook.topOfBook()
-            volume = round(random() * 5, 0) + 1
+            volume = round(random() * 10, 0) + 5
 
             if do == 'buy':
                 # new buy order
                 # choose a price level
-                price = round(levels[Side.SELL][0] - choice((.01, .02, .03, .04, .05, .1, .2)), 2)
+                price = round(levels[Side.BUY][0] - choice((.0, .01, .02, .03, .04, .05)), 2)
                 order = Order(volume=volume,
                               price=price,
                               side=Side.BUY,
@@ -157,7 +157,7 @@ class SyntheticExchange(Exchange):
 
             elif do == 'sell':
                 # new sell order
-                price = round(levels[Side.BUY][0] - choice((.01, .02, .03, .04, .05, .1, .2)), 2)
+                price = round(levels[Side.SELL][0] + choice((.0, .01, .02, .03, .04, .05)), 2)
                 order = Order(volume=volume,
                               price=price,
                               side=Side.SELL,
@@ -172,10 +172,10 @@ class SyntheticExchange(Exchange):
 
             elif do == 'cross':
                 # cross the spread
-                side = choice(['buy']*5 + ['sell']*2)  # stocks only go up
+                side = choice(['buy'] * 5 + ['sell'] * 4)  # stocks only go up
                 if side == 'buy':
                     # cross to buy
-                    price = round(levels[Side.SELL][0] + choice((0.0, .01, .02)), 2)
+                    price = round(levels[Side.BUY][0] + choice((.05, .1, .2)), 2)
                     order = Order(volume=volume,
                                   price=price,
                                   side=Side.BUY,
@@ -190,10 +190,10 @@ class SyntheticExchange(Exchange):
 
                 else:
                     # cross to sell
-                    price = round(levels[Side.BUY][0] - choice((0.0, .01, .02)), 2)
+                    price = round(levels[Side.SELL][0] - choice((.05, .1, .2)), 2)
                     order = Order(volume=volume,
                                   price=price,
-                                  side=Side.BUY,
+                                  side=Side.SELL,
                                   instrument=instrument,
                                   exchange=self._exchange)
                     order.id = self._id
