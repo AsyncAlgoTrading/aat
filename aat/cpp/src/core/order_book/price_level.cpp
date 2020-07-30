@@ -62,7 +62,7 @@ namespace core {
     // check if order is in level
     if (order->price != price || std::find(orders.begin(), orders.end(), order) == orders.end()) {
       // something is wrong
-      throw AATCPPException("Order note found in price level!");
+      throw AATCPPException("Order not found in price level!");
     }
     // remove order
     orders.erase(std::find(orders.begin(), orders.end(), order));  // FIXME c++
@@ -79,7 +79,7 @@ namespace core {
     // check if order is in level
     if (order->price != price || std::find(orders.begin(), orders.end(), order) == orders.end()) {
       // something is wrong
-      throw AATCPPException("Order note found in price level!");
+      throw AATCPPException("Order not found in price level!");
     }
     // remove order
     orders.erase(std::find(orders.begin(), orders.end(), order));  // FIXME c++

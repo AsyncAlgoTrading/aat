@@ -11,6 +11,9 @@ runcpp:  build  ## Clean and make target, run target
 rundebug:  debug  ## Clean and make debug target, run target
 	$(PYTHON) -m aat $(CONFIG)
 
+buildextf: ## build the package extensions
+	$(PYTHON) setup.py build_ext -j8 --inplace -f
+
 buildext: ## build the package extensions
 	$(PYTHON) setup.py build_ext -j8 --inplace
 
@@ -33,7 +36,7 @@ testpy: ## Make unit tests
 
 testpycpp: ## Make unit tests
 	# AAT_USE_CPP=1 $(PYTHON) -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch --capture=no
-	AAT_USE_CPP=1 $(PYTHON) -m pytest -s ./aat/tests
+	AAT_USE_CPP=1 $(PYTHON) -m pytest -vs ./aat/tests
 
 testjs:  ## Make js tests
 	cd js; yarn test

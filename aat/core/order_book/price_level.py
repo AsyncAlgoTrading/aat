@@ -1,8 +1,35 @@
 from collections import deque
+from ...common import _in_cpp
 from ...config import OrderType, OrderFlag
 
 
+try:
+    from aat.binding import _PriceLevelCpp  # type: ignore
+    _CPP = _in_cpp()
+except ImportError:
+    _CPP = False
+
+
+def _make_cpp_price_level(price, collector):
+    '''helper method to ensure all arguments are setup'''
+    return _PriceLevelCpp(price, collector)
+
+
 class _PriceLevel(object):
+    __slots__ = [
+        "_price",
+        "_orders",
+        "_orders_staged",
+        "_stop_orders",
+        "_stop_orders_staged",
+        "_collector"
+    ]
+
+    def __new__(cls, *args, **kwargs):
+        if _CPP:
+            return _make_cpp_price_level(*args, **kwargs)
+        return super(_PriceLevel, cls).__new__(cls)
+
     def __init__(self, price, collector):
         self._price = price
         self._orders = deque()

@@ -12,6 +12,20 @@ here = os.path.abspath(os.path.dirname(__file__))
 PREFIX = sysconfig.get_config_vars()['prefix']
 name = 'aat'
 
+CPU_COUNT = os.cpu_count()
+# *************************************** #
+# Numpy build path and compiler toolchain #
+# *************************************** #
+try:
+    # enable numpy faster compiler
+    from numpy.distutils.ccompiler import CCompiler_compile
+    import distutils.ccompiler
+    distutils.ccompiler.CCompiler.compile = CCompiler_compile
+    os.environ['NPY_NUM_BUILD_JOBS'] = str(CPU_COUNT)
+
+except ImportError:
+    raise
+
 
 def get_version(file, name='__version__'):
     path = os.path.realpath(file)
@@ -44,6 +58,7 @@ requires_dev = [
     'pybind11>=2.4.3',
     'pytest>=5.4.1',
     'pytest-cov>=2.8.1',
+    'pytest-faulthandler>=2.0.1',
     'Sphinx>=1.8.4',
     'sphinx-markdown-builder>=0.5.2',
 ] + requires
