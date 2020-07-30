@@ -6,6 +6,7 @@ import os.path
 from aiostream.stream import merge  # type: ignore
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from traitlets.config.application import Application  # type: ignore
 from traitlets import validate, TraitError, Unicode, Bool, List, Instance  # type: ignore
 from tornado.web import StaticFileHandler, RedirectHandler, Application as TornadoApplication
@@ -106,6 +107,12 @@ class TradingEngine(Application):
         # setup subscriptions
         self._handler_subscriptions = {m: [] for m in EventType.__members__.values()}
 
+        # setup `now` handler for backtest
+        self._latest = datetime.fromtimestamp(0)
+
+        # register internal management event handler before all strategy handlers
+        self.registerHandler(self.manager)
+
         # install event handlers
         strategies = getStrategies(config.get('strategy', {}).get('strategies', []))
         for strategy in strategies:
@@ -116,8 +123,6 @@ class TradingEngine(Application):
         if not self.event_handlers:
             self.log.critical('Warning! No event handlers set')
 
-        # register internal management event handler
-        self.registerHandler(self.manager)
 
         # install print handler if verbose
         if self.verbose:
@@ -211,6 +216,9 @@ class TradingEngine(Application):
                 # tick exchange event to handlers
                 await self.tick(event)
 
+                # TODO move out of critical path
+                self._latest = event.target.timestamp if hasattr(event, 'target') and hasattr(event.target, 'timestamp') else self._latest
+
                 # process any secondary events
                 while self._queued_events:
                     event = self._queued_events.popleft()
@@ -242,6 +250,11 @@ class TradingEngine(Application):
                     raise
                 await self.tick(Event(type=EventType.ERROR, target=Error(target=event, handler=handler, callback=callback, exception=e)))
                 await asyncio.sleep(1)
+
+    def now(self):
+        '''Return the current datetime. Useful to avoid code changes between
+        live trading and backtesting. Defaults to `datetime.now`'''
+        return self._latest if self.trading_type == TradingType.BACKTEST else datetime.now()
 
     def start(self):
         try:

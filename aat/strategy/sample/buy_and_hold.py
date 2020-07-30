@@ -2,7 +2,7 @@ from aat import Strategy, Event, Order, Trade, Side
 
 
 class BuyAndHoldStrategy(Strategy):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, up=-1, down=-1, *args, **kwargs) -> None:
         super(BuyAndHoldStrategy, self).__init__(*args, **kwargs)
 
     async def onStart(self, event: Event) -> None:
@@ -10,7 +10,7 @@ class BuyAndHoldStrategy(Strategy):
 
     async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
-        print('Trade:\n{}'.format(event))
+        print(event)
 
         trade: Trade = event.target  # type: ignore
 
@@ -18,7 +18,7 @@ class BuyAndHoldStrategy(Strategy):
         if not self.orders(trade.instrument) and not self.trades(trade.instrument):
             req = Order(side=Side.BUY,
                         price=trade.price + 10,
-                        volume=1,
+                        volume=1.1,
                         instrument=trade.instrument,
                         order_type=Order.Types.MARKET,
                         exchange=trade.exchange)
@@ -29,7 +29,7 @@ class BuyAndHoldStrategy(Strategy):
 
         else:
             print(self.positions())
-            print(self.risk())
+            # print(self.risk())
 
     async def onBought(self, event: Event) -> None:
         trade: Trade = event.target  # type: ignore
@@ -50,6 +50,10 @@ class BuyAndHoldStrategy(Strategy):
 
     async def onExit(self, event: Event) -> None:
         print('Finishing...')
-        import matplotlib.pyplot as plt  # type: ignore
-        plt.plot(self.positions()[0].unrealizedPnlHistory)
-        plt.show()
+        # import matplotlib.pyplot as plt  # type: ignore
+        # import numpy as np
+
+        # pnl_history = np.array(self.positions()[0].unrealizedPnlHistory).T
+
+        # plt.plot(pnl_history[1], pnl_history[0])
+        # plt.show()

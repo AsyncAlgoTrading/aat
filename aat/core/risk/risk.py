@@ -50,6 +50,7 @@ class RiskManager(object):
             self._active_positions[trade.id] = Position(price=trade.price,
                                                         size=trade.volume,
                                                         notional=trade.volume * trade.price,
+                                                        timestamp=trade.timestamp,
                                                         instrument=trade.instrument,
                                                         exchange=trade.exchange,
                                                         trades=[trade])
@@ -78,10 +79,10 @@ class RiskManager(object):
     # **********************
     async def onTrade(self, event: Event):
         trade: Trade = event.target  # type: ignore
-        # TODO
+        # TODO move
         if trade.instrument in self._instrument_positions_map:
             pos = self._instrument_positions_map[trade.instrument]
-            pos.unrealizedPnl = pos.size * (trade.price - pos.price)
+            pos.unrealizedPnl = (pos.size * (trade.price - pos.price), trade.timestamp)
 
     async def onCancel(self, event):
         # TODO

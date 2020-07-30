@@ -161,6 +161,7 @@ class Order(object):
     @filled.setter
     def filled(self, filled: float) -> None:
         assert isinstance(filled, (int, float))
+        assert filled <= self.volume
         self.__filled = filled
 
     def __repr__(self) -> str:

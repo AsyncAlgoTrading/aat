@@ -11,6 +11,13 @@ using namespace aat::common;
 namespace aat {
 namespace config {
 
+  enum class TradingType {
+    LIVE = 0,
+    SIMULATION = 1,
+    SANDBOX = 2,
+    BACKTEST = 3
+  };
+
   enum class Side { NONE = 0, BUY = 1, SELL = 2 };
 
   enum class EventType {
@@ -71,7 +78,15 @@ namespace config {
     IMMEDIATE_OR_CANCEL = 3,
   };
 
+  static const std::vector<str_t> TradingType_names = {
+    "LIVE",
+    "SIMULATION",
+    "SANDBOX",
+    "BACKTEST",
+  };
+
   static const std::vector<str_t> Side_names = {
+    "NONE",
     "BUY",
     "SELL",
   };
@@ -123,7 +138,15 @@ namespace config {
     "IMMEDIATE_OR_CANCEL",
   };
 
+  static std::unordered_map<str_t, TradingType> _TradingType_mapping = {
+    {"LIVE", TradingType::LIVE},
+    {"SIMULATION", TradingType::SIMULATION},
+    {"SANDBOX", TradingType::SANDBOX},
+    {"BACKTEST", TradingType::BACKTEST},
+  };
+
   static std::unordered_map<str_t, Side> _Side_mapping = {
+    {"NONE", Side::NONE},
     {"BUY", Side::BUY},
     {"SELL", Side::SELL},
   };
@@ -175,6 +198,7 @@ namespace config {
     {"IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL},
   };
 
+  ENUM_TO_STRING(TradingType)
   ENUM_TO_STRING(Side)
   ENUM_TO_STRING(EventType)
   ENUM_TO_STRING(DataType)

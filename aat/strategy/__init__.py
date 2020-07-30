@@ -177,6 +177,11 @@ class Strategy(EventHandler):
     #################
     # Other Methods #
     #################
+    def now(self):
+        '''Return the current datetime. Useful to avoid code changes between
+        live trading and backtesting. Defaults to `datetime.now`'''
+        return self._manager.now()
+
     def instruments(self, type=None, exchange=None):
         '''Return list of all available instruments'''
         return Instrument._instrumentdb.instruments(type=type, exchange=exchange)

@@ -20,8 +20,9 @@ def _make_cpp_trade(id, timestamp, maker_orders=None, taker_order=None):
 class Trade(object):
     __slots__ = [
         "__id",
-        "__timestamp",
         "__type",
+        "__price",
+        "__volume",
         "__maker_orders",
         "__taker_order",
 
@@ -39,13 +40,17 @@ class Trade(object):
             return _make_cpp_trade(*args, **kwargs)
         return super(Trade, cls).__new__(cls)
 
-    def __init__(self, maker_orders, taker_order):
+    def __init__(self, volume, price, maker_orders, taker_order):
         self.__id = -1  # on construction, provide no ID until exchange assigns one
-        self.__timestamp = datetime.now()
         self.__type = DataType.TRADE
 
+        assert(isinstance(price, (float, int)))
+        assert(isinstance(volume, (float, int)))
         assert(isinstance(taker_order, Order))
         # assert(len(maker_orders) > 0)  # not necessarily
+
+        self.__price = price
+        self.__volume = volume
         self.__maker_orders = maker_orders
         self.__taker_order = taker_order
 
@@ -58,7 +63,7 @@ class Trade(object):
     # ******** #
     @property
     def timestamp(self) -> int:
-        return self.__timestamp
+        return self.taker_order.timestamp
 
     @property
     def type(self):
@@ -66,12 +71,11 @@ class Trade(object):
 
     @property
     def volume(self):
-        return self.taker_order.volume
+        return self.__volume
 
     @property
     def price(self):
-        # FIXME calculate actual VWAP taking into account slippage/txncost
-        return self.taker_order.price
+        return self.__price
 
     @property
     def instrument(self):
@@ -87,7 +91,7 @@ class Trade(object):
 
     @property
     def notional(self):
-        return self.taker_order.price * self.taker_order.volume
+        return self.price * self.volume
 
     # ***********#
     # Read/write #
@@ -120,7 +124,7 @@ class Trade(object):
         self.__my_order = order
 
     def __repr__(self) -> str:
-        return f'Trade( id={self.id}, timestamp{self.timestamp}, maker_orders={len(self.maker_orders)}, taker_order={self.taker_order})'
+        return f'Trade( id={self.id}, timestamp{self.timestamp}, {self.volume}@{self.price}, \n\ttaker_order={self.taker_order},\n\tmaker_orders={self.maker_orders}, )'
 
     def __eq__(self, other) -> bool:
         assert isinstance(other, Trade)
@@ -138,7 +142,8 @@ class Trade(object):
             [{'maker_order{}.' + k: v for k, v in order.to_json().items()} for i, order in enumerate(self.maker_orders)]
 
         ret: Dict[str, Union[str, int, float]] = \
-            {'id': self.id, 'timestamp': self.timestamp}
+            {'id': self.id, 'timestamp': self.timestamp,
+            'price': self.price, 'volume': self.volume}
 
         # update with taker order dict
         ret.update(taker_order)
@@ -155,4 +160,6 @@ class Trade(object):
         return {
             "id": int,
             "timestamp": int,
+            "volume": float,
+            "price": float,
         }

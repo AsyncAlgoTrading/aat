@@ -87,11 +87,14 @@ class _PriceLevel(object):
             self.add(taker_order)
             return None, ()
 
-        if taker_order.filled >= taker_order.volume:
+        if taker_order.filled == taker_order.volume:
             # already filled:
             return None, self._get_stop_orders()
 
-        while taker_order.filled < taker_order.volume and self._orders:
+        elif taker_order.filled > taker_order.volume:
+            raise Exception("Unknown error occurred - order book is corrupt")
+
+        while (taker_order.filled < taker_order.volume) and self._orders:
             # need to fill original volume - filled so far
             to_fill = taker_order.volume - taker_order.filled
 
@@ -104,6 +107,8 @@ class _PriceLevel(object):
             # remaining in maker_order
             maker_remaining = maker_order.volume - maker_order.filled
 
+            print('taker', taker_order.volume, taker_order.filled)
+            print('maker_remaining', maker_remaining, 'to_fill', to_fill)
             if maker_remaining > to_fill:
                 # handle fill or kill/all or nothing
                 if maker_order.flag in (OrderFlag.FILL_OR_KILL, OrderFlag.ALL_OR_NONE):
@@ -143,6 +148,7 @@ class _PriceLevel(object):
 
                 else:
                     # maker_order is fully executed
+                    maker_order.filled = maker_order.volume
                     # don't append to deque
                     # tell maker order filled
                     self._collector.pushChange(taker_order)
@@ -156,12 +162,15 @@ class _PriceLevel(object):
                 self._collector.pushFill(taker_order)
                 self._collector.pushFill(maker_order, accumulate=True)
 
-        if taker_order.filled >= taker_order.volume:
+        if taker_order.filled == taker_order.volume:
             # execute the taker order
             self._collector.pushTrade(taker_order)
 
             # return nothing to signify to stop
             return None, self._get_stop_orders()
+
+        elif taker_order.filled > taker_order.volume:
+            raise Exception("Unknown error occurred - order book is corrupt")
 
         # return order, this level is cleared and the order still has volume
         return taker_order, self._get_stop_orders()

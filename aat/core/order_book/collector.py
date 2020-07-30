@@ -27,8 +27,9 @@ class _Collector(object):
         self._event_queue.clear()
         self._price = 0.0
         self._volume = 0.0
-        self._orders.clear()
         self._price_levels.clear()
+        self._orders.clear()
+
 
     def setCallback(self, callback):
         self._callback = callback
@@ -64,14 +65,24 @@ class _Collector(object):
         '''push taker order trade'''
         if not self.orders():
             raise Exception('No maker orders provided')
+
         if taker_order.filled <= 0:
             raise Exception('No trade occurred')
+
+        if taker_order.volume < self.volume():
+            print(taker_order, taker_order.filled)
+            print(self.orders(), [x.filled for x in self.orders()])
+            print(self.volume())
+            raise Exception('Accumulation error occurred')
+
         self.push(Event(type=EventType.TRADE,
-                        target=Trade(maker_orders=self.orders().copy(),
+                        target=Trade(volume=self.volume(),
+                                     price=self.price(),
+                                     maker_orders=self.orders().copy(),
                                      taker_order=taker_order)))
 
     def accumulate(self, order):
-        # fixme price change/volume down?
+        # FIXME price change/volume down?
         self._price = ((self._price * self._volume + order.price * order.filled) / (self._volume + order.filled)) if (self._volume + order.filled > 0) else 0.0
         self._volume += order.filled
         self._orders.append(order)
@@ -85,8 +96,22 @@ class _Collector(object):
         while self._event_queue:
             ev = self._event_queue.popleft()
             self._callback(ev)
+
         for pl in self._price_levels:
             pl.commit()
+
+        for order in self._orders:
+            if order.volume > order.filled:
+                # reset
+                print('resetting order ', order, order.volume, order.filled)
+                volume = order.volume - order.filled
+                order.filled = 0
+                order.volume = volume
+            elif order.volume == order.filled:
+                print('resetting order ', order, order.volume, order.filled)
+                order.filled = 0
+                # order.volume = 0
+
         self.reset()
 
     def revert(self):

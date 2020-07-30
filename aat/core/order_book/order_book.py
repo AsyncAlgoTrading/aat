@@ -103,7 +103,7 @@ class OrderBook(object):
             order (Data): order to submit to orderbook
         '''
         if order is None:
-            return
+            raise Exception('Order cannot be None')
 
         # secondary triggered orders
         secondaries = []
@@ -137,6 +137,7 @@ class OrderBook(object):
                 # level cleared exactly
                 self._collector.clearLevel(prices_cross[top])
             break
+
 
         # if order remaining, check rules/push to book
         if order.filled < order.volume:
@@ -184,6 +185,7 @@ class OrderBook(object):
                         if _insort(levels, order.price):
                             # new price level
                             prices[order.price] = _PriceLevel(order.price, collector=self._collector)
+
                         # add order to price level
                         prices[order.price].add(order)
 
@@ -267,6 +269,9 @@ class OrderBook(object):
                     for secondary in secondaries:
                         self.add(secondary)
         else:
+            if order.filled > order.volume:
+                raise Exception("Unknown error occurred - order book is corrupt")
+
             # don't need to add trade as this is done in the price_levels
             # clear levels
             self._clearOrders(order, self._collector.clearedLevels())

@@ -98,11 +98,13 @@ namespace core {
       return nullptr;
     }
 
-    if (taker_order->filled >= taker_order->volume) {
+    if (taker_order->filled == taker_order->volume) {
       // already filled
       for (std::shared_ptr<Order> order : stop_orders)
         secondaries.push_back(order);
       return nullptr;
+    } else if (taker_order->filled > taker_order->volume) {
+      throw AATCPPException("Unknown error occurred - order book is corrupt");
     }
 
     while (taker_order->filled < taker_order->volume && orders.size() > 0) {
@@ -175,7 +177,7 @@ namespace core {
       }
     }
 
-    if (taker_order->filled >= taker_order->volume) {
+    if (taker_order->filled == taker_order->volume) {
       // execute the taker order
       collector.pushTrade(taker_order);
 
@@ -183,6 +185,8 @@ namespace core {
       for (std::shared_ptr<Order> order : stop_orders)
         secondaries.push_back(order);
       return nullptr;
+    } else if (taker_order->filled > taker_order->volume) {
+      throw AATCPPException("Unknown error occurred - order book is corrupt");
     }
 
     // return order, this level is cleared and the order still has volume

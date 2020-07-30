@@ -2,7 +2,7 @@ PYTHON=python3.7
 CONFIG=./config/synthetic.cfg
 
 
-run:  build  ## Clean and make target, run target
+run:    ## Clean and make target, run target
 	$(PYTHON) -m aat $(CONFIG)
 
 runcpp:  build  ## Clean and make target, run target
