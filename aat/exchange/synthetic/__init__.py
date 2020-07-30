@@ -49,7 +49,7 @@ class SyntheticExchange(Exchange):
 
             while start < end:
                 side = Side.BUY if start <= mid else Side.SELL
-                increment = choice((.01, .02, .03, .04, .05))
+                increment = choice((.1, .2))
                 order = Order(volume=round(random() * 10, 0) + 3,
                               price=start,
                               side=side,
@@ -142,7 +142,7 @@ class SyntheticExchange(Exchange):
             if do == 'buy':
                 # new buy order
                 # choose a price level
-                price = round(levels[Side.BUY][0] - choice((.0, .01, .02, .03, .04, .05)), 2)
+                price = round(levels[Side.BUY][0] - choice((0, .1, .2, .5, 1)), 2)
                 order = Order(volume=volume,
                               price=price,
                               side=Side.BUY,
@@ -157,7 +157,7 @@ class SyntheticExchange(Exchange):
 
             elif do == 'sell':
                 # new sell order
-                price = round(levels[Side.SELL][0] + choice((.0, .01, .02, .03, .04, .05)), 2)
+                price = round(levels[Side.SELL][0] + choice((0, .1, .2, .5, 1)), 2)
                 order = Order(volume=volume,
                               price=price,
                               side=Side.SELL,
@@ -175,7 +175,7 @@ class SyntheticExchange(Exchange):
                 side = choice(['buy'] * 5 + ['sell'] * 4)  # stocks only go up
                 if side == 'buy':
                     # cross to buy
-                    price = round(levels[Side.BUY][0] + choice((.05, .1, .2)), 2)
+                    price = round(levels[Side.BUY][0] + choice((.5, 1)), 2)
                     order = Order(volume=volume,
                                   price=price,
                                   side=Side.BUY,
@@ -190,7 +190,7 @@ class SyntheticExchange(Exchange):
 
                 else:
                     # cross to sell
-                    price = round(levels[Side.SELL][0] - choice((.05, .1, .2)), 2)
+                    price = round(levels[Side.SELL][0] - choice((.5, 1)), 2)
                     order = Order(volume=volume,
                                   price=price,
                                   side=Side.SELL,
