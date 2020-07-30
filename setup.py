@@ -22,9 +22,8 @@ try:
     import distutils.ccompiler
     distutils.ccompiler.CCompiler.compile = CCompiler_compile
     os.environ['NPY_NUM_BUILD_JOBS'] = str(CPU_COUNT)
-
 except ImportError:
-    raise
+    pass  # no numpy
 
 
 def get_version(file, name='__version__'):
