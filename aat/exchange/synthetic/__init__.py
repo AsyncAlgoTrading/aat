@@ -16,7 +16,7 @@ def _getName(n=1):
 class SyntheticExchange(Exchange):
     _inst = 0
 
-    def __init__(self, trading_type=None, verbose=False, **kwargs):
+    def __init__(self, trading_type=None, verbose=False, count=5, cycles=1000, **kwargs):
         super().__init__(ExchangeType('synthetic{}'.format(SyntheticExchange._inst)))
         self._trading_type = trading_type
         self._verbose = verbose
@@ -26,10 +26,12 @@ class SyntheticExchange(Exchange):
         self._pending_orders = deque()
         SyntheticExchange._inst += 1
 
+        self._inst_count = int(count)
+        self._backtest_cycles_total = int(cycles)
         self._backtest_count = 0
 
     def _seed(self, symbols=None):
-        self._instruments = {symbol: Instrument(symbol) for symbol in symbols or _getName(5)}
+        self._instruments = {symbol: Instrument(symbol) for symbol in symbols or _getName(self._inst_count)}
         self._orderbooks = {Instrument(symbol): OrderBook(instrument=i, exchange_name=self._exchange, callback=lambda x: None) for symbol, i in self._instruments.items()}
         self._seedOrders()
 
@@ -101,7 +103,7 @@ class SyntheticExchange(Exchange):
         while True:
             if self._trading_type == TradingType.BACKTEST:
                 self._backtest_count += 1
-                if self._backtest_count >= 10000:
+                if self._backtest_count >= self._backtest_cycles_total:
                     return
 
             while self._pending_orders:
