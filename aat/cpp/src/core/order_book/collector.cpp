@@ -124,6 +124,10 @@ namespace core {
   Collector::revert() {
     for (std::shared_ptr<PriceLevel> pl : price_levels)
       pl->revert();
+
+    for (std::shared_ptr<Order> order : orders)
+      order->filled = 0.0;
+
     reset();
   }
 

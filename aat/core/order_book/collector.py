@@ -1,10 +1,38 @@
 from collections import deque
 from ..models import Event, Trade
+from ...common import _in_cpp
 from ...config import EventType
 
 
+try:
+    from aat.binding import _CollectorCpp  # type: ignore
+    _CPP = _in_cpp()
+except ImportError:
+    _CPP = False
+
+
+def _make_cpp_collector(callback=lambda *args: args):
+    '''helper method to ensure all arguments are setup'''
+    return _CollectorCpp(callback)
+
+
 class _Collector(object):
-    def __init__(self, callback):
+    __slots__ = [
+        "_callback",
+        "_event_queue",
+        "_orders",
+        "_taker_order",
+        "_price_levels",
+        "_price",
+        "_volume",
+    ]
+
+    def __new__(cls, *args, **kwargs):
+        if _CPP:
+            return _make_cpp_collector(*args, **kwargs)
+        return super(_Collector, cls).__new__(cls)
+
+    def __init__(self, callback=lambda *args: args):
         # callback to call to process events
         self._callback = callback
 
@@ -116,6 +144,10 @@ class _Collector(object):
         '''revert the event queue'''
         for pl in self._price_levels:
             pl.revert()
+
+        for order in self.orders():
+            order.filled = 0.0
+
         self.reset()
 
     def clear(self):
