@@ -33,6 +33,8 @@ class SyntheticExchange(Exchange):
 
         self._time = datetime.now() - timedelta(days=10)
 
+        self._omit_cancel = set()
+
     def _seed(self, symbols=None):
         self._instruments = {symbol: Instrument(symbol) for symbol in symbols or _getName(self._inst_count)}
         self._orderbooks = {Instrument(symbol): OrderBook(instrument=i, exchange_name=self._exchange, callback=lambda x: None) for symbol, i in self._instruments.items()}
@@ -216,6 +218,10 @@ class SyntheticExchange(Exchange):
                     orders = price_level._orders
                     if orders:
                         order = choice(orders)
+
+                        if order.id in self._omit_cancel:
+                            continue
+
                         self._jumptime(order)  # advance time in backtest
 
                         if do == 'cancel':
@@ -227,6 +233,7 @@ class SyntheticExchange(Exchange):
                                 order.volume = new_volume
                                 orderbook.change(order)
                             else:
+                                print(order)
                                 orderbook.cancel(order)
 
                 elif levels:
@@ -240,14 +247,19 @@ class SyntheticExchange(Exchange):
                         self._jumptime(order)  # advance time in backtest
                         order = choice(orders)
 
+                        if order.id in self._omit_cancel:
+                            continue
+
                         if do == 'cancel':
                             orderbook.cancel(order)
+
                         else:
                             new_volume = max(order.volume + choice((-1, -.5, .5, 1)), 1.0)
                             if new_volume > order.filled:
                                 order.volume = new_volume
                                 orderbook.change(order)
                             else:
+                                print(order)
                                 orderbook.cancel(order)
 
             # print current state if running in verbose mode
@@ -259,9 +271,10 @@ class SyntheticExchange(Exchange):
     # ******************* #
     async def newOrder(self, order: Order):
         order.id = self._id
-        self._jumptime(order)
         self._id += 1
+        self._jumptime(order)
         self._pending_orders.append(order)
+        self._omit_cancel.add(order.id)  # don't cancel user orders
         return order
 
 

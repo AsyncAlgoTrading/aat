@@ -152,7 +152,7 @@ class OrderBook(object):
                 else:
                     # market order, partial
                     if order.filled > 0:
-                        self._collector.pushTrade(order)
+                        self._collector.pushTrade(order, order.filled)
 
                     # clear levels
                     self._clearOrders(order, self._collector.clearedLevels())
@@ -173,6 +173,9 @@ class OrderBook(object):
                         # cancel the order, do not execute any
                         self._collector.revert()
 
+                        # reset filled
+                        order.filled = 0.0
+
                         # cancel the order
                         self._collector.pushCancel(order)
                         self._collector.commit()
@@ -187,9 +190,6 @@ class OrderBook(object):
 
                         # add order to price level
                         prices[order.price].add(order)
-
-                        # reset order volume/filled
-                        order.rebase()
 
                         # execute secondaries
                         for secondary in secondaries:
@@ -201,6 +201,9 @@ class OrderBook(object):
                         # cancel the order, do not execute any
                         self._collector.revert()
 
+                        # reset filled
+                        order.filled = 0.0
+
                         # cancel the order
                         self._collector.pushCancel(order)
                         self._collector.commit()
@@ -216,9 +219,6 @@ class OrderBook(object):
 
                         # add order to price level
                         prices[order.price].add(order)
-
-                        # reset order volume/filled
-                        order.rebase()
 
                         # execute secondaries
                         for secondary in secondaries:
@@ -251,9 +251,6 @@ class OrderBook(object):
                         # add order to price level
                         prices[order.price].add(order)
 
-                        # reset order volume/filled
-                        order.rebase()
-
                         # execute secondaries
                         for secondary in secondaries:
                             self.add(secondary)
@@ -272,9 +269,6 @@ class OrderBook(object):
 
                     # add order to price level
                     prices[order.price].add(order)
-
-                    # reset order volume/filled
-                    order.rebase()
 
                     # execute secondaries
                     for secondary in secondaries:

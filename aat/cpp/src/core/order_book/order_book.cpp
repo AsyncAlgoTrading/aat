@@ -92,7 +92,7 @@ namespace core {
         } else {
           // market order, partial
           if (order->filled > 0)
-            collector.pushTrade(order);
+            collector.pushTrade(order, order->filled);
 
           // clear levels
           clearOrders(order, collector.getClearedLevels());
@@ -128,9 +128,6 @@ namespace core {
             // add order to price level
             prices[order->price]->add(order);
 
-            // reset order volume/filled
-            order->rebase();
-
             // execute secondaries
             for (std::shared_ptr<Order> secondary : secondaries)
               add(secondary);
@@ -155,9 +152,6 @@ namespace core {
             }
             // add order to price level
             prices[order->price]->add(order);
-
-            // reset order volume/filled
-            order->rebase();
 
             // execute secondaries
             for (std::shared_ptr<Order> secondary : secondaries)
@@ -188,9 +182,6 @@ namespace core {
             // add order to price level
             prices[order->price]->add(order);
 
-            // reset order volume/filled
-            order->rebase();
-
             // execute secondaries
             for (std::shared_ptr<Order> secondary : secondaries)
               add(secondary);
@@ -210,9 +201,6 @@ namespace core {
 
           // add order to price level
           prices[order->price]->add(order);
-
-          // reset order volume/filled
-          order->rebase();
 
           // execute secondaries
           for (std::shared_ptr<Order> secondary : secondaries)

@@ -19,7 +19,6 @@ namespace core {
       ExchangeType exchange = NullExchange, double notional = 0.0, OrderType order_type = OrderType::LIMIT,
       OrderFlag flag = OrderFlag::NONE, std::shared_ptr<Order> stop_target = nullptr);
 
-    virtual void rebase();
     virtual str_t toString() const;
     virtual json toJson() const;
     virtual json perspectiveSchema() const;

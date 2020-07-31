@@ -136,7 +136,7 @@ namespace core {
           collector.pushFill(taker_order);
 
           // change event
-          collector.pushChange(maker_order, true);
+          collector.pushChange(maker_order, true, to_fill);
 
           if (maker_order->flag == OrderFlag::IMMEDIATE_OR_CANCEL) {
             // cancel maker event, don't put in queue
@@ -165,7 +165,7 @@ namespace core {
           // don't append to deque
           // tell maker order filled
           collector.pushChange(taker_order);
-          collector.pushFill(maker_order, true);
+          collector.pushFill(maker_order, true, maker_remaining);
         }
       } else {
         // exactly equal
@@ -173,13 +173,13 @@ namespace core {
         taker_order->filled += maker_remaining;
 
         collector.pushFill(taker_order);
-        collector.pushFill(maker_order, true);
+        collector.pushFill(maker_order, true, to_fill);
       }
     }
 
     if (taker_order->filled == taker_order->volume) {
       // execute the taker order
-      collector.pushTrade(taker_order);
+      collector.pushTrade(taker_order, taker_order->filled);
 
       // return nothing to signify to stop
       for (std::shared_ptr<Order> order : stop_orders)

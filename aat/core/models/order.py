@@ -46,18 +46,18 @@ class Order(object):
             return _make_cpp_order(*args, **kwargs)
         return super(Order, cls).__new__(cls)
 
-    def __init__(self, volume, price, side, instrument=None, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.LIMIT, flag=OrderFlag.NONE, stop_target=None):
+    def __init__(self, volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.LIMIT, flag=OrderFlag.NONE, stop_target=None):
         self.__id = 0  # on construction, provide no ID until exchange assigns one
         self.__timestamp = datetime.now()
         self.__type = DataType.ORDER
 
-        assert instrument is None or isinstance(instrument, Instrument)
+        assert isinstance(instrument, Instrument)
         assert isinstance(exchange, ExchangeType)
         self.__instrument = instrument
         self.__exchange = exchange
 
         assert isinstance(volume, (int, float))
-        assert volume < float('inf') and (volume > 0 or order_type == OrderType.STOP)
+        assert volume < float('inf') and ((volume > 0 and order_type != OrderType.STOP) or (order_type == OrderType.STOP and volume == 0))
         assert order_type == OrderType.STOP or ((volume > 0.0) and (volume < float('inf')))
         assert isinstance(price, (int, float))
         assert price < float('inf')
@@ -65,7 +65,9 @@ class Order(object):
         assert isinstance(notional, (int, float))
         assert isinstance(order_type, OrderType)
         assert isinstance(flag, OrderFlag)
-        assert stop_target is None or (isinstance(stop_target, Order) and order_type == OrderType.STOP and stop_target.order_type != OrderType.STOP)
+        assert (order_type != OrderType.STOP and stop_target is None) or (isinstance(stop_target, Order) and order_type == OrderType.STOP and stop_target.order_type != OrderType.STOP)
+        assert order_type != OrderType.STOP or (isinstance(stop_target.instrument, Instrument))
+
         self.__volume = volume
         self.__price = price
         self.__side = side
@@ -151,7 +153,7 @@ class Order(object):
     def volume(self, volume: float) -> None:
         assert isinstance(volume, (int, float))
         assert volume < float('inf') and (volume > 0 or self.order_type == OrderType.STOP)
-        assert volume > self.filled
+        assert volume >= self.filled
         self.__volume = volume
 
     @property
@@ -176,10 +178,6 @@ class Order(object):
             self.volume == other.volume and \
             self.notional == other.notional and \
             self.filled == other.filled
-
-    def rebase(self) -> None:
-        self.__volume = self.__volume - self.__filled
-        self.__filled = 0.0
 
     def to_json(self) -> Mapping[str, Union[str, int, float]]:
         return \

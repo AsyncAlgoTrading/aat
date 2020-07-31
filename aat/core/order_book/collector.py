@@ -73,26 +73,26 @@ class _Collector(object):
         '''push order open'''
         self.push(Event(type=EventType.OPEN, target=order))
 
-    def pushFill(self, order, accumulate=False):
+    def pushFill(self, order, accumulate=False, filled_in_txn=0.0):
         '''push order fill'''
         if accumulate:
-            self.accumulate(order)
+            self.accumulate(order, filled_in_txn)
         self.push(Event(type=EventType.FILL, target=order))
 
-    def pushChange(self, order, accumulate=False):
+    def pushChange(self, order, accumulate=False, filled_in_txn=0.0):
         '''push order change'''
         if accumulate:
-            self.accumulate(order)
+            self.accumulate(order, filled_in_txn)
         self.push(Event(type=EventType.CHANGE, target=order))
 
-    def pushCancel(self, order, accumulate=False):
+    def pushCancel(self, order, accumulate=False, filled_in_txn=0.0):
         '''push order cancellation'''
         if accumulate:
-            self.accumulate(order)
+            self.accumulate(order, filled_in_txn)
         self.push(Event(type=EventType.CANCEL,
                         target=order))
 
-    def pushTrade(self, taker_order):
+    def pushTrade(self, taker_order, filled_in_txn):
         '''push taker order trade'''
         if not self.orders():
             raise Exception('No maker orders provided')
@@ -100,7 +100,7 @@ class _Collector(object):
         if taker_order.filled <= 0:
             raise Exception('No trade occurred')
 
-        if taker_order.volume < self.volume():
+        if filled_in_txn != self.volume():
             raise Exception('Accumulation error occurred')
 
         self.push(Event(type=EventType.TRADE,
@@ -111,10 +111,12 @@ class _Collector(object):
 
         self._taker_order = taker_order
 
-    def accumulate(self, order):
+    def accumulate(self, order, filled_in_txn):
+        assert filled_in_txn > 0
+
         # FIXME price change/volume down?
-        self._price = ((self._price * self._volume + order.price * order.filled) / (self._volume + order.filled)) if (self._volume + order.filled > 0) else 0.0
-        self._volume += order.filled
+        self._price = ((self._price * self._volume + order.price * filled_in_txn) / (self._volume + filled_in_txn)) if (self._volume + filled_in_txn > 0) else 0.0
+        self._volume += filled_in_txn
         self._orders.append(order)
 
     def clearLevel(self, price_level):
@@ -130,23 +132,12 @@ class _Collector(object):
         for pl in self._price_levels:
             pl.commit()
 
-        # reset order volume/filled
-        for order in self.orders():
-            order.rebase()
-
-        # reset order volume/filled
-        if self.taker_order():
-            self.taker_order().rebase()
-
         self.reset()
 
     def revert(self):
         '''revert the event queue'''
         for pl in self._price_levels:
             pl.revert()
-
-        for order in self.orders():
-            order.filled = 0.0
 
         self.reset()
 

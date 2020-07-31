@@ -55,8 +55,9 @@ class _PriceLevel(object):
                 # change event
                 self._collector.pushChange(order)
             else:
-                self._orders.append(order)
-                self._collector.pushOpen(order)
+                if order.filled < order.volume:
+                    self._orders.append(order)
+                    self._collector.pushOpen(order)
 
     def find(self, order):
         # check if order is in level
@@ -150,7 +151,7 @@ class _PriceLevel(object):
                     self._collector.pushFill(taker_order)
 
                     # change event
-                    self._collector.pushChange(maker_order, accumulate=True)
+                    self._collector.pushChange(maker_order, True, to_fill)
 
                     if maker_order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
                         # cancel maker event, don't put in queue
@@ -177,7 +178,7 @@ class _PriceLevel(object):
                     # don't append to deque
                     # tell maker order filled
                     self._collector.pushChange(taker_order)
-                    self._collector.pushFill(maker_order, accumulate=True)
+                    self._collector.pushFill(maker_order, True, maker_remaining)
 
             else:
                 # exactly equal
@@ -185,11 +186,11 @@ class _PriceLevel(object):
                 taker_order.filled += maker_remaining
 
                 self._collector.pushFill(taker_order)
-                self._collector.pushFill(maker_order, accumulate=True)
+                self._collector.pushFill(maker_order, True, to_fill)
 
         if taker_order.filled == taker_order.volume:
             # execute the taker order
-            self._collector.pushTrade(taker_order)
+            self._collector.pushTrade(taker_order, taker_order.filled)
 
             # return nothing to signify to stop
             return None, self._get_stop_orders()

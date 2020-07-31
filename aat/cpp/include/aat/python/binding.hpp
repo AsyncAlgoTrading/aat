@@ -125,7 +125,7 @@ PYBIND11_MODULE(binding, m) {
   py::class_<Collector>(m, "_CollectorCpp")
     .def(py::init<std::function<void(std::shared_ptr<Event>)>>())
     .def("pushOpen", &Collector::pushOpen)
-    .def("pushChange", &Collector::pushChange, py::arg("order").none(false), py::arg("accumulate") = false)
+    .def("pushChange", &Collector::pushChange, py::arg("order").none(false), py::arg("accumulate") = false, py::arg("filled_in_txn") = 0.0)
     .def("getVolume", &Collector::getVolume);
 
   /*******************************

@@ -41,31 +41,31 @@ namespace core {
   }
 
   void
-  Collector::pushFill(std::shared_ptr<Order> order, bool accumulate) {
+  Collector::pushFill(std::shared_ptr<Order> order, bool accumulate, double filled_in_txn) {
     if (accumulate) {
-      _accumulate(order);
+      _accumulate(order, filled_in_txn);
     }
     push(std::make_shared<Event>(EventType::FILL, order));
   }
 
   void
-  Collector::pushChange(std::shared_ptr<Order> order, bool accumulate) {
+  Collector::pushChange(std::shared_ptr<Order> order, bool accumulate, double filled_in_txn) {
     if (accumulate) {
-      _accumulate(order);
+      _accumulate(order, filled_in_txn);
     }
     push(std::make_shared<Event>(EventType::CHANGE, order));
   }
 
   void
-  Collector::pushCancel(std::shared_ptr<Order> order, bool accumulate) {
+  Collector::pushCancel(std::shared_ptr<Order> order, bool accumulate, double filled_in_txn) {
     if (accumulate) {
-      _accumulate(order);
+      _accumulate(order, filled_in_txn);
     }
     push(std::make_shared<Event>(EventType::CANCEL, order));
   }
 
   void
-  Collector::pushTrade(std::shared_ptr<Order> taker_order) {
+  Collector::pushTrade(std::shared_ptr<Order> taker_order, double filled_in_txn) {
     if (orders.size() == 0) {
       throw AATCPPException("No maker orders provied!");
     }
@@ -74,7 +74,7 @@ namespace core {
       throw AATCPPException("No Trade occurred");
     }
 
-    if (taker_order->volume < volume) {
+    if (filled_in_txn < volume) {
       throw AATCPPException("Accumulation error occurred");
     }
 
@@ -83,10 +83,10 @@ namespace core {
   }
 
   void
-  Collector::_accumulate(std::shared_ptr<Order> order) {
-    price = (volume + order->filled > 0) ? ((price * volume + order->price * order->filled) / (volume + order->filled))
+  Collector::_accumulate(std::shared_ptr<Order> order, double filled_in_txn) {
+    price = (volume + filled_in_txn > 0) ? ((price * volume + order->price * filled_in_txn) / (volume + filled_in_txn))
                                          : 0.0;
-    volume += order->filled;
+    volume += filled_in_txn;
     orders.push_back(order);
   }
 
@@ -108,14 +108,6 @@ namespace core {
 
     for (std::shared_ptr<PriceLevel> pl : price_levels)
       pl->commit();
-
-    // reset order volume/filled
-    for (std::shared_ptr<Order> order : orders)
-      order->rebase();
-
-    // reset order volume/filled
-    if (taker_order)
-      taker_order->rebase();
 
     reset();
   }
