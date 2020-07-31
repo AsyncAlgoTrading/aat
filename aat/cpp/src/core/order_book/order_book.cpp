@@ -58,8 +58,23 @@ namespace core {
     std::unordered_map<double, std::shared_ptr<PriceLevel>>& prices = (order->side == Side::BUY) ? buys : sells;
     std::unordered_map<double, std::shared_ptr<PriceLevel>>& prices_cross = (order->side == Side::BUY) ? sells : buys;
 
+    // set order price appropriately
+    double order_price;
+    if (order->order_type == OrderType::MARKET) {
+      if (order->flag == OrderFlag::NONE) {
+        // price goes infinite "fill however you want"
+        order_price
+          = (order->side == Side::BUY) ? std::numeric_limits<double>::max() : std::numeric_limits<double>::min();
+      } else {
+        // with a flag, the price dictates the "max allowed price" to AON or FOK under
+        order_price = order->price;
+      }
+    } else {
+      order_price = order->price;
+    }
+
     // check if crosses
-    while (top > 0.0 && ((order->side == Side::BUY) ? order->price >= top : order->price <= top)) {
+    while (top > 0.0 && ((order->side == Side::BUY) ? order_price >= top : order_price <= top)) {
       // execute order against level
       // if returns trade, it cleared the level
       // else, order was fully executed

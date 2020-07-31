@@ -233,7 +233,6 @@ class SyntheticExchange(Exchange):
                                 order.volume = new_volume
                                 orderbook.change(order)
                             else:
-                                print(order)
                                 orderbook.cancel(order)
 
                 elif levels:
@@ -259,7 +258,6 @@ class SyntheticExchange(Exchange):
                                 order.volume = new_volume
                                 orderbook.change(order)
                             else:
-                                print(order)
                                 orderbook.cancel(order)
 
             # print current state if running in verbose mode

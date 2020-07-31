@@ -66,6 +66,7 @@ namespace core {
     Collector& collector;
     std::deque<std::shared_ptr<Order>> orders{};
     std::deque<std::shared_ptr<Order>> orders_staged;
+    std::deque<double> orders_filled_staged;
     std::vector<std::shared_ptr<Order>> stop_orders;
     std::vector<std::shared_ptr<Order>> stop_orders_staged;
   };

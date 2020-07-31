@@ -116,8 +116,19 @@ class OrderBook(object):
         prices = self._buys if order.side == Side.BUY else self._sells
         prices_cross = self._sells if order.side == Side.BUY else self._buys
 
+        # set order price appropriately
+        if order.order_type == OrderType.MARKET:
+            if order.flag in (None, OrderFlag.NONE):
+                # price goes infinite "fill however you want"
+                order_price = float('inf') if order.side == Side.BUY else float('-inf')
+            else:
+                # with a flag, the price dictates the "max allowed price" to AON or FOK under
+                order_price = order.price
+        else:
+            order_price = order.price
+
         # check if crosses
-        while top is not None and (order.price >= top if order.side == Side.BUY else order.price <= top):
+        while top is not None and (order_price >= top if order.side == Side.BUY else order_price <= top):
             # execute order against level
             # if returns trade, it cleared the level
             # else, order was fully executed

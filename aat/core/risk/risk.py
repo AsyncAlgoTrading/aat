@@ -12,10 +12,9 @@ class RiskManager(object):
         self._manager = manager
 
     def newPosition(self, trade: Trade):
-        if trade.instrument in self._active_positions:
-            import pdb
-            pdb.set_trace()
+        my_order: Order = trade.my_order
 
+        if trade.instrument in self._active_positions:
             # update position
             cur_pos = self._active_positions[trade.instrument]
             cur_pos.trades.append(trade)
@@ -25,18 +24,22 @@ class RiskManager(object):
             prev_notional = cur_pos.notional
             prev_price = cur_pos.price
 
-            cur_pos.size = (cur_pos.size + trade.my_order.volume if trade.my_order.side == Side.BUY else -1 * trade.my_order.volume, trade.timestamp)
+            # FIXME separate maker, taker
+            cur_pos.size = (cur_pos.size + (my_order.volume if my_order.side == Side.BUY else -1 * my_order.volume), trade.timestamp)
 
             if (prev_size > 0 and cur_pos.size > prev_size) or (prev_size < 0 and cur_pos.size < prev_size):
                 # increasing position size
                 # update average price
-                cur_pos.price = ((prev_notional + (trade.my_order.volume * trade.price)) / cur_pos.size, trade.timestamp)
+                cur_pos.price = ((prev_notional + (my_order.volume * trade.price)) / cur_pos.size, trade.timestamp)
 
             elif (prev_size > 0 and cur_pos.size < 0) or (prev_size < 0 and cur_pos.size > 0):
                 # decreasing position size in one direction, increasing position size in other
-
                 # update realized pnl
-                cur_pos.pnl = (cur_pos.pnl + (prev_size * (trade.price - prev_price)), trade.timestamp)  # update realized pnl with closing position
+                pnl = cur_pos.pnl + (prev_size * (trade.price - prev_price))
+                cur_pos.pnl = (pnl, trade.timestamp)  # update realized pnl with closing position
+
+                # deduct from unrealized pnl
+                cur_pos.unrealizedPnl = (cur_pos.unrealizedPnl - pnl, trade.timestamp)
 
                 # update average price
                 cur_pos.price = (trade.price, trade.timestamp)
@@ -44,7 +47,11 @@ class RiskManager(object):
             else:
                 # decreasing position size
                 # update realized pnl
-                cur_pos.pnl = (cur_pos.pnl + (trade.volume * (prev_price - trade.price)), trade.timestamp)  # update realized pnl with closing position
+                pnl = cur_pos.pnl + (prev_size * (trade.price - prev_price))
+                cur_pos.pnl = (pnl, trade.timestamp)  # update realized pnl with closing position
+
+                # deduct from unrealized pnl
+                cur_pos.unrealizedPnl = (cur_pos.unrealizedPnl - pnl, trade.timestamp)
 
             # TODO close if side is 0
 
@@ -84,6 +91,7 @@ class RiskManager(object):
             pos = self._active_positions[trade.instrument]
             pos.unrealizedPnl = (pos.size * (trade.price - pos.price), trade.timestamp)
             pos.pnl = (pos.pnl, trade.timestamp)
+            pos.instrumentPrice = (trade.price, trade.timestamp)
 
     async def onCancel(self, event):
         # TODO

@@ -126,10 +126,18 @@ namespace core {
         if (maker_order->flag == OrderFlag::FILL_OR_KILL || maker_order->flag == OrderFlag::ALL_OR_NONE) {
           // kill the maker order and continue
           collector.pushCancel(maker_order);
+
+          // won't fill anything from that order
+          orders_filled_staged.push_back(0.0);
+
           continue;
+
         } else {
           // maker_order is partially executed
           maker_order->filled += to_fill;
+
+          // won't fill anything from that order
+          orders_filled_staged.push_back(to_fill);
 
           // will exit loop
           taker_order->filled = taker_order->volume;
@@ -162,6 +170,11 @@ namespace core {
           return nullptr;
         } else {
           // maker_order is fully executed
+          maker_order->filled = maker_order->volume;
+
+          // append filled in case need to revert
+          orders_filled_staged.push_back(maker_order->volume);
+
           // don't append to deque
           // tell maker order filled
           collector.pushChange(taker_order);
@@ -171,6 +184,9 @@ namespace core {
         // exactly equal
         maker_order->filled += to_fill;
         taker_order->filled += maker_remaining;
+
+        // won't fill anything from that order
+        orders_filled_staged.push_back(to_fill);
 
         collector.pushFill(taker_order);
         collector.pushFill(maker_order, true, to_fill);
@@ -199,6 +215,7 @@ namespace core {
   PriceLevel::clear() {
     orders.clear();
     orders_staged.clear();
+    orders_filled_staged.clear();
     stop_orders.clear();
     stop_orders_staged.clear();
   }
@@ -210,14 +227,25 @@ namespace core {
 
   void
   PriceLevel::revert() {
+    // reset orders
     orders.clear();
     orders.insert(
       orders.begin(), std::make_move_iterator(orders_staged.begin()), std::make_move_iterator(orders_staged.end()));
-    orders_staged.clear();
 
+    // deduct filled amount
+    for (std::size_t i = 0; i < orders.size(); ++i)
+      orders[i]->filled -= orders_filled_staged[i];
+
+    // reset staged
+    orders_staged.clear();
+    orders_filled_staged.clear();
+
+    // reset stop orders
     stop_orders.clear();
     stop_orders.insert(stop_orders.begin(), std::make_move_iterator(stop_orders_staged.begin()),
       std::make_move_iterator(stop_orders_staged.end()));
+
+    // reset staged
     stop_orders_staged.clear();
   }
 

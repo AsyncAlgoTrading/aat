@@ -20,6 +20,7 @@ class _PriceLevel(object):
         "_price",
         "_orders",
         "_orders_staged",
+        "_orders_filled_staged",
         "_stop_orders",
         "_stop_orders_staged",
         "_collector"
@@ -34,6 +35,7 @@ class _PriceLevel(object):
         self._price = price
         self._orders = deque()
         self._orders_staged = deque()
+        self._orders_filled_staged = deque()
         self._stop_orders = []
         self._stop_orders_staged = []
         self._collector = collector
@@ -140,11 +142,17 @@ class _PriceLevel(object):
                 if maker_order.flag in (OrderFlag.FILL_OR_KILL, OrderFlag.ALL_OR_NONE):
                     # kill the maker order and continue
                     self._collector.pushCancel(maker_order)
+
+                    # won't fill anything from that order
+                    self._orders_filled_staged.append(0.0)
                     continue
 
                 else:
                     # maker_order is partially executed
                     maker_order.filled += to_fill
+
+                    # append filled in case need to revert
+                    self._orders_filled_staged.append(to_fill)
 
                     # will exit loop
                     taker_order.filled = taker_order.volume
@@ -175,6 +183,10 @@ class _PriceLevel(object):
                 else:
                     # maker_order is fully executed
                     maker_order.filled = maker_order.volume
+
+                    # append filled in case need to revert
+                    self._orders_filled_staged.append(maker_order.volume)
+
                     # don't append to deque
                     # tell maker order filled
                     self._collector.pushChange(taker_order)
@@ -184,6 +196,9 @@ class _PriceLevel(object):
                 # exactly equal
                 maker_order.filled += to_fill
                 taker_order.filled += maker_remaining
+
+                # append filled in case need to revert
+                self._orders_filled_staged.append(to_fill)
 
                 self._collector.pushFill(taker_order)
                 self._collector.pushFill(maker_order, True, to_fill)
@@ -205,6 +220,7 @@ class _PriceLevel(object):
         '''clear queues'''
         self._orders.clear()
         self._orders_staged.clear()
+        self._orders_filled_staged.clear()
         self._stop_orders = []
         self._stop_orders_staged = []
 
@@ -221,9 +237,23 @@ class _PriceLevel(object):
 
     def revert(self):
         '''staged order reverted, unstage the orders'''
+        assert len(self._orders) == 0
+
+        # reset orders
         self._orders = self._orders_staged
+
+        # deduct filled amount
+        for i, filled in enumerate(self._orders_filled_staged):
+            self._orders[i].filled -= filled
+
+        # reset staged
         self._orders_staged = deque()
+        self._orders_filled_staged = deque()
+
+        # reset stop_orders
         self._stop_orders = self._stop_orders_staged
+
+        # reset staged
         self._stop_orders_staged = []
 
     def __bool__(self):

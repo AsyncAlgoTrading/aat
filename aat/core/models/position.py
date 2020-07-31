@@ -19,6 +19,8 @@ class Position(object):
         "__notional_history",
         "__price",
         "__price_history",
+        "__instrumentPrice",
+        "__instrumentPrice_history",
         "__instrument",
         "__exchange",
         "__pnl",
@@ -53,6 +55,9 @@ class Position(object):
         self.__price = price
         self.__price_history = [(price, timestamp)]
 
+        self.__instrumentPrice = price
+        self.__instrumentPrice_history = [(price, timestamp)]
+
         self.__pnl = 0.0
         self.__pnl_history = [(0.0, timestamp)]
 
@@ -85,6 +90,10 @@ class Position(object):
         return self.__price_history
 
     @property
+    def instrumentPriceHistory(self):
+        return self.__instrumentPrice_history
+
+    @property
     def pnlHistory(self):
         return self.__pnl_history
 
@@ -110,6 +119,22 @@ class Position(object):
 
         self.__price = price
         self.__price_history.append((self.price, when))
+
+    @property
+    def instrumentPrice(self):
+        return round(self.__instrumentPrice, 4)
+
+    @instrumentPrice.setter
+    def instrumentPrice(self, instrument_price):
+        '''Tuple as we need temporal information for history'''
+        assert isinstance(instrument_price, tuple)
+        instrument_price, when = instrument_price
+
+        assert isinstance(instrument_price, (int, float))
+        assert isinstance(when, datetime)
+
+        self.__instrumentPrice = instrument_price
+        self.__instrumentPrice_history.append((self.instrumentPrice, when))
 
     @property
     def size(self):
@@ -164,15 +189,15 @@ class Position(object):
         return round(self.__unrealizedPnl, 4)
 
     @unrealizedPnl.setter
-    def unrealizedPnl(self, unrealizedPnl):
+    def unrealizedPnl(self, unrealized_pnl):
         '''Tuple as we need temporal information for history'''
-        assert isinstance(unrealizedPnl, tuple)
-        unrealizedPnl, when = unrealizedPnl
+        assert isinstance(unrealized_pnl, tuple)
+        unrealized_pnl, when = unrealized_pnl
 
-        assert isinstance(unrealizedPnl, (int, float))
+        assert isinstance(unrealized_pnl, (int, float))
         assert isinstance(when, datetime)
 
-        self.__unrealizedPnl = unrealizedPnl
+        self.__unrealizedPnl = unrealized_pnl
         self.__unrealizedPnl_history.append((self.unrealizedPnl, when))
 
     @property
