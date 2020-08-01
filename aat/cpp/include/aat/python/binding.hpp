@@ -93,8 +93,7 @@ PYBIND11_MODULE(binding, m) {
     .def(py::init<Instrument&, ExchangeType&>())
     .def(py::init<Instrument&, ExchangeType&, std::function<void(std::shared_ptr<Event>)>>())
     .def("__repr__", &OrderBook::toString)
-    .def(
-      "__iter__", [](const OrderBook& o) { return py::make_iterator(o.begin(), o.end()); },
+    .def("__iter__", [](const OrderBook& o) { return py::make_iterator(o.begin(), o.end()); },
       py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
     .def("setCallback", &OrderBook::setCallback)
     .def("add", &OrderBook::add)
@@ -110,8 +109,7 @@ PYBIND11_MODULE(binding, m) {
    ******************************/
   py::class_<PriceLevel>(m, "_PriceLevelCpp")
     .def(py::init<double, Collector&>())
-    .def(
-      "__iter__", [](const PriceLevel& pl) { return py::make_iterator(pl.cbegin(), pl.cend()); },
+    .def("__iter__", [](const PriceLevel& pl) { return py::make_iterator(pl.cbegin(), pl.cend()); },
       py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
     .def("__getitem__", &PriceLevel::operator[])
     .def("__bool__", &PriceLevel::operator bool)

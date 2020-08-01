@@ -46,7 +46,7 @@ class SyntheticExchange(Exchange):
         for instrument, orderbook in self._orderbooks.items():
 
             # pick a random startpoint, endpoint, and midpoint
-            offset = choice((20, 50, 100, 150, 200, 300))
+            offset = 50
             start = round(random() * offset, 2) + offset
             end = start + round(random() * offset + offset / 5, 2) + offset * 2
             mid = (start + end) / 2.0
@@ -165,12 +165,12 @@ class SyntheticExchange(Exchange):
             # add a new buy order, a new sell order, or a cross
             do = choice(['buy', 'sell'] + ['change'] * 5 + ['cross'] + ['cancel'] * 2)
             levels = orderbook.topOfBook()
-            volume = round(random() * 10, 0) + 5
+            volume = round(random() * 10, 0) + 10
 
             if do == 'buy':
                 # new buy order
                 # choose a price level
-                price = round(levels[Side.BUY][0] - choice((0, .1, .2, .5, 1)), 2)
+                price = round(levels[Side.BUY][0] - choice((0, .5, 1, 1.5, 2)), 2)
                 order = Order(volume=volume,
                               price=price,
                               side=Side.BUY,
@@ -185,7 +185,7 @@ class SyntheticExchange(Exchange):
 
             elif do == 'sell':
                 # new sell order
-                price = round(levels[Side.SELL][0] + choice((0, .1, .2, .5, 1)), 2)
+                price = round(levels[Side.SELL][0] + choice((0, .5, 1, 1.5, 2)), 2)
 
                 if price == float('inf'):
                     # liquidity exausted
@@ -210,16 +210,16 @@ class SyntheticExchange(Exchange):
                 # update trends
                 if random() < .1:
                     self._trend.append('sell')
-                if random() < .2:
-                    self._trend = [{'buy': 'sell', 'sell': 'buy'}.get(_) for _ in self._trend]
-                elif random() > .95:
+                # if random() < .2:
+                #     self._trend = [{'buy': 'sell', 'sell': 'buy'}.get(_) for _ in self._trend]
+                elif random() > .9:
                     # accelerate the trend
                     self._trend.append('buy')
 
                 side = choice(self._trend)
                 if side == 'buy':
                     # cross to buy
-                    price = round(levels[Side.BUY][0] + choice((.5, 1)), 2)
+                    price = round(levels[Side.BUY][0] + choice((1, 2, 5)), 2)
 
                     if price <= 0.0:
                         # liquidity exausted
@@ -240,7 +240,7 @@ class SyntheticExchange(Exchange):
 
                 else:
                     # cross to sell
-                    price = round(levels[Side.SELL][0] - choice((.5, 1)), 2)
+                    price = round(levels[Side.SELL][0] - choice((1, 2, 5)), 2)
 
                     if price == float('inf'):
                         # liquidity exausted
@@ -282,7 +282,7 @@ class SyntheticExchange(Exchange):
                             orderbook.cancel(order)
 
                         else:
-                            new_volume = max(order.volume + choice((-1, -.5, .5, 1)), 1.0)
+                            new_volume = max(order.volume + choice((-5, -1, 1, 5)), 1.0)
                             if new_volume > order.filled:
                                 order.volume = new_volume
                                 orderbook.change(order)
@@ -307,7 +307,7 @@ class SyntheticExchange(Exchange):
                             orderbook.cancel(order)
 
                         else:
-                            new_volume = max(order.volume + choice((-1, -.5, .5, 1)), 1.0)
+                            new_volume = max(order.volume + choice((-5, -1, 1, 5)), 1.0)
                             if new_volume > order.filled:
                                 order.volume = new_volume
                                 orderbook.change(order)

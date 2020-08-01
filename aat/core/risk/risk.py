@@ -21,8 +21,8 @@ class RiskManager(object):
 
             # TODO update notional/size/price etc
             prev_size = cur_pos.size
-            prev_notional = cur_pos.notional
             prev_price = cur_pos.price
+            prev_notional = prev_size * prev_price
 
             # FIXME separate maker, taker
             cur_pos.size = (cur_pos.size + (my_order.volume if my_order.side == Side.BUY else -1 * my_order.volume), trade.timestamp)
@@ -58,7 +58,6 @@ class RiskManager(object):
         else:
             self._active_positions[trade.instrument] = Position(price=trade.price,
                                                                 size=trade.volume,
-                                                                notional=trade.volume * trade.price,
                                                                 timestamp=trade.timestamp,
                                                                 instrument=trade.instrument,
                                                                 exchange=trade.exchange,
