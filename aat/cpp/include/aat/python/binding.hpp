@@ -56,6 +56,7 @@ PYBIND11_MODULE(binding, m) {
     .value("BOUGHT", EventType::BOUGHT)
     .value("SOLD", EventType::SOLD)
     .value("REJECTED", EventType::REJECTED)
+    .value("CANCELED", EventType::CANCELED)
     .export_values();
 
   py::enum_<DataType>(m, "DataTypeCpp", py::arithmetic())

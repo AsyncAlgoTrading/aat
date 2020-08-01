@@ -136,12 +136,7 @@ class RiskManager(object):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onBought(self, event: Event):
-        trade: Trade = event.target  # type: ignore
-        self._active_orders.remove(trade.my_order)
-        self.newPosition(trade)
-
-    async def onSold(self, event: Event):
+    async def onTraded(self, event: Event):
         trade: Trade = event.target  # type: ignore
         self._active_orders.remove(trade.my_order)
         self.newPosition(trade)

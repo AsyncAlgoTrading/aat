@@ -44,6 +44,7 @@ class EventType(BaseEnum):
     BOUGHT = 'BOUGHT'
     SOLD = 'SOLD'
     REJECTED = 'REJECTED'
+    CANCELED = 'CANCELED'
 
 
 class DataType(BaseEnum):

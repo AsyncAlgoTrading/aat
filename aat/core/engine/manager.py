@@ -269,21 +269,10 @@ class StrategyManager(EventHandler):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onBought(self, event: Event):
+    async def onTraded(self, event: Event):
         # TODO
-        await self._risk_mgr.onBought(event)
-        await self._order_mgr.onBought(event)
-
-        if event in self._alerted_events:
-            strategy, order = self._alerted_events[event]
-            # remove from list of open orders if done
-            if order.filled >= order.volume:
-                self._strategy_open_orders[strategy].remove(order)
-
-    async def onSold(self, event: Event):
-        # TODO
-        await self._risk_mgr.onSold(event)
-        await self._order_mgr.onSold(event)
+        await self._risk_mgr.onTraded(event)
+        await self._order_mgr.onTraded(event)
 
         if event in self._alerted_events:
             strategy, order = self._alerted_events[event]
@@ -302,10 +291,20 @@ class StrategyManager(EventHandler):
             # remove from list of open orders
             self._strategy_open_orders[strategy].remove(order)
 
+    async def onCanceled(self, event: Event):
+        # TODO
+        await self._risk_mgr.onCanceled(event)
+        await self._order_mgr.onCanceled(event)
+
+        # synchronize state
+        if event in self._alerted_events:
+            strategy, order = self._alerted_events[event]
+            # remove from list of open orders
+            self._strategy_open_orders[strategy].remove(order)
+
     #################
     # Other Methods #
     #################
-
     def now(self):
         '''Return the current datetime. Useful to avoid code changes between
         live trading and backtesting. Defaults to `datetime.now`'''

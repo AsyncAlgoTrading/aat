@@ -40,7 +40,8 @@ namespace config {
     // Order Events
     BOUGHT = 11,
     SOLD = 12,
-    REJECTED = 13
+    REJECTED = 13,
+    CANCELED = 14
   };
 
   enum class DataType {
@@ -93,6 +94,7 @@ namespace config {
     "BOUGHT",
     "SOLD",
     "REJECTED",
+    "CANCELED",
   };
 
   static const std::vector<str_t> DataType_names = {
@@ -146,6 +148,7 @@ namespace config {
     {"BOUGHT", EventType::BOUGHT},
     {"SOLD", EventType::SOLD},
     {"REJECTED", EventType::REJECTED},
+    {"CANCELED", EventType::CANCELED},
   };
 
   static std::unordered_map<str_t, DataType> _DataType_mapping = {

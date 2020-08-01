@@ -115,7 +115,7 @@ class OrderManager(object):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onBought(self, event: Event):
+    async def onTraded(self, event: Event):
         # TODO
         pass
 
@@ -124,5 +124,9 @@ class OrderManager(object):
         pass
 
     async def onRejected(self, event: Event):
+        # TODO
+        pass
+
+    async def onCanceled(self, event: Event):
         # TODO
         pass

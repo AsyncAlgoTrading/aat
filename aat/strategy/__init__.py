@@ -14,6 +14,10 @@ class Strategy(EventHandler):
     async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
 
+    async def onOrder(self, event: Event) -> None:
+        '''Called whenever an Order `Open`, `Cancel`, `Change`, or `Fill` event is received'''
+        pass
+
     async def onOpen(self, event: Event) -> None:
         '''Called whenever an Order `Open` event is received'''
         pass
@@ -58,7 +62,7 @@ class Strategy(EventHandler):
     # Order Entry Callbacks #
     #########################
     async def onBought(self, event: Event):
-        '''callback method for if your order executes.
+        '''callback method for if your order executes (buy)
 
         Args:
             trade (Trade): the trade/s as your order completes
@@ -66,7 +70,15 @@ class Strategy(EventHandler):
         pass
 
     async def onSold(self, event: Event):
-        '''callback method for if your order executes.
+        '''callback method for if your order executes (sell)
+
+        Args:
+            trade (Trade): the trade/s as your order completes
+        '''
+        pass
+
+    async def onTraded(self, event: Event):
+        '''callback method for if your order executes (either buy or sell)
 
         Args:
             trade (Trade): the trade/s as your order completes
@@ -78,6 +90,14 @@ class Strategy(EventHandler):
 
         Args:
             order (Order): the order you attempted to make
+        '''
+        pass
+
+    async def onCanceled(self, event: Event):
+        '''callback method for if your order is canceled
+
+        Args:
+            order (Order): the order you canceled
         '''
         pass
 
@@ -216,6 +236,7 @@ class Strategy(EventHandler):
 
 
 setattr(Strategy.onTrade, '_original', 1)
+setattr(Strategy.onOrder, '_original', 1)
 setattr(Strategy.onOpen, '_original', 1)
 setattr(Strategy.onCancel, '_original', 1)
 setattr(Strategy.onChange, '_original', 1)
@@ -230,3 +251,4 @@ setattr(Strategy.onExit, '_original', 1)
 setattr(Strategy.onBought, '_original', 1)
 setattr(Strategy.onSold, '_original', 1)
 setattr(Strategy.onRejected, '_original', 1)
+setattr(Strategy.onTraded, '_original', 1)
