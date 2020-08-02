@@ -162,10 +162,10 @@ class CalculationsMixin(object):
         ############
         # Plotting #
         ############
-        fig, axes = plt.subplots(5, 1,
+        fig, axes = plt.subplots(7, 1,
                                  sharex=True,
                                  figsize=(7, 7),
-                                 gridspec_kw={'height_ratios': [2, 1, 3, 1, 1]})
+                                 gridspec_kw={'height_ratios': [2, 1, 3, 1, 1, 1, 1]})
         plt.rc('legend', fontsize=4)  # using a size in points
 
         # Plot prices
@@ -215,7 +215,20 @@ class CalculationsMixin(object):
         df_returns = df_returns.groupby(df_returns.index).last()
         df_returns.drop_duplicates(inplace=True)
 
-        fig2 = plt.figure(figsize=(7, 7))
+        # rolling stddev
+        total_returns = self._df_notional.sum(axis=1).pct_change(1).fillna(0.0)
+        total_returns_rolling = total_returns.rolling(10)
+        total_returns_rolling.std().plot(ax=axes[5])
+        axes[5].axhline(total_returns.std())
+        axes[5].set_ylabel('Std.')
+
+        sharpe = total_returns.values.mean() / total_returns.values.std() * np.sqrt(252)
+        total_returns['sharpe'] = total_returns.rolling(10).mean() / total_returns.rolling(10).std() * np.sqrt(252)
+        total_returns['sharpe'].plot(ax=axes[6])
+        axes[6].axhline(sharpe)
+        axes[6].set_ylabel('Sharpe')
+
+        fig2 = plt.figure(figsize=(9, 5))
         grid = plt.GridSpec(2, len(df_returns.columns), figure=fig2, wspace=0.4, hspace=0.3)
         axes2 = []
         for _ in range(len(df_returns.columns)):
