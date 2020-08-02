@@ -44,7 +44,9 @@ if sys.version_info.major < 3 or sys.version_info.minor < 7:
 
 requires = [
     'aiostream>=0.3.1',
+    'matplotlib>2.2',
     'numpy>=1.11.0',
+    'pandas>=0.24.1'
     'perspective-python>=0.4.8',
     'pybind11>=2',
     'traitlets>=4.3.3',
