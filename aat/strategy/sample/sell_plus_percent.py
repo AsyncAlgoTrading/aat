@@ -10,7 +10,7 @@ class SellPlusPercentStrategy(Strategy):
 
         self._up_percent = 1.0 + float(percent) / 100
         self._down_percent = 1.0 - float(percent) / 100
-        self._stop: Dict[Instrument, Tuple[float, float, float]]  = {}
+        self._stop: Dict[Instrument, Tuple[float, float, float]] = {}
 
     async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
