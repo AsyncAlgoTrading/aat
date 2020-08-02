@@ -1,6 +1,6 @@
 import asyncio
-import pandas as pd
-import pyEX
+import pandas as pd  # type: ignore
+import pyEX  # type: ignore
 from collections import deque
 from ..exchange import Exchange
 from aat.config import InstrumentType, EventType, Side, TradingType

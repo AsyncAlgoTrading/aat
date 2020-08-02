@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Tuple, Union
 
 from ..exchange import ExchangeType
 from ..instrument import Instrument
@@ -116,7 +117,7 @@ class Position(object):
         return round(self.__instrumentPrice, 4)
 
     @instrumentPrice.setter
-    def instrumentPrice(self, instrument_price):
+    def instrumentPrice(self, instrument_price: Union[Tuple[Union[int, float], datetime], Union[int, float]]):
         '''Tuple as we need temporal information for history'''
         assert isinstance(instrument_price, tuple)
         instrument_price, when = instrument_price
@@ -135,7 +136,7 @@ class Position(object):
         return self.__size
 
     @size.setter
-    def size(self, size):
+    def size(self, size: Union[Tuple[Union[int, float], datetime], Union[int, float]]):
         '''Tuple as we need temporal information for history'''
         assert isinstance(size, tuple)
         size, when = size
@@ -151,7 +152,7 @@ class Position(object):
         return round(self.__price, 4)
 
     @price.setter
-    def price(self, price):
+    def price(self, price: Union[Tuple[Union[int, float], datetime], Union[int, float]]):
         '''Tuple as we need temporal information for history'''
         assert isinstance(price, tuple)
         price, when = price
@@ -168,7 +169,7 @@ class Position(object):
         return round(self.__investment, 4)
 
     @investment.setter
-    def investment(self, investment):
+    def investment(self, investment: Union[Tuple[Union[int, float], datetime], Union[int, float]]):
         '''Tuple as we need temporal information for history'''
         assert isinstance(investment, tuple)
         investment, when = investment
@@ -184,7 +185,7 @@ class Position(object):
         return round(self.__notional, 4)
 
     @notional.setter
-    def notional(self, notional):
+    def notional(self, notional: Union[Tuple[Union[int, float], datetime], Union[int, float]]):
         '''Tuple as we need temporal information for history'''
         assert isinstance(notional, tuple)
         notional, when = notional
@@ -200,7 +201,7 @@ class Position(object):
         return round(self.__pnl, 4)
 
     @pnl.setter
-    def pnl(self, pnl):
+    def pnl(self, pnl: Union[Tuple[Union[int, float], datetime], Union[int, float]]):
         '''Tuple as we need temporal information for history'''
         assert isinstance(pnl, tuple)
         pnl, when = pnl
@@ -216,7 +217,7 @@ class Position(object):
         return round(self.__unrealizedPnl, 4)
 
     @unrealizedPnl.setter
-    def unrealizedPnl(self, unrealized_pnl):
+    def unrealizedPnl(self, unrealized_pnl: Union[Tuple[Union[int, float], datetime], Union[int, float]]):
         '''Tuple as we need temporal information for history'''
         assert isinstance(unrealized_pnl, tuple)
         unrealized_pnl, when = unrealized_pnl

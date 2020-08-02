@@ -20,19 +20,19 @@ class RiskManager(object):
             cur_pos.trades.append(trade)
 
             # TODO update notional/size/price etc
-            prev_size = cur_pos.size
-            prev_price = cur_pos.price
-            prev_notional = prev_size * prev_price
+            prev_size: float = cur_pos.size
+            prev_price: float = cur_pos.price
+            prev_notional: float = prev_size * prev_price
 
             # FIXME separate maker, taker
             cur_pos.size = (cur_pos.size + (my_order.volume if my_order.side == Side.BUY else -1 * my_order.volume), trade.timestamp)
 
-            if (prev_size > 0 and cur_pos.size > prev_size) or (prev_size < 0 and cur_pos.size < prev_size):
+            if (prev_size > 0 and cur_pos.size > prev_size) or (prev_size < 0 and cur_pos.size < prev_size):  # type: ignore
                 # increasing position size
                 # update average price
                 cur_pos.price = ((prev_notional + (my_order.volume * trade.price)) / cur_pos.size, trade.timestamp)
 
-            elif (prev_size > 0 and cur_pos.size < 0) or (prev_size < 0 and cur_pos.size > 0):
+            elif (prev_size > 0 and cur_pos.size < 0) or (prev_size < 0 and cur_pos.size > 0):  # type: ignore
                 # decreasing position size in one direction, increasing position size in other
                 # update realized pnl
                 pnl = cur_pos.pnl + (prev_size * (trade.price - prev_price))

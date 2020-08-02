@@ -227,5 +227,5 @@ class CalculationsMixin(object):
         plt.show()
 
     def ipython(self):
-        import IPython
+        import IPython  # type: ignore
         IPython.embed()
