@@ -1,9 +1,10 @@
 from abc import abstractmethod
 from ..config import Side
 from ..core import Event, EventHandler, Trade, Order, Instrument, ExchangeType
+from ..core.risk import CalculationsMixin
 
 
-class Strategy(EventHandler):
+class Strategy(EventHandler, CalculationsMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
