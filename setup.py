@@ -49,6 +49,7 @@ requires = [
     'pandas>=0.24.1'
     'perspective-python>=0.4.8',
     'pybind11>=2',
+    'tornado>=6.0',
     'traitlets>=4.3.3',
 ]
 
