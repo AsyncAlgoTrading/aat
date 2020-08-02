@@ -5,6 +5,9 @@ CONFIG=./config/synthetic.cfg
 run:    ## Clean and make target, run target
 	$(PYTHON) -m aat $(CONFIG)
 
+iex:    ## Clean and make target, run target
+	$(PYTHON) -m aat ./config/iex.cfg
+
 runcpp:  build  ## Clean and make target, run target
 	AAT_USE_CPP=1 $(PYTHON) -m aat $(CONFIG)
 

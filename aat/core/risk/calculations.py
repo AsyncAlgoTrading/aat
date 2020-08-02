@@ -174,7 +174,7 @@ class CalculationsMixin(object):
 
         # Plot Positions
         self._df_size.plot(kind='area', ax=axes[1], stacked=True, linewidth=0)
-        axes[1].set_ylabel('Position Size')
+        axes[1].set_ylabel('Positions')
 
         df_position_notional = self._df_size.copy()
         for col in df_position_notional.columns:
@@ -182,7 +182,7 @@ class CalculationsMixin(object):
 
         df_position_notional.fillna(method='ffill', inplace=True)
         df_position_notional.plot(kind='area', ax=axes[2], stacked=True, linewidth=0)
-        axes[2].set_ylabel('Position Size')
+        axes[2].set_ylabel('Notional')
 
         # Plot PNLs
         # cm = matplotlib.cm.get_cmap("Paired")

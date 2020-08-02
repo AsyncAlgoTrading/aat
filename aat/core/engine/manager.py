@@ -14,6 +14,9 @@ class StrategyManager(EventHandler):
         # store trading engine
         self._engine = trading_engine
 
+        # store the exchanges
+        self._exchanges = exchanges
+
         # pull from trading engine class
         self._risk_mgr = self._engine.risk_manager
         self._order_mgr = self._engine.order_manager
@@ -319,6 +322,9 @@ class StrategyManager(EventHandler):
         if strategy not in self._data_subscriptions:
             self._data_subscriptions[strategy] = []
         self._data_subscriptions[strategy].append(instrument)
+
+        for exc in self._exchanges:
+            exc.subscribe(instrument)
 
     def dataSubscriptions(self, handler, event):
         '''does handler subscribe to the data for event'''

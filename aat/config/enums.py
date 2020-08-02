@@ -57,15 +57,28 @@ class DataType(BaseEnum):
 
 class InstrumentType(BaseEnum):
     OTHER = 'OTHER'
+
     EQUITY = 'EQUITY'
+
+    # TODO ETF separate?
+
     BOND = 'BOND'
+
     OPTION = 'OPTION'
+
     FUTURE = 'FUTURE'
+
     PAIR = 'PAIR'
+
     SPREAD = 'SPREAD'
+
     FUTURESOPTION = 'FUTURESOPTION'
+
     MUTUALFUND = 'MUTUALFUND'
+
     COMMODITIES = 'COMMODITIES'
+
+    # TODO Warrant?
 
     # Non-tradeable
     CURRENCY = 'CURRENCY'
