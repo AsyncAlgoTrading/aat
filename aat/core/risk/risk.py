@@ -6,55 +6,62 @@ class RiskManager(object):
     def __init__(self):
         self._active_orders = []
         self._active_positions = {}
-        self._instrument_positions_map = {}
 
     def _setManager(self, manager):
         '''install manager'''
         self._manager = manager
 
     def newPosition(self, trade: Trade):
-        if trade.id in self._active_positions:
+        my_order: Order = trade.my_order
+
+        if trade.instrument in self._active_positions:
             # update position
-            cur_pos = self._active_positions[trade.id]
+            cur_pos = self._active_positions[trade.instrument]
             cur_pos.trades.append(trade)
 
             # TODO update notional/size/price etc
-            prev_size = cur_pos.size
-            prev_notional = cur_pos.notional
-            prev_price = cur_pos.price
+            prev_size: float = cur_pos.size
+            prev_price: float = cur_pos.price
+            prev_notional: float = prev_size * prev_price
 
-            cur_pos.size += trade.volume if trade.side == Side.BUY else -1 * trade.volume
+            # FIXME separate maker, taker
+            cur_pos.size = (cur_pos.size + (my_order.volume if my_order.side == Side.BUY else -1 * my_order.volume), trade.timestamp)
 
-            if (prev_size > 0 and cur_pos.size > prev_size) or (prev_size < 0 and cur_pos.size < prev_size):
+            if (prev_size > 0 and cur_pos.size > prev_size) or (prev_size < 0 and cur_pos.size < prev_size):  # type: ignore
                 # increasing position size
                 # update average price
-                cur_pos.price = (prev_notional + (trade.volume * trade.price)) / cur_pos.size
+                cur_pos.price = ((prev_notional + (my_order.volume * trade.price)) / cur_pos.size, trade.timestamp)
 
-            elif (prev_size > 0 and cur_pos.size < 0) or (prev_size < 0 and cur_pos.size > 0):
+            elif (prev_size > 0 and cur_pos.size < 0) or (prev_size < 0 and cur_pos.size > 0):  # type: ignore
                 # decreasing position size in one direction, increasing position size in other
-
                 # update realized pnl
-                cur_pos.pnl += (prev_size * (trade.price - prev_price))  # update realized pnl with closing position
+                pnl = cur_pos.pnl + (prev_size * (trade.price - prev_price))
+                cur_pos.pnl = (pnl, trade.timestamp)  # update realized pnl with closing position
+
+                # deduct from unrealized pnl
+                cur_pos.unrealizedPnl = (cur_pos.unrealizedPnl - pnl, trade.timestamp)
 
                 # update average price
-                cur_pos.price = trade.price
+                cur_pos.price = (trade.price, trade.timestamp)
 
             else:
                 # decreasing position size
                 # update realized pnl
-                cur_pos.pnl += (trade.volume * (prev_price - trade.price))  # update realized pnl with closing position
+                pnl = cur_pos.pnl + (prev_size * (trade.price - prev_price))
+                cur_pos.pnl = (pnl, trade.timestamp)  # update realized pnl with closing position
+
+                # deduct from unrealized pnl
+                cur_pos.unrealizedPnl = (cur_pos.unrealizedPnl - pnl, trade.timestamp)
 
             # TODO close if side is 0
 
         else:
-            self._active_positions[trade.id] = Position(price=trade.price,
-                                                        size=trade.volume,
-                                                        notional=trade.volume * trade.price,
-                                                        instrument=trade.instrument,
-                                                        exchange=trade.exchange,
-                                                        trades=[trade])
-
-            self._instrument_positions_map[trade.instrument] = self._active_positions[trade.id]
+            self._active_positions[trade.instrument] = Position(price=trade.price,
+                                                                size=trade.volume,
+                                                                timestamp=trade.timestamp,
+                                                                instrument=trade.instrument,
+                                                                exchange=trade.exchange,
+                                                                trades=[trade])
 
     # *********************
     # Risk Methods        *
@@ -78,10 +85,12 @@ class RiskManager(object):
     # **********************
     async def onTrade(self, event: Event):
         trade: Trade = event.target  # type: ignore
-        # TODO
-        if trade.instrument in self._instrument_positions_map:
-            pos = self._instrument_positions_map[trade.instrument]
-            pos.unrealizedPnl = pos.size * (trade.price - pos.price)
+        # TODO move
+        if trade.instrument in self._active_positions:
+            pos = self._active_positions[trade.instrument]
+            pos.unrealizedPnl = (pos.size * (trade.price - pos.price), trade.timestamp)
+            pos.pnl = (pos.pnl, trade.timestamp)
+            pos.instrumentPrice = (trade.price, trade.timestamp)
 
     async def onCancel(self, event):
         # TODO
@@ -126,16 +135,11 @@ class RiskManager(object):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onBought(self, event: Event):
-        trade: Trade = event.target  # type: ignore
-        self._active_orders.remove(trade.my_order)
-        self.newPosition(trade)
-
-    async def onSold(self, event: Event):
+    async def onTraded(self, event: Event):
         trade: Trade = event.target  # type: ignore
         self._active_orders.remove(trade.my_order)
         self.newPosition(trade)
 
     async def onRejected(self, event: Event):
-        trade: Trade = event.target  # type: ignore
-        self._active_orders.remove(trade.my_order)
+        order: Order = event.target  # type: ignore
+        self._active_orders.remove(order)

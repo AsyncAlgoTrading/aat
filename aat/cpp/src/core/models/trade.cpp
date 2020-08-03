@@ -11,7 +11,7 @@ namespace core {
   str_t
   Trade::toString() const {
     sstream_t ss;
-    ss << "Trade+( id=" << id << ", timestamp=" << format_timestamp(timestamp)
+    ss << "Trade+( id=" << id << ", timestamp=" << format_timestamp(timestamp) << volume << "@" << price
        << ", maker_orders=" << maker_orders.size() << ", taker_order=" << taker_order->toString() << ")";
     return ss.str();
   }
@@ -21,6 +21,9 @@ namespace core {
     json ret;
     ret["id"] = id;
     ret["timestamp"] = format_timestamp(timestamp);
+    ret["volume"] = volume;
+    ret["price"] = price;
+
     ret["taker_order"] = taker_order->toJson();
 
     std::vector<json> orders;
@@ -36,6 +39,8 @@ namespace core {
     json ret;
     ret["id"] = "int";
     ret["timestamp"] = "int";
+    ret["volume"] = "float";
+    ret["price"] = "float";
 
     // FIXME
     return ret;

@@ -1,12 +1,26 @@
-from aat import Strategy, Event, Order, Trade, Side
+from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
 
 
-class BuyAndHoldStrategy(Strategy):
+class BuyAndHoldIEXStrategy(Strategy):
     def __init__(self, *args, **kwargs) -> None:
-        super(BuyAndHoldStrategy, self).__init__(*args, **kwargs)
+        super(BuyAndHoldIEXStrategy, self).__init__(*args, **kwargs)
 
     async def onStart(self, event: Event) -> None:
-        self.subscribe(self.instruments()[0])
+        # Get available instruments from exchange
+        insts = self.instruments()
+        print('Available Instruments:\n{}'.format(insts))
+
+        for name in ('FB', 'AMZN', 'NFLX', 'GOOG', 'MSFT', 'AAPL', 'NVDA'):
+            # Create an instrument
+            inst = Instrument(name=name, type=InstrumentType.EQUITY)
+
+            # Check that its available
+            if inst not in insts:
+                raise Exception('Not available on exchange: {}'.format(name))
+
+            # Subscribe
+            self.subscribe(inst)
+            print('Subscribing to {}'.format(inst))
 
     async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
@@ -15,13 +29,13 @@ class BuyAndHoldStrategy(Strategy):
         # no past trades, no current orders
         if not self.orders(trade.instrument) and not self.trades(trade.instrument):
             req = Order(side=Side.BUY,
-                        price=trade.price + 10,
-                        volume=1.1,
+                        price=trade.price,
+                        volume=5000//trade.price,
                         instrument=trade.instrument,
                         order_type=Order.Types.MARKET,
                         exchange=trade.exchange)
 
-            print("requesting buy : {}".format(req))
+            print('requesting buy : {}'.format(req))
 
             await self.newOrder(req)
 
@@ -44,3 +58,4 @@ class BuyAndHoldStrategy(Strategy):
 
     async def onExit(self, event: Event) -> None:
         print('Finishing...')
+        self.performanceCharts()

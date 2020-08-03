@@ -1,9 +1,12 @@
 import asyncio
+import inspect
 import os
 import os.path
+
 from aiostream.stream import merge  # type: ignore
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from traitlets.config.application import Application  # type: ignore
 from traitlets import validate, TraitError, Unicode, Bool, List, Instance  # type: ignore
 from tornado.web import StaticFileHandler, RedirectHandler, Application as TornadoApplication
@@ -20,7 +23,7 @@ from ..models import Event, Error
 from ..portfolio import PortfolioManager
 from ..risk import RiskManager
 from ..table import TableHandler
-from ...config import EventType, getStrategies, getExchanges
+from ...config import TradingType, EventType, getStrategies, getExchanges
 from ...exchange import Exchange
 # from aat.strategy import Strategy
 from ...ui import ServerApplication
@@ -38,13 +41,13 @@ class TradingEngine(Application):
 
     # Configureable parameters
     verbose = Bool(default_value=True)
-    api = Bool(default_value=True)
+    api = Bool(default_value=False)
     port = Unicode(default_value='8080', help="Port to run on").tag(config=True)
     event_loop = Instance(klass=asyncio.events.AbstractEventLoop)
     executor = Instance(klass=ThreadPoolExecutor, args=(4,), kwargs={})
 
     # Core components
-    trading_type = Unicode(default_value='simulation')
+    trading_type = Instance(klass=TradingType, default_value=TradingType.SIMULATION)
     order_manager = Instance(OrderManager, args=(), kwargs={})
     risk_manager = Instance(RiskManager, args=(), kwargs={})
     portfolio_manager = Instance(PortfolioManager, args=(), kwargs={})
@@ -64,7 +67,7 @@ class TradingEngine(Application):
 
     @validate('trading_type')
     def _validate_trading_type(self, proposal):
-        if proposal['value'] not in ('live', 'simulation', 'backtest'):
+        if proposal['value'] not in (TradingType.LIVE, TradingType.SIMULATION, TradingType.SANDBOX, TradingType.BACKTEST):
             raise TraitError(f'Invalid trading type: {proposal["value"]}')
         return proposal['value']
 
@@ -86,7 +89,7 @@ class TradingEngine(Application):
         self.api = bool(int(config.get('general', {}).get('api', self.api)))
 
         # Trading type
-        self.trading_type = config.get('general', {}).get('trading_type', 'simulation')
+        self.trading_type = TradingType(config.get('general', {}).get('trading_type', 'simulation').upper())
 
         # Load exchange instances
         self.exchanges = getExchanges(config.get('exchange', {}).get('exchanges', []), trading_type=self.trading_type, verbose=self.verbose)
@@ -104,6 +107,12 @@ class TradingEngine(Application):
         # setup subscriptions
         self._handler_subscriptions = {m: [] for m in EventType.__members__.values()}
 
+        # setup `now` handler for backtest
+        self._latest = datetime.fromtimestamp(0)
+
+        # register internal management event handler before all strategy handlers
+        self.registerHandler(self.manager)
+
         # install event handlers
         strategies = getStrategies(config.get('strategy', {}).get('strategies', []))
         for strategy in strategies:
@@ -113,9 +122,6 @@ class TradingEngine(Application):
         # warn if no event handlers installed
         if not self.event_handlers:
             self.log.critical('Warning! No event handlers set')
-
-        # register internal management event handler
-        self.registerHandler(self.manager)
 
         # install print handler if verbose
         if self.verbose:
@@ -157,10 +163,17 @@ class TradingEngine(Application):
 
             # register callbacks for event types
             for type in EventType.__members__.values():
-                # get callback, could be none if not implemented
-                cb = handler.callback(type)
-                if cb:
-                    self.registerCallback(type, cb, handler)
+                # get callback or callback tuple
+                # could be none if not implemented
+                cbs = handler.callback(type)
+
+                # if not a tuple, make for consistency
+                if not isinstance(cbs, tuple):
+                    cbs = (cbs, )
+
+                for cb in cbs:
+                    if cb:
+                        self.registerCallback(type, cb, handler)
             handler._setManager(self.manager)
             return handler
         return None
@@ -203,11 +216,14 @@ class TradingEngine(Application):
         # send start event to all callbacks
         await self.tick(Event(type=EventType.START, target=None))
 
-        async with merge(*(exch.tick() for exch in self.exchanges)).stream() as stream:
+        async with merge(*(exch.tick() for exch in self.exchanges if inspect.isasyncgenfunction(exch.tick))).stream() as stream:
             # stream through all events
             async for event in stream:
                 # tick exchange event to handlers
                 await self.tick(event)
+
+                # TODO move out of critical path
+                self._latest = event.target.timestamp if hasattr(event, 'target') and hasattr(event.target, 'timestamp') else self._latest
 
                 # process any secondary events
                 while self._queued_events:
@@ -240,6 +256,11 @@ class TradingEngine(Application):
                     raise
                 await self.tick(Event(type=EventType.ERROR, target=Error(target=event, handler=handler, callback=callback, exception=e)))
                 await asyncio.sleep(1)
+
+    def now(self):
+        '''Return the current datetime. Useful to avoid code changes between
+        live trading and backtesting. Defaults to `datetime.now`'''
+        return self._latest if self.trading_type == TradingType.BACKTEST else datetime.now()
 
     def start(self):
         try:

@@ -32,6 +32,13 @@ PYBIND11_MODULE(binding, m) {
    * Enums
    ******************************/
   using namespace aat::config;
+  py::enum_<TradingType>(m, "TradingTypeCpp", py::arithmetic())
+    .value("LIVE", TradingType::LIVE)
+    .value("SIMULATION", TradingType::SIMULATION)
+    .value("SANDBOX", TradingType::SANDBOX)
+    .value("BACKTEST", TradingType::BACKTEST)
+    .export_values();
+
   py::enum_<Side>(m, "SideCpp", py::arithmetic()).value("BUY", Side::BUY).value("SELL", Side::SELL).export_values();
 
   py::enum_<EventType>(m, "EventTypeCpp", py::arithmetic())
@@ -49,6 +56,7 @@ PYBIND11_MODULE(binding, m) {
     .value("BOUGHT", EventType::BOUGHT)
     .value("SOLD", EventType::SOLD)
     .value("REJECTED", EventType::REJECTED)
+    .value("CANCELED", EventType::CANCELED)
     .export_values();
 
   py::enum_<DataType>(m, "DataTypeCpp", py::arithmetic())
@@ -95,6 +103,30 @@ PYBIND11_MODULE(binding, m) {
     .def("level", (std::vector<std::shared_ptr<PriceLevel>>(OrderBook::*)(double) const) & OrderBook::level)
     .def("level", (std::vector<double>(OrderBook::*)(std::uint64_t) const) & OrderBook::level)
     .def("levels", &OrderBook::levelsMap);
+
+  /*******************************
+   * PriceLevel
+   ******************************/
+  py::class_<PriceLevel>(m, "_PriceLevelCpp")
+    .def(py::init<double, Collector&>())
+    .def("__iter__", [](const PriceLevel& pl) { return py::make_iterator(pl.cbegin(), pl.cend()); },
+      py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
+    .def("__getitem__", &PriceLevel::operator[])
+    .def("__bool__", &PriceLevel::operator bool)
+    .def("getPrice", &PriceLevel::getPrice)
+    .def("getVolume", &PriceLevel::getVolume)
+    .def("add", &PriceLevel::add);
+
+  /*******************************
+   * Collector
+   ******************************/
+  using namespace pybind11::literals;
+  py::class_<Collector>(m, "_CollectorCpp")
+    .def(py::init<std::function<void(std::shared_ptr<Event>)>>())
+    .def("pushOpen", &Collector::pushOpen)
+    .def("pushChange", &Collector::pushChange, py::arg("order").none(false), py::arg("accumulate") = false,
+      py::arg("filled_in_txn") = 0.0)
+    .def("getVolume", &Collector::getVolume);
 
   /*******************************
    * Exchange
@@ -169,14 +201,16 @@ PYBIND11_MODULE(binding, m) {
     .def_readwrite("notional", &Order::notional);
 
   py::class_<Trade, std::shared_ptr<Trade>>(m, "TradeCpp")
-    .def(py::init<uint_t, timestamp_t, std::deque<std::shared_ptr<Order>>, std::shared_ptr<Order>>())
+    .def(py::init<uint_t, double, double, std::deque<std::shared_ptr<Order>>, std::shared_ptr<Order>>())
     .def("__repr__", &Trade::toString)
     .def("slippage", &Trade::slippage)
     .def("transactionCost", &Trade::transactionCost)
     .def("toJson", &Trade::toJson)
     .def("perspectiveSchema", &Trade::perspectiveSchema)
     .def_readwrite("id", &Trade::id)
-    .def_readwrite("timestamp", &Trade::timestamp)
+    .def_readonly("timestamp", &Trade::timestamp)
+    .def_readwrite("volume", &Trade::volume)
+    .def_readwrite("price", &Trade::price)
     .def_readonly("type", &Trade::type)
     .def_readwrite("maker_orders", &Trade::maker_orders)
     .def_readwrite("taker_order", &Trade::taker_order)

@@ -32,12 +32,12 @@ def _config_to_dict(filename: str) -> Dict[str, Dict[str, Union[str, List[str], 
 def getStrategies(strategies: List) -> List:
     strategy_instances = []
     for strategy in strategies:
-        if type(strategy) == list:
+        if isinstance(strategy, list):
             mod, clazz = strategy[0].split(':')
             args = strategy[1:]
         else:
             mod, clazz = strategy.split(':')
-            args = ()
+            args = []
         mod = importlib.import_module(mod)
         clazz = getattr(mod, clazz)
         strategy_instances.append(clazz(*args))
@@ -47,11 +47,15 @@ def getStrategies(strategies: List) -> List:
 def getExchanges(exchanges: List, trading_type, verbose: bool = False) -> List:
     exchange_instances = []
     for exchange in exchanges:
-        mod, clazz_and_args = exchange.split(':')
-        clazz, args = clazz_and_args.split(',') if ',' in clazz_and_args else clazz_and_args, ()
+        if isinstance(exchange, list):
+            mod, clazz = exchange[0].split(':')
+            args = exchange[1:]
+        else:
+            mod, clazz = exchange.split(':')
+            args = []
         mod = importlib.import_module(mod)
         clazz = getattr(mod, clazz)
-        exchange_instances.append(clazz(*args, trading_type=trading_type, verbose=verbose))
+        exchange_instances.append(clazz(trading_type, verbose, *args))
     return exchange_instances
 
 

@@ -1,12 +1,16 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 
 
 class _MarketData(metaclass=ABCMeta):
     '''internal only class to represent the streaming-source
     side of a data source'''
-    @abstractmethod
-    def instruments(self):
+
+    async def instruments(self):
         '''get list of available instruments'''
+        return []
+
+    def subscribe(self, instrument):
+        '''subscribe to market data for a given instrument'''
 
     async def tick(self):
         '''return data from exchange'''

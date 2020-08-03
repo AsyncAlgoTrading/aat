@@ -14,6 +14,9 @@ class StrategyManager(EventHandler):
         # store trading engine
         self._engine = trading_engine
 
+        # store the exchanges
+        self._exchanges = exchanges
+
         # pull from trading engine class
         self._risk_mgr = self._engine.risk_manager
         self._order_mgr = self._engine.order_manager
@@ -33,6 +36,9 @@ class StrategyManager(EventHandler):
         self._strategy_open_orders = {}
         self._strategy_past_orders = {}
         self._strategy_trades = {}
+
+        # internal use for synchronizing
+        self._alerted_events = {}
 
     # ********************* #
     # Engine facing methods #
@@ -55,12 +61,12 @@ class StrategyManager(EventHandler):
         # append to list of trades
         self._strategy_trades[strategy].append(trade)
 
-        # remove from list of open orders if done
-        if trade.my_order and trade.my_order.filled >= trade.my_order.volume:
-            self._strategy_open_orders[strategy].remove(trade.my_order)
-
         # push event to loop
-        self._engine.pushEvent(Event(type=Event.Types.BOUGHT, target=trade))
+        ev = Event(type=Event.Types.BOUGHT, target=trade)
+        self._engine.pushEvent(ev)
+
+        # synchronize state when engine processes this
+        self._alerted_events[ev] = (strategy, trade.my_order)
 
     # TODO ugly private method
     async def _onSold(self, strategy, trade: Trade):
@@ -72,41 +78,47 @@ class StrategyManager(EventHandler):
         # append to list of trades
         self._strategy_trades[strategy].append(trade)
 
-        # remove from list of open orders if done
-        if trade.my_order and trade.my_order.filled >= trade.my_order.volume:
-            self._strategy_open_orders[strategy].remove(trade.my_order)
-
         # push event to loop
-        self._engine.pushEvent(Event(type=Event.Types.SOLD, target=trade))
+        ev = Event(type=Event.Types.SOLD, target=trade)
+        self._engine.pushEvent(ev)
+
+        # synchronize state when engine processes this
+        self._alerted_events[ev] = (strategy, trade.my_order)
 
     # TODO ugly private method
-    async def _onReject(self, strategy, order: Order):
+
+    async def _onRejected(self, strategy, order: Order):
         '''callback method for if your order fails to execute
 
         Args:
             order (Order): the order you attempted to make
         '''
-        # remove from list of open orders
-        self._strategy_open_orders[strategy].remove(order)
-
         # push event to loop
-        self._engine.pushEvent(Event(type=Event.Types.REJECTED, target=order))
+        ev = Event(type=Event.Types.REJECTED, target=order)
+        self._engine.pushEvent(ev)
+
+        # synchronize state when engine processes this
+        self._alerted_events[ev] = (strategy, order)
 
     # *********************
     # Order Entry Methods *
     # *********************
+
     async def newOrder(self, strategy, order: Order):
         '''helper method, defers to buy/sell'''
         # ensure has list
         if strategy not in self._strategy_open_orders:
             self._strategy_open_orders[strategy] = []
+
         if strategy not in self._strategy_past_orders:
             self._strategy_past_orders[strategy] = []
+
         if strategy not in self._strategy_trades:
             self._strategy_trades[strategy] = []
 
         # append to open orders list
         self._strategy_open_orders[strategy].append(order)
+
         # append to past orders list
         self._strategy_past_orders[strategy].append(order)
 
@@ -119,9 +131,13 @@ class StrategyManager(EventHandler):
             await self._order_mgr.newOrder(strategy, order)
             return ret
 
-        # raise onReject
-        strategy.onReject(order)
+        # raise onRejected
+        self._engine.pushEvent(Event(type=Event.Types.REJECTED, target=order))
         return None
+
+    async def cancel(self, strategy, order: Order):
+        '''cancel an open order'''
+        await self._order_mgr.cancel(strategy, order)
 
     def orders(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         '''select all open orders
@@ -256,24 +272,47 @@ class StrategyManager(EventHandler):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onBought(self, event: Event):
+    async def onTraded(self, event: Event):
         # TODO
-        await self._risk_mgr.onBought(event)
-        await self._order_mgr.onBought(event)
+        await self._risk_mgr.onTraded(event)
+        await self._order_mgr.onTraded(event)
 
-    async def onSold(self, event: Event):
-        # TODO
-        await self._risk_mgr.onSold(event)
-        await self._order_mgr.onSold(event)
+        if event in self._alerted_events:
+            strategy, order = self._alerted_events[event]
+            # remove from list of open orders if done
+            if order.filled >= order.volume:
+                self._strategy_open_orders[strategy].remove(order)
 
     async def onRejected(self, event: Event):
         # TODO
         await self._risk_mgr.onRejected(event)
         await self._order_mgr.onRejected(event)
 
+        # synchronize state
+        if event in self._alerted_events:
+            strategy, order = self._alerted_events[event]
+            # remove from list of open orders
+            self._strategy_open_orders[strategy].remove(order)
+
+    async def onCanceled(self, event: Event):
+        # TODO
+        await self._risk_mgr.onCanceled(event)
+        await self._order_mgr.onCanceled(event)
+
+        # synchronize state
+        if event in self._alerted_events:
+            strategy, order = self._alerted_events[event]
+            # remove from list of open orders
+            self._strategy_open_orders[strategy].remove(order)
+
     #################
     # Other Methods #
     #################
+    def now(self):
+        '''Return the current datetime. Useful to avoid code changes between
+        live trading and backtesting. Defaults to `datetime.now`'''
+        return self._engine.now()
+
     def instruments(self, type: InstrumentType = None, exchange=None):
         '''Return list of all available instruments'''
         return Instrument._instrumentdb.instruments(type=type, exchange=exchange)
@@ -283,6 +322,9 @@ class StrategyManager(EventHandler):
         if strategy not in self._data_subscriptions:
             self._data_subscriptions[strategy] = []
         self._data_subscriptions[strategy].append(instrument)
+
+        for exc in self._exchanges:
+            exc.subscribe(instrument)
 
     def dataSubscriptions(self, handler, event):
         '''does handler subscribe to the data for event'''
