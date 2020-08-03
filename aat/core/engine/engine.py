@@ -41,7 +41,7 @@ class TradingEngine(Application):
 
     # Configureable parameters
     verbose = Bool(default_value=True)
-    api = Bool(default_value=True)
+    api = Bool(default_value=False)
     port = Unicode(default_value='8080', help="Port to run on").tag(config=True)
     event_loop = Instance(klass=asyncio.events.AbstractEventLoop)
     executor = Instance(klass=ThreadPoolExecutor, args=(4,), kwargs={})

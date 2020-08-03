@@ -30,7 +30,7 @@ class BuyAndHoldIEXStrategy(Strategy):
         if not self.orders(trade.instrument) and not self.trades(trade.instrument):
             req = Order(side=Side.BUY,
                         price=trade.price,
-                        volume=1,
+                        volume=5000//trade.price,
                         instrument=trade.instrument,
                         order_type=Order.Types.MARKET,
                         exchange=trade.exchange)
