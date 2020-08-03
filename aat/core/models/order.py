@@ -167,7 +167,7 @@ class Order(object):
         self.__filled = filled
 
     def __repr__(self) -> str:
-        return f'Order( instrument={self.instrument}, {self.volume}@{self.price}, side={self.side}, exchange={self.exchange})'
+        return f'Order( instrument={self.instrument}, timestamp={self.timestamp}, {self.volume}@{self.price}, side={self.side}, exchange={self.exchange})'
 
     def __eq__(self, other) -> bool:
         assert isinstance(other, Order)

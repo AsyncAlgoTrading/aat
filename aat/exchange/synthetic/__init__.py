@@ -147,6 +147,7 @@ class SyntheticExchange(Exchange):
 
             while self._pending_orders:
                 order = self._pending_orders.popleft()
+                self._jumptime(order)
                 self._orderbooks[order.instrument].add(order)
                 await asyncio.sleep(self._sleep)
 
@@ -322,9 +323,17 @@ class SyntheticExchange(Exchange):
     # Order Entry Methods #
     # ******************* #
     async def newOrder(self, order: Order):
+        # assign id
         order.id = self._id
-        self._id += 1
+
+        # adjust time if backtesting
+
         self._jumptime(order)
+        # fix exchange if messed up
+        # if order.exchange != self.exchange():
+        #     order.exchange = self.exchange()
+
+        self._id += 1
         self._pending_orders.append(order)
         self._omit_cancel.add(order.id)  # don't cancel user orders
         return order

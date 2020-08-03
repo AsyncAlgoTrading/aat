@@ -117,6 +117,7 @@ namespace core {
 
           // execute secondaries
           for (std::shared_ptr<Order> secondary : secondaries)
+            secondary->timestamp = order->timestamp  // adjust trigger time
             add(secondary);
         }
       } else {
@@ -144,6 +145,7 @@ namespace core {
 
             // execute secondaries
             for (std::shared_ptr<Order> secondary : secondaries)
+              secondary->timestamp = order->timestamp  // adjust trigger time
               add(secondary);
           }
         } else if (order->flag == OrderFlag::ALL_OR_NONE) {
@@ -169,6 +171,7 @@ namespace core {
 
             // execute secondaries
             for (std::shared_ptr<Order> secondary : secondaries)
+              secondary->timestamp = order->timestamp  // adjust trigger time
               add(secondary);
           }
         } else if (order->flag == OrderFlag::IMMEDIATE_OR_CANCEL) {
@@ -182,6 +185,7 @@ namespace core {
 
             // execute secondaries
             for (std::shared_ptr<Order> secondary : secondaries)
+              secondary->timestamp = order->timestamp  // adjust trigger time
               add(secondary);
 
           } else {
@@ -198,6 +202,7 @@ namespace core {
 
             // execute secondaries
             for (std::shared_ptr<Order> secondary : secondaries)
+              secondary->timestamp = order->timestamp  // adjust trigger time
               add(secondary);
           }
         } else {
@@ -218,6 +223,7 @@ namespace core {
 
           // execute secondaries
           for (std::shared_ptr<Order> secondary : secondaries)
+            secondary->timestamp = order->timestamp  // adjust trigger time
             add(secondary);
         }
       }
@@ -232,6 +238,7 @@ namespace core {
 
       // execute secondaries
       for (std::shared_ptr<Order> secondary : secondaries)
+        secondary->timestamp = order->timestamp  // adjust trigger time
         add(secondary);
     }
 
