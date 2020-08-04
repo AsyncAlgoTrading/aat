@@ -123,7 +123,7 @@ class Trade(object):
         self.__my_order = order
 
     def __repr__(self) -> str:
-        return f'Trade( id={self.id}, timestamp{self.timestamp}, {self.volume}@{self.price}, \n\ttaker_order={self.taker_order},\n\tmaker_orders={self.maker_orders}, )'
+        return f'Trade( id={self.id}, timestamp={self.timestamp}, {self.volume}@{self.price}, \n\ttaker_order={self.taker_order},\n\tmaker_orders={self.maker_orders}, )'
 
     def __eq__(self, other) -> bool:
         assert isinstance(other, Trade)

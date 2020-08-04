@@ -174,6 +174,7 @@ class OrderBook(object):
 
                     # execute secondaries
                     for secondary in secondaries:
+                        secondary.timestamp = order.timestamp  # adjust trigger time
                         self.add(secondary)
 
             else:
@@ -204,6 +205,7 @@ class OrderBook(object):
 
                         # execute secondaries
                         for secondary in secondaries:
+                            secondary.timestamp = order.timestamp  # adjust trigger time
                             self.add(secondary)
 
                 elif order.flag == OrderFlag.ALL_OR_NONE:
@@ -233,6 +235,7 @@ class OrderBook(object):
 
                         # execute secondaries
                         for secondary in secondaries:
+                            secondary.timestamp = order.timestamp  # adjust trigger time
                             self.add(secondary)
 
                 elif order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
@@ -248,6 +251,7 @@ class OrderBook(object):
 
                         # execute secondaries
                         for secondary in secondaries:
+                            secondary.timestamp = order.timestamp  # adjust trigger time
                             self.add(secondary)
 
                     else:
@@ -264,6 +268,7 @@ class OrderBook(object):
 
                         # execute secondaries
                         for secondary in secondaries:
+                            secondary.timestamp = order.timestamp  # adjust trigger time
                             self.add(secondary)
 
                 else:
@@ -283,6 +288,7 @@ class OrderBook(object):
 
                     # execute secondaries
                     for secondary in secondaries:
+                        secondary.timestamp = order.timestamp  # adjust trigger time
                         self.add(secondary)
         else:
             if order.filled > order.volume:
@@ -297,6 +303,7 @@ class OrderBook(object):
 
             # execute secondaries
             for secondary in secondaries:
+                secondary.timestamp = order.timestamp  # adjust trigger time
                 self.add(secondary)
 
         # clear the collector
