@@ -17,6 +17,7 @@ class Instrument(object):
     __exchanges: List[ExchangeType]
     __type: InstrumentType
     __brokerExchange: Optional[str]
+    __brokerId: Optional[str]
     __currency: Optional['Instrument']
     __underlying: Optional['Instrument']
     __leg1: Optional['Instrument']
@@ -29,6 +30,7 @@ class Instrument(object):
         "__type",
         "__exchanges",
         "__brokerExchange",
+        "__brokerId",
         "__currency",
         "__underlying",
         "__leg1",
@@ -71,6 +73,9 @@ class Instrument(object):
             brokerExchange (str): Underlying exchange to use (e.g. not aat.exchange,
                                   but real exchange in cases where aat is wrapping a
                                   broker like IB, TDA, etc)
+                Applies to: All
+
+            brokerId (str): Broker's id  if available
                 Applies to: All
 
             currency (Instrument): Underlying currency
@@ -127,6 +132,12 @@ class Instrument(object):
         else:
             self.__brokerExchange = kwargs.get("brokerExchange")
 
+        if hasattr(self, "_Instrument__brokerId"):
+            assert kwargs.get('brokerId') is None or self.__brokerExchange == kwargs.get("brokerId")
+        else:
+            self.__brokerId = kwargs.get("brokerId")
+
+
         if hasattr(self, "_Instrument__currency"):
             assert kwargs.get('currency') is None or self.__currency == kwargs.get("currency")
         else:
@@ -159,6 +170,7 @@ class Instrument(object):
 
         # Optional Fields Validation
         assert isinstance(self.__brokerExchange, (None.__class__, str))
+        assert isinstance(self.__brokerId, (None.__class__, str))
         assert isinstance(self.__currency, (None.__class__, Instrument))
         assert isinstance(self.__underlying, (None.__class__, Instrument))
         assert isinstance(self.__leg1, (None.__class__, Instrument))
