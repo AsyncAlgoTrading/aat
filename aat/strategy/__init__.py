@@ -110,6 +110,17 @@ class Strategy(EventHandler, CalculationsMixin):
         # defer to execution
         return await self._manager.newOrder(self, order)
 
+    async def cancel(self, order: Order):
+        '''cancel an open order
+
+        Args:
+            order (Order): an order to submit to the exchange
+        Returns:
+            None
+        '''
+        # defer to execution
+        return await self._manager.cancel(self, order)
+
     async def buy(self, order: Order):
         '''submit a buy order. Note that this is merely a request for an order, it provides no guarantees that the order will
         execute. At a later point, if your order executes, you will receive an alert via the `bought` method

@@ -133,7 +133,7 @@ class Instrument(object):
             self.__brokerExchange = kwargs.get("brokerExchange")
 
         if hasattr(self, "_Instrument__brokerId"):
-            assert kwargs.get('brokerId') is None or self.__brokerExchange == kwargs.get("brokerId")
+            assert kwargs.get('brokerId') is None or self.__brokerId == kwargs.get("brokerId")
         else:
             self.__brokerId = kwargs.get("brokerId")
 
@@ -202,6 +202,10 @@ class Instrument(object):
     @property
     def brokerExchange(self):
         return self.__brokerExchange
+
+    @property
+    def brokerId(self):
+        return self.__brokerId
 
     @property
     def currency(self):
