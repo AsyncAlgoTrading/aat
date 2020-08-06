@@ -34,13 +34,5 @@ class BuyAndHoldStrategy(Strategy):
         import sys
         sys.exit(0)
 
-    def slippage(self, trade: Trade) -> Trade:
-        # trade.slippage = trade.price * .0001  # .01% price impact TODO
-        return trade
-
-    def transactionCost(self, trade: Trade) -> Trade:
-        # trade.transactionCost = trade.price * trade.volume * .0025  # 0.0025 max fee TODO
-        return trade
-
     async def onExit(self, event: Event) -> None:
         print('Finishing...')

@@ -332,3 +332,16 @@ class StrategyManager(EventHandler):
             # subscribe all by default
             return True
         return event.target.instrument in self._data_subscriptions[handler]
+
+    async def lookup(self, instrument: Instrument, exchange=None):
+        '''Return list of all available instruments that match the instrument given'''
+        if exchange in self._exchanges:
+            return await self._exchanges.lookup(instrument)
+        elif exchange is None:
+            ret = []
+            for exchange in self._exchanges:
+                ret.extend(await exchange.lookup(instrument))
+            return ret
+
+        # None implement
+        raise NotImplementedError()

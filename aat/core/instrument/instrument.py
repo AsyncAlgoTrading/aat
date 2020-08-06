@@ -127,43 +127,42 @@ class Instrument(object):
             self.__exchanges = []
 
         # Optional Fields
-        if hasattr(self, "_Instrument__brokerExchange"):
+        if hasattr(self, "_Instrument__brokerExchange") and self.__brokerExchange is not None:
             assert kwargs.get('brokerExchange') is None or self.__brokerExchange == kwargs.get("brokerExchange")
         else:
             self.__brokerExchange = kwargs.get("brokerExchange")
 
-        if hasattr(self, "_Instrument__brokerId"):
+        if hasattr(self, "_Instrument__brokerId") and self.__brokerId is not None:
             assert kwargs.get('brokerId') is None or self.__brokerId == kwargs.get("brokerId")
         else:
             self.__brokerId = kwargs.get("brokerId")
 
-
-        if hasattr(self, "_Instrument__currency"):
+        if hasattr(self, "_Instrument__currency") and self.__currency is not None:
             assert kwargs.get('currency') is None or self.__currency == kwargs.get("currency")
         else:
             self.__currency = kwargs.get("currency")
 
-        if hasattr(self, "_Instrument__underlying"):
+        if hasattr(self, "_Instrument__underlying") and self.__underlying is not None:
             assert kwargs.get('underlying') is None or self.__underlying == kwargs.get("underlying")
         else:
             self.__underlying = kwargs.get("underlying")
 
-        if hasattr(self, "_Instrument__leg1"):
+        if hasattr(self, "_Instrument__leg1") and self.__leg1 is not None:
             assert kwargs.get('leg1') is None or self.__leg1 == kwargs.get("leg1")
         else:
             self.__leg1 = kwargs.get("leg1")
 
-        if hasattr(self, "_Instrument__leg2"):
+        if hasattr(self, "_Instrument__leg2") and self.__leg2 is not None:
             assert kwargs.get('leg2') is None or self.__leg2 == kwargs.get("leg2")
         else:
             self.__leg2 = kwargs.get("leg2")
 
-        if hasattr(self, "_Instrument__leg1_side"):
+        if hasattr(self, "_Instrument__leg1_side") and self.__leg1_side is not None:
             assert kwargs.get('leg1_side') is None or self.__leg1_side == kwargs.get("leg1_side")
         else:
             self.__leg1_side = kwargs.get("leg1_side")
 
-        if hasattr(self, "_Instrument__leg2_side"):
+        if hasattr(self, "_Instrument__leg2_side") and self.__leg2_side is not None:
             assert kwargs.get('leg2_side') is None or self.__leg2_side == kwargs.get("leg2_side")
         else:
             self.__leg2_side = kwargs.get("leg2_side")
@@ -232,6 +231,8 @@ class Instrument(object):
         return self.__leg2_side
 
     def __eq__(self, other):
+        if other is None:
+            return False
         return self.name == other.name and self.type == other.type
 
     def __hash__(self):

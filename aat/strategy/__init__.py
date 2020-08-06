@@ -226,6 +226,10 @@ class Strategy(EventHandler, CalculationsMixin):
         '''Subscribe to market data for the given instrument'''
         return self._manager.subscribe(instrument=instrument, strategy=self)
 
+    async def lookup(self, instrument, exchange=None):
+        '''Return list of all available instruments that match the instrument given'''
+        return await self._manager.lookup(instrument, exchange=exchange)
+
     def slippage(self, trade: Trade):
         '''method to inject slippage when backtesting
 

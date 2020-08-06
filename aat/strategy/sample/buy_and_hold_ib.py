@@ -1,18 +1,16 @@
 from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
 
 
-class BuyAndHoldIEXStrategy(Strategy):
+class BuyAndHoldIBStrategy(Strategy):
     def __init__(self, *args, **kwargs) -> None:
-        super(BuyAndHoldIEXStrategy, self).__init__(*args, **kwargs)
+        super(BuyAndHoldIBStrategy, self).__init__(*args, **kwargs)
 
     async def onStart(self, event: Event) -> None:
         # Get available instruments from exchange
-        insts = self.instruments()
-        print('Available Instruments:\n{}'.format(insts))
-
-        for name in ('FB', 'AMZN', 'NFLX', 'GOOG', 'MSFT', 'AAPL', 'NVDA'):
+        for name in ('MSFT', 'AAPL'):
             # Create an instrument
             inst = Instrument(name=name, type=InstrumentType.EQUITY)
+            insts = await self.lookup(inst)
 
             # Check that its available
             if inst not in insts:
@@ -50,4 +48,3 @@ class BuyAndHoldIEXStrategy(Strategy):
 
     async def onExit(self, event: Event) -> None:
         print('Finishing...')
-        self.performanceCharts()
