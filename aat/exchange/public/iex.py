@@ -2,7 +2,9 @@ import asyncio
 import pandas as pd  # type: ignore
 import pyEX  # type: ignore
 from collections import deque
-from ..exchange import Exchange
+from datetime import datetime, timedelta
+from tqdm import tqdm
+from aat.exchange import Exchange
 from aat.config import InstrumentType, EventType, Side, TradingType
 from aat.core import ExchangeType, Instrument, Event, Trade, Order
 
@@ -28,12 +30,27 @@ _iex_instrument_types = {
 class IEX(Exchange):
     '''Investor's Exchange'''
 
-    def __init__(self, trading_type, verbose, api_key, is_sandbox):
+    def __init__(self, trading_type, verbose, api_key, is_sandbox, timeframe='1y', start_date=None, end_date=None):
         super().__init__(ExchangeType('iex'))
         self._trading_type = trading_type
         self._verbose = verbose
         self._api_key = api_key
         self._is_sandbox = is_sandbox
+
+        if trading_type == TradingType.LIVE:
+            assert not is_sandbox
+
+        self._timeframe = timeframe
+
+        if timeframe == 'live':
+            assert trading_type != TradingType.BACKTEST
+
+        if timeframe == '1d':
+            # intraday testing
+            # TODO if today is weekend/holiday, pick last day with data
+            self._start_date = datetime.strptime(start_date, '%Y%m%d') if start_date else datetime.today()
+            self._end_date = datetime.strptime(end_date, '%Y%m%d') if end_date else datetime.today()
+
         self._subscriptions = []
 
         # "Order" management
@@ -48,7 +65,7 @@ class IEX(Exchange):
 
         For OrderEntry-only, can just return None
         '''
-        self._client = pyEX.Client(self._api_key, 'sandbox' if self._is_sandbox else 'v1')
+        self._client = pyEX.Client(self._api_key, 'sandbox' if self._is_sandbox else 'stable')
 
     # ******************* #
     # Market Data Methods #
@@ -58,7 +75,7 @@ class IEX(Exchange):
         instruments = []
         symbols = self._client.symbols()
         for record in symbols:
-            if not record['isEnabled']:
+            if not record['isEnabled'] or not record['type']:
                 continue
             symbol = record['symbol']
             brokerExchange = record['exchange']
@@ -78,41 +95,66 @@ class IEX(Exchange):
 
     async def tick(self):
         '''return data from exchange'''
-        dfs = []
-        for i in self._subscriptions:
-            df = self._client.chartDF(i.name, timeframe='6m')
-            df = df[['close', 'volume']]
-            df.columns = ['close:{}'.format(i.name), 'volume:{}'.format(i.name)]
-            dfs.append(df)
 
-        data = pd.concat(dfs, axis=1)
-        data.sort_index(inplace=True)
-        data = data.groupby(data.index).last()
-        data.drop_duplicates(inplace=True)
-        data.fillna(method='ffill', inplace=True)
+        if self._timeframe == 'live':
+            raise NotImplementedError()
 
-        for index in data.index:
-            for i in self._subscriptions:
-                volume = data.loc[index]['volume:{}'.format(i.name)]
-                price = data.loc[index]['close:{}'.format(i.name)]
+        else:
+            dfs = []
+            if self._timeframe != '1d':
+                for i in tqdm(self._subscriptions, desc="Fetching data..."):
+                    df = self._client.chartDF(i.name, timeframe=self._timeframe)
+                    df = df[['close', 'volume']]
+                    df.columns = ['close:{}'.format(i.name), 'volume:{}'.format(i.name)]
+                    dfs.append(df)
+                data = pd.concat(dfs, axis=1)
+                data.sort_index(inplace=True)
+                data = data.groupby(data.index).last()
+                data.drop_duplicates(inplace=True)
+                data.fillna(method='ffill', inplace=True)
+            else:
+                for i in tqdm(self._subscriptions, desc="Fetching data..."):
+                    date = self._start_date
+                    subdfs = []
+                    while date <= self._end_date:
+                        df = self._client.chartDF(i.name, timeframe='1d', date=date.strftime('%Y%m%d'))
+                        if not df.empty:
+                            df = df[['average', 'volume']]
+                            df.columns = ['close:{}'.format(i.name), 'volume:{}'.format(i.name)]
+                            subdfs.append(df)
+                        date += timedelta(days=1)
+                    dfs.append(pd.concat(subdfs))
 
-                o = Order(volume=volume, price=price, side=Side.BUY, instrument=i, exchange=self.exchange())
-                o.timestamp = index.to_pydatetime()
+                data = pd.concat(dfs, axis=1)
+                data.index = [x + timedelta(hours=int(y.split(':')[0]), minutes=int(y.split(':')[1])) for x, y in data.index]
+                data = data.groupby(data.index).last()
+                data.drop_duplicates(inplace=True)
+                data.fillna(method='ffill', inplace=True)
 
-                t = Trade(volume=volume, price=price, taker_order=o, maker_orders=[])
+            for index in data.index:
+                for i in self._subscriptions:
+                    volume = data.loc[index]['volume:{}'.format(i.name)]
+                    price = data.loc[index]['close:{}'.format(i.name)]
+                    if volume == 0:
+                        continue
 
-                yield Event(type=EventType.TRADE, target=t)
-                await asyncio.sleep(0)
+                    o = Order(volume=volume, price=price, side=Side.BUY, instrument=i, exchange=self.exchange())
+                    o.timestamp = index.to_pydatetime()
 
-            while self._queued_orders:
-                order = self._queued_orders.popleft()
-                order.timestamp = index
+                    t = Trade(volume=volume, price=price, taker_order=o, maker_orders=[])
 
-                t = Trade(volume=order.volume, price=order.price, taker_order=order, maker_orders=[])
-                t.my_order = order
+                    yield Event(type=EventType.TRADE, target=t)
+                    await asyncio.sleep(0)
 
-                yield Event(type=EventType.TRADE, target=t)
-                await asyncio.sleep(0)
+                while self._queued_orders:
+                    order = self._queued_orders.popleft()
+                    order.timestamp = index
+
+                    t = Trade(volume=order.volume, price=order.price, taker_order=order, maker_orders=[])
+                    t.my_order = order
+
+                    yield Event(type=EventType.TRADE, target=t)
+                    await asyncio.sleep(0)
 
     # ******************* #
     # Order Entry Methods #

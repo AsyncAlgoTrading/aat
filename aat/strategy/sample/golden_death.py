@@ -1,0 +1,150 @@
+import math
+import pandas as pd
+from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
+
+
+class GoldenDeathStrategy(Strategy):
+    def __init__(self, symbol, long_ma=15, short_ma=5, *args, **kwargs):
+        super(GoldenDeathStrategy, self).__init__(*args, **kwargs)
+
+        # Long moving average size
+        self._long_ma = long_ma
+
+        # Short moving average size
+        self._short_ma = short_ma
+
+        # Symbol to trade
+        self._symbol = symbol
+
+        # Moving average lists
+        self._long_ma_list = []
+        self._short_ma_list = []
+
+        # State vars
+        self._triggered = False
+        self._entered = False
+
+        # Orders
+        self._buy_order = None
+        self._volume = 0
+        self._sell_order = None
+
+    async def onStart(self, event: Event):
+        # Get available instruments from exchange
+        self.subscribe(Instrument(name=self._symbol, type=InstrumentType.EQUITY))
+
+    async def onTrade(self, event: Event):
+        '''Called whenever a `Trade` event is received'''
+        trade: Trade = event.target  # type: ignore
+
+        # append prices
+        self._long_ma_list.append(trade.price)
+        self._short_ma_list.append(trade.price)
+
+        # adding to list
+        self._long_ma_list = self._long_ma_list[-self._long_ma:]
+        self._short_ma_list = self._short_ma_list[-self._short_ma:]
+
+        if len(self._long_ma_list) < self._long_ma:
+            return
+
+        long_mvg_av = pd.Series(self._long_ma_list).rolling(self._long_ma, min_periods=self._long_ma).mean().iloc[-1]
+        short_mvg_av = pd.Series(self._short_ma_list).rolling(self._short_ma, min_periods=self._short_ma).mean().iloc[-1]
+        print(long_mvg_av, short_mvg_av)
+        # States
+        #
+        # Not Entered, Not Triggered -> if long_ma > short_ma -> Not Entered, Triggered (Wait for short av to move above)
+        # Not Entered, Not Triggered -> if long_ma <= short_ma -> Not Entered, Not Triggered (Not ready yet)
+        # Not Entered, Triggered -> if long_ma > short_ma -> Not Entered, Triggered (Wait for short to move above)
+        # Not Entered, Triggered -> if long_ma <= short_ma -> Entered, Triggered (BUY)
+        # Entered, Triggered -> if long_ma > short_ma -> Not Entered, Triggered (SELL)
+        # Entered, Triggered -> if long_ma <= short_ma -> Entered, Triggered (Wait for short to move below)
+
+        if not self._entered:
+            if not self._triggered:
+                if long_mvg_av > short_mvg_av:
+                    # Not Entered, Not Triggered -> if long_ma > short_ma -> Not Entered, Triggered (Wait for short av to move above)
+                    self._triggered = True
+                else:
+                    # Not Entered, Not Triggered -> if long_ma <= short_ma -> Not Entered, Not Triggered (Not ready yet)
+                    pass
+            else:
+                if long_mvg_av > short_mvg_av:
+                    # Not Entered, Triggered -> if long_ma > short_ma -> Not Entered, Triggered (Wait for short to move above)
+                    pass
+                else:
+                    # Not Entered, Triggered -> if long_ma <= short_ma -> Entered, Triggered (BUY)
+                    if not self.orders(trade.instrument):
+                        self._volume = math.ceil(1000 / trade.price)
+                        self._buy_order = Order(side=Side.BUY,
+                                                price=trade.price,
+                                                volume=self._volume,
+                                                instrument=trade.instrument,
+                                                order_type=Order.Types.MARKET,
+                                                exchange=trade.exchange)
+                        print('submitting buy order: {}'.format(self._buy_order))
+                        await self.newOrder(self._buy_order)
+        else:
+            if not self._triggered:
+                raise Exception('Never in this state')
+            else:
+                if long_mvg_av > short_mvg_av:
+                    # Entered, Triggered -> if long_ma > short_ma -> Not Entered, Triggered (SELL)
+                    if not self.orders(trade.instrument):
+                        self._sell_order = Order(side=Side.SELL,
+                                                 price=trade.price,
+                                                 volume=self._volume,
+                                                 instrument=trade.instrument,
+                                                 order_type=Order.Types.MARKET,
+                                                 exchange=trade.exchange)
+                        print('submitting sell order: {}'.format(self._sell_order))
+                        await self.newOrder(self._sell_order)
+                else:
+                    # Entered, Triggered -> if long_ma <= short_ma -> Entered, Triggered (Wait for short to move below)
+                    pass
+
+        # # no current orders, no past trades
+        # if not self.orders(trade.instrument) and not self.trades(trade.instrument):
+        #     req = Order(side=Side.BUY,
+        #                 price=trade.price,
+        #                 volume=math.ceil(1000 / trade.price),
+        #                 instrument=trade.instrument,
+        #                 order_type=Order.Types.MARKET,
+        #                 exchange=trade.exchange)
+
+        #     print('requesting buy : {}'.format(req))
+        #     await self.newOrder(req)
+
+        # else:
+        #     # no current orders, 1 past trades, and stop set
+        #     if not self.orders(trade.instrument) and len(self.trades(trade.instrument)) == 1 and \
+        #             trade.instrument in self._stop and \
+        #             (trade.price >= self._stop[trade.instrument][0] or
+        #              trade.price <= self._stop[trade.instrument][1]):
+        #         req = Order(side=Side.SELL,
+        #                     price=trade.price,
+        #                     volume=self._stop[trade.instrument][2],
+        #                     instrument=trade.instrument,
+        #                     order_type=Order.Types.MARKET,
+        #                     exchange=trade.exchange)
+
+        #         print('requesting sell : {}'.format(req))
+        #         await self.newOrder(req)
+
+    async def onTraded(self, event: Event):
+        trade: Trade = event.target  # type: ignore
+        if self._buy_order and self._buy_order == trade.my_order:
+            self._entered = True
+            self._buy_order = None
+        elif self._sell_order and self._sell_order == trade.my_order:
+            self._entered = False
+            self._sell_order = None
+
+    async def onRejected(self, event: Event):
+        print('order rejected')
+        import sys
+        sys.exit(0)
+
+    async def onExit(self, event: Event):
+        print('Finishing...')
+        self.performanceCharts()

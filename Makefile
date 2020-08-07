@@ -8,6 +8,9 @@ run:    ## Clean and make target, run target
 iex:    ## Clean and make target, run target
 	$(PYTHON) -m aat ./config/iex.cfg
 
+iexintraday:    ## Clean and make target, run target
+	$(PYTHON) -m aat ./config/iex_intraday.cfg
+
 ib:    ## Clean and make target, run target
 	$(PYTHON) -m aat ./config/ib.cfg
 
