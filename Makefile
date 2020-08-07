@@ -8,6 +8,9 @@ run:    ## Clean and make target, run target
 iex:    ## Clean and make target, run target
 	$(PYTHON) -m aat ./config/iex.cfg
 
+ib:    ## Clean and make target, run target
+	$(PYTHON) -m aat ./config/ib.cfg
+
 runcpp:  build  ## Clean and make target, run target
 	AAT_USE_CPP=1 $(PYTHON) -m aat $(CONFIG)
 

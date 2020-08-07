@@ -45,3 +45,5 @@ class InstrumentDB(object):
             *args,
             **kwargs):
         return self._name_map[name]
+
+# TODO allow for multiple exchange's distinct instrument representation

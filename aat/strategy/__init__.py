@@ -110,6 +110,17 @@ class Strategy(EventHandler, CalculationsMixin):
         # defer to execution
         return await self._manager.newOrder(self, order)
 
+    async def cancel(self, order: Order):
+        '''cancel an open order
+
+        Args:
+            order (Order): an order to submit to the exchange
+        Returns:
+            None
+        '''
+        # defer to execution
+        return await self._manager.cancel(self, order)
+
     async def buy(self, order: Order):
         '''submit a buy order. Note that this is merely a request for an order, it provides no guarantees that the order will
         execute. At a later point, if your order executes, you will receive an alert via the `bought` method
@@ -214,6 +225,10 @@ class Strategy(EventHandler, CalculationsMixin):
     def subscribe(self, instrument=None):
         '''Subscribe to market data for the given instrument'''
         return self._manager.subscribe(instrument=instrument, strategy=self)
+
+    async def lookup(self, instrument, exchange=None):
+        '''Return list of all available instruments that match the instrument given'''
+        return await self._manager.lookup(instrument, exchange=exchange)
 
     def slippage(self, trade: Trade):
         '''method to inject slippage when backtesting

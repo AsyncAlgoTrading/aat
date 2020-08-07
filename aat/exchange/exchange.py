@@ -40,6 +40,11 @@ class Exchange(_MarketData, _OrderEntry):
 
         For OrderEntry-only, can just return None
         '''
+
+    def lookup(self, instrument):
+        '''lookup an instrument on the exchange'''
+        return []
+
     # ****************** #
     # Inherited  methods #
 
