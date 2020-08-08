@@ -570,6 +570,18 @@ To test our strategy in any mode, we may need to setup exchange-specific keys to
 We can run any number of strategies against any number of exchanges, including custom user-defined strategies and exchanges not implemented in the core `aat` repository. `aat` will multiplex the event streams and your strategies control which instruments they trade against which exchanges. 
 
 
+| Exchange  | Market Data | Order Entry  |  TradingTypes | Asset Classes |
+|---|---|---|---|---|
+| Synthetic | Yes | Yes | Simulation,Backtest  | Equity |
+| IEX | Yes | Fake | Live, Simulation, Sandbox, Backtest | Equity |
+| InteractiveBrokers | In Progress | Yes |  Live, Simulation, Sandbox | Equity, Option, Future, Commodities, Spreads, Pair |
+| TD Ameritrade | In Progress | In Progress | Equity, Option |
+| Alpaca | In Progress | In Progress |   |
+| Coinbase | In Progress | In Progress |  |
+| Gemini | In Progress | In Progress |  |
+| Coinbase | In Progress | In Progress |  |
+| ccxt | In Progress | In Progress |  |
+
 # TODO below here are sections that still need to be documented
 
 ## Core Data Structures
