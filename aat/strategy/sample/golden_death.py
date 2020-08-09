@@ -50,7 +50,7 @@ class GoldenDeathStrategy(Strategy):
 
         long_mvg_av = pd.Series(self._long_ma_list).rolling(self._long_ma, min_periods=self._long_ma).mean().iloc[-1]
         short_mvg_av = pd.Series(self._short_ma_list).rolling(self._short_ma, min_periods=self._short_ma).mean().iloc[-1]
-        print(long_mvg_av, short_mvg_av)
+
         # States
         #
         # Not Entered, Not Triggered -> if long_ma > short_ma -> Not Entered, Triggered (Wait for short av to move above)
@@ -102,34 +102,6 @@ class GoldenDeathStrategy(Strategy):
                 else:
                     # Entered, Triggered -> if long_ma <= short_ma -> Entered, Triggered (Wait for short to move below)
                     pass
-
-        # # no current orders, no past trades
-        # if not self.orders(trade.instrument) and not self.trades(trade.instrument):
-        #     req = Order(side=Side.BUY,
-        #                 price=trade.price,
-        #                 volume=math.ceil(1000 / trade.price),
-        #                 instrument=trade.instrument,
-        #                 order_type=Order.Types.MARKET,
-        #                 exchange=trade.exchange)
-
-        #     print('requesting buy : {}'.format(req))
-        #     await self.newOrder(req)
-
-        # else:
-        #     # no current orders, 1 past trades, and stop set
-        #     if not self.orders(trade.instrument) and len(self.trades(trade.instrument)) == 1 and \
-        #             trade.instrument in self._stop and \
-        #             (trade.price >= self._stop[trade.instrument][0] or
-        #              trade.price <= self._stop[trade.instrument][1]):
-        #         req = Order(side=Side.SELL,
-        #                     price=trade.price,
-        #                     volume=self._stop[trade.instrument][2],
-        #                     instrument=trade.instrument,
-        #                     order_type=Order.Types.MARKET,
-        #                     exchange=trade.exchange)
-
-        #         print('requesting sell : {}'.format(req))
-        #         await self.newOrder(req)
 
     async def onTraded(self, event: Event):
         trade: Trade = event.target  # type: ignore
