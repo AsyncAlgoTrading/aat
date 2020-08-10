@@ -3,7 +3,7 @@ import pandas as pd  # type: ignore
 import pyEX  # type: ignore
 from collections import deque
 from datetime import datetime, timedelta
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 from aat.exchange import Exchange
 from aat.config import InstrumentType, EventType, Side, TradingType
 from aat.core import ExchangeType, Instrument, Event, Trade, Order

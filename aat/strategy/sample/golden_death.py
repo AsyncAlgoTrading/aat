@@ -1,5 +1,5 @@
 import math
-import pandas as pd
+import pandas as pd  # type: ignore
 from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
 
 
