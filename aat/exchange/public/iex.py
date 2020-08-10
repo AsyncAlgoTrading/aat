@@ -97,7 +97,26 @@ class IEX(Exchange):
         '''return data from exchange'''
 
         if self._timeframe == 'live':
-            raise NotImplementedError()
+            data = deque()
+
+            def _callback(record):
+                data.append(record)
+
+            self._client.tradesSSE(symbols=",".join([i.name for i in self._subscriptions]),
+                                   on_data=_callback)
+
+            while True:
+                while data:
+                    record = data.popleft()
+                    volume = record['volume']
+                    price = record['price']
+                    instrument = Instrument(record['symbol'], InstrumentType.EQUITY)
+
+                    o = Order(volume=volume, price=price, side=Side.BUY, instrument=instrument, exchange=self.exchange())
+                    t = Trade(volume=volume, price=price, taker_order=o, maker_orders=[])
+                    yield Event(type=EventType.TRADE, target=t)
+
+                await asyncio.sleep(0)
 
         else:
             dfs = []
