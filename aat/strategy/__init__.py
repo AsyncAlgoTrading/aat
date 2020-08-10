@@ -233,6 +233,10 @@ class Strategy(EventHandler, CalculationsMixin):
         '''Return list of all available exchanges'''
         return list(set(__ for _ in Instrument._instrumentdb.instruments(type=instrument_type) for __ in _.exchanges))
 
+    def accounts(self, type=None, exchange=None):
+        '''Return list of all accounts'''
+        raise NotImplementedError()
+
     def subscribe(self, instrument=None):
         '''Subscribe to market data for the given instrument'''
         return self._manager.subscribe(instrument=instrument, strategy=self)
