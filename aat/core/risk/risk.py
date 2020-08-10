@@ -1,10 +1,18 @@
+import pandas as pd  # type: ignore
 from aat.config import Side
 from aat.core import Event, Order, Trade, Instrument, ExchangeType, Position
 
 
 class RiskManager(object):
     def __init__(self):
+        # Track prices over time
+        self._prices = {}
+        self._trades = {}
+
+        # Track active (open) orders
         self._active_orders = []
+
+        # Track active positions
         self._active_positions = {}
 
     def _setManager(self, manager):
@@ -69,7 +77,13 @@ class RiskManager(object):
     def positions(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         return list(self._active_positions.values())
 
+    def priceHistory(self, instrument: Instrument = None):
+        if instrument:
+            return pd.DataFrame(self._prices[instrument], columns=[instrument.name, 'when'])
+        return {i: pd.DataFrame(self._prices[i], columns=[i.name, 'when']) for i in self._prices}
+
     def risk(self, position=None):
+        # TODO
         return "risk"
 
     # *********************
@@ -91,6 +105,13 @@ class RiskManager(object):
             pos.unrealizedPnl = (pos.size * (trade.price - pos.price), trade.timestamp)
             pos.pnl = (pos.pnl, trade.timestamp)
             pos.instrumentPrice = (trade.price, trade.timestamp)
+
+        if trade.instrument not in self._prices:
+            self._prices[trade.instrument] = [(trade.price, trade.timestamp)]
+            self._trades[trade.instrument] = [trade]
+        else:
+            self._prices[trade.instrument].append((trade.price, trade.timestamp))
+            self._trades[trade.instrument].append(trade)
 
     async def onCancel(self, event):
         # TODO

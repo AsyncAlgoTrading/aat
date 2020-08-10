@@ -28,6 +28,19 @@ class CalculationsMixin(object):
     def _getPrice(self):
         portfolio = []
         price_cols = []
+        for instrument, price_history in self.priceHistory().items():
+            #########
+            # Price #
+            #########
+            price_col = instrument.name
+            price_cols.append(price_col)
+            price_history.set_index('when', inplace=True)
+            portfolio.append(price_history)
+        return self._constructDf(portfolio)
+
+    def _getAssetPrice(self):
+        portfolio = []
+        price_cols = []
         for position in self.positions():
             instrument = position.instrument
 
@@ -147,7 +160,7 @@ class CalculationsMixin(object):
         self._df_pnl = self._getPnl()
         self._df_pnl.fillna(0.0, inplace=True)
 
-        self._df_price = self._getPrice()
+        self._df_asset_price = self._getAssetPrice()
 
         self._df_total_pnl = self._df_pnl[[c for c in self._df_pnl if 'pnl:' in c]]
         self._df_total_pnl.columns = [c.replace('pnl:', '') for c in self._df_total_pnl.columns]
@@ -163,7 +176,19 @@ class CalculationsMixin(object):
 
     def plotPrice(self, ax=None, **plot_kwargs):
         self._df_price = self._getPrice()
-        self._df_price.plot(ax=ax, **plot_kwargs)
+
+        if not self._df_price.empty:
+            self._df_price.plot(ax=ax, **plot_kwargs)
+
+        if ax:
+            ax.set_ylabel('Price')
+
+    def plotAssetPrice(self, ax=None, **plot_kwargs):
+        self._df_asset_price = self._getAssetPrice()
+
+        if not self._df_asset_price.empty:
+            self._df_asset_price.plot(ax=ax, **plot_kwargs)
+
         if ax:
             ax.set_ylabel('Price')
 
@@ -171,7 +196,9 @@ class CalculationsMixin(object):
         self._df_size = self._getSize()
         self._df_size.columns = [c.replace('s:', '') for c in self._df_size.columns]
 
-        self._df_size.plot(kind='area', ax=ax, stacked=True, linewidth=0, **plot_kwargs)
+        if not self._df_size.empty:
+            self._df_size.plot(kind='area', ax=ax, stacked=True, linewidth=0, **plot_kwargs)
+
         if ax:
             ax.set_ylabel('Positions')
 
@@ -180,10 +207,12 @@ class CalculationsMixin(object):
         df_position_notional.columns = [c.replace('s:', '') for c in self._df_size.columns]
 
         for col in df_position_notional.columns:
-            df_position_notional[col] = df_position_notional[col] * self._df_price[col]
+            df_position_notional[col] = df_position_notional[col] * self._df_asset_price[col]
 
-        df_position_notional.fillna(method='ffill', inplace=True)
-        df_position_notional.plot(kind='area', ax=ax, stacked=True, linewidth=0, **plot_kwargs)
+        if not df_position_notional.empty:
+            df_position_notional.fillna(method='ffill', inplace=True)
+            df_position_notional.plot(kind='area', ax=ax, stacked=True, linewidth=0, **plot_kwargs)
+
         if ax:
             ax.set_ylabel('Notional')
 
@@ -198,7 +227,10 @@ class CalculationsMixin(object):
 
         self._df_total_pnl = self._df_pnl[[c for c in self._df_pnl if 'pnl:' in c]]
         self._df_total_pnl.columns = [c.replace('pnl:', '') for c in self._df_total_pnl.columns]
-        self._df_total_pnl.plot(ax=ax)
+
+        if not self._df_total_pnl.empty:
+            self._df_total_pnl.plot(ax=ax)
+
         if ax:
             ax.set_ylabel('PNL')
 
@@ -211,7 +243,10 @@ class CalculationsMixin(object):
         df2['neg'] = df2['alpha']
         df2['pos'][df2['pos'] <= 0] = np.nan
         df2['neg'][df2['neg'] > 0] = np.nan
-        df2.plot(ax=ax, y=['pos', 'neg'], kind='area', stacked=False, color=['green', 'red'], legend=False, linewidth=0, fontsize=5, rot=0, **plot_kwargs)
+
+        if not df2.empty:
+            df2.plot(ax=ax, y=['pos', 'neg'], kind='area', stacked=False, color=['green', 'red'], legend=False, linewidth=0, fontsize=5, rot=0, **plot_kwargs)
+
         if ax:
             ax.set_ylabel('Alpha')
 
@@ -225,19 +260,20 @@ class CalculationsMixin(object):
             # drop if exactly -100% (e.g. "sold")
             df_returns.append(self._df_notional[col].drop_duplicates().pct_change(1).fillna(0.0))
 
-        df_returns = pd.concat(df_returns, axis=1, sort=True)
-        df_returns.sort_index(inplace=True)
-        df_returns = df_returns.groupby(df_returns.index).last()
-        df_returns.drop_duplicates(inplace=True)
+        if df_returns:
+            df_returns = pd.concat(df_returns, axis=1, sort=True)
+            df_returns.sort_index(inplace=True)
+            df_returns = df_returns.groupby(df_returns.index).last()
+            df_returns.drop_duplicates(inplace=True)
 
-        fig2 = plt.figure(figsize=(9, 5))
-        grid = plt.GridSpec(2, len(df_returns.columns), figure=fig2, wspace=0.4, hspace=0.3)
-        axes2 = []
-        for _ in range(len(df_returns.columns)):
-            axes2.append(plt.subplot(grid[0, _]))
+            fig2 = plt.figure(figsize=(9, 5))
+            grid = plt.GridSpec(2, len(df_returns.columns), figure=fig2, wspace=0.4, hspace=0.3)
+            axes2 = []
+            for _ in range(len(df_returns.columns)):
+                axes2.append(plt.subplot(grid[0, _]))
 
-        for i, col in enumerate(df_returns.columns):
-            df_returns.hist(column=col, ax=axes2[i], grid=False)
+            for i, col in enumerate(df_returns.columns):
+                df_returns.hist(column=col, ax=axes2[i], grid=False)
 
     def plotStdDev(self, ax, **plot_kwargs):
         self._df_notional = self._getNotional()
@@ -276,6 +312,7 @@ class CalculationsMixin(object):
 
             # Plot prices
             self.plotPrice(ax=axes[0])
+            # self.plotAssetPrice(ax=axes[1])
 
             # Plot Positions
             self.plotPositions(ax=axes[1])
