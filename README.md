@@ -111,6 +111,9 @@ class Strategy(metaclass=ABCMeta):
     async def newOrder(self, order: Order):
         '''helper method, defers to buy/sell'''
 
+    async def cancelOrder(self, order: Order):
+        '''cancel an open order'''
+
     async def buy(self, order: Order):
         '''submit a buy order. Note that this is merely a request for an order, it provides no guarantees that the order will
         execute. At a later point, if your order executes, you will receive an alert via the `bought` method'''
@@ -128,6 +131,9 @@ class Strategy(metaclass=ABCMeta):
     def trades(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         '''select all past trades'''
 
+    def accounts(self) -> List:
+        '''get accounts from source'''
+
     ################
     # Risk Methods #
     ################
@@ -136,6 +142,9 @@ class Strategy(metaclass=ABCMeta):
 
     def risk(self, position=None):
         '''Get risk metrics'''
+
+    def priceHistory(self, instrument: Instrument):
+        '''Get price history for an asset'''
 
     #################
     # Other Methods #
@@ -152,6 +161,9 @@ class Strategy(metaclass=ABCMeta):
 
     def subscribe(self, instrument=None):
         '''Subscribe to market data for the given instrument'''
+
+    def lookup(self, instrument):
+        '''lookup an instrument on the exchange'''
 ```
 
 ### Example Strategy

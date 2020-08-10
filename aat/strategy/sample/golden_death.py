@@ -4,7 +4,7 @@ from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
 
 
 class GoldenDeathStrategy(Strategy):
-    def __init__(self, symbol, long_ma=15, short_ma=5, *args, **kwargs):
+    def __init__(self, symbol, long_ma=30, short_ma=5, *args, **kwargs):
         super(GoldenDeathStrategy, self).__init__(*args, **kwargs)
 
         # Long moving average size
@@ -119,4 +119,5 @@ class GoldenDeathStrategy(Strategy):
 
     async def onExit(self, event: Event):
         print('Finishing...')
+
         self.performanceCharts()

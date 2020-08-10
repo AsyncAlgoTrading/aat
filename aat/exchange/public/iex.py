@@ -75,7 +75,7 @@ class IEX(Exchange):
         instruments = []
         symbols = self._client.symbols()
         for record in symbols:
-            if not record['isEnabled'] or not record['type']:
+            if not record['isEnabled'] or not record['type'] or record['type'] == 'temp':
                 continue
             symbol = record['symbol']
             brokerExchange = record['exchange']

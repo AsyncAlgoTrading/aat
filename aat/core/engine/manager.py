@@ -217,6 +217,9 @@ class StrategyManager(EventHandler):
     def risk(self, position=None):
         return self._risk_mgr.risk(position=position)
 
+    def priceHistory(self, instrument=None):
+        return self._risk_mgr.priceHistory(instrument=instrument)
+
     # **********************
     # EventHandler methods *
     # **********************

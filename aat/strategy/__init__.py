@@ -8,6 +8,9 @@ class Strategy(EventHandler, CalculationsMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def __repr__(self):
+        return self.__class__.__name__
+
     #########################
     # Event Handler Methods #
     #########################
@@ -203,7 +206,6 @@ class Strategy(EventHandler, CalculationsMixin):
         Returns:
             list (Position): list of positions
         '''
-        # TODO move me to manager
         return self._manager.positions(instrument=instrument, exchange=exchange, side=side)
 
     def risk(self, position=None):
@@ -214,12 +216,22 @@ class Strategy(EventHandler, CalculationsMixin):
         Returns:
             dict: metrics
         '''
-        # TODO move me to manager
         return self._manager.risk(position=position)
+
+    def priceHistory(self, instrument: Instrument = None):
+        '''Get price history for asset
+
+        Args:
+            instrument (Instrument): get price history for instrument
+        Returns:
+            DataFrame: price history
+        '''
+        return self._manager.priceHistory(instrument=instrument)
 
     #################
     # Other Methods #
     #################
+
     def now(self):
         '''Return the current datetime. Useful to avoid code changes between
         live trading and backtesting. Defaults to `datetime.now`'''
