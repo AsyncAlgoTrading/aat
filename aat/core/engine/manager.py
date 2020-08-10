@@ -135,9 +135,9 @@ class StrategyManager(EventHandler):
         self._engine.pushEvent(Event(type=Event.Types.REJECTED, target=order))
         return None
 
-    async def cancel(self, strategy, order: Order):
+    async def cancelOrder(self, strategy, order: Order):
         '''cancel an open order'''
-        await self._order_mgr.cancel(strategy, order)
+        await self._order_mgr.cancelOrder(strategy, order)
 
     def orders(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         '''select all open orders

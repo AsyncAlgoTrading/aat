@@ -19,12 +19,14 @@ class SyntheticExchange(Exchange):
 
     def __init__(self, trading_type=None, verbose=False, count=5, cycles=10000, **kwargs):
         super().__init__(ExchangeType('synthetic{}'.format(SyntheticExchange._inst)))
+        assert trading_type in (TradingType.SIMULATION, TradingType.BACKTEST)
         self._trading_type = trading_type
         self._verbose = verbose
         self._sleep = 0.1 if trading_type in (TradingType.LIVE, TradingType.SIMULATION, TradingType.SANDBOX) else 0.0
         self._id = 0
         self._events = deque()
         self._pending_orders = deque()
+        self._pending_cancel_orders = deque()
         SyntheticExchange._inst += 1
 
         self._inst_count = int(count)
@@ -149,6 +151,12 @@ class SyntheticExchange(Exchange):
                 order = self._pending_orders.popleft()
                 self._jumptime(order)
                 self._orderbooks[order.instrument].add(order)
+                await asyncio.sleep(self._sleep)
+
+            while self._pending_cancel_orders:
+                order = self._pending_cancel_orders.popleft()
+                self._jumptime(order)
+                self._orderbooks[order.instrument].cancel(order)
                 await asyncio.sleep(self._sleep)
 
             while self._events:
@@ -336,6 +344,10 @@ class SyntheticExchange(Exchange):
         self._id += 1
         self._pending_orders.append(order)
         self._omit_cancel.add(order.id)  # don't cancel user orders
+        return order
+
+    async def cancelOrder(self, order: Order):
+        self._pending_cancel_orders.append(order)
         return order
 
 

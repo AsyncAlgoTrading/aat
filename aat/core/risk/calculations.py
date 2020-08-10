@@ -4,13 +4,18 @@ import pandas as pd  # type: ignore
 
 
 class CalculationsMixin(object):
+    __perf_charts = False  # TODO move
+
     def _constructDf(self, dfs):
         # join along time axis
-        df = pd.concat(dfs, sort=True)
-        df.sort_index(inplace=True)
-        df = df.groupby(df.index).last()
-        df.drop_duplicates(inplace=True)
-        df.fillna(method='ffill', inplace=True)
+        if dfs:
+            df = pd.concat(dfs, sort=True)
+            df.sort_index(inplace=True)
+            df = df.groupby(df.index).last()
+            df.drop_duplicates(inplace=True)
+            df.fillna(method='ffill', inplace=True)
+        else:
+            df = pd.DataFrame()
         return df
 
     def _getInstruments(self):
@@ -257,41 +262,45 @@ class CalculationsMixin(object):
         ax.set_ylabel('Sharpe')
 
     def performanceCharts(self):
-        self.collectStats()
+        if not CalculationsMixin.__perf_charts:
+            self.collectStats()
 
-        ############
-        # Plotting #
-        ############
-        fig, axes = plt.subplots(7, 1,
-                                 sharex=True,
-                                 figsize=(7, 7),
-                                 gridspec_kw={'height_ratios': [2, 1, 3, 1, 1, 1, 1]})
-        plt.rc('legend', fontsize=4)  # using a size in points
+            ############
+            # Plotting #
+            ############
+            fig, axes = plt.subplots(7, 1,
+                                     sharex=True,
+                                     figsize=(7, 7),
+                                     gridspec_kw={'height_ratios': [2, 1, 3, 1, 1, 1, 1]})
+            plt.rc('legend', fontsize=4)  # using a size in points
 
-        # Plot prices
-        self.plotPrice(ax=axes[0])
+            # Plot prices
+            self.plotPrice(ax=axes[0])
 
-        # Plot Positions
-        self.plotPositions(ax=axes[1])
+            # Plot Positions
+            self.plotPositions(ax=axes[1])
 
-        # Plot Notionals
-        self.plotNotional(ax=axes[2])
+            # Plot Notionals
+            self.plotNotional(ax=axes[2])
 
-        # Plot PNLs
-        self.plotPnl(ax=axes[3])
+            # Plot PNLs
+            self.plotPnl(ax=axes[3])
 
-        # Plot up/down chart
-        self.plotUpDown(ax=axes[4])
+            # Plot up/down chart
+            self.plotUpDown(ax=axes[4])
 
-        # rolling stddev
-        self.plotStdDev(ax=axes[5])
-        self.plotSharpe(ax=axes[6])
+            # rolling stddev
+            self.plotStdDev(ax=axes[5])
+            self.plotSharpe(ax=axes[6])
 
-        # Plot returns
-        self.plotReturnHistograms()
+            # Plot returns
+            self.plotReturnHistograms()
 
-        # Show plot
-        plt.show()
+            # Show plot
+            plt.show()
+
+            # Only show once
+            CalculationsMixin.__perf_charts = True
 
     def ipython(self):
         import IPython  # type: ignore
