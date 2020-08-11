@@ -90,7 +90,7 @@ class IEX(Exchange):
             instruments.append(inst)
         return instruments
 
-    def subscribe(self, instrument):
+    async def subscribe(self, instrument):
         self._subscriptions.append(instrument)
 
     async def tick(self):

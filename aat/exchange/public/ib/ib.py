@@ -57,7 +57,7 @@ class _API(EWrapper, EClient):
 class InteractiveBrokersExchange(Exchange):
     '''Interactive Brokers Exchange'''
 
-    def __init__(self, trading_type=None, verbose=False, **kwargs):
+    def __init__(self, trading_type, verbose, **kwargs):
         self._trading_type = trading_type
         self._verbose = verbose
 
@@ -155,7 +155,7 @@ class InteractiveBrokersExchange(Exchange):
     # ******************* #
     # Order Entry Methods #
     # ******************* #
-    def accounts(self):
+    async def accounts(self):
         '''get accounts from source'''
         return []
 

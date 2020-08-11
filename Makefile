@@ -20,6 +20,9 @@ iexlive:    ## Clean and make target, run target
 ib:    ## Clean and make target, run target
 	$(PYTHON) -m aat ./config/ib.cfg
 
+coinbasesandbox:    ## Clean and make target, run target
+	$(PYTHON) -m aat ./config/coinbase_sandbox.cfg
+
 runcpp:  build  ## Clean and make target, run target
 	AAT_USE_CPP=1 $(PYTHON) -m aat $(CONFIG)
 
