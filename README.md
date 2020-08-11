@@ -1,5 +1,5 @@
 
-<img src="docs/img/icon.png" width="200px"></img>
+<img src="https://raw.githubusercontent.com/AsyncAlgoTrading/aat/master/docs/img/icon.png" width="200px"></img>
 
 [![Build Status](https://dev.azure.com/tpaine154/aat/_apis/build/status/AsyncAlgoTrading.aat?branchName=master)](https://dev.azure.com/tpaine154/aat/_build/latest?definitionId=19&branchName=master)
 [![Coverage](https://img.shields.io/azure-devops/coverage/tpaine154/aat/19/master)](https://dev.azure.com/tpaine154/aat/_apis/build/status/AsyncAlgoTrading.aat?branchName=master)
