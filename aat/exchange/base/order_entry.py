@@ -8,7 +8,7 @@ class _OrderEntry(metaclass=ABCMeta):
     '''internal only class to represent the rest-sink
     side of a data source'''
 
-    def accounts(self) -> List:
+    async def accounts(self) -> List:
         '''get accounts from source'''
         return []
 
