@@ -126,11 +126,13 @@ class IEX(Exchange):
                     df = df[['close', 'volume']]
                     df.columns = ['close:{}'.format(i.name), 'volume:{}'.format(i.name)]
                     dfs.append(df)
+
                 data = pd.concat(dfs, axis=1)
                 data.sort_index(inplace=True)
                 data = data.groupby(data.index).last()
                 data.drop_duplicates(inplace=True)
                 data.fillna(method='ffill', inplace=True)
+
             else:
                 for i in tqdm(self._subscriptions, desc="Fetching data..."):
                     date = self._start_date
