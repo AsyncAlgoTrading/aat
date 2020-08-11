@@ -279,23 +279,25 @@ class CalculationsMixin(object):
         self._df_notional = self._getNotional()
         self._df_notional.columns = [c.replace('n:', '') for c in self._df_notional.columns]
 
-        total_returns = self._df_notional.sum(axis=1).pct_change(1).fillna(0.0)
-        total_returns_rolling = total_returns.rolling(10)
-        total_returns_rolling.std().plot(ax=ax)
-        ax.axhline(total_returns.std())
-        ax.set_ylabel('Std.')
+        if not self._df_notional.empty:
+            total_returns = self._df_notional.sum(axis=1).pct_change(1).fillna(0.0)
+            total_returns_rolling = total_returns.rolling(10)
+            total_returns_rolling.std().plot(ax=ax)
+            ax.axhline(total_returns.std())
+            ax.set_ylabel('Std.')
 
     def plotSharpe(self, ax, **plot_kwargs):
         self._df_notional = self._getNotional()
         self._df_notional.columns = [c.replace('n:', '') for c in self._df_notional.columns]
 
-        total_returns = self._df_notional.sum(axis=1).pct_change(1).fillna(0.0)
+        if not self._df_notional.empty:
+            total_returns = self._df_notional.sum(axis=1).pct_change(1).fillna(0.0)
 
-        sharpe = total_returns.values.mean() / total_returns.values.std() * np.sqrt(252)
-        total_returns['sharpe'] = total_returns.rolling(10).mean() / total_returns.rolling(10).std() * np.sqrt(252)
-        total_returns['sharpe'].plot(ax=ax)
-        ax.axhline(sharpe)
-        ax.set_ylabel('Sharpe')
+            sharpe = total_returns.values.mean() / total_returns.values.std() * np.sqrt(252)
+            total_returns['sharpe'] = total_returns.rolling(10).mean() / total_returns.rolling(10).std() * np.sqrt(252)
+            total_returns['sharpe'].plot(ax=ax)
+            ax.axhline(sharpe)
+            ax.set_ylabel('Sharpe')
 
     def performanceCharts(self):
         if not CalculationsMixin.__perf_charts:

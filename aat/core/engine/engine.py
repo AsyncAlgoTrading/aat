@@ -204,10 +204,15 @@ class TradingEngine(Application):
         '''push non-exchange event into the queue'''
         self._queued_events.append(event)
 
+    def pushTargetedEvent(self, strategy, event):
+        '''push non-exchange event targeted to a specific strat into the queue'''
+        self._queued_targeted_events.append((strategy, event))
+
     async def run(self):
         '''run the engine'''
         # setup future queue
         self._queued_events = deque()
+        self._queued_targeted_events = deque()
 
         # await all connections
         await asyncio.gather(*(asyncio.create_task(exch.connect()) for exch in self.exchanges))
@@ -230,15 +235,24 @@ class TradingEngine(Application):
                     event = self._queued_events.popleft()
                     await self.tick(event)
 
+                # process any secondary events
+                while self._queued_targeted_events:
+                    strat, event = self._queued_targeted_events.popleft()
+                    await self.tick(event, strat)
+
         await self.tick(Event(type=EventType.EXIT, target=None))
 
-    async def tick(self, event):
+    async def tick(self, event, strategy=None):
         '''send an event to all registered event handlers
 
         Arguments:
             event (Event): event to send
         '''
         for callback, handler in self._handler_subscriptions[event.type]:
+            # TODO make cleaner? move to somewhere not in critical path?
+            if strategy is not None and (handler not in (strategy, self.manager)):
+                continue
+
             # TODO make cleaner? move to somewhere not in critical path?
             if event.type in (EventType.TRADE, EventType.OPEN, EventType.CHANGE, EventType.CANCEL, EventType.DATA) and \
                not self.manager.dataSubscriptions(handler, event):
