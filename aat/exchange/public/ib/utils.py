@@ -76,7 +76,34 @@ def _constructContract(instrument):
         contract.currency = (instrument.currency.name if instrument.currency else '') or "USD"
 
     elif instrument.type == InstrumentType.SPREAD:
-        contract.symbol = instrument.name
+        if instrument.leg1 and \
+           instrument.leg1.type == InstrumentType.FUTURE and \
+           instrument.leg1.underlying and \
+           instrument.leg1.underlying.type == InstrumentType.COMMODITIES and \
+           instrument.leg2 and \
+           instrument.leg2.type == InstrumentType.FUTURE and \
+           instrument.leg2.underlying and \
+           instrument.leg2.underlying.type == InstrumentType.COMMODITIES and \
+           instrument.leg1 != instrument.leg2:
+            # Intercommodity futures use A.B
+            contract.symbol = '{}.{}'.format(instrument.leg1.underlying.name,
+                                             instrument.leg2.underlying.name)
+
+        elif instrument.leg1 and instrument.leg1.underlying and \
+                instrument.leg2 and instrument.leg2.underlying and \
+                (instrument.leg1.underlying == instrument.leg2.underlying):
+            # most other spreads just use the underlying
+            contract.symbol = instrument.leg1.underlying.name
+
+        elif instrument.leg1 and instrument.leg2 and \
+            (instrument.leg1.type == InstrumentType.EQUITY and
+             instrument.leg2.type == InstrumentType.EQUITY):
+            # Stock spreads use A,B
+            contract.symbol = '{},{}'.format(instrument.leg1.name, instrument.leg2.name)
+
+        else:
+            contract.symbol = instrument.name
+
         contract.secType = "BAG"
         contract.currency = (instrument.currency.name if instrument.currency else '') or "USD"
         contract.exchange = instrument.brokerExchange or "SMART"
