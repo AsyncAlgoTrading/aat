@@ -11,11 +11,14 @@ iex:    ## Clean and make target, run target
 iexintraday:    ## Clean and make target, run target
 	$(PYTHON) -m aat ./config/iex_intraday.cfg
 
+iexpintraday:    ## Clean and make target, run target
+	$(PYTHON) -m aat ./private_config/iex_intraday.cfg
+
 iexmomentum:    ## Clean and make target, run target
 	$(PYTHON) -m aat ./config/iex_intraday_momentum.cfg
 
-iexpintraday:    ## Clean and make target, run target
-	$(PYTHON) -m aat ./private_config/iex_intraday.cfg
+iexpmomentum:    ## Clean and make target, run target
+	$(PYTHON) -m aat ./private_config/iex_intraday_momentum.cfg
 
 iexlive:    ## Clean and make target, run target
 	$(PYTHON) -m aat ./config/iex_live.cfg

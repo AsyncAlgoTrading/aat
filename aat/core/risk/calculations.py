@@ -6,13 +6,16 @@ import pandas as pd  # type: ignore
 class CalculationsMixin(object):
     __perf_charts = False  # TODO move
 
-    def _constructDf(self, dfs):
+    def _constructDf(self, dfs, drop_duplicates=True):
         # join along time axis
         if dfs:
             df = pd.concat(dfs, sort=True)
             df.sort_index(inplace=True)
             df = df.groupby(df.index).last()
-            df.drop_duplicates(inplace=True)
+
+            if drop_duplicates:
+                df.drop_duplicates(inplace=True)
+
             df.fillna(method='ffill', inplace=True)
         else:
             df = pd.DataFrame()
@@ -80,13 +83,13 @@ class CalculationsMixin(object):
             total_pnl_cols.append(total_pnl_col)
             portfolio.append(unrealized_pnl_history)
 
-        df_pnl = self._constructDf(portfolio)
+        df_pnl = self._constructDf(portfolio, drop_duplicates=False)  # dont drop duplicates
 
         ################
         # calculations #
         ################
         # calculate total pnl
-        df_pnl['alpha'] = df_pnl.sum(axis=1)
+        df_pnl['alpha'] = df_pnl[[c for c in df_pnl.columns if c.startswith('pnl:')]].sum(axis=1)
         return df_pnl
 
     def _getSize(self):
@@ -294,7 +297,7 @@ class CalculationsMixin(object):
             total_returns = self._df_notional.sum(axis=1).pct_change(1).fillna(0.0)
 
             sharpe = total_returns.values.mean() / total_returns.values.std() * np.sqrt(252)
-            total_returns['sharpe'] = total_returns.rolling(10).mean() / total_returns.rolling(10).std() * np.sqrt(252)
+            total_returns['sharpe'] = total_returns.rolling(20).mean() / total_returns.rolling(10).std() * np.sqrt(252)
             total_returns['sharpe'].plot(ax=ax)
             ax.axhline(sharpe)
             ax.set_ylabel('Sharpe')

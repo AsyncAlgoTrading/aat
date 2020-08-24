@@ -2,7 +2,17 @@ from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
 
 
 class MomentumStrategy(Strategy):
-    def __init__(self, instrument, trigger, profit, stop, quantity=1, buy_only=True, *args, **kwargs) -> None:
+    def __init__(self,
+                 instrument,
+                 trigger,
+                 profit,
+                 stop,
+                 notional=None,
+                 enter_hour=10,
+                 enter_minute=0,
+                 exit_hour=15,
+                 exit_minute=30,
+                 *args, **kwargs) -> None:
         super(MomentumStrategy, self).__init__(*args, **kwargs)
 
         # symbol to trade
@@ -15,16 +25,23 @@ class MomentumStrategy(Strategy):
         self._profit = abs(float(profit) / 10000)
 
         # the point to stop, can be any value < profit
-        self._stop = abs(float(stop) / 10000)
-
-        # do we also short?
-        self._buy_only = buy_only
+        self._stop = float(stop) / 10000
 
         # how much to trade
-        self._quantity = quantity
+        self._notional = float(notional) if notional else None
+        self._quantity = None
+
+        # only enter after this time
+        self._enter_hour = enter_hour
+        self._enter_minute = enter_minute
+
+        # when to exit if havent stopped/taken profit
+        self._exit_hour = exit_hour
+        self._exit_minute = exit_minute
 
         # trackers
         self._initial_price = None
+        self._initial_price_day = None
         self._last_price = None
 
         # orders
@@ -49,8 +66,9 @@ class MomentumStrategy(Strategy):
         trade: Trade = event.target  # type: ignore
 
         # set initial price to first trade
-        if self._initial_price is None or self._initial_price == 0.0:
+        if self._initial_price is None or self._initial_price == 0.0 or self._initial_price_day != trade.timestamp.day:
             self._initial_price = trade.price
+            self._initial_price_day = trade.timestamp.day
 
         # self last price to last traded price
         self._last_price = trade.price
@@ -58,15 +76,15 @@ class MomentumStrategy(Strategy):
         # determine if we trade
         cur_perf = (self._last_price - self._initial_price) / self._initial_price if self._initial_price != 0.0 else None
 
-        print(cur_perf)
         if cur_perf is None:
             # don't handle 0 price
             return
 
-        if self._enter_trade is not None and self._exit_order is not None:
+        if self._enter_trade is not None and self._exit_order is None:
             # already traded, look for exit
             if cur_perf > self._profit:
                 # close position with sell
+                print('exiting with sell order')
                 self._exit_order = Order(side=Side.SELL,
                                          price=trade.price,
                                          volume=self._quantity,
@@ -74,18 +92,10 @@ class MomentumStrategy(Strategy):
                                          order_type=Order.Types.MARKET,
                                          exchange=trade.exchange)
                 await self.newOrder(self._exit_order)
-            elif self._enter_order.side == Side.SELL and cur_perf < -1 * self._profit:
-                # close position with buy
-                self._exit_order = Order(side=Side.BUY,
-                                         price=trade.price,
-                                         volume=self._quantity,
-                                         instrument=trade.instrument,
-                                         order_type=Order.Types.MARKET,
-                                         exchange=trade.exchange)
-                await self.newOrder(self._exit_order)
 
-            elif abs(cur_perf) < self._stop or cur_perf > -1 * self._stop:
+            elif cur_perf < self._stop:
                 # close to stop
+                print('exiting to stop loss')
                 side = Side.SELL if self._enter_order.side == Side.BUY else Side.BUY
                 self._exit_order = Order(side=side,
                                          price=trade.price,
@@ -97,22 +107,45 @@ class MomentumStrategy(Strategy):
 
             else:
                 # check if 15:45 or later
-                # TODO
+                if trade.timestamp.hour >= self._exit_hour and trade.timestamp.minute >= self._exit_minute:
+                    # exit
+                    print('exiting at EOD')
+                    self._exit_order = Order(side=Side.SELL,
+                                             price=trade.price,
+                                             volume=self._quantity,
+                                             instrument=trade.instrument,
+                                             order_type=Order.Types.MARKET,
+                                             exchange=trade.exchange)
+                    await self.newOrder(self._exit_order)
 
-                pass
-
-        elif self._enter_order is not None:
+        elif self._enter_trade is not None and self._exit_order is not None:
             # already ordered, wait for execution
             return
 
-        elif self._exit_order is not None:
+        elif self._enter_trade is None and self._exit_order is not None:
             raise Exception('Inconsistent state machine')
 
         else:
-            # TODO don't do this if later than 15:45
+            if trade.timestamp.hour >= self._exit_hour and trade.timestamp.minute > self._exit_minute:
+                # no more trading today
+                return
+
+            if trade.timestamp.hour <= self._enter_hour and trade.timestamp.minute < self._enter_minute:
+                # no trading yet
+                return
+
+            if self._enter_order is not None:
+                # already trying to enter, wait for execution
+                return
 
             if cur_perf > self._trigger:
                 # buy
+                print('entering with buy order')
+                if self._notional is not None:
+                    self._quantity = max(self._notional // trade.price, 1)
+                else:
+                    self._quantity = 1
+
                 self._enter_order = Order(side=Side.BUY,
                                           price=trade.price,
                                           volume=self._quantity,
@@ -121,29 +154,20 @@ class MomentumStrategy(Strategy):
                                           exchange=trade.exchange)
                 await self.newOrder(self._enter_order)
 
-            elif cur_perf < -1 * self._trigger and not self._buy_only:
-                # short
-                self._enter_order = Order(side=Side.SELL,
-                                          price=trade.price,
-                                          volume=self._quantity,
-                                          instrument=trade.instrument,
-                                          order_type=Order.Types.MARKET,
-                                          exchange=trade.exchange)
-                await self.newOrder(self._enter_order)
-
-            else:
-                return
-
     async def onTraded(self, event: Event) -> None:
         trade: Trade = event.target  # type: ignore
-        print('bought {} {:.2f} @ {:.2f}'.format(trade.instrument, trade.volume, trade.price))
         if self._exit_order is None:
+            print('entered {} {:.2f} @ {:.2f}'.format(trade.instrument, trade.volume, trade.price))
             self._enter_trade = trade
             assert trade.my_order == self._enter_order
         else:
+            print('exited {} {:.2f} @ {:.2f}'.format(trade.instrument, trade.volume, trade.price))
             self._enter_order = None
             self._enter_trade = None
             self._exit_order = None
+
+            # reset initial price
+            self._initial_price = trade.price
 
     async def onRejected(self, event: Event) -> None:
         print('order rejected')
