@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 from typing import List, Optional
 from .db import InstrumentDB
 from ..exchange import ExchangeType
@@ -25,7 +25,7 @@ class Instrument(object):
     __leg2: Optional['Instrument']
     __leg1_side: Optional[Side]
     __leg2_side: Optional[Side]
-    __expiration: Optional[datetime]
+    __expiration: Optional[date]
     __tick_size: Optional[float]
     __unit_value: Optional[float]
 
@@ -177,17 +177,21 @@ class Instrument(object):
         if hasattr(self, "_Instrument__expiration"):
             assert kwargs.get('expiration') is None or self.__leg2 == kwargs.get("expiration")
         else:
-            self.__leg2 = kwargs.get("expiration")
+            self.__expiration = kwargs.get("expiration")
 
         if hasattr(self, "_Instrument__tick_size"):
             assert kwargs.get('tick_size') is None or self.__leg2 == kwargs.get("tick_size")
+        elif kwargs.get("tick_size") is not None:
+            self.__tick_size = float(kwargs.get("tick_size"))
         else:
-            self.__leg2 = kwargs.get("tick_size")
+            self.__tick_size = None
 
         if hasattr(self, "_Instrument__unit_value"):
             assert kwargs.get('unit_value') is None or self.__leg2 == kwargs.get("unit_value")
+        elif kwargs.get("unit_value") is not None:
+            self.__unit_value = float(kwargs.get("unit_value"))
         else:
-            self.__leg2 = kwargs.get("unit_value")
+            self.__unit_value = None
 
         # Optional Fields Validation
         assert isinstance(self.__brokerExchange, (None.__class__, str))
@@ -198,7 +202,7 @@ class Instrument(object):
         assert isinstance(self.__leg2, (None.__class__, Instrument))
         assert isinstance(self.__leg1_side, (None.__class__, Side))
         assert isinstance(self.__leg2_side, (None.__class__, Side))
-        assert isinstance(self.__expiration, (None.__class__, datetime))
+        assert isinstance(self.__expiration, (None.__class__, date))
         assert isinstance(self.__unit_value, (None.__class__, float))
         assert isinstance(self.__tick_size, (None.__class__, float))
 
@@ -256,7 +260,7 @@ class Instrument(object):
         return self.__leg2_side
 
     @property
-    def expiry(self):
+    def expiration(self):
         return self.__expiration
 
     @property
