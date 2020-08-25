@@ -1,3 +1,4 @@
+import asyncio
 from abc import abstractmethod
 from ..config import Side
 from ..core import Event, EventHandler, Trade, Order, Instrument, ExchangeType
@@ -157,13 +158,44 @@ class Strategy(EventHandler, CalculationsMixin):
         '''
         return await self._manager.newOrder(self, order)
 
+    async def cancelAll(self, instrument: Instrument = None):
+        '''cancel all open orders. If argument is provided, cancel only orders for
+        that instrument.
+
+        Args:
+            insrument (Optional[Instrument]): Cancel all orders that trade this instrument
+        Returns:
+            None
+        '''
+        return await asyncio.wait([self.cancel(order) for order in self.orders(instrument=instrument)])
+
+    async def closeAll(self, instrument: Instrument = None):
+        '''close all open postions immediately. If argument is provided, close only positions for
+        that instrument.
+
+        Args:
+            insrument (Optional[Instrument]): Close all positions for this instrument
+        Returns:
+            None
+        '''
+        # cancel all open orders
+        await self.cancelAll(instrument=instrument)
+
+        # construct closing orders
+        orders = [Order(volume=p.size,
+                        price=0,
+                        side=Side.SELL if p.size > 0 else Side.BUY,
+                        instrument=p.instrument,
+                        exchange=p.exchange) for p in self.positions(instrument=instrument) if p.size != 0]
+        return await asyncio.wait([self.newOrder(order) for order in orders])
+
     def orders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         '''select all open orders
 
         Args:
-            instrument (Instrument): filter open orders by instrument
-            exchange (ExchangeType): filter open orders by exchange
-            side (Side): filter open orders by side
+            instrument (Optional[Instrument]): filter open orders by instrument
+            exchange (Optional[ExchangeType]): filter open orders by exchange
+            side (Optional[Side]): filter open orders by side
         Returns:
             list (Order): list of open orders
         '''
@@ -173,9 +205,9 @@ class Strategy(EventHandler, CalculationsMixin):
         '''select all past orders
 
         Args:
-            instrument (Instrument): filter open orders by instrument
-            exchange (ExchangeType): filter open orders by exchange
-            side (Side): filter open orders by side
+            instrument (Optional[Instrument]): filter past orders by instrument
+            exchange (Optional[ExchangeType]): filter past orders by exchange
+            side (Optional[Side]): filter past orders by side
         Returns:
             list (Order): list of open orders
         '''
@@ -185,9 +217,9 @@ class Strategy(EventHandler, CalculationsMixin):
         '''select all past trades
 
         Args:
-            instrument (Instrument): filter trades by instrument
-            exchange (ExchangeType): filter trades by exchange
-            side (Side): filter trades by side
+            instrument (Optional[Instrument]): filter trades by instrument
+            exchange (Optional[ExchangeType]): filter trades by exchange
+            side (Optional[Side]): filter trades by side
         Returns:
             list (Trade): list of trades
         '''

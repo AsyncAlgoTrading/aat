@@ -123,6 +123,12 @@ class Strategy(metaclass=ABCMeta):
         '''submit a sell order. Note that this is merely a request for an order, it provides no guarantees that the order will
         execute. At a later point, if your order executes, you will receive an alert via the `sold` method'''
 
+    async def cancelAll(self, instrument: Instrument = None):
+        '''cancel all open orders'''
+
+    async def closeAll(self, instrument: Instrument = None):
+        '''close all open positions'''
+
     def orders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         '''select all open orders'''
 
@@ -165,6 +171,7 @@ class Strategy(metaclass=ABCMeta):
 
     def lookup(self, instrument):
         '''lookup an instrument on the exchange'''
+
 ```
 
 ### Example Strategy
