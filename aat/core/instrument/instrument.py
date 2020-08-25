@@ -186,14 +186,14 @@ class Instrument(object):
         if hasattr(self, "_Instrument__price_increment"):
             assert kwargs.get('price_increment') is None or self.__leg2 == kwargs.get("price_increment")
         elif kwargs.get("price_increment") is not None:
-            self.__price_increment = float(kwargs.get("price_increment"))
+            self.__price_increment = float(kwargs.get("price_increment"))  # type: ignore
         else:
             self.__price_increment = None
 
         if hasattr(self, "_Instrument__unit_value"):
             assert kwargs.get('unit_value') is None or self.__leg2 == kwargs.get("unit_value")
         elif kwargs.get("unit_value") is not None:
-            self.__unit_value = float(kwargs.get("unit_value"))
+            self.__unit_value = float(kwargs.get("unit_value"))  # type: ignore
         else:
             self.__unit_value = None
 
