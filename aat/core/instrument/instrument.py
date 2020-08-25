@@ -1,8 +1,10 @@
+from datetime import datetime
 from typing import List, Optional
 from .db import InstrumentDB
 from ..exchange import ExchangeType
 from ...config import InstrumentType, Side
 from ...common import _in_cpp
+from ...config.enums import OptionType
 
 try:
     from ...binding import InstrumentCpp  # type: ignore
@@ -24,6 +26,11 @@ class Instrument(object):
     __leg2: Optional['Instrument']
     __leg1_side: Optional[Side]
     __leg2_side: Optional[Side]
+    __expiration: Optional[datetime]
+    __contract_month: Optional[int]
+    __price_increment: Optional[float]
+    __unit_value: Optional[float]
+    __option_type: Optional[OptionType]
 
     __slots__ = [
         "__name",
@@ -37,6 +44,10 @@ class Instrument(object):
         "__leg2",
         "__leg1_side",
         "__leg2_side",
+        "__expiration",
+        "__price_increment",
+        "__unit_value",
+        "__option_type"
     ]
 
     def __new__(cls, *args, **kwargs):
@@ -167,6 +178,30 @@ class Instrument(object):
         else:
             self.__leg2_side = kwargs.get("leg2_side")
 
+        if hasattr(self, "_Instrument__expiration"):
+            assert kwargs.get('expiration') is None or self.__leg2 == kwargs.get("expiration")
+        else:
+            self.__expiration = kwargs.get("expiration")
+
+        if hasattr(self, "_Instrument__price_increment"):
+            assert kwargs.get('price_increment') is None or self.__leg2 == kwargs.get("price_increment")
+        elif kwargs.get("price_increment") is not None:
+            self.__price_increment = float(kwargs.get("price_increment"))  # type: ignore
+        else:
+            self.__price_increment = None
+
+        if hasattr(self, "_Instrument__unit_value"):
+            assert kwargs.get('unit_value') is None or self.__leg2 == kwargs.get("unit_value")
+        elif kwargs.get("unit_value") is not None:
+            self.__unit_value = float(kwargs.get("unit_value"))  # type: ignore
+        else:
+            self.__unit_value = None
+
+        if hasattr(self, "_Instrument__option_type"):
+            assert kwargs.get('option_type') is None or self.__option_type == kwargs.get('option_type')
+        else:
+            self.__option_type = kwargs.get('option_type')
+
         # Optional Fields Validation
         assert isinstance(self.__brokerExchange, (None.__class__, str))
         assert isinstance(self.__brokerId, (None.__class__, str))
@@ -176,6 +211,10 @@ class Instrument(object):
         assert isinstance(self.__leg2, (None.__class__, Instrument))
         assert isinstance(self.__leg1_side, (None.__class__, Side))
         assert isinstance(self.__leg2_side, (None.__class__, Side))
+        assert isinstance(self.__expiration, (None.__class__, datetime))
+        assert isinstance(self.__unit_value, (None.__class__, float))
+        assert isinstance(self.__price_increment, (None.__class__, float))
+        assert isinstance(self.__option_type, (None.__class__, OptionType))
 
         # install into instrumentdb, noop if already there
         self._instrumentdb.add(self)
@@ -229,6 +268,22 @@ class Instrument(object):
     @property
     def leg2_side(self):
         return self.__leg2_side
+
+    @property
+    def expiration(self):
+        return self.__expiration
+
+    @property
+    def unit_value(self):
+        return self.__unit_value
+
+    @property
+    def price_increment(self):
+        return self.__price_increment
+
+    @property
+    def option_type(self):
+        return self.__option_type
 
     def __eq__(self, other):
         if other is None:
