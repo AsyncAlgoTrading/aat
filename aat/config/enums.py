@@ -17,9 +17,11 @@ class Side(BaseEnum):
     BUY = 'BUY'
     SELL = 'SELL'
 
+
 class OptionType(BaseEnum):
     CALL = 'CALL'
     PUT = 'PUT'
+
 
 class EventType(BaseEnum):
     # Trade events
