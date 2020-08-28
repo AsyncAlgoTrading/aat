@@ -1,4 +1,5 @@
 from collections import deque
+from datetime import datetime
 from typing import Mapping, Type, Union, List, Dict
 from .order import Order
 from ...config import DataType, Side
@@ -61,7 +62,7 @@ class Trade(object):
     # Readonly #
     # ******** #
     @property
-    def timestamp(self) -> int:
+    def timestamp(self) -> datetime:
         return self.taker_order.timestamp
 
     @property
@@ -141,7 +142,7 @@ class Trade(object):
             [{'maker_order{}.' + k: v for k, v in order.to_json().items()} for i, order in enumerate(self.maker_orders)]
 
         ret: Dict[str, Union[str, int, float]] = \
-            {'id': self.id, 'timestamp': self.timestamp,
+            {'id': self.id, 'timestamp': self.timestamp.timestamp(),
              'price': self.price, 'volume': self.volume}
 
         # update with taker order dict

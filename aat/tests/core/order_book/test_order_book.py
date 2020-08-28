@@ -22,7 +22,8 @@ class TestOrderBook:
         data = Order(volume=5.0,
                      price=4.5,
                      side=Order.Sides.SELL,
-                     instrument=_INSTRUMENT)
+                     instrument=_INSTRUMENT,
+                     order_type=Order.Types.LIMIT)
         ob.add(data)
 
         print(ob)
@@ -33,7 +34,8 @@ class TestOrderBook:
         data = Order(volume=4.0,
                      price=5.5,
                      side=Order.Sides.BUY,
-                     instrument=_INSTRUMENT)
+                     instrument=_INSTRUMENT,
+                     order_type=Order.Types.LIMIT)
         ob.add(data)
 
         print(ob)
@@ -52,7 +54,8 @@ class TestOrderBook:
         data = Order(volume=100.0,
                      price=0.0,
                      side=Order.Sides.SELL,
-                     instrument=_INSTRUMENT)
+                     instrument=_INSTRUMENT,
+                     order_type=Order.Types.LIMIT)
         ob.add(data)
 
         print(ob)

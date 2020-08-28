@@ -32,10 +32,9 @@ class RiskManager(object):
             prev_price: float = cur_pos.price
             prev_notional: float = prev_size * prev_price
 
-            # FIXME separate maker, taker
             cur_pos.size = (cur_pos.size + (my_order.volume if my_order.side == Side.BUY else -1 * my_order.volume), trade.timestamp)
 
-            if (prev_size > 0 and cur_pos.size > prev_size) or (prev_size < 0 and cur_pos.size < prev_size):  # type: ignore
+            if (prev_size >= 0 and cur_pos.size > prev_size) or (prev_size <= 0 and cur_pos.size < prev_size):  # type: ignore
                 # increasing position size
                 # update average price
                 cur_pos.price = ((prev_notional + (my_order.volume * trade.price)) / cur_pos.size, trade.timestamp)
@@ -43,8 +42,8 @@ class RiskManager(object):
             elif (prev_size > 0 and cur_pos.size < 0) or (prev_size < 0 and cur_pos.size > 0):  # type: ignore
                 # decreasing position size in one direction, increasing position size in other
                 # update realized pnl
-                pnl = cur_pos.pnl + (prev_size * (trade.price - prev_price))
-                cur_pos.pnl = (pnl, trade.timestamp)  # update realized pnl with closing position
+                pnl = (prev_size * (trade.price - prev_price))
+                cur_pos.pnl = (cur_pos.pnl + pnl, trade.timestamp)  # update realized pnl with closing position
 
                 # deduct from unrealized pnl
                 cur_pos.unrealizedPnl = (cur_pos.unrealizedPnl - pnl, trade.timestamp)
@@ -55,13 +54,13 @@ class RiskManager(object):
             else:
                 # decreasing position size
                 # update realized pnl
-                pnl = cur_pos.pnl + (prev_size * (trade.price - prev_price))
-                cur_pos.pnl = (pnl, trade.timestamp)  # update realized pnl with closing position
+                pnl = (prev_size * (trade.price - prev_price))
+                cur_pos.pnl = (cur_pos.pnl + pnl, trade.timestamp)  # update realized pnl with closing position
 
                 # deduct from unrealized pnl
                 cur_pos.unrealizedPnl = (cur_pos.unrealizedPnl - pnl, trade.timestamp)
 
-            # TODO close if side is 0
+            # TODO close if side is 0?
 
         else:
             self._active_positions[trade.instrument] = Position(price=trade.price,

@@ -11,4 +11,4 @@ except ImportError:
     pass
 
 # import last
-from .engine import TradingEngine  # noqa: F401
+from .engine import TradingEngine, StrategyManager  # noqa: F401

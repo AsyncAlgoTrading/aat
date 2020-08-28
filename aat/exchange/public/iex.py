@@ -120,12 +120,18 @@ class IEX(Exchange):
 
         else:
             dfs = []
+            insts = set()
+
             if self._timeframe != '1d':
                 for i in tqdm(self._subscriptions, desc="Fetching data..."):
+                    if i.name in insts:
+                        continue
+
                     df = self._client.chartDF(i.name, timeframe=self._timeframe)
                     df = df[['close', 'volume']]
                     df.columns = ['close:{}'.format(i.name), 'volume:{}'.format(i.name)]
                     dfs.append(df)
+                    insts.add(i.name)
 
                 data = pd.concat(dfs, axis=1)
                 data.sort_index(inplace=True)
@@ -135,6 +141,9 @@ class IEX(Exchange):
 
             else:
                 for i in tqdm(self._subscriptions, desc="Fetching data..."):
+                    if i.name in insts:
+                        continue
+
                     date = self._start_date
                     subdfs = []
                     while date <= self._end_date:
@@ -145,6 +154,7 @@ class IEX(Exchange):
                             subdfs.append(df)
                         date += timedelta(days=1)
                     dfs.append(pd.concat(subdfs))
+                    insts.add(i.name)
 
                 data = pd.concat(dfs, axis=1)
                 data.index = [x + timedelta(hours=int(y.split(':')[0]), minutes=int(y.split(':')[1])) for x, y in data.index]

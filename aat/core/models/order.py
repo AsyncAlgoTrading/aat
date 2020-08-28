@@ -14,7 +14,7 @@ except ImportError:
     _CPP = False
 
 
-def _make_cpp_order(volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.LIMIT, flag=OrderFlag.NONE, stop_target=None):
+def _make_cpp_order(volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.MARKET, flag=OrderFlag.NONE, stop_target=None):
     '''helper method to ensure all arguments are setup'''
     return OrderCpp(0, datetime.now(), volume, price, side, instrument, exchange, notional, order_type, flag, stop_target)
 
@@ -46,7 +46,7 @@ class Order(object):
             return _make_cpp_order(*args, **kwargs)
         return super(Order, cls).__new__(cls)
 
-    def __init__(self, volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.LIMIT, flag=OrderFlag.NONE, stop_target=None):
+    def __init__(self, volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.MARKET, flag=OrderFlag.NONE, stop_target=None):
         self.__id = 0  # on construction, provide no ID until exchange assigns one
         self.__timestamp = datetime.now()
         self.__type = DataType.ORDER
@@ -137,7 +137,7 @@ class Order(object):
         self.__id = id
 
     @property
-    def timestamp(self) -> int:
+    def timestamp(self) -> datetime:
         return self.__timestamp
 
     @timestamp.setter
@@ -182,7 +182,7 @@ class Order(object):
     def to_json(self) -> Mapping[str, Union[str, int, float]]:
         return \
             {'id': self.id,
-             'timestamp': self.timestamp,
+             'timestamp': self.timestamp.timestamp(),
              'volume': self.volume,
              'price': self.price,
              'side': self.side.value,
