@@ -1,3 +1,4 @@
+from typing import Optional
 from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
 
 
@@ -45,9 +46,9 @@ class MomentumStrategy(Strategy):
         self._last_price = None
 
         # orders
-        self._enter_order = None
-        self._enter_trade = None
-        self._exit_order = None
+        self._enter_order: Optional[Order] = None
+        self._enter_trade: Optional[Trade] = None
+        self._exit_order: Optional[Order] = None
 
     async def onStart(self, event: Event) -> None:
         # Create an instrument
@@ -68,13 +69,13 @@ class MomentumStrategy(Strategy):
         # set initial price to first trade
         if self._initial_price is None or self._initial_price == 0.0 or self._initial_price_day != trade.timestamp.day:
             self._initial_price = trade.price
-            self._initial_price_day = trade.timestamp.day
+            self._initial_price_day = trade.timestamp.day  # type: ignore
 
         # self last price to last traded price
         self._last_price = trade.price
 
         # determine if we trade
-        cur_perf = (self._last_price - self._initial_price) / self._initial_price if self._initial_price != 0.0 else None
+        cur_perf = (self._last_price - self._initial_price) / self._initial_price if self._initial_price != 0.0 else None  # type: ignore
 
         if cur_perf is None:
             # don't handle 0 price
@@ -96,7 +97,7 @@ class MomentumStrategy(Strategy):
             elif cur_perf < self._stop:
                 # close to stop
                 print('exiting to stop loss')
-                side = Side.SELL if self._enter_order.side == Side.BUY else Side.BUY
+                side = Side.SELL if self._enter_order.side == Side.BUY else Side.BUY  # type: ignore
                 self._exit_order = Order(side=side,
                                          price=trade.price,
                                          volume=self._quantity,
@@ -144,7 +145,7 @@ class MomentumStrategy(Strategy):
                 if self._notional is not None:
                     self._quantity = max(self._notional // trade.price, 1)
                 else:
-                    self._quantity = 1
+                    self._quantity = 1  # type: ignore
 
                 self._enter_order = Order(side=Side.BUY,
                                           price=trade.price,

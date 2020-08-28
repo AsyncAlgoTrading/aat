@@ -137,7 +137,7 @@ class Order(object):
         self.__id = id
 
     @property
-    def timestamp(self) -> int:
+    def timestamp(self) -> datetime:
         return self.__timestamp
 
     @timestamp.setter
@@ -182,7 +182,7 @@ class Order(object):
     def to_json(self) -> Mapping[str, Union[str, int, float]]:
         return \
             {'id': self.id,
-             'timestamp': self.timestamp,
+             'timestamp': self.timestamp.timestamp(),
              'volume': self.volume,
              'price': self.price,
              'side': self.side.value,
