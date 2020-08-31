@@ -129,11 +129,11 @@ class InteractiveBrokersExchange(Exchange):
         For OrderEntry-only, can just return None
         '''
         if self._trading_type == TradingType.LIVE:
-            print('*'* 100)
-            print('*'* 100)
+            print('*' * 100)
+            print('*' * 100)
             print('WARNING: LIVE TRADING')
-            print('*'* 100)
-            print('*'* 100)
+            print('*' * 100)
+            print('*' * 100)
             self._api.connect('127.0.0.1', 7496, randint(0, 10000))
             self._api_thread = threading.Thread(target=self._api.run, daemon=True)
             self._api_thread.start()
