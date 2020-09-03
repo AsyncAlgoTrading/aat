@@ -1,9 +1,16 @@
 from datetime import datetime
-from ...instrument import Instrument
-from ....config import InstrumentType, TradingType
+from typing import List
+
+from aat.core import TradingEngine, Instrument
+from aat.exchange import Exchange
+from aat.config import InstrumentType, TradingType
 
 
 class StrategyManagerUtilsMixin(object):
+    _engine: TradingEngine
+    _exchanges: List[Exchange]
+
+
     #################
     # Other Methods #
     #################
@@ -39,7 +46,8 @@ class StrategyManagerUtilsMixin(object):
     async def lookup(self, instrument: Instrument, exchange=None):
         '''Return list of all available instruments that match the instrument given'''
         if exchange in self._exchanges:
-            return await self._exchanges.lookup(instrument)
+            return await exchange.lookup(instrument)
+
         elif exchange is None:
             ret = []
             for exchange in self._exchanges:

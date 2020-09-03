@@ -1,10 +1,24 @@
-from ...models import Event, Order, Trade
-from ...instrument import Instrument
-from ...exchange import ExchangeType
-from ....config import Side
+from datetime import datetime
+from typing import List
+
+from aat.core import TradingEngine, Instrument, ExchangeType, Event, Order, Trade
+from aat.core.risk import RiskManager
+from aat.core.execution import OrderManager
+from aat.config import InstrumentType, TradingType, Side
+from aat.exchange import Exchange
 
 
 class StrategyManagerOrderEntryMixin(object):
+    _engine: TradingEngine
+    _exchanges: List[Exchange]
+    _strategy_trades: dict
+    _strategy_open_orders: dict
+    _strategy_past_orders: dict
+    _alerted_events: dict
+    _risk_mgr: RiskManager
+    _order_mgr: OrderManager
+
+
     #####################
     # Order Entry Hooks #
     #####################

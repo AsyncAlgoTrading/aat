@@ -163,3 +163,7 @@ class RiskManager(object):
     async def onRejected(self, event: Event):
         order: Order = event.target  # type: ignore
         self._active_orders.remove(order)
+
+    async def onCanceled(self, event: Event):
+        order: Order = event.target  # type: ignore
+        self._active_orders.remove(order)
