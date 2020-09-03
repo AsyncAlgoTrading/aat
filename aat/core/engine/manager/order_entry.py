@@ -1,15 +1,17 @@
-from datetime import datetime
-from typing import List
+from typing import List, TYPE_CHECKING
 
-from aat.core import TradingEngine, Instrument, ExchangeType, Event, Order, Trade
+from aat.core import Instrument, ExchangeType, Event, Order, Trade
 from aat.core.risk import RiskManager
 from aat.core.execution import OrderManager
-from aat.config import InstrumentType, TradingType, Side
+from aat.config import Side
 from aat.exchange import Exchange
+
+if TYPE_CHECKING:
+    from aat.core import TradingEngine
 
 
 class StrategyManagerOrderEntryMixin(object):
-    _engine: TradingEngine
+    _engine: 'TradingEngine'
     _exchanges: List[Exchange]
     _strategy_trades: dict
     _strategy_open_orders: dict
@@ -17,7 +19,6 @@ class StrategyManagerOrderEntryMixin(object):
     _alerted_events: dict
     _risk_mgr: RiskManager
     _order_mgr: OrderManager
-
 
     #####################
     # Order Entry Hooks #

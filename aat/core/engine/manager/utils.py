@@ -1,19 +1,22 @@
 from datetime import datetime
-from typing import List
+from typing import List, TYPE_CHECKING
 
-from aat.core import TradingEngine, Instrument
+from aat.core import Instrument
 from aat.exchange import Exchange
 from aat.config import InstrumentType, TradingType
 
+if TYPE_CHECKING:
+    from aat.core import TradingEngine
+
 
 class StrategyManagerUtilsMixin(object):
-    _engine: TradingEngine
+    _engine: 'TradingEngine'
     _exchanges: List[Exchange]
-
 
     #################
     # Other Methods #
     #################
+
     def tradingType(self) -> TradingType:
         return self._engine.trading_type
 
