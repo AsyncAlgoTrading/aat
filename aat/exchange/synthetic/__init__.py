@@ -6,7 +6,7 @@ from collections import deque
 from random import choice, random, randint
 from ..exchange import Exchange
 from ...core import Instrument, OrderBook, Order, Event, ExchangeType
-from ...config import TradingType, Side, EventType
+from ...config import TradingType, Side, EventType, OrderType
 
 
 def _getName(n=1):
@@ -17,7 +17,7 @@ def _getName(n=1):
 class SyntheticExchange(Exchange):
     _inst = 0
 
-    def __init__(self, trading_type=None, verbose=False, count=5, cycles=10000, **kwargs):
+    def __init__(self, trading_type=None, verbose=False, count=3, cycles=10000, **kwargs):
         super().__init__(ExchangeType('synthetic{}'.format(SyntheticExchange._inst)))
         assert trading_type in (TradingType.SIMULATION, TradingType.BACKTEST)
         self._trading_type = trading_type
@@ -60,7 +60,8 @@ class SyntheticExchange(Exchange):
                               price=start,
                               side=side,
                               instrument=instrument,
-                              exchange=self._exchange)
+                              exchange=self._exchange,
+                              order_type=OrderType.LIMIT)
                 order.id = self._id
 
                 if self._trading_type == TradingType.BACKTEST:
@@ -184,7 +185,8 @@ class SyntheticExchange(Exchange):
                               price=price,
                               side=Side.BUY,
                               instrument=instrument,
-                              exchange=self._exchange)
+                              exchange=self._exchange,
+                              order_type=OrderType.LIMIT)
                 order.id = self._id
 
                 self._jumptime(order)  # advance time in backtest
@@ -205,7 +207,8 @@ class SyntheticExchange(Exchange):
                               price=price,
                               side=Side.SELL,
                               instrument=instrument,
-                              exchange=self._exchange)
+                              exchange=self._exchange,
+                              order_type=OrderType.LIMIT)
                 order.id = self._id
 
                 self._jumptime(order)  # advance time in backtest
@@ -239,7 +242,8 @@ class SyntheticExchange(Exchange):
                                   price=price,
                                   side=Side.BUY,
                                   instrument=instrument,
-                                  exchange=self._exchange)
+                                  exchange=self._exchange,
+                                  order_type=OrderType.LIMIT)
                     order.id = self._id
 
                     self._jumptime(order)  # advance time in backtest
@@ -260,7 +264,8 @@ class SyntheticExchange(Exchange):
                                   price=price,
                                   side=Side.SELL,
                                   instrument=instrument,
-                                  exchange=self._exchange)
+                                  exchange=self._exchange,
+                                  order_type=OrderType.LIMIT)
                     order.id = self._id
 
                     self._jumptime(order)  # advance time in backtest

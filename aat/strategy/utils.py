@@ -1,4 +1,4 @@
-from ..config import Side
+from ..config import Side, TradingType
 from ..core import Trade, Instrument, ExchangeType, StrategyManager
 
 
@@ -79,6 +79,10 @@ class StrategyUtilsMixin(object):
     #################
     # Other Methods #
     #################
+    def tradingType(self) -> TradingType:
+        '''Return the trading type, from TradingType enum'''
+        return self._manager.tradingType()
+
     def now(self):
         '''Return the current datetime. Useful to avoid code changes between
         live trading and backtesting. Defaults to `datetime.now`'''

@@ -22,7 +22,6 @@ class SellPlusPercentStrategy(Strategy):
                         price=trade.price,
                         volume=math.ceil(1000 / trade.price),
                         instrument=trade.instrument,
-                        order_type=Order.Types.MARKET,
                         exchange=trade.exchange)
 
             print('requesting buy : {}'.format(req))
@@ -38,7 +37,6 @@ class SellPlusPercentStrategy(Strategy):
                             price=trade.price,
                             volume=self._stop[trade.instrument][2],
                             instrument=trade.instrument,
-                            order_type=Order.Types.MARKET,
                             exchange=trade.exchange)
 
                 print('requesting sell : {}'.format(req))
