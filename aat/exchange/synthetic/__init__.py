@@ -19,6 +19,8 @@ class SyntheticExchange(Exchange):
 
     def __init__(self, trading_type=None, verbose=False, count=3, cycles=10000, **kwargs):
         super().__init__(ExchangeType('synthetic{}'.format(SyntheticExchange._inst)))
+        print('using synthetic exchange: {}'.format(self.exchange()))
+
         assert trading_type in (TradingType.SIMULATION, TradingType.BACKTEST)
         self._trading_type = trading_type
         self._verbose = verbose

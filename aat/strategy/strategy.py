@@ -168,7 +168,9 @@ class Strategy(EventHandler, StrategyUtilsMixin, CalculationsMixin):
         Returns:
             None
         '''
-        return await asyncio.wait([self.cancel(order) for order in self.orders(instrument=instrument)])
+        orders = self.orders(instrument=instrument)
+        if orders:
+            return await asyncio.wait([self.cancel(order) for order in orders])
 
     async def closeAll(self, instrument: Instrument = None):
         '''close all open postions immediately. If argument is provided, close only positions for
