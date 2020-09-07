@@ -24,7 +24,7 @@ class SyntheticExchange(Exchange):
         assert trading_type in (TradingType.SIMULATION, TradingType.BACKTEST)
         self._trading_type = trading_type
         self._verbose = verbose
-        self._sleep = 0.1 if trading_type in (TradingType.LIVE, TradingType.SIMULATION, TradingType.SANDBOX) else 0.0
+        self._sleep = 0.3 if trading_type in (TradingType.LIVE, TradingType.SIMULATION, TradingType.SANDBOX) else 0.0
         self._id = 0
         self._events = deque()
         self._pending_orders = deque()
