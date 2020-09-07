@@ -235,10 +235,13 @@ class TradingEngine(Application):
                     event = self._queued_events.popleft()
                     await self.tick(event)
 
-                # process any secondary events
+                # process any secondary callback-targeted events (e.g. order fills)
                 while self._queued_targeted_events:
                     strat, event = self._queued_targeted_events.popleft()
                     await self.tick(event, strat)
+
+                # process any periodics
+                await asyncio.gather(*(asyncio.create_task(p.execute(self._latest)) for p in self.manager._periodics))
 
         await self.tick(Event(type=EventType.EXIT, target=None))
 

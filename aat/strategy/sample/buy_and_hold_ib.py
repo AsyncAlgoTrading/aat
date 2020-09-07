@@ -2,23 +2,22 @@ from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
 
 
 class BuyAndHoldIBStrategy(Strategy):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, instrument, notional, *args, **kwargs) -> None:
         super(BuyAndHoldIBStrategy, self).__init__(*args, **kwargs)
 
+        # symbol to trade
+        self._symbol, self._symbol_type = instrument.split("-")
+
+        # notional value to trade
+        self._notional = float(notional)
+
     async def onStart(self, event: Event) -> None:
-        # Get available instruments from exchange
-        for name in ('MSFT', 'AAPL'):
-            # Create an instrument
-            inst = Instrument(name=name, type=InstrumentType.EQUITY)
-            insts = await self.lookup(inst)
+        # Create an instrument
+        inst = Instrument(name=self._symbol, type=InstrumentType(self._symbol_type))
 
-            # Check that its available
-            if inst not in insts:
-                raise Exception('Not available on exchange: {}'.format(name))
-
-            # Subscribe
-            self.subscribe(inst)
-            print('Subscribing to {}'.format(inst))
+        # Subscribe
+        await self.subscribe(inst)
+        print('Subscribing to {}'.format(inst))
 
     async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
@@ -28,7 +27,7 @@ class BuyAndHoldIBStrategy(Strategy):
         if not self.orders(trade.instrument) and not self.trades(trade.instrument):
             req = Order(side=Side.BUY,
                         price=trade.price,
-                        volume=5000 // trade.price,
+                        volume=self._notional // trade.price,
                         instrument=trade.instrument,
                         order_type=Order.Types.MARKET,
                         exchange=trade.exchange)

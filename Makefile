@@ -1,4 +1,4 @@
-PYTHON=python3.7
+PYTHON=python
 CONFIG=./config/synthetic.cfg
 
 
@@ -100,7 +100,7 @@ docs:  ## Build the sphinx docs
 dist:  ## dist to pypi
 	rm -rf dist build
 	$(PYTHON) setup.py sdist bdist_wheel
-	twine check dist/* && twine upload dist/*
+	$(PYTHON) -m twine check dist/* && twine upload dist/*
 
 clean: ## clean the repository
 	find . -name "__pycache__" | xargs rm -rf

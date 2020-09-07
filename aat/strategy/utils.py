@@ -1,4 +1,5 @@
-from ..config import Side
+from typing import Union, Callable, Optional
+from ..config import Side, TradingType
 from ..core import Trade, Instrument, ExchangeType, StrategyManager
 
 
@@ -79,6 +80,14 @@ class StrategyUtilsMixin(object):
     #################
     # Other Methods #
     #################
+    def tradingType(self) -> TradingType:
+        '''Return the trading type, from TradingType enum'''
+        return self._manager.tradingType()
+
+    def loop(self):
+        '''Return the event loop'''
+        return self._manager.loop()
+
     def now(self):
         '''Return the current datetime. Useful to avoid code changes between
         live trading and backtesting. Defaults to `datetime.now`'''
@@ -100,9 +109,35 @@ class StrategyUtilsMixin(object):
         '''Subscribe to market data for the given instrument'''
         return self._manager.subscribe(instrument=instrument, strategy=self)
 
-    async def lookup(self, instrument, exchange=None):
+    async def lookup(self,
+                     instrument: Optional[Instrument],
+                     exchange=None):
         '''Return list of all available instruments that match the instrument given'''
         return await self._manager.lookup(instrument, exchange=exchange)
+
+    def periodic(self,
+                 function: Callable,
+                 second: Union[int, str] = 0,
+                 minute: Union[int, str] = '*',
+                 hour: Union[int, str] = '*'):
+        '''periodically run a given async function. NOTE: precise timing
+        is NOT guaranteed due to event loop scheduling.
+
+        Args:
+            function (callable); function to call periodically
+            second (Union[int, str]); second to align periodic to, or '*' for every second
+            minute (Union[int, str]); minute to align periodic to, or '*' for every minute
+            hour (Union[int, str]); hour to align periodic to, or '*' for every hour
+
+                NOTE: this is a rudimentary scheme but should be sufficient. For more
+                complicated scheduling, just install multiple instances of the same periodic
+                e.g. for running on :00, :15, :30, and :45 install
+                    periodic(0, 0, '*')
+                    periodic(0, 15, '*')
+                    periodic(0, 30, '*')
+                    periodic(0, 45, '*')
+        '''
+        return self._manager.periodic(function, second, minute, hour)
 
     def slippage(self, trade: Trade):
         '''method to inject slippage when backtesting

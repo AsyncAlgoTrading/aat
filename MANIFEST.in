@@ -14,9 +14,7 @@ include aat/*.dylib
 graft aat/tests
 
 # C++ build
-graft cpp
-graft cmake
-include CMakeLists.txt
+graft aat/cpp
 
 # Patterns to exclude from any directory
 global-exclude *~

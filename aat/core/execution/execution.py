@@ -39,7 +39,7 @@ class OrderManager(object):
             raise Exception('Exchange not installed: {}'.format(order.exchange))
 
         await exchange.cancelOrder(order)
-        self._pending_orders.pop(order.id)
+        self._pending_orders.pop(order.id, None)
         return order
 
     # **********************
