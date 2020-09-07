@@ -17,7 +17,7 @@ def _getName(n=1):
 class SyntheticExchange(Exchange):
     _inst = 0
 
-    def __init__(self, trading_type=None, verbose=False, count=3, cycles=10000, **kwargs):
+    def __init__(self, trading_type=None, verbose=False, inst_count=3, cycles=10000, **kwargs):
         super().__init__(ExchangeType('synthetic{}'.format(SyntheticExchange._inst)))
         print('using synthetic exchange: {}'.format(self.exchange()))
 
@@ -31,7 +31,7 @@ class SyntheticExchange(Exchange):
         self._pending_cancel_orders = deque()
         SyntheticExchange._inst += 1
 
-        self._inst_count = int(count)
+        self._inst_count = int(inst_count)
         self._backtest_cycles_total = int(cycles)
         self._backtest_count = 0
 
@@ -338,6 +338,11 @@ class SyntheticExchange(Exchange):
     # Order Entry Methods #
     # ******************* #
     async def newOrder(self, order: Order):
+        if order.instrument not in self._instruments.values():
+            # invalid instrument
+            self._events.append(Event(type=EventType.REJECTED, target=order))
+            return
+
         # assign id
         order.id = self._id
 

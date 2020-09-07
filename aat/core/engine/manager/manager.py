@@ -43,6 +43,9 @@ class StrategyManager(StrategyManagerOrderEntryMixin, StrategyManagerRiskMixin, 
         # internal use for synchronizing
         self._alerted_events = {}
 
+        # internal use for periodics
+        self._periodics = []
+
     # ********************* #
     # EventHandler methods *
     # **********************

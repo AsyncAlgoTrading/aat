@@ -238,22 +238,32 @@ There are several callbacks for order entry:
 - onRejected: called when a strategy's order is rejected
 - onCanceled: called when a strategy's order is canceled
 
-There are several methods for order entry and data subscriptions:
+There are several methods for order entry and data subscriptions...
 
 - subscribe: subscribe to an instrument/exchange data
 - instruments: get available instruments
 - exchanges: get available exchanges
+- lookup: lookup an instrument on the exchange
 - newOrder: submit a new order
 - buy  (alias of newOrder): submit a new order
 - sell (alias of newOrder): submit a new order
 - orders: get open orders
 - pastOrders: get past orders
 - trades: get past trades
-- positions: get position informatino
-- risk: get risk information
-- now: get current time as of engine (`datetime.now` when running in realtime)
 
-There are also several optional callbacks for backtesting:
+... several helpers for analyzing positions and risk ... 
+
+- accounts: get account information
+- positions: get position information
+- risk: get risk information
+
+... and some general utility methods ... 
+
+- tradingType: get the trading type of the runtime
+- now: get current time as of engine (`datetime.now` when running in realtime)
+- loop: get the event loop for the engine
+
+... and some optional simulators for backtesting.
 
 - slippage
 - transactionCost
