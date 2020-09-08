@@ -108,7 +108,7 @@ class TradingEngine(Application):
         self._handler_subscriptions = {m: [] for m in EventType.__members__.values()}
 
         # setup `now` handler for backtest
-        self._latest = datetime.fromtimestamp(0)
+        self._latest = datetime.fromtimestamp(0) if self.trading_type in (TradingType.BACKTEST, TradingType.SIMULATION) else datetime.now()
 
         # register internal management event handler before all strategy handlers
         self.registerHandler(self.manager)
