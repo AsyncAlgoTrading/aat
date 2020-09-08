@@ -84,7 +84,7 @@ def _constructContract(instrument):
            instrument.leg2.type == InstrumentType.FUTURE and \
            instrument.leg2.underlying and \
            instrument.leg2.underlying.type == InstrumentType.COMMODITIES and \
-           instrument.leg1 != instrument.leg2:
+           instrument.leg1.underlying != instrument.leg2.underlying:
             # Intercommodity futures use A.B
             contract.symbol = '{}.{}'.format(instrument.leg1.underlying.name,
                                              instrument.leg2.underlying.name)
@@ -109,16 +109,16 @@ def _constructContract(instrument):
         contract.exchange = instrument.brokerExchange or "SMART"
 
         leg1 = ComboLeg()
-        leg1.conId = instrument.brokerId
+        leg1.conId = instrument.leg1.brokerId
         leg1.ratio = 1  # TODO
         leg1.action = instrument.leg1_side
-        leg1.exchange = instrument.brokerExchange or "SMART"
+        leg1.exchange = instrument.leg1.brokerExchange or "SMART"
 
         leg2 = ComboLeg()
-        leg2.conId = instrument.brokerId  # MCD STK
+        leg2.conId = instrument.leg2.brokerId  # MCD STK
         leg2.ratio = 1  # TODO
         leg2.action = instrument.leg2_side
-        leg2.exchange = instrument.brokerExchange or "SMART"
+        leg2.exchange = instrument.leg2.brokerExchange or "SMART"
 
         contract.comboLegs = [leg1, leg2]
 
