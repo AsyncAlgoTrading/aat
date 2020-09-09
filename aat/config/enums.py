@@ -24,6 +24,9 @@ class OptionType(BaseEnum):
 
 
 class EventType(BaseEnum):
+    # Heartbeat events
+    HEARTBEAT = 'HEARTBEAT'
+
     # Trade events
     TRADE = 'TRADE'
 

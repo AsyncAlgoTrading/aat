@@ -11,6 +11,7 @@
 
 Like [Zipline](https://github.com/quantopian/zipline) and [Lean](https://github.com/QuantConnect/Lean), `aat` exposes a single strategy class which is utilized for both live trading and backtesting. The strategy class is simple enough to write and test algorithms quickly, but extensible enough to allow for complex slippage and transaction cost modeling, as well as mid- and post- trade analysis.  
 
+`aat` is active use for live algorithmic trading on equities, commodity futures contracts, and commodity futures spreads by undisclosed funds.
 
 # Overview
 ## Internals
@@ -20,6 +21,7 @@ Like [Zipline](https://github.com/quantopian/zipline) and [Lean](https://github.
 - risk management engine
 - execution engine
 - backtest engine
+
 
 ### Trading Engine
 The trading engine initializes all exchanges and strategies, then martials data, trade requests, and trade responses between the strategy, risk, execution, and exchange objects, while keeping track of high-level statistics on the system

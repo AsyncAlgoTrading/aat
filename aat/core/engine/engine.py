@@ -219,13 +219,13 @@ class TradingEngine(Application):
         await asyncio.gather(*(asyncio.create_task(exch.instruments()) for exch in self.exchanges))
 
         # send start event to all callbacks
-        await self.tick(Event(type=EventType.START, target=None))
+        await self.processEvent(Event(type=EventType.START, target=None))
 
-        async with merge(*(exch.tick() for exch in self.exchanges if inspect.isasyncgenfunction(exch.tick))).stream() as stream:
+        async with merge(*(exch.tick() for exch in self.exchanges + [self] if inspect.isasyncgenfunction(exch.tick))).stream() as stream:
             # stream through all events
             async for event in stream:
                 # tick exchange event to handlers
-                await self.tick(event)
+                await self.processEvent(event)
 
                 # TODO move out of critical path
                 self._latest = event.target.timestamp if hasattr(event, 'target') and hasattr(event.target, 'timestamp') else self._latest
@@ -233,24 +233,28 @@ class TradingEngine(Application):
                 # process any secondary events
                 while self._queued_events:
                     event = self._queued_events.popleft()
-                    await self.tick(event)
+                    await self.processEvent(event)
 
                 # process any secondary callback-targeted events (e.g. order fills)
                 while self._queued_targeted_events:
                     strat, event = self._queued_targeted_events.popleft()
-                    await self.tick(event, strat)
+                    await self.processEvent(event, strat)
 
                 # process any periodics
                 await asyncio.gather(*(asyncio.create_task(p.execute(self._latest)) for p in self.manager._periodics))
 
-        await self.tick(Event(type=EventType.EXIT, target=None))
+        await self.processEvent(Event(type=EventType.EXIT, target=None))
 
-    async def tick(self, event, strategy=None):
+    async def processEvent(self, event, strategy=None):
         '''send an event to all registered event handlers
 
         Arguments:
             event (Event): event to send
         '''
+        if event.type == EventType.HEARTBEAT:
+            # ignore heartbeat
+            return
+
         for callback, handler in self._handler_subscriptions[event.type]:
             # TODO make cleaner? move to somewhere not in critical path?
             if strategy is not None and (handler not in (strategy, self.manager)):
@@ -271,8 +275,15 @@ class TradingEngine(Application):
                 if event.type == EventType.ERROR:
                     # don't infinite error
                     raise
-                await self.tick(Event(type=EventType.ERROR, target=Error(target=event, handler=handler, callback=callback, exception=e)))
+                await self.processEvent(Event(type=EventType.ERROR, target=Error(target=event, handler=handler, callback=callback, exception=e)))
                 await asyncio.sleep(1)
+
+    async def tick(self):
+        '''helper method to ensure periodic methods execute periodically in absence
+        of market data'''
+        while True:
+            yield Event(type=EventType.HEARTBEAT, target=None)
+            await asyncio.sleep(1)
 
     def now(self):
         '''Return the current datetime. Useful to avoid code changes between
@@ -289,4 +300,4 @@ class TradingEngine(Application):
         except KeyboardInterrupt:
             pass
         # send exit event to all callbacks
-        asyncio.ensure_future(self.tick(Event(type=EventType.EXIT, target=None)))
+        asyncio.ensure_future(self.processEvent(Event(type=EventType.EXIT, target=None)))
