@@ -228,7 +228,12 @@ class TradingEngine(Application):
                 await self.processEvent(event)
 
                 # TODO move out of critical path
-                self._latest = event.target.timestamp if hasattr(event, 'target') and hasattr(event.target, 'timestamp') else self._latest
+                if self.trading_type in (TradingType.BACKTEST, TradingType.SIMULATION):
+                    # use time of last event
+                    self._latest = event.target.timestamp if hasattr(event, 'target') and hasattr(event.target, 'timestamp') else self._latest
+                else:
+                    # use now
+                    self._latest = datetime.now()
 
                 # process any secondary events
                 while self._queued_events:
