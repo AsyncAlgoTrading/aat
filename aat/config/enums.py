@@ -84,7 +84,7 @@ class InstrumentType(BaseEnum):
 
     MUTUALFUND = 'MUTUALFUND'
 
-    COMMODITIES = 'COMMODITIES'
+    COMMODITY = 'COMMODITY'
 
     # TODO Warrant?
 

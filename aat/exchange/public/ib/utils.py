@@ -69,7 +69,7 @@ def _constructContract(instrument):
         contract.exchange = instrument.brokerExchange or "FUNDSERV"
         contract.currency = (instrument.currency.name if instrument.currency else '') or "USD"
 
-    elif instrument.type == InstrumentType.COMMODITIES:
+    elif instrument.type == InstrumentType.COMMODITY:
         contract.symbol = instrument.name  # "XAUUSD"
         contract.secType = "CMDTY"
         contract.exchange = instrument.brokerExchange or "SMART"
@@ -79,11 +79,11 @@ def _constructContract(instrument):
         if instrument.leg1 and \
            instrument.leg1.type == InstrumentType.FUTURE and \
            instrument.leg1.underlying and \
-           instrument.leg1.underlying.type == InstrumentType.COMMODITIES and \
+           instrument.leg1.underlying.type == InstrumentType.COMMODITY and \
            instrument.leg2 and \
            instrument.leg2.type == InstrumentType.FUTURE and \
            instrument.leg2.underlying and \
-           instrument.leg2.underlying.type == InstrumentType.COMMODITIES and \
+           instrument.leg2.underlying.type == InstrumentType.COMMODITY and \
            instrument.leg1.underlying != instrument.leg2.underlying:
             # Intercommodity futures use A.B
             contract.symbol = '{}.{}'.format(instrument.leg1.underlying.name,
@@ -190,7 +190,7 @@ def _constructInstrument(contract):
     elif contract.secType == "FUND":
         type = InstrumentType.MUTUALFUND
     elif contract.secType == "CMDTY":
-        type = InstrumentType.COMMODITIES
+        type = InstrumentType.COMMODITY
     elif contract.secType == "BAG":
         type = InstrumentType.SPREAD
     else:

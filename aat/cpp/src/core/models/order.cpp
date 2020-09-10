@@ -8,8 +8,8 @@ using namespace aat::common;
 
 namespace aat {
 namespace core {
-  Order::Order(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
-    ExchangeType exchange, double notional, OrderType order_type, OrderFlag flag, std::shared_ptr<Order> stop_target)
+  Order::Order(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument& instrument,
+    ExchangeType& exchange, double notional, OrderType order_type, OrderFlag flag, std::shared_ptr<Order> stop_target)
     : id(id)
     , timestamp(timestamp)
     , type(DataType::ORDER)

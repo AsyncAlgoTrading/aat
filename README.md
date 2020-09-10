@@ -606,7 +606,7 @@ We can run any number of strategies against any number of exchanges, including c
 |---|---|---|---|---|
 | Synthetic | Yes | Yes | Simulation,Backtest  | Equity |
 | IEX | Yes | Fake | Live, Simulation, Sandbox, Backtest | Equity |
-| InteractiveBrokers | In Progress | Yes |  Live, Simulation, Sandbox | Equity, Option, Future, Commodities, Spreads, Pair |
+| InteractiveBrokers | In Progress | Yes |  Live, Simulation, Sandbox | Equity, Option, Future, Commodities, Spreads, Pairs |
 | TD Ameritrade | In Progress | In Progress | Equity, Option |
 | Alpaca | In Progress | In Progress |   |
 | Coinbase | In Progress | In Progress |  |

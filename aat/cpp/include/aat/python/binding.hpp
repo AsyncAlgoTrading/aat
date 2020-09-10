@@ -93,7 +93,8 @@ PYBIND11_MODULE(binding, m) {
     .def(py::init<Instrument&, ExchangeType&>())
     .def(py::init<Instrument&, ExchangeType&, std::function<void(std::shared_ptr<Event>)>>())
     .def("__repr__", &OrderBook::toString)
-    .def("__iter__", [](const OrderBook& o) { return py::make_iterator(o.begin(), o.end()); },
+    .def(
+      "__iter__", [](const OrderBook& o) { return py::make_iterator(o.begin(), o.end()); },
       py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
     .def("setCallback", &OrderBook::setCallback)
     .def("add", &OrderBook::add)
@@ -109,7 +110,8 @@ PYBIND11_MODULE(binding, m) {
    ******************************/
   py::class_<PriceLevel>(m, "_PriceLevelCpp")
     .def(py::init<double, Collector&>())
-    .def("__iter__", [](const PriceLevel& pl) { return py::make_iterator(pl.cbegin(), pl.cend()); },
+    .def(
+      "__iter__", [](const PriceLevel& pl) { return py::make_iterator(pl.cbegin(), pl.cend()); },
       py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
     .def("__getitem__", &PriceLevel::operator[])
     .def("__bool__", &PriceLevel::operator bool)
@@ -155,7 +157,7 @@ PYBIND11_MODULE(binding, m) {
    * Models
    ******************************/
   py::class_<Data, std::shared_ptr<Data>>(m, "DataCpp")
-    .def(py::init<uint_t, timestamp_t, Instrument, ExchangeType>())
+    .def(py::init<uint_t, timestamp_t, Instrument&, ExchangeType&>())
     .def("__repr__", &Data::toString)
     .def("__eq__", &Data::operator==)
     .def("toJson", &Data::toJson)
@@ -177,7 +179,7 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("target", &Event::target);
 
   py::class_<Order, std::shared_ptr<Order>>(m, "OrderCpp")
-    .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument, ExchangeType, double, OrderType, OrderFlag,
+    .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument&, ExchangeType&, double, OrderType, OrderFlag,
            std::shared_ptr<Order>>(),
       py::arg("id").none(false), py::arg("timestamp").none(false), py::arg("volume").none(false),
       py::arg("price").none(false), py::arg("side").none(false), py::arg("instrument").none(false),
@@ -216,14 +218,11 @@ PYBIND11_MODULE(binding, m) {
     .def_readwrite("taker_order", &Trade::taker_order)
     .def_readwrite("my_order", &Trade::my_order);
 
-  // py::class_<Position>(m, "PositionCpp")
-  //   .def(py::init<>())
-  //   .def("__repr__", &Position::toString)
-  //   .def("toJson", &Position::toJson)
-  //   .def("perspectiveSchema", &Position::perspectiveSchema)
-  //   .def_readwrite("size", &Position::size)
-  //   .def_readwrite("notional", &Position::notional)
-  //   .def_readwrite("pnl", &Position::pnl);
+  py::class_<Position>(m, "PositionCpp")
+    .def(py::init<double, double, timestamp_t, Instrument&, ExchangeType&, std::vector<std::shared_ptr<Trade>>&>())
+    .def("__repr__", &Position::toString)
+    .def("toJson", &Position::toJson)
+    .def("perspectiveSchema", &Position::perspectiveSchema);
 
   /*******************************
    * Helpers

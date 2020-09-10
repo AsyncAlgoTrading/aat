@@ -48,21 +48,22 @@ namespace core {
 
     void setCallback(std::function<void(std::shared_ptr<Event>)> callback);
 
+    void reset();
+
     void add(std::shared_ptr<Order> order);
     void cancel(std::shared_ptr<Order> order);
     void change(std::shared_ptr<Order> order);
+
     std::shared_ptr<Order> find(std::shared_ptr<Order> order);
 
-    std::map<Side, std::vector<double>> topOfBookMap() const;  // For Binding
     std::vector<double> topOfBook() const;
-
+    std::map<Side, std::vector<double>> topOfBookMap() const;  // For Binding
     double spread() const;
 
     std::vector<double> level(uint_t level) const;
     std::vector<std::shared_ptr<PriceLevel>> level(double price) const;
-
-    std::map<Side, std::vector<std::vector<double>>> levelsMap(uint_t levels) const;  // For Binding
     std::vector<std::vector<double>> levels(uint_t levels) const;
+    std::map<Side, std::vector<std::vector<double>>> levelsMap(uint_t levels) const;  // For Binding
 
     str_t toString() const;
 
