@@ -24,6 +24,9 @@ class OptionType(BaseEnum):
 
 
 class EventType(BaseEnum):
+    # Heartbeat events
+    HEARTBEAT = 'HEARTBEAT'
+
     # Trade events
     TRADE = 'TRADE'
 
@@ -81,7 +84,7 @@ class InstrumentType(BaseEnum):
 
     MUTUALFUND = 'MUTUALFUND'
 
-    COMMODITIES = 'COMMODITIES'
+    COMMODITY = 'COMMODITY'
 
     # TODO Warrant?
 

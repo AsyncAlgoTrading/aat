@@ -3,7 +3,8 @@
 namespace aat {
 namespace core {
 
-  OrderBookIterator& OrderBookIterator::operator++() {
+  OrderBookIterator&
+  OrderBookIterator::operator++() {
     // TODO
 
     return *this;

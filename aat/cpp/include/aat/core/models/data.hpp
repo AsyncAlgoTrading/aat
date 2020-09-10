@@ -22,7 +22,7 @@ namespace core {
 
   struct Data : public _EventTarget {
    public:
-    Data(uint_t id, Instrument instrument, ExchangeType exchange = NullExchange)
+    Data(uint_t id, Instrument& instrument, ExchangeType& exchange = NullExchange)
       : id(id)
       , timestamp(datetime::now())
       , type(DataType::DATA)
@@ -30,7 +30,7 @@ namespace core {
       , exchange(exchange)
       , data(nullptr) {}
 
-    Data(uint_t id, timestamp_t timestamp, Instrument instrument, ExchangeType exchange = NullExchange)
+    Data(uint_t id, timestamp_t timestamp, Instrument& instrument, ExchangeType& exchange = NullExchange)
       : id(id)
       , timestamp(timestamp)
       , type(DataType::DATA)
