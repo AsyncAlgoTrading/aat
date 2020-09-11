@@ -108,7 +108,7 @@ class TradingEngine(Application):
         self._handler_subscriptions = {m: [] for m in EventType.__members__.values()}
 
         # setup `now` handler for backtest
-        self._latest = datetime.fromtimestamp(0) if self.trading_type in (TradingType.BACKTEST, TradingType.SIMULATION) else datetime.now()
+        self._latest = datetime.fromtimestamp(0) if self._offline() else datetime.now()
 
         # register internal management event handler before all strategy handlers
         self.registerHandler(self.manager)
@@ -148,6 +148,9 @@ class TradingEngine(Application):
             self.log.critical(f'listening on 0.0.0.0:{self.port}')
             self.log.critical('.......')
             self.api_application.listen(self.port)
+
+    def _offline(self):
+        return self.trading_type in (TradingType.BACKTEST, TradingType.SIMULATION)
 
     def registerHandler(self, handler):
         '''register a handler and all callbacks that handler implements
@@ -228,7 +231,7 @@ class TradingEngine(Application):
                 await self.processEvent(event)
 
                 # TODO move out of critical path
-                if self.trading_type in (TradingType.BACKTEST, TradingType.SIMULATION):
+                if self._offline():
                     # use time of last event
                     self._latest = event.target.timestamp if hasattr(event, 'target') and hasattr(event.target, 'timestamp') else self._latest
                 else:
@@ -286,6 +289,11 @@ class TradingEngine(Application):
     async def tick(self):
         '''helper method to ensure periodic methods execute periodically in absence
         of market data'''
+
+        # TODO periodic strategies in backtest/simulation
+        if self._offline():
+            return
+
         while True:
             yield Event(type=EventType.HEARTBEAT, target=None)
             await asyncio.sleep(1)

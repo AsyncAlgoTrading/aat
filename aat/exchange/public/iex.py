@@ -1,4 +1,6 @@
 import asyncio
+import os
+import os.path
 import pandas as pd  # type: ignore
 import pyEX  # type: ignore
 from collections import deque
@@ -30,12 +32,13 @@ _iex_instrument_types = {
 class IEX(Exchange):
     '''Investor's Exchange'''
 
-    def __init__(self, trading_type, verbose, api_key, is_sandbox, timeframe='1y', start_date=None, end_date=None):
+    def __init__(self, trading_type, verbose, api_key, is_sandbox, timeframe='1y', start_date=None, end_date=None, cache_data=True):
         super().__init__(ExchangeType('iex'))
         self._trading_type = trading_type
         self._verbose = verbose
         self._api_key = api_key
         self._is_sandbox = is_sandbox
+        self._cache_data = cache_data
 
         if trading_type == TradingType.LIVE:
             assert not is_sandbox
@@ -125,9 +128,24 @@ class IEX(Exchange):
             if self._timeframe != '1d':
                 for i in tqdm(self._subscriptions, desc="Fetching data..."):
                     if i.name in insts:
+                        # already fetched the data, multiple subscriptions
                         continue
 
-                    df = self._client.chartDF(i.name, timeframe=self._timeframe)
+                    if self._cache_data:
+                        # first, check if we have this data and its cached already
+                        os.makedirs('_aat_data', exist_ok=True)
+                        data_filename = os.path.join('_aat_data', 'iex_{}_{}_{}_{}.pkl'.format(i.name, self._timeframe, datetime.now().strftime('%Y%m%d'), 'sand' if self._is_sandbox else ''))
+
+                        if os.path.exists(data_filename):
+                            print('using cached IEX data for {}'.format(i.name))
+                            df = pd.read_pickle(data_filename)
+                        else:
+                            df = self._client.chartDF(i.name, timeframe=self._timeframe)
+                            df.to_pickle(data_filename)
+
+                    else:
+                        df = self._client.chartDF(i.name, timeframe=self._timeframe)
+
                     df = df[['close', 'volume']]
                     df.columns = ['close:{}'.format(i.name), 'volume:{}'.format(i.name)]
                     dfs.append(df)
@@ -142,17 +160,33 @@ class IEX(Exchange):
             else:
                 for i in tqdm(self._subscriptions, desc="Fetching data..."):
                     if i.name in insts:
+                        # already fetched the data, multiple subscriptions
                         continue
 
                     date = self._start_date
                     subdfs = []
                     while date <= self._end_date:
-                        df = self._client.chartDF(i.name, timeframe='1d', date=date.strftime('%Y%m%d'))
+                        if self._cache_data:
+                            # first, check if we have this data and its cached already
+                            os.makedirs('_aat_data', exist_ok=True)
+                            data_filename = os.path.join('_aat_data', 'iex_{}_{}_{}_{}.pkl'.format(i.name, self._timeframe, date, 'sand' if self._is_sandbox else ''))
+
+                            if os.path.exists(data_filename):
+                                print('using cached IEX data for {} - {}'.format(i.name, date))
+                                df = pd.read_pickle(data_filename)
+                            else:
+                                df = self._client.chartDF(i.name, timeframe='1d', date=date.strftime('%Y%m%d'))
+                                df.to_pickle(data_filename)
+                        else:
+                            df = self._client.chartDF(i.name, timeframe='1d', date=date.strftime('%Y%m%d'))
+
                         if not df.empty:
                             df = df[['average', 'volume']]
                             df.columns = ['close:{}'.format(i.name), 'volume:{}'.format(i.name)]
                             subdfs.append(df)
+
                         date += timedelta(days=1)
+
                     dfs.append(pd.concat(subdfs))
                     insts.add(i.name)
 
