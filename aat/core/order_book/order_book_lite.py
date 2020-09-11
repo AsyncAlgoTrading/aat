@@ -15,6 +15,7 @@ class OrderBookLite(OrderBookBase):
         exchange_name (str): name of the exchange
         callback (Function): callback on events
     '''
+
     def __init__(self,
                  instrument,
                  exchange_name='',
