@@ -16,7 +16,7 @@ class Exchange(_MarketData, _OrderEntry):
         exchanges can be queried for data, or send data
     '''
 
-    def __init__(self, exchange: str):
+    def __init__(self, exchange):
         self._exchange = exchange
 
     def exchange(self):

@@ -55,12 +55,16 @@ jobs:
       displayName: 'Lint JS'
 
     - script: |
+        make annotate
+      displayName: 'Type Annotate'
+
+    - script: |
         make tests
       displayName: 'Test'
 
     - script: |
-        make annotate
-      displayName: 'Type Annotate'
+      make testruns
+    displayName: 'Live tests'
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()
@@ -122,16 +126,20 @@ jobs:
       displayName: 'Lint C++'
 
     - script: |
-        make tests
-      displayName: 'Test'
-
-    - script: |
         make annotate
       displayName: 'Type Annotate'
 
     - script: |
+        make tests
+      displayName: 'Test'
+
+    - script: |
         make testpycpp
       displayName: 'Test C++'
+
+    - script: |
+      make testruns
+    displayName: 'Live tests'
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()
@@ -205,16 +213,20 @@ jobs:
       displayName: 'Lint C++'
 
     - script: |
-        make tests
-      displayName: 'Test'
-
-    - script: |
         make annotate
       displayName: 'Type Annotate'
 
     - script: |
+        make tests
+      displayName: 'Test'
+
+    - script: |
         make testpycpp
       displayName: 'Test C++'
+
+    - script: |
+      make testruns
+    displayName: 'Live tests'
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()

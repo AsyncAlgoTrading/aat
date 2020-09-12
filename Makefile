@@ -65,6 +65,9 @@ testpycpp: ## Make unit tests
 testjs:  ## Make js tests
 	cd js; yarn test
 
+testruns:  ## Run a few examples as a live end-to-end test
+	$(PYTHON) -m aat.strategy.sample.readonly
+
 lint: lintpy lintjs lintcpp  ## run all linters
 
 lintpy: ## run python linter
