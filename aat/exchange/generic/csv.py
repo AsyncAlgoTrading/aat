@@ -1,7 +1,7 @@
 import csv
 from collections import deque
 from typing import List
-from aat.config import EventType, InstrumentType, Side
+from aat.config import EventType, InstrumentType, Side, TradingType
 from aat.core import ExchangeType, Event, Instrument, Trade, Order
 from aat.exchange import Exchange
 
@@ -53,6 +53,7 @@ class CSV(Exchange):
         self._order_id += 1
         self._queued_orders.append(order)
         return order
+
 
 class CSV2(Exchange):
     '''CSV File Exchange'''
