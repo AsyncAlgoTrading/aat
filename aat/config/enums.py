@@ -5,6 +5,10 @@ class BaseEnum(Enum):
     def __str__(self):
         return f'{self.value}'
 
+    @classmethod
+    def members(cls):
+        return list(cls.__members__.keys())
+
 
 class TradingType(BaseEnum):
     LIVE = 'LIVE'
