@@ -63,8 +63,8 @@ jobs:
       displayName: 'Test'
 
     - script: |
-      make testruns
-    displayName: 'Live tests'
+        make testruns
+      displayName: 'Live tests'
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()
@@ -138,8 +138,8 @@ jobs:
       displayName: 'Test C++'
 
     - script: |
-      make testruns
-    displayName: 'Live tests'
+        make testruns
+      displayName: 'Live tests'
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()
@@ -225,8 +225,8 @@ jobs:
       displayName: 'Test C++'
 
     - script: |
-      make testruns
-    displayName: 'Live tests'
+        make testruns
+      displayName: 'Live tests'
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()
