@@ -1,5 +1,5 @@
-from aat.config import Side, OrderType, OrderFlag
-from aat.core import Instrument, OrderBook, Order, ExchangeType
+from aat.config import Side
+from aat.core import Instrument, OrderBook, Order
 from .helpers import _seed
 
 _INSTRUMENT = Instrument('TE.ST')
