@@ -1,4 +1,5 @@
 import csv
+from collections import deque
 from typing import List
 from aat.config import EventType, InstrumentType, Side
 from aat.core import ExchangeType, Event, Instrument, Trade, Order
@@ -14,6 +15,8 @@ class CSV(Exchange):
         self._verbose = verbose
         self._filename = filename
         self._data: List[Trade] = []
+        self._queued_orders = deque()
+        self._order_id = 1
 
     async def instruments(self):
         '''get list of available instruments'''
@@ -42,6 +45,14 @@ class CSV(Exchange):
         for item in self._data:
             yield Event(EventType.TRADE, item)
 
+    async def newOrder(self, order: Order):
+        if self._trading_type == TradingType.LIVE:
+            raise NotImplementedError("Live OE not available for CSV")
+
+        order.id = self._order_id
+        self._order_id += 1
+        self._queued_orders.append(order)
+        return order
 
 class CSV2(Exchange):
     '''CSV File Exchange'''
