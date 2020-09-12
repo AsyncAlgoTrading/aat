@@ -15,7 +15,7 @@ class CSV(Exchange):
         self._verbose = verbose
         self._filename = filename
         self._data: List[Trade] = []
-        self._queued_orders = deque()
+        self._queued_orders = deque()  # type: ignore
         self._order_id = 1
 
     async def instruments(self):
