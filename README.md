@@ -534,7 +534,29 @@ strategies =
 ```
 
 We can run this configuration by running:
-`aat myconfig.cfg`
+`aat --config myconfig.cfg`
+
+We can also run via CLI:
+
+```bash
+usage: __main__.py [-h] [--config CONFIG] [--verbose]
+                   [--trading_type {live,simulation,sandbox,backtest}]
+                   [--strategies STRATEGIES [STRATEGIES ...]]
+                   [--exchanges EXCHANGES [EXCHANGES ...]]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --config CONFIG       Config file
+  --verbose             Run in verbose mode
+  --trading_type {live,simulation,sandbox,backtest}
+                        Trading Type in ("live", "sandbox", "simulation",
+                        "backtest")
+  --strategies STRATEGIES [STRATEGIES ...]
+                        Strategies to run in form
+                        <path.to.module:Class,args,for,strat>
+  --exchanges EXCHANGES [EXCHANGES ...]
+                        Exchanges to run on
+```
 
 ### Trading Type
 There are several values for the `TradingType` field:
