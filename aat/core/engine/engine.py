@@ -224,6 +224,9 @@ class TradingEngine(Application):
         # send start event to all callbacks
         await self.processEvent(Event(type=EventType.START, target=None))
 
+        # **************** #
+        # Main event loop
+        # **************** #
         async with merge(*(exch.tick() for exch in self.exchanges + [self] if inspect.isasyncgenfunction(exch.tick))).stream() as stream:
             # stream through all events
             async for event in stream:
@@ -244,13 +247,21 @@ class TradingEngine(Application):
                     await self.processEvent(event)
 
                 # process any secondary callback-targeted events (e.g. order fills)
+                # these need to route to a specific callback,
+                # rather than all callbacks
                 while self._queued_targeted_events:
                     strat, event = self._queued_targeted_events.popleft()
+
+                    # send to manager
+                    await self.processEvent(event, self.manager)
+
+                    # send to the generating strategy
                     await self.processEvent(event, strat)
 
                 # process any periodics
                 await asyncio.gather(*(asyncio.create_task(p.execute(self._latest)) for p in self.manager._periodics))
 
+        # Before engine shutdown, send an exit event
         await self.processEvent(Event(type=EventType.EXIT, target=None))
 
     async def processEvent(self, event, strategy=None):
