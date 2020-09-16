@@ -1,8 +1,9 @@
 from aat.core import Order, Event
+from aat.core.engine.manager import ManagerBase
 from aat.exchange import Exchange
 
 
-class OrderManager(object):
+class OrderManager(ManagerBase):
     def __init__(self):
         # map exchangetype to exchange instance
         self._exchanges = {}

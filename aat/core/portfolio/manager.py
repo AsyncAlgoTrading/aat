@@ -3,36 +3,47 @@ from aat.config import Side
 from aat.core import Event, Order, Trade, Instrument, ExchangeType, Position
 from aat.core.engine.manager import ManagerBase
 
-class RiskManager(ManagerBase):
+from .portfolio import Portfolio
+
+
+class PortfolioManager(ManagerBase):
     def __init__(self):
+        self._portfolio = Portfolio()
+
+        # Track prices over time
+        self._prices = {}
+        self._trades = {}
+
         # Track active (open) orders
         self._active_orders = []
+
+        # Track active positions
+        self._active_positions = {}
 
     def _setManager(self, manager):
         '''install manager'''
         self._manager = manager
 
+    def newPosition(self, strategy, trade: Trade):
+        self._portfolio.newPosition(strategy, trade)
+
     # *********************
     # Risk Methods        *
     # *********************
-    def risk(self, position=None):
-        # TODO
-        return "risk"
+    def positions(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
+        return self._portfolio.positions(instrument=instruent, exchange=exchange, side=side)
 
-    # *********************
-    # Order Entry Methods *
-    # *********************
-    async def newOrder(self, strategy, order: Order):
-        # TODO
-        self._active_orders.append(order)  # TODO use strategy
-        return order, True
+    def priceHistory(self, instrument: Instrument = None):
+        if instrument:
+            return pd.DataFrame(self._prices[instrument], columns=[instrument.name, 'when'])
+        return {i: pd.DataFrame(self._prices[i], columns=[i.name, 'when']) for i in self._prices}
 
     # **********************
     # EventHandler methods *
     # **********************
     async def onTrade(self, event: Event):
-        # TODO
-        pass
+        trade: Trade = event.target  # type: ignore
+        self._portfolio.onTrade(trade)
 
     async def onCancel(self, event):
         # TODO
@@ -79,13 +90,4 @@ class RiskManager(ManagerBase):
     #########################
     async def onTraded(self, event: Event):
         trade: Trade = event.target  # type: ignore
-        self._active_orders.remove(trade.my_order)
-        self.newPosition(trade)
-
-    async def onRejected(self, event: Event):
-        order: Order = event.target  # type: ignore
-        self._active_orders.remove(order)
-
-    async def onCanceled(self, event: Event):
-        order: Order = event.target  # type: ignore
-        self._active_orders.remove(order)
+        self._portfolio.onTraded(trade)

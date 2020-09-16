@@ -3,6 +3,7 @@ from typing import List, TYPE_CHECKING
 from aat.core import Instrument, ExchangeType, Event, Order, Trade
 from aat.core.risk import RiskManager
 from aat.core.execution import OrderManager
+from aat.core.portfolio import PortfolioManager
 from aat.config import Side
 from aat.exchange import Exchange
 
@@ -19,6 +20,7 @@ class StrategyManagerOrderEntryMixin(object):
     _alerted_events: dict
     _risk_mgr: RiskManager
     _order_mgr: OrderManager
+    _portfolio_mgr: PortfolioManager
 
     #####################
     # Order Entry Hooks #

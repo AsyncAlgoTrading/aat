@@ -214,6 +214,7 @@ class IEX(Exchange):
                 while self._queued_orders:
                     order = self._queued_orders.popleft()
                     order.timestamp = index
+                    order.filled = order.volume
 
                     t = Trade(volume=order.volume, price=order.price, taker_order=order, maker_orders=[])
                     t.my_order = order

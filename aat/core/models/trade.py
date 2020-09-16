@@ -48,6 +48,7 @@ class Trade(object):
         assert(isinstance(volume, (float, int)))
         assert(isinstance(taker_order, Order))
         # assert(len(maker_orders) > 0)  # not necessarily
+        assert(volume == taker_order.filled)
 
         self.__price = price
         self.__volume = volume

@@ -192,8 +192,15 @@ class InteractiveBrokersExchange(Exchange):
                     yield e
 
                 elif status in ('Filled',):
+                    # set filled
+                    order.filled = order_data['filled']
+
+                    # create trade object
                     t = Trade(volume=order_data['filled'], price=order_data['avgFillPrice'], maker_orders=[], taker_order=order)
+
+                    # set my order
                     t.my_order = order
+
                     e = Event(type=EventType.TRADE, target=t)
                     yield e
 

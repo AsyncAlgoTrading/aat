@@ -252,9 +252,6 @@ class TradingEngine(Application):
                 while self._queued_targeted_events:
                     strat, event = self._queued_targeted_events.popleft()
 
-                    # send to manager
-                    await self.processEvent(event, self.manager)
-
                     # send to the generating strategy
                     await self.processEvent(event, strat)
 

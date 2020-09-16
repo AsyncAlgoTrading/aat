@@ -79,7 +79,7 @@ def getExchanges(exchanges: List, trading_type, verbose: bool = False) -> List:
     return exchange_instances
 
 
-def parseConfig(argv: list) -> dict:
+def parseConfig(argv: list = None) -> dict:
     from aat import TradingType
 
     parser = argparse.ArgumentParser()
