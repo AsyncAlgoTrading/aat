@@ -1,6 +1,6 @@
 import pandas as pd  # type: ignore
 from aat.config import Side
-from aat.core import Event, Order, Trade, Instrument, ExchangeType, Position
+from aat.core import Event, Trade, Instrument, ExchangeType
 from aat.core.engine.manager import ManagerBase
 
 from .portfolio import Portfolio
@@ -31,7 +31,7 @@ class PortfolioManager(ManagerBase):
     # Risk Methods        *
     # *********************
     def positions(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
-        return self._portfolio.positions(instrument=instruent, exchange=exchange, side=side)
+        return self._portfolio.positions(instrument=instrument, exchange=exchange, side=side)
 
     def priceHistory(self, instrument: Instrument = None):
         if instrument:

@@ -1,7 +1,6 @@
 import pandas as pd  # type: ignore
 from aat.config import Side
-from aat.core import Event, Order, Trade, Instrument, ExchangeType, Position
-from aat.core.engine.manager import ManagerBase
+from aat.core import Order, Instrument, ExchangeType, Position
 
 
 class Portfolio(object):
@@ -68,9 +67,9 @@ class Portfolio(object):
             # If strategy has no positions yet, make a new dict
             if strategy not in self._active_positions_by_strategy:
                 self._active_positions_by_strategy[strategy] = {}
-            
+
             # if not tracking instrument yet, add
-            if instrument not in self._active_positions_by_instrument:
+            if trade.instrument not in self._active_positions_by_instrument:
                 self._active_positions_by_instrument = []
 
             # Map position in by strategy
@@ -85,7 +84,6 @@ class Portfolio(object):
             self._active_positions_by_instrument[trade.instrument].append(
                 self._active_positions_by_strategy[strategy][trade.instrument]
             )
-                            
 
     def positions(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         # TODO

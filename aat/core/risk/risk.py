@@ -1,7 +1,6 @@
-import pandas as pd  # type: ignore
-from aat.config import Side
-from aat.core import Event, Order, Trade, Instrument, ExchangeType, Position
+from aat.core import Event, Order, Trade
 from aat.core.engine.manager import ManagerBase
+
 
 class RiskManager(ManagerBase):
     def __init__(self):
@@ -80,7 +79,6 @@ class RiskManager(ManagerBase):
     async def onTraded(self, event: Event):
         trade: Trade = event.target  # type: ignore
         self._active_orders.remove(trade.my_order)
-        self.newPosition(trade)
 
     async def onRejected(self, event: Event):
         order: Order = event.target  # type: ignore

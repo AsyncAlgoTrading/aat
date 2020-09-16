@@ -53,7 +53,7 @@ class StrategyManager(StrategyManagerOrderEntryMixin, StrategyManagerRiskMixin, 
     # ********* #
     def riskManager(self):
         return self._risk_mgr
-    
+
     def orderManager(self):
         return self._order_mgr
 
