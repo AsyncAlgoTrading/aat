@@ -20,5 +20,9 @@ def _in_cpp():
     return _cpp
 
 
-__c = itertools.count()
-def _gen_id(): return next(__c)  # noqa: E731
+def id_generator():
+    __c = itertools.count()
+
+    def _gen_id():
+        return next(__c)
+    return _gen_id

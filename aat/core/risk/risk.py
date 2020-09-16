@@ -1,4 +1,7 @@
+from typing import Optional
+
 from aat.core import Event, Order, Trade
+from aat.core.handler import EventHandler
 from aat.core.engine.manager import ManagerBase
 
 
@@ -76,14 +79,14 @@ class RiskManager(ManagerBase):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onTraded(self, event: Event):
+    async def onTraded(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
         trade: Trade = event.target  # type: ignore
         self._active_orders.remove(trade.my_order)
 
-    async def onRejected(self, event: Event):
+    async def onRejected(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
         order: Order = event.target  # type: ignore
         self._active_orders.remove(order)
 
-    async def onCanceled(self, event: Event):
+    async def onCanceled(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
         order: Order = event.target  # type: ignore
         self._active_orders.remove(order)

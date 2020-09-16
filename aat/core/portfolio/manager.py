@@ -1,6 +1,8 @@
 import pandas as pd  # type: ignore
-from aat.config import Side
+from typing import Optional
+
 from aat.core import Event, Trade, Instrument, ExchangeType
+from aat.core.handler import EventHandler
 from aat.core.engine.manager import ManagerBase
 
 from .portfolio import Portfolio
@@ -30,8 +32,11 @@ class PortfolioManager(ManagerBase):
     # *********************
     # Risk Methods        *
     # *********************
-    def positions(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
-        return self._portfolio.positions(instrument=instrument, exchange=exchange, side=side)
+    def portfolio(self):
+        return self._portfolio
+
+    def positions(self, instrument: Instrument = None, exchange: ExchangeType = None):
+        return self._portfolio.positions(instrument=instrument, exchange=exchange)
 
     def priceHistory(self, instrument: Instrument = None):
         if instrument:
@@ -88,6 +93,6 @@ class PortfolioManager(ManagerBase):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onTraded(self, event: Event):
+    async def onTraded(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
         trade: Trade = event.target  # type: ignore
-        self._portfolio.onTraded(trade)
+        self._portfolio.onTraded(trade, strategy)

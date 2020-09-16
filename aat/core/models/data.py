@@ -4,8 +4,10 @@ from typing import Mapping, Union, Type
 
 from ..exchange import ExchangeType
 from ..instrument import Instrument
-from ...common import _in_cpp, _gen_id
+from ...common import _in_cpp, id_generator
 from ...config import DataType
+
+_ID_GENERATOR = id_generator()
 
 try:
     from aat.binding import DataCpp  # type: ignore
@@ -37,7 +39,7 @@ class Data(object):
         return super(Data, cls).__new__(cls)
 
     def __init__(self, instrument=None, exchange=ExchangeType("")):
-        self.__id = _gen_id()
+        self.__id = _ID_GENERATOR()
         self.__timestamp = datetime.now()
 
         assert instrument is None or isinstance(instrument, Instrument)

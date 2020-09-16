@@ -1,9 +1,9 @@
 from typing import List, TYPE_CHECKING
 
 from aat.core import Instrument, ExchangeType, Event, Order, Trade
-from aat.core.risk import RiskManager
 from aat.core.execution import OrderManager
 from aat.core.portfolio import PortfolioManager
+from aat.core.risk import RiskManager
 from aat.config import Side
 from aat.exchange import Exchange
 
@@ -187,34 +187,40 @@ class StrategyManagerOrderEntryMixin(object):
     # Order Entry Callbacks #
     #########################
     async def onTraded(self, event: Event):
-        # TODO
-        await self._risk_mgr.onTraded(event)
-        await self._order_mgr.onTraded(event)
-
         if event in self._alerted_events:
             strategy, order = self._alerted_events[event]
             # remove from list of open orders if done
             if order.filled >= order.volume:
                 self._strategy_open_orders[strategy].remove(order)
+        else:
+            strategy = None
+
+        await self._portfolio_mgr.onTraded(event, strategy)
+        await self._risk_mgr.onTraded(event, strategy)
+        await self._order_mgr.onTraded(event, strategy)
 
     async def onRejected(self, event: Event):
-        # TODO
-        await self._risk_mgr.onRejected(event)
-        await self._order_mgr.onRejected(event)
-
         # synchronize state
         if event in self._alerted_events:
             strategy, order = self._alerted_events[event]
             # remove from list of open orders
             self._strategy_open_orders[strategy].remove(order)
+        else:
+            strategy = None
+
+        await self._portfolio_mgr.onRejected(event, strategy)
+        await self._risk_mgr.onRejected(event, strategy)
+        await self._order_mgr.onRejected(event, strategy)
 
     async def onCanceled(self, event: Event):
-        # TODO
-        await self._risk_mgr.onCanceled(event)
-        await self._order_mgr.onCanceled(event)
-
         # synchronize state
         if event in self._alerted_events:
             strategy, order = self._alerted_events[event]
             # remove from list of open orders
             self._strategy_open_orders[strategy].remove(order)
+        else:
+            strategy = None
+
+        await self._portfolio_mgr.onCanceled(event, strategy)
+        await self._risk_mgr.onCanceled(event, strategy)
+        await self._order_mgr.onCanceled(event, strategy)

@@ -4,6 +4,7 @@ import traceback
 from typing import List
 
 from .order_entry import StrategyManagerOrderEntryMixin
+from .portfolio import StrategyManagerPortfolioMixin
 from .risk import StrategyManagerRiskMixin
 from .utils import StrategyManagerUtilsMixin
 
@@ -11,7 +12,7 @@ from aat.core.handler import EventHandler
 from aat.exchange import Exchange
 
 
-class StrategyManager(StrategyManagerOrderEntryMixin, StrategyManagerRiskMixin, StrategyManagerUtilsMixin, EventHandler):
+class StrategyManager(StrategyManagerOrderEntryMixin, StrategyManagerRiskMixin, StrategyManagerPortfolioMixin, StrategyManagerUtilsMixin, EventHandler):
     def __init__(self, trading_engine, trading_type, exchanges: List[Exchange]):
         '''The Manager sits between the strategies and the engine and manages state'''
         # store trading engine

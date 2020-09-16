@@ -1,184 +1,34 @@
+from typing import Set
+
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
 
 
 class CalculationsMixin(object):
-    __perf_charts = False  # TODO move
-
-    def _constructDf(self, dfs, drop_duplicates=True):
-        # join along time axis
-        if dfs:
-            df = pd.concat(dfs, sort=True)
-            df.sort_index(inplace=True)
-            df = df.groupby(df.index).last()
-
-            if drop_duplicates:
-                df.drop_duplicates(inplace=True)
-
-            df.fillna(method='ffill', inplace=True)
-        else:
-            df = pd.DataFrame()
-        return df
-
-    def _getInstruments(self):
-        instruments = []
-        for position in self.positions():
-            instrument = position.instrument
-            instruments.append(instrument)
-        return instruments
-
-    def _getPrice(self):
-        portfolio = []
-        price_cols = []
-        for instrument, price_history in self.priceHistory().items():
-            #########
-            # Price #
-            #########
-            price_col = instrument.name
-            price_cols.append(price_col)
-            price_history.set_index('when', inplace=True)
-            portfolio.append(price_history)
-        return self._constructDf(portfolio)
-
-    def _getAssetPrice(self):
-        portfolio = []
-        price_cols = []
-        for position in self.positions():
-            instrument = position.instrument
-
-            #########
-            # Price #
-            #########
-            price_col = instrument.name
-            price_cols.append(price_col)
-            price_history = pd.DataFrame(position.instrumentPriceHistory, columns=[price_col, 'when'])
-            price_history.set_index('when', inplace=True)
-            portfolio.append(price_history)
-        return self._constructDf(portfolio)
-
-    def _getPnl(self):
-        portfolio = []
-        pnl_cols = []
-        total_pnl_cols = []
-        for position in self.positions():
-            instrument = position.instrument
-
-            #######
-            # Pnl #
-            #######
-            total_pnl_col = 'pnl:{}'.format(instrument.name)
-            unrealized_pnl_col = 'ur:{}'.format(instrument.name)
-            pnl_cols.append(unrealized_pnl_col)
-            unrealized_pnl_history = pd.DataFrame(position.unrealizedPnlHistory, columns=[unrealized_pnl_col, 'when'])
-            unrealized_pnl_history.set_index('when', inplace=True)
-
-            realized_pnl_col = 'r:{}'.format(instrument.name)
-            pnl_cols.append(realized_pnl_col)
-            realized_pnl_history = pd.DataFrame(position.pnlHistory, columns=[realized_pnl_col, 'when'])
-            realized_pnl_history.set_index('when', inplace=True)
-
-            unrealized_pnl_history[realized_pnl_col] = realized_pnl_history[realized_pnl_col]
-            unrealized_pnl_history[total_pnl_col] = unrealized_pnl_history.sum(axis=1)
-            total_pnl_cols.append(total_pnl_col)
-            portfolio.append(unrealized_pnl_history)
-
-        df_pnl = self._constructDf(portfolio, drop_duplicates=False)  # dont drop duplicates
-
-        ################
-        # calculations #
-        ################
-        # calculate total pnl
-        df_pnl['alpha'] = df_pnl[[c for c in df_pnl.columns if c.startswith('pnl:')]].sum(axis=1)
-        return df_pnl
-
-    def _getSize(self):
-        portfolio = []
-        size_cols = []
-        for position in self.positions():
-            instrument = position.instrument
-
-            #################
-            # Position Size #
-            #################
-            size_col = 's:{}'.format(instrument.name)
-            size_cols.append(size_col)
-            size_history = pd.DataFrame(position.sizeHistory, columns=[size_col, 'when'])
-            size_history.set_index('when', inplace=True)
-            portfolio.append(size_history)
-
-            price_col = instrument.name
-            price_history = pd.DataFrame(position.instrumentPriceHistory, columns=[price_col, 'when'])
-            price_history.set_index('when', inplace=True)
-            portfolio.append(price_history)
-
-        return self._constructDf(portfolio)[size_cols]
-
-    def _getNotional(self):
-        portfolio = []
-        notional_cols = []
-        for position in self.positions():
-            instrument = position.instrument
-
-            #################
-            # Position Size #
-            #################
-            notional_col = 'n:{}'.format(instrument.name)
-            notional_cols.append(notional_col)
-            notional_history = pd.DataFrame(position.notionalHistory, columns=[notional_col, 'when'])
-            notional_history.set_index('when', inplace=True)
-            portfolio.append(notional_history)
-
-            price_col = instrument.name
-            price_history = pd.DataFrame(position.instrumentPriceHistory, columns=[price_col, 'when'])
-            price_history.set_index('when', inplace=True)
-            portfolio.append(price_history)
-
-        return self._constructDf(portfolio)[notional_cols]
-
-    def _getInvestment(self):
-        portfolio = []
-        investment_cols = []
-        for position in self.positions():
-            instrument = position.instrument
-
-            #################
-            # Position Size #
-            #################
-            investment_col = 'i:{}'.format(instrument.name)
-            investment_cols.append(investment_col)
-            investment_history = pd.DataFrame(position.investmentHistory, columns=[investment_col, 'when'])
-            investment_history.set_index('when', inplace=True)
-            portfolio.append(investment_history)
-
-            price_col = instrument.name
-            price_history = pd.DataFrame(position.instrumentPriceHistory, columns=[price_col, 'when'])
-            price_history.set_index('when', inplace=True)
-            portfolio.append(price_history)
-
-        return self._constructDf(portfolio)[investment_cols]
+    __perf_charts: Set[object] = set()  # TODO move
 
     def collectStats(self):
         # assemble portfolio
-        self._df_pnl = self._getPnl()
+        self._df_pnl = self.portfolio().getPnl(self)
         self._df_pnl.fillna(0.0, inplace=True)
 
-        self._df_asset_price = self._getAssetPrice()
+        self._df_asset_price = self.portfolio().getAssetPrice(self)
 
         self._df_total_pnl = self._df_pnl[[c for c in self._df_pnl if 'pnl:' in c]]
         self._df_total_pnl.columns = [c.replace('pnl:', '') for c in self._df_total_pnl.columns]
 
-        self._df_size = self._getSize()
+        self._df_size = self.portfolio().getSize(self)
         self._df_size.columns = [c.replace('s:', '') for c in self._df_size.columns]
 
-        self._df_notional = self._getNotional()
+        self._df_notional = self.portfolio().getNotional(self)
         self._df_notional.columns = [c.replace('n:', '') for c in self._df_notional.columns]
 
-        self._df_investment = self._getInvestment()
+        self._df_investment = self.portfolio().getInvestment(self)
         self._df_investment.columns = [c.replace('i:', '') for c in self._df_investment.columns]
 
     def plotPrice(self, ax=None, **plot_kwargs):
-        self._df_price = self._getPrice()
+        self._df_price = self.portfolio().getPrice()
 
         if not self._df_price.empty:
             self._df_price.plot(ax=ax, **plot_kwargs)
@@ -187,7 +37,7 @@ class CalculationsMixin(object):
             ax.set_ylabel('Price')
 
     def plotAssetPrice(self, ax=None, **plot_kwargs):
-        self._df_asset_price = self._getAssetPrice()
+        self._df_asset_price = self.portfolio().getAssetPrice(self)
 
         if not self._df_asset_price.empty:
             self._df_asset_price.plot(ax=ax, **plot_kwargs)
@@ -196,7 +46,7 @@ class CalculationsMixin(object):
             ax.set_ylabel('Price')
 
     def plotPositions(self, ax=None, **plot_kwargs):
-        self._df_size = self._getSize()
+        self._df_size = self.portfolio().getSize(self)
         self._df_size.columns = [c.replace('s:', '') for c in self._df_size.columns]
 
         if not self._df_size.empty:
@@ -206,7 +56,7 @@ class CalculationsMixin(object):
             ax.set_ylabel('Positions')
 
     def plotNotional(self, ax=None, **plot_kwargs):
-        df_position_notional = self._getSize()
+        df_position_notional = self.portfolio().getSize(self)
         df_position_notional.columns = [c.replace('s:', '') for c in self._df_size.columns]
 
         for col in df_position_notional.columns:
@@ -225,7 +75,7 @@ class CalculationsMixin(object):
         # colors = []
         # for i in ls:
         #     colors.extend([matplotlib.colors.to_hex(cm(i)), matplotlib.colors.to_hex(cm(i + .05))])
-        self._df_pnl = self._getPnl()
+        self._df_pnl = self.portfolio().getPnl(self)
         self._df_pnl.fillna(0.0, inplace=True)
 
         self._df_total_pnl = self._df_pnl[[c for c in self._df_pnl if 'pnl:' in c]]
@@ -238,7 +88,7 @@ class CalculationsMixin(object):
             ax.set_ylabel('PNL')
 
     def plotUpDown(self, ax=None, **plot_kwargs):
-        self._df_pnl = self._getPnl()
+        self._df_pnl = self.portfolio().getPnl(self)
         self._df_pnl.fillna(0.0, inplace=True)
 
         df2 = self._df_pnl[['alpha']]
@@ -253,8 +103,8 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel('Alpha')
 
-    def plotReturnHistograms(self, **plot_kwargs):
-        self._df_notional = self._getNotional()
+    def plotReturnHistograms(self, ax, **plot_kwargs):
+        self._df_notional = self.portfolio().getNotional(self)
         self._df_notional.columns = [c.replace('n:', '') for c in self._df_notional.columns]
 
         df_returns = []
@@ -269,17 +119,10 @@ class CalculationsMixin(object):
             df_returns = df_returns.groupby(df_returns.index).last()
             df_returns.drop_duplicates(inplace=True)
 
-            fig2 = plt.figure(figsize=(9, 5))
-            grid = plt.GridSpec(2, len(df_returns.columns), figure=fig2, wspace=0.4, hspace=0.3)
-            axes2 = []
-            for _ in range(len(df_returns.columns)):
-                axes2.append(plt.subplot(grid[0, _]))
-
-            for i, col in enumerate(df_returns.columns):
-                df_returns.hist(column=col, ax=axes2[i], grid=False)
+        df_returns.plot(kind='hist', ax=ax, sharex=True, stacked=True, bins=10, histtype='bar')
 
     def plotStdDev(self, ax, **plot_kwargs):
-        self._df_notional = self._getNotional()
+        self._df_notional = self.portfolio().getNotional(self)
         self._df_notional.columns = [c.replace('n:', '') for c in self._df_notional.columns]
 
         if not self._df_notional.empty:
@@ -290,7 +133,7 @@ class CalculationsMixin(object):
             ax.set_ylabel('Std.')
 
     def plotSharpe(self, ax, **plot_kwargs):
-        self._df_notional = self._getNotional()
+        self._df_notional = self.portfolio().getNotional(self)
         self._df_notional.columns = [c.replace('n:', '') for c in self._df_notional.columns]
 
         if not self._df_notional.empty:
@@ -302,47 +145,88 @@ class CalculationsMixin(object):
             ax.axhline(sharpe)
             ax.set_ylabel('Sharpe')
 
+    def performanceByStrategy(self):
+        fig, axes = plt.subplots(8, 1,
+                                 figsize=(7, 10),
+                                 gridspec_kw={'height_ratios': [3, 2, 2, 3, 2, 1, 1, 3]})
+        # join all but last on x axis
+        for ax in axes[:-1]:
+            axes[0].get_shared_x_axes().join(axes[0], ax)
+
+        plt.rc('legend', fontsize=4)  # using a size in points
+        fig.suptitle("Summary ({})".format(self.name()))
+
+        # Plot prices
+        self.plotPrice(ax=axes[0])
+
+        # Plot Positions
+        self.plotPositions(ax=axes[1])
+
+        # Plot Notionals
+        self.plotNotional(ax=axes[2])
+
+        # Plot PNLs
+        self.plotPnl(ax=axes[3])
+
+        # Plot up/down chart
+        self.plotUpDown(ax=axes[4])
+
+        # rolling stddev
+        self.plotStdDev(ax=axes[5])
+        self.plotSharpe(ax=axes[6])
+
+        # Plot returns
+        self.plotReturnHistograms(ax=axes[7])
+
+    def performanceByAsset(self):
+        fig, axes = plt.subplots(8, 1,
+                                 figsize=(7, 10),
+                                 gridspec_kw={'height_ratios': [3, 2, 2, 3, 2, 1, 1, 3]})
+        # join all but last on x axis
+        for ax in axes[:-1]:
+            axes[0].get_shared_x_axes().join(axes[0], ax)
+
+        plt.rc('legend', fontsize=4)  # using a size in points
+        fig.suptitle("Summary (by asset)")
+
+        # Plot prices
+        self.plotPrice(ax=axes[0])
+
+        # Plot Positions
+        # self.plotPositions(ax=axes[1])
+
+        # Plot Notionals
+        # self.plotNotional(ax=axes[2])
+
+        # Plot PNLs
+        # self.plotPnl(ax=axes[3])
+
+        # Plot up/down chart
+        # self.plotUpDown(ax=axes[4])
+
+        # rolling stddev
+        # self.plotStdDev(ax=axes[5])
+        # self.plotSharpe(ax=axes[6])
+
+        # Plot returns
+        # self.plotReturnHistograms(ax=axes[7])
+
     def performanceCharts(self):
-        if not CalculationsMixin.__perf_charts:
+        if self not in CalculationsMixin.__perf_charts:
             self.collectStats()
 
-            ############
-            # Plotting #
-            ############
-            fig, axes = plt.subplots(7, 1,
-                                     sharex=True,
-                                     figsize=(7, 7),
-                                     gridspec_kw={'height_ratios': [2, 1, 3, 1, 1, 1, 1]})
-            plt.rc('legend', fontsize=4)  # using a size in points
+        if not CalculationsMixin.__perf_charts:
+            # Only run once
+            self.performanceByAsset()
 
-            # Plot prices
-            self.plotPrice(ax=axes[0])
-            # self.plotAssetPrice(ax=axes[1])
+            CalculationsMixin.__total_count = self.__class__._ID_GENERATOR()
 
-            # Plot Positions
-            self.plotPositions(ax=axes[1])
+        CalculationsMixin.__perf_charts.add(self)
+        self.performanceByStrategy()
 
-            # Plot Notionals
-            self.plotNotional(ax=axes[2])
-
-            # Plot PNLs
-            self.plotPnl(ax=axes[3])
-
-            # Plot up/down chart
-            self.plotUpDown(ax=axes[4])
-
-            # rolling stddev
-            self.plotStdDev(ax=axes[5])
-            self.plotSharpe(ax=axes[6])
-
-            # Plot returns
-            self.plotReturnHistograms()
-
+        if len(CalculationsMixin.__perf_charts) == CalculationsMixin.__total_count:
             # Show plot
             plt.show()
-
-            # Only show once
-            CalculationsMixin.__perf_charts = True
 
     def ipython(self):
         import IPython  # type: ignore

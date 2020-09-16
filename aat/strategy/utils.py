@@ -42,41 +42,6 @@ class StrategyUtilsMixin(object):
         '''
         return self._manager.trades(self, instrument, exchange, side)
 
-    ################
-    # Risk Methods #
-    ################
-    def positions(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
-        '''select all positions
-
-        Args:
-            instrument (Instrument): filter positions by instrument
-            exchange (ExchangeType): filter positions by exchange
-            side (Side): filter positions by side
-        Returns:
-            list (Position): list of positions
-        '''
-        return self._manager.positions(instrument=instrument, exchange=exchange, side=side)
-
-    def risk(self, position=None):
-        '''Get risk metrics
-
-        Args:
-            position (Position): only get metrics on this position
-        Returns:
-            dict: metrics
-        '''
-        return self._manager.risk(position=position)
-
-    def priceHistory(self, instrument: Instrument = None):
-        '''Get price history for asset
-
-        Args:
-            instrument (Instrument): get price history for instrument
-        Returns:
-            DataFrame: price history
-        '''
-        return self._manager.priceHistory(instrument=instrument)
-
     #################
     # Other Methods #
     #################

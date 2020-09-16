@@ -44,7 +44,8 @@ class SellPlusPercentStrategy(Strategy):
 
     async def onBought(self, event: Event) -> None:
         trade: Trade = event.target  # type: ignore
-        print('bought {:.2f} @ {:.2f}'.format(trade.volume, trade.price))
+
+        print('bought {} {:.2f} @ {:.2f}'.format(trade.instrument, trade.volume, trade.price))
         self._stop[trade.instrument] = (trade.price * self._up_percent,
                                         trade.price * self._down_percent,
                                         trade.volume)

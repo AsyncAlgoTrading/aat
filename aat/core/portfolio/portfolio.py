@@ -18,11 +18,14 @@ class Portfolio(object):
         # Track active positions by strategy and instrument
         self._active_positions_by_strategy = {}
 
-    def newPosition(self, strategy, trade):
+    # *****************
+    # Manager Methods #
+    # *****************
+    def newPosition(self, trade, strategy):
         my_order: Order = trade.my_order
-
         if trade.instrument in self._active_positions_by_instrument and \
-           strategy in self._active_positions_by_strategy:
+           strategy in self._active_positions_by_strategy and \
+           trade.instrument in self._active_positions_by_strategy[strategy]:
 
             # update position
             cur_pos = self._active_positions_by_strategy[strategy][trade.instrument]
@@ -70,7 +73,7 @@ class Portfolio(object):
 
             # if not tracking instrument yet, add
             if trade.instrument not in self._active_positions_by_instrument:
-                self._active_positions_by_instrument = []
+                self._active_positions_by_instrument[trade.instrument] = []
 
             # Map position in by strategy
             self._active_positions_by_strategy[strategy][trade.instrument] = Position(price=trade.price,
@@ -85,21 +88,9 @@ class Portfolio(object):
                 self._active_positions_by_strategy[strategy][trade.instrument]
             )
 
-    def positions(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
-        # TODO
-        return list(sum(x) for x in self._active_positions_by_instrument.values())
-
-    def priceHistory(self, instrument: Instrument = None):
-        if instrument:
-            return pd.DataFrame(self._prices[instrument], columns=[instrument.name, 'when'])
-        return {i: pd.DataFrame(self._prices[i], columns=[i.name, 'when']) for i in self._prices}
-
     def onTrade(self, trade):
-        # TODO move
         if trade.instrument in self._active_positions_by_instrument:
-
             for pos in self._active_positions_by_instrument[trade.instrument]:
-                pos = self._active_positions[trade.instrument]
                 pos.unrealizedPnl = (pos.size * (trade.price - pos.price), trade.timestamp)
                 pos.pnl = (pos.pnl, trade.timestamp)
                 pos.instrumentPrice = (trade.price, trade.timestamp)
@@ -111,5 +102,196 @@ class Portfolio(object):
             self._prices[trade.instrument].append((trade.price, trade.timestamp))
             self._trades[trade.instrument].append(trade)
 
-    async def onTraded(self, trade):
-        self.newPosition(trade)
+    def onTraded(self, trade, strategy):
+        self.newPosition(trade, strategy)
+
+    # ******************
+    # Strategy Methods #
+    # ******************
+    def positions(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None):
+        ret = {}
+
+        for position in self._active_positions_by_strategy[strategy].values():
+            if instrument and position.instrument != instrument:
+                # Skip if not asking for this instrument
+                continue
+
+            if exchange and position.exchange != exchange:
+                # Skip if not asking for this exchange
+                continue
+
+            ret[position.instrument] = position
+        return list(ret.values())
+
+    def _positions(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None):
+        ret = {}
+
+        for position_list in self._active_positions_by_instrument.values():
+            for position in position_list:
+
+                if instrument and position.instrument != instrument:
+                    # Skip if not asking for this instrument
+                    continue
+
+                if exchange and position.exchange != exchange:
+                    # Skip if not asking for this exchange
+                    continue
+
+                if position.instrument not in ret:
+                    ret[position.instrument] = position
+                else:
+                    ret[position.instrument] += position
+        return list(ret.values())
+
+    def priceHistory(self, instrument: Instrument = None):
+        if instrument:
+            return pd.DataFrame(self._prices[instrument], columns=[instrument.name, 'when'])
+        return {i: pd.DataFrame(self._prices[i], columns=[i.name, 'when']) for i in self._prices}
+
+    def _constructDf(self, dfs, drop_duplicates=True):
+        # join along time axis
+        if dfs:
+            df = pd.concat(dfs, sort=True)
+            df.sort_index(inplace=True)
+            df = df.groupby(df.index).last()
+
+            if drop_duplicates:
+                df.drop_duplicates(inplace=True)
+
+            df.fillna(method='ffill', inplace=True)
+        else:
+            df = pd.DataFrame()
+        return df
+
+    def getPnl(self, strategy):
+        portfolio = []
+        pnl_cols = []
+        total_pnl_cols = []
+        for position in self.positions(strategy):
+            instrument = position.instrument
+
+            #######
+            # Pnl #
+            #######
+            total_pnl_col = 'pnl:{}'.format(instrument.name)
+            unrealized_pnl_col = 'ur:{}'.format(instrument.name)
+            pnl_cols.append(unrealized_pnl_col)
+            unrealized_pnl_history = pd.DataFrame(position.unrealizedPnlHistory, columns=[unrealized_pnl_col, 'when'])
+            unrealized_pnl_history.set_index('when', inplace=True)
+
+            realized_pnl_col = 'r:{}'.format(instrument.name)
+            pnl_cols.append(realized_pnl_col)
+            realized_pnl_history = pd.DataFrame(position.pnlHistory, columns=[realized_pnl_col, 'when'])
+            realized_pnl_history.set_index('when', inplace=True)
+
+            unrealized_pnl_history[realized_pnl_col] = realized_pnl_history[realized_pnl_col]
+            unrealized_pnl_history[total_pnl_col] = unrealized_pnl_history.sum(axis=1)
+            total_pnl_cols.append(total_pnl_col)
+            portfolio.append(unrealized_pnl_history)
+
+        df_pnl = self._constructDf(portfolio, drop_duplicates=False)  # dont drop duplicates
+
+        ################
+        # calculations #
+        ################
+        # calculate total pnl
+        df_pnl['alpha'] = df_pnl[[c for c in df_pnl.columns if c.startswith('pnl:')]].sum(axis=1)
+        return df_pnl
+
+    def getInstruments(self, strategy):
+        raise NotImplementedError()
+
+    def getPrice(self):
+        portfolio = []
+        price_cols = []
+        for instrument, price_history in self.priceHistory().items():
+            #########
+            # Price #
+            #########
+            price_col = instrument.name
+            price_cols.append(price_col)
+            price_history.set_index('when', inplace=True)
+            portfolio.append(price_history)
+        return self._constructDf(portfolio)
+
+    def getAssetPrice(self, strategy):
+        portfolio = []
+        price_cols = []
+        for position in self.positions(strategy):
+            instrument = position.instrument
+
+            #########
+            # Price #
+            #########
+            price_col = instrument.name
+            price_cols.append(price_col)
+            price_history = pd.DataFrame(position.instrumentPriceHistory, columns=[price_col, 'when'])
+            price_history.set_index('when', inplace=True)
+            portfolio.append(price_history)
+        return self._constructDf(portfolio)
+
+    def getSize(self, strategy):
+        portfolio = []
+        size_cols = []
+        for position in self.positions(strategy):
+            instrument = position.instrument
+
+            #################
+            # Position Size #
+            #################
+            size_col = 's:{}'.format(instrument.name)
+            size_cols.append(size_col)
+            size_history = pd.DataFrame(position.sizeHistory, columns=[size_col, 'when'])
+            size_history.set_index('when', inplace=True)
+            portfolio.append(size_history)
+
+            price_col = instrument.name
+            price_history = pd.DataFrame(position.instrumentPriceHistory, columns=[price_col, 'when'])
+            price_history.set_index('when', inplace=True)
+            portfolio.append(price_history)
+
+        return self._constructDf(portfolio)[size_cols]
+
+    def getNotional(self, strategy):
+        portfolio = []
+        notional_cols = []
+        for position in self.positions(strategy):
+            instrument = position.instrument
+
+            #################
+            # Position Size #
+            #################
+            notional_col = 'n:{}'.format(instrument.name)
+            notional_cols.append(notional_col)
+            notional_history = pd.DataFrame(position.notionalHistory, columns=[notional_col, 'when'])
+            notional_history.set_index('when', inplace=True)
+            portfolio.append(notional_history)
+
+            price_col = instrument.name
+            price_history = pd.DataFrame(position.instrumentPriceHistory, columns=[price_col, 'when'])
+            price_history.set_index('when', inplace=True)
+            portfolio.append(price_history)
+
+        return self._constructDf(portfolio)[notional_cols]
+
+    def getInvestment(self, strategy):
+        portfolio = []
+        investment_cols = []
+        for position in self.positions(strategy):
+            instrument = position.instrument
+
+            #################
+            # Position Size #
+            #################
+            investment_col = 'i:{}'.format(instrument.name)
+            investment_cols.append(investment_col)
+            investment_history = pd.DataFrame(position.investmentHistory, columns=[investment_col, 'when'])
+            investment_history.set_index('when', inplace=True)
+            portfolio.append(investment_history)
+
+            price_col = instrument.name
+            price_history = pd.DataFrame(position.instrumentPriceHistory, columns=[price_col, 'when'])
+            price_history.set_index('when', inplace=True)
+            portfolio.append(price_history)
+
+        return self._constructDf(portfolio)[investment_cols]

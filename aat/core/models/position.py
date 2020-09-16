@@ -82,6 +82,11 @@ class Position(object):
         return self.__exchange
 
     @property
+    def timestamp(self):
+        '''time of creation of initial position'''
+        return self.__size_history[0][1]
+
+    @property
     def sizeHistory(self):
         return self.__size_history
 
@@ -234,3 +239,16 @@ class Position(object):
 
     def __repr__(self):
         return f'Position(price={self.price}, size={self.size}, notional={self.notional}, pnl={self.pnl}, unrealizedPnl={self.unrealizedPnl}, instrument={self.instrument}, exchange={self.exchange})'
+
+    def __add__(self, other):
+        '''Adding positions should give you the net position'''
+        assert isinstance(other, Position)
+        assert self.instrument == other.instrument
+
+        ret = Position(self.size + other.size,
+                       self.price + other.price,
+                       min(self.timestamp, other.timestamp),
+                       self.instrument,
+                       self.exchange,  # FIXME
+                       self.trades + other.trades)
+        return ret
