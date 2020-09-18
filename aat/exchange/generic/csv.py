@@ -27,19 +27,21 @@ class CSV(Exchange):
             self._reader = csv.DictReader(csvfile, delimiter=',')
 
             for row in self._reader:
+                order = Order(volume=float(row['volume']),
+                              price=float(row['close']),
+                              side=Side.BUY,
+                              exchange=self.exchange(),
+                              instrument=Instrument(
+                    row['symbol'].split('-')[0],
+                    InstrumentType(row['symbol'].split('-')[1].upper())
+                )
+                )
+                order.filled = float(row['volume'])
+
                 self._data.append(Trade(volume=float(row['volume']),
                                         price=float(row['close']),
                                         maker_orders=[],
-                                        taker_order=Order(volume=float(row['volume']),
-                                                          price=float(row['close']),
-                                                          side=Side.BUY,
-                                                          exchange=self.exchange(),
-                                                          instrument=Instrument(
-                                                              row['symbol'].split('-')[0],
-                                                              InstrumentType(row['symbol'].split('-')[1].upper())
-                                        )
-                )
-                ))
+                                        taker_order=order))
 
     async def tick(self):
         for item in self._data:
