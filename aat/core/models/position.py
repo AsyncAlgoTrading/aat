@@ -237,6 +237,27 @@ class Position(object):
     def trades(self):
         return self.__trades
 
+    def toJson(self):
+        return {
+            "size": self.size,
+            "size_history": self.sizeHistory,
+            "notional": self.notional,
+            "notional_history": self.notionalHistory,
+            "price": self.price,
+            "price_history": self.priceHistory,
+            "investment": self.investment,
+            "investment_history": self.investmentHistory,
+            "instrumentPrice": self.instrumentPrice,
+            "instrumentPrice_history": self.instrumentPriceHistory,
+            "instrument": self.instrument,
+            "exchange": self.exchange,
+            "pnl": self.pnl,
+            "pnl_history": self.pnlHistory,
+            "unrealizedPnl": self.unrealizedPnl,
+            "unrealizedPnl_history": self.unrealizedPnlHistory,
+            "trades": self.trades,
+        }
+
     def __repr__(self):
         return f'Position(price={self.price}, size={self.size}, notional={self.notional}, pnl={self.pnl}, unrealizedPnl={self.unrealizedPnl}, instrument={self.instrument}, exchange={self.exchange})'
 

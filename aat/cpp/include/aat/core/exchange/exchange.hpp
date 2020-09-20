@@ -29,6 +29,8 @@ namespace core {
     str_t name;
   };
 
+  virtual json toJson() const;
+
   static ExchangeType NullExchange = ExchangeType("");
 
 }  // namespace core

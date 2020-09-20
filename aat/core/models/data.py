@@ -78,7 +78,7 @@ class Data(object):
         assert isinstance(other, Data)
         return self.id == other.id
 
-    def to_json(self) -> Mapping[str, Union[str, int, float]]:
+    def toJson(self) -> Mapping[str, Union[str, int, float]]:
         return \
             {'id': self.id,
              'timestamp': self.timestamp,

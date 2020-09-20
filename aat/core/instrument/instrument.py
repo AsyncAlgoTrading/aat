@@ -293,5 +293,69 @@ class Instrument(object):
     def __hash__(self):
         return hash(str(self))
 
+    def toJson(self):
+        return {
+            "name": self.name,
+            "type": self.type.value,
+            "exchanges": [v.toJson() for v in self.exchanges] if self.exchanges else [],
+            "brokerExchange": self.brokerExchange,
+            "brokerId": self.brokerId,
+            "currency": self.currency.toJson() if self.currency else '',
+            "underlying": self.underlying.toJson() if self.underlying else '',
+            "leg1": self.leg1.toJson() if self.leg1 else '',
+            "leg2": self.leg2.toJson() if self.leg2 else '',
+            "leg1_side": self.leg1_side.value if self.leg1_side else '',
+            "leg2_side": self.leg2_side.value if self.leg2_side else '',
+            "expiration": self.expiration.timestamp() if self.expiration else '',
+            "price_increment": self.price_increment or '',
+            "unit_value": self.unit_value or '',
+            "option_type": self.option_type.value if self.option_type else '',
+        }
+
+    @staticmethod
+    def fromJson(jsn):
+        kwargs = {}
+        kwargs["name"] = jsn['name']
+        kwargs["type"] = InstrumentType(jsn['type'])
+        kwargs["exchanges"] = [ExchangeType.fromJson(e) for e in jsn['exchanges']]
+
+        if 'brokerExchange' in jsn and jsn['brokerExchange']:
+            kwargs["brokerExchange"] = jsn['brokerExchange']
+
+        if 'brokerId' in jsn and jsn['brokerId']:
+            kwargs["brokerId"] = jsn['brokerId']
+
+        if 'currency' in jsn and jsn['currency']:
+            kwargs['currency'] = Instrument.fromJson(jsn['currency'])
+
+        if 'underlying' in jsn and jsn['underlying']:
+            kwargs['underlying'] = Instrument.fromJson(jsn['underlying'])
+
+        if 'leg1' in jsn and jsn['leg1']:
+            kwargs['leg1'] = Instrument.fromJson(jsn['leg1'])
+
+        if 'leg2' in jsn and jsn['leg2']:
+            kwargs['leg2'] = Instrument.fromJson(jsn['leg2'])
+
+        if 'leg1_side' in jsn and jsn['leg1_side']:
+            kwargs['leg1_side'] = Side(jsn['leg1_side'])
+
+        if 'leg2_side' in jsn and jsn['leg2_side']:
+            kwargs['leg2_side'] = Side(jsn['leg2_side'])
+
+        if 'expiration' in jsn and jsn['expiration']:
+            kwargs["expiration"] = datetime.fromtimestamp(jsn['expiration'])
+
+        if 'price_increment' in jsn and jsn['price_increment']:
+            kwargs["price_increment"] = jsn['price_increment']
+
+        if 'unit_value' in jsn and jsn['unit_value']:
+            kwargs["unit_value"] = jsn['unit_value']
+
+        if 'option_type' in jsn and jsn['option_type']:
+            kwargs["option_type"] = OptionType(jsn['option_type'])
+
+        return Instrument(**kwargs)
+
     def __repr__(self):
         return f'Instrument({self.name}-{self.type})'

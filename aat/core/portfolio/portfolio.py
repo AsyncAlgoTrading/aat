@@ -1,6 +1,19 @@
 import pandas as pd  # type: ignore
+import json
+from datetime import datetime
+from json import JSONEncoder
 from aat.config import Side
-from aat.core import Order, Instrument, ExchangeType, Position
+from aat.core import Order, Trade, Instrument, ExchangeType, Position
+
+
+class _Serializer(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (Trade, Instrument, Position, ExchangeType)):
+            return obj.toJson()
+        elif isinstance(obj, datetime):
+            return obj.timestamp()
+        else:
+            raise Exception('Unknown type: {} - {}'.format(type(obj), obj))
 
 
 class Portfolio(object):
@@ -24,11 +37,11 @@ class Portfolio(object):
     def newPosition(self, trade, strategy):
         my_order: Order = trade.my_order
         if trade.instrument in self._active_positions_by_instrument and \
-           strategy in self._active_positions_by_strategy and \
-           trade.instrument in self._active_positions_by_strategy[strategy]:
+           strategy.name() in self._active_positions_by_strategy and \
+           trade.instrument in self._active_positions_by_strategy[strategy.name()]:
 
             # update position
-            cur_pos = self._active_positions_by_strategy[strategy][trade.instrument]
+            cur_pos = self._active_positions_by_strategy[strategy.name()][trade.instrument]
             cur_pos.trades.append(trade)
 
             # TODO update notional/size/price etc
@@ -68,24 +81,24 @@ class Portfolio(object):
 
         else:
             # If strategy has no positions yet, make a new dict
-            if strategy not in self._active_positions_by_strategy:
-                self._active_positions_by_strategy[strategy] = {}
+            if strategy.name() not in self._active_positions_by_strategy:
+                self._active_positions_by_strategy[strategy.name()] = {}
 
             # if not tracking instrument yet, add
             if trade.instrument not in self._active_positions_by_instrument:
                 self._active_positions_by_instrument[trade.instrument] = []
 
             # Map position in by strategy
-            self._active_positions_by_strategy[strategy][trade.instrument] = Position(price=trade.price,
-                                                                                      size=trade.volume,
-                                                                                      timestamp=trade.timestamp,
-                                                                                      instrument=trade.instrument,
-                                                                                      exchange=trade.exchange,
-                                                                                      trades=[trade])
+            self._active_positions_by_strategy[strategy.name()][trade.instrument] = Position(price=trade.price,
+                                                                                             size=trade.volume,
+                                                                                             timestamp=trade.timestamp,
+                                                                                             instrument=trade.instrument,
+                                                                                             exchange=trade.exchange,
+                                                                                             trades=[trade])
 
             # map a single position by instrument
             self._active_positions_by_instrument[trade.instrument].append(
-                self._active_positions_by_strategy[strategy][trade.instrument]
+                self._active_positions_by_strategy[strategy.name()][trade.instrument]
             )
 
     def onTrade(self, trade):
@@ -111,7 +124,7 @@ class Portfolio(object):
     def positions(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None):
         ret = {}
 
-        for position in self._active_positions_by_strategy[strategy].values():
+        for position in self._active_positions_by_strategy[strategy.name()].values():
             if instrument and position.instrument != instrument:
                 # Skip if not asking for this instrument
                 continue
@@ -373,3 +386,36 @@ class Portfolio(object):
             portfolio.append(price_history)
 
         return self._constructDf(portfolio)[investment_cols]
+
+    def save(self, filename_prefix):
+        with open('{}.prices.json'.format(filename_prefix), 'w') as fp:
+            json.dump({json.dumps(k.toJson()): v for k, v in self._prices.items()}, fp, cls=_Serializer)
+
+        with open('{}.trades.json'.format(filename_prefix), 'w') as fp:
+            json.dump({json.dumps(k.toJson()): v for k, v in self._trades.items()}, fp, cls=_Serializer)
+
+        with open('{}.active_by_inst.json'.format(filename_prefix), 'w') as fp:
+            json.dump({json.dumps(k.toJson()): v for k, v in self._active_positions_by_instrument.items()}, fp, cls=_Serializer)
+
+        with open('{}.active_by_strat.json'.format(filename_prefix), 'w') as fp:
+            json.dump({k: {json.dumps(kk.toJson()): vv for kk, vv in v.items()}
+                       for k, v in self._active_positions_by_strategy.items()}, fp, cls=_Serializer)
+
+    def restore(self, filename_prefix):
+        with open('{}.prices.json'.format(filename_prefix), 'r') as fp:
+            jsn = json.load(fp)
+            self._prices = {
+                Instrument.fromJson(json.loads(k)): [(p1, datetime.fromtimestamp(p2)) for p1, p2 in v] for k, v in jsn.items()
+            }
+
+        with open('{}.trades.json'.format(filename_prefix), 'r') as fp:
+            jsn = json.load(fp)
+            self._trades = {
+                Instrument.fromJson(json.loads(k)): [Trade.fromJson(x) for x in v] for k, v in jsn.items()
+            }
+
+        with open('{}.active_by_inst.json'.format(filename_prefix), 'r') as fp:
+            jsn = json.load(fp)
+
+        with open('{}.active_by_strat.json'.format(filename_prefix), 'r') as fp:
+            jsn = json.load(fp)

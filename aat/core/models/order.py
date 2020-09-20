@@ -179,15 +179,52 @@ class Order(object):
             self.notional == other.notional and \
             self.filled == other.filled
 
-    def to_json(self) -> Mapping[str, Union[str, int, float]]:
+    def toJson(self) -> Mapping[str, Union[str, int, float]]:
         return \
             {'id': self.id,
              'timestamp': self.timestamp.timestamp(),
              'volume': self.volume,
              'price': self.price,
              'side': self.side.value,
-             'instrument': str(self.instrument),
-             'exchange': str(self.exchange)}
+             'instrument': self.instrument.toJson(),
+             'exchange': self.exchange.toJson(),
+             'notional': self.notional,
+             'filled': self.filled,
+             'order_type': self.order_type.value,
+             'flag': self.flag.value,
+             'stop_target': self.stop_target.toJson() if self.stop_target else ''  # type: ignore
+             }
+
+    @staticmethod
+    def fromJson(jsn):
+        kwargs = {}
+        kwargs['volume'] = jsn['volume']
+        kwargs['price'] = jsn['price']
+        kwargs['side'] = Side(jsn['side'])
+        kwargs['instrument'] = Instrument.fromJson(jsn['instrument'])
+        kwargs['exchange'] = ExchangeType.fromJson(jsn['exchange'])
+
+        if 'notional' in jsn and jsn['notional']:
+            kwargs['notional'] = jsn['notional']
+
+        if 'flag' in jsn and jsn['flag']:
+            kwargs['flag'] = OrderFlag(jsn['flag'])
+
+        if 'stop_target' in jsn and jsn['stop_target']:
+            kwargs['stop_target'] = Order.fromJson(jsn['stop_target'])
+
+        if 'order_type' in jsn and jsn['order_type']:
+            kwargs['order_type'] = OrderType(jsn['order_type'])
+
+        ret = Order(**kwargs)
+
+        if 'notional' in jsn and jsn['notional']:
+            ret.notional = jsn['notional']
+
+        if 'filled' in jsn and jsn['filled']:
+            ret.filled = jsn['filled']
+
+        return ret
 
     @staticmethod
     def perspectiveSchema() -> Mapping[str, Type]:

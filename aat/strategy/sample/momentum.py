@@ -177,4 +177,4 @@ class MomentumStrategy(Strategy):
 
     async def onExit(self, event: Event) -> None:
         print('Finishing...')
-        self.performanceCharts(save=True)
+        self.performanceCharts(render=False, save=True, save_data=True)

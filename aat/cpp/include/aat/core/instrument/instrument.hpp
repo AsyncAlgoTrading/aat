@@ -23,6 +23,7 @@ namespace core {
 
     bool operator==(const Instrument& other) const;
     str_t toString() const;
+    virtual json toJson() const;
 
     str_t name;
     InstrumentType type;

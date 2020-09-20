@@ -1,4 +1,5 @@
 from ..core import Instrument, ExchangeType, StrategyManager
+from ..core.portfolio import Portfolio
 
 
 class StrategyPortfolioMixin(object):
@@ -15,7 +16,7 @@ class StrategyPortfolioMixin(object):
         '''
         return self._manager.positions(instrument=instrument, exchange=exchange)
 
-    def portfolio(self):
+    def portfolio(self) -> Portfolio:
         '''Get portfolio object'''
         return self._manager.portfolio()
 

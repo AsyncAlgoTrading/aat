@@ -35,6 +35,9 @@ runcpp:  build  ## Clean and make target, run target
 rundebug:  debug  ## Clean and make debug target, run target
 	$(PYTHON) -m aat  --config $(CONFIG)
 
+stratres:  ## View strategy results offline
+	$(PYTHON) -m aat.strategy.calculations
+
 buildextf: ## build the package extensions
 	$(PYTHON) setup.py build_ext -j8 --inplace -f
 
