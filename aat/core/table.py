@@ -37,11 +37,11 @@ class TableHandler(EventHandler):
 
     def onTrade(self, event: Event):
         '''onTrade'''
-        self._trades.update([event.target.to_json()])
+        self._trades.update([event.target.toJson()])
 
     def onOpen(self, event: Event):
         '''onOpen'''
-        self._orders.update([event.target.to_json()])
+        self._orders.update([event.target.toJson()])
 
     def onCancel(self, event: Event):
         '''onCancel'''
@@ -49,7 +49,7 @@ class TableHandler(EventHandler):
 
     def onChange(self, event: Event):
         '''onChange'''
-        self._orders.update([event.target.to_json()])
+        self._orders.update([event.target.toJson()])
 
     def onFill(self, event: Event):
         '''onFill'''

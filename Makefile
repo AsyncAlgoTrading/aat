@@ -3,37 +3,40 @@ CONFIG=./config/synthetic.cfg
 
 
 run:    ## Clean and make target, run target
-	$(PYTHON) -m aat $(CONFIG)
+	$(PYTHON) -m aat --config $(CONFIG)
 
 iex:    ## Clean and make target, run target
-	$(PYTHON) -m aat ./config/iex.cfg
+	$(PYTHON) -m aat  --config ./config/iex.cfg
 
 iexintraday:    ## Clean and make target, run target
-	$(PYTHON) -m aat ./config/iex_intraday.cfg
+	$(PYTHON) -m aat  --config ./config/iex_intraday.cfg
 
 iexpintraday:    ## Clean and make target, run target
-	$(PYTHON) -m aat ./private_config/iex_intraday.cfg
+	$(PYTHON) -m aat  --config ./private_config/iex_intraday.cfg
 
 iexmomentum:    ## Clean and make target, run target
-	$(PYTHON) -m aat ./config/iex_intraday_momentum.cfg
+	$(PYTHON) -m aat  --config ./config/iex_intraday_momentum.cfg
 
 iexpmomentum:    ## Clean and make target, run target
-	$(PYTHON) -m aat ./private_config/iex_intraday_momentum.cfg
+	$(PYTHON) -m aat  --config ./private_config/iex_intraday_momentum.cfg
 
 iexlive:    ## Clean and make target, run target
-	$(PYTHON) -m aat ./config/iex_live.cfg
+	$(PYTHON) -m aat  --config ./config/iex_live.cfg
 
 ib:    ## Clean and make target, run target
-	$(PYTHON) -m aat ./config/ib.cfg
+	$(PYTHON) -m aat  --config ./config/ib.cfg
 
 coinbasesandbox:    ## Clean and make target, run target
-	$(PYTHON) -m aat ./config/coinbase_sandbox.cfg
+	$(PYTHON) -m aat --config  ./config/coinbase_sandbox.cfg
 
 runcpp:  build  ## Clean and make target, run target
-	AAT_USE_CPP=1 $(PYTHON) -m aat $(CONFIG)
+	AAT_USE_CPP=1 $(PYTHON) -m aat  --config $(CONFIG)
 
 rundebug:  debug  ## Clean and make debug target, run target
-	$(PYTHON) -m aat $(CONFIG)
+	$(PYTHON) -m aat  --config $(CONFIG)
+
+stratres:  ## View strategy results offline
+	$(PYTHON) -m aat.strategy.calculations
 
 buildextf: ## build the package extensions
 	$(PYTHON) setup.py build_ext -j8 --inplace -f
@@ -111,6 +114,7 @@ clean: ## clean the repository
 	rm -rf .coverage coverage cover htmlcov logs build dist *.egg-info
 	find . -name "*.so"  | xargs rm -rf
 	make -C ./docs clean
+	rm -rf _aat_BACKTEST_*
 
 # Thanks to Francoise at marmelab.com for this
 .DEFAULT_GOAL := help

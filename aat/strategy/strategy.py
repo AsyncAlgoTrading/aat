@@ -1,17 +1,26 @@
 import asyncio
 from abc import abstractmethod
 from .calculations import CalculationsMixin
+from .portfolio import StrategyPortfolioMixin
+from .risk import StrategyRiskMixin
 from .utils import StrategyUtilsMixin
 from ..config import Side
 from ..core import Event, EventHandler, Order, Instrument
+from ..common import id_generator
 
 
-class Strategy(EventHandler, StrategyUtilsMixin, CalculationsMixin):
+class Strategy(EventHandler, StrategyUtilsMixin, StrategyPortfolioMixin, StrategyRiskMixin, CalculationsMixin):
+    _ID_GENERATOR = id_generator()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.__inst = Strategy._ID_GENERATOR()
+
+    def name(self):
+        return repr(self)
 
     def __repr__(self):
-        return self.__class__.__name__
+        return '{}-{}'.format(self.__class__.__name__, self.__inst)
 
     #########################
     # Event Handler Methods #

@@ -12,5 +12,11 @@ namespace core {
     return "No Exchange";
   }
 
+  json
+  ExchangeType::toJson() const {
+    json ret;
+    return ret;
+  }
+
 }  // namespace core
 }  // namespace aat

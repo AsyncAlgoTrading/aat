@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import Tuple, Union
 
+from .trade import Trade
 from ..exchange import ExchangeType
 from ..instrument import Instrument
-from ...common import _in_cpp
+from ...common import _in_cpp, _merge
 
 try:
     from aat.binding import PositionCpp  # type: ignore
@@ -80,6 +81,11 @@ class Position(object):
     @property
     def exchange(self):
         return self.__exchange
+
+    @property
+    def timestamp(self):
+        '''time of creation of initial position'''
+        return self.__size_history[0][1]
 
     @property
     def sizeHistory(self):
@@ -232,5 +238,85 @@ class Position(object):
     def trades(self):
         return self.__trades
 
+    def toJson(self):
+        return {
+            "timestamp": self.timestamp.timestamp(),
+            "instrument": self.instrument.toJson(),
+            "exchange": self.exchange.toJson(),
+            "size": self.size,
+            "size_history": self.sizeHistory,
+            "notional": self.notional,
+            "notional_history": self.notionalHistory,
+            "price": self.price,
+            "price_history": self.priceHistory,
+            "investment": self.investment,
+            "investment_history": self.investmentHistory,
+            "instrumentPrice": self.instrumentPrice,
+            "instrumentPrice_history": self.instrumentPriceHistory,
+            "pnl": self.pnl,
+            "pnl_history": self.pnlHistory,
+            "unrealizedPnl": self.unrealizedPnl,
+            "unrealizedPnl_history": self.unrealizedPnlHistory,
+            "trades": [t.toJson() for t in self.trades],
+        }
+
+    @staticmethod
+    def fromJson(jsn):
+        kwargs = {}
+        kwargs['size'] = jsn['size']
+        kwargs['price'] = jsn['price']
+        kwargs['timestamp'] = datetime.fromtimestamp(jsn['timestamp'])
+        kwargs['instrument'] = Instrument.fromJson(jsn['instrument'])
+        kwargs['exchange'] = ExchangeType.fromJson(jsn['exchange'])
+        kwargs['trades'] = [Trade.fromJson(x) for x in jsn['trades']]
+
+        ret = Position(**kwargs)
+        ret.__notional = jsn['notional']
+        ret.__investment = jsn['investment']
+        ret.__instrumentPrice = jsn['instrumentPrice']
+        ret.__pnl = jsn['pnl']
+        ret.__unrealizedPnl = jsn['unrealizedPnl']
+
+        ret.__size_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['size_history']]
+        ret.__notional_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['notional_history']]
+        ret.__price_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['price_history']]
+        ret.__investment_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['investment_history']]
+        ret.__instrumentPrice_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['instrumentPrice_history']]
+        ret.__pnl_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['pnl_history']]
+        ret.__unrealizedPnl_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['unrealizedPnl_history']]
+        ret.__size_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['size_history']]
+        return ret
+
     def __repr__(self):
         return f'Position(price={self.price}, size={self.size}, notional={self.notional}, pnl={self.pnl}, unrealizedPnl={self.unrealizedPnl}, instrument={self.instrument}, exchange={self.exchange})'
+
+    def __add__(self, other):
+        '''Adding positions should give you the net position'''
+        assert isinstance(other, Position)
+        assert self.instrument == other.instrument
+
+        # collect histories
+        size_history = _merge(self.__size_history, other.__size_history)
+        notional_history = _merge(self.__notional_history, other.__notional_history)
+        price_history = _merge(self.__price_history, other.__price_history, False)
+        investment_history = _merge(self.__investment_history, other.__investment_history)
+        instrumentPrice_history = _merge(self.__instrumentPrice_history, other.__instrumentPrice_history, False)
+        pnl_history = _merge(self.__pnl_history, other.__pnl_history)
+        unrealizedPnl_history = _merge(self.__unrealizedPnl_history, other.__unrealizedPnl_history)
+
+        ret = Position(size_history[-1][0],
+                       price_history[-1][0],
+                       size_history[-1][1],
+                       self.instrument,
+                       self.exchange,  # FIXME
+                       self.trades + other.trades)
+
+        ret.__size_history = size_history
+        ret.__notional_history = notional_history
+        ret.__price_history = price_history
+        ret.__investment_history = investment_history
+        ret.__instrumentPrice_history = instrumentPrice_history
+        ret.__pnl_history = pnl_history
+        ret.__unrealizedPnl_history = unrealizedPnl_history
+
+        return ret

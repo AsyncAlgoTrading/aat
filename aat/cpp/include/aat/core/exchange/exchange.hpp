@@ -21,6 +21,8 @@ namespace core {
       : name(name) {}
 
     str_t toString() const;
+    virtual json toJson() const;
+
     bool
     operator==(const ExchangeType& other) const {
       return name == other.name;
@@ -28,6 +30,7 @@ namespace core {
     explicit operator bool() const { return name != ""; }
     str_t name;
   };
+
 
   static ExchangeType NullExchange = ExchangeType("");
 

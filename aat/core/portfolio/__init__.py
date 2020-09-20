@@ -1,1 +1,2 @@
-from .portfolio import PortfolioManager  # noqa: F401
+from .manager import PortfolioManager  # noqa: F401
+from .portfolio import Portfolio  # noqa: F401

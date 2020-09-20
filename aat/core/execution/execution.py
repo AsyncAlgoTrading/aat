@@ -1,8 +1,12 @@
+from typing import Optional
+
 from aat.core import Order, Event
+from aat.core.handler import EventHandler
+from aat.core.engine.manager import ManagerBase
 from aat.exchange import Exchange
 
 
-class OrderManager(object):
+class OrderManager(ManagerBase):
     def __init__(self):
         # map exchangetype to exchange instance
         self._exchanges = {}
@@ -124,18 +128,14 @@ class OrderManager(object):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onTraded(self, event: Event):
+    async def onTraded(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
         # TODO
         pass
 
-    async def onSold(self, event: Event):
+    async def onRejected(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
         # TODO
         pass
 
-    async def onRejected(self, event: Event):
-        # TODO
-        pass
-
-    async def onCanceled(self, event: Event):
+    async def onCanceled(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
         # TODO
         pass

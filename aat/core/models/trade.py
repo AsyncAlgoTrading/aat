@@ -48,6 +48,7 @@ class Trade(object):
         assert(isinstance(volume, (float, int)))
         assert(isinstance(taker_order, Order))
         # assert(len(maker_orders) > 0)  # not necessarily
+        assert(volume == taker_order.filled)
 
         self.__price = price
         self.__volume = volume
@@ -131,26 +132,42 @@ class Trade(object):
         return self.id == other.id and \
             self.timestamp == other.timestamp
 
-    def to_json(self) -> Mapping[str, Union[str, int, float]]:
+    def toJson(self, flat=False) -> Mapping[str, Union[str, int, float]]:
         '''convert trade to flat json'''
-
-        # Typings here to enforce flatness of json
-        taker_order: Dict[str, Union[str, int, float]] = \
-            {'taker_order.' + k: v for k, v in self.taker_order.to_json().items()}
-
-        maker_orders: List[Dict[str, Union[str, int, float]]] = \
-            [{'maker_order{}.' + k: v for k, v in order.to_json().items()} for i, order in enumerate(self.maker_orders)]
-
         ret: Dict[str, Union[str, int, float]] = \
             {'id': self.id, 'timestamp': self.timestamp.timestamp(),
              'price': self.price, 'volume': self.volume}
 
-        # update with taker order dict
-        ret.update(taker_order)
+        if flat:
+            # Typings here to enforce flatness of json
+            taker_order: Dict[str, Union[str, int, float]] = \
+                {'taker_order.' + k: v for k, v in self.taker_order.toJson().items()}
 
-        # update with maker order dicts
-        for maker_order in maker_orders:
-            ret.update(maker_order)
+            maker_orders: List[Dict[str, Union[str, int, float]]] = \
+                [{'maker_order{}.' + k: v for k, v in order.toJson().items()} for i, order in enumerate(self.maker_orders)]
+
+            # update with taker order dict
+            ret.update(taker_order)
+
+            # update with maker order dicts
+            for maker_order in maker_orders:
+                ret.update(maker_order)
+
+        else:
+            ret['taker_order'] = self.taker_order.toJson()  # type: ignore
+            ret['maker_orders'] = [m.toJson() for m in self.maker_orders]  # type: ignore
+
+        return ret
+
+    @staticmethod
+    def fromJson(jsn):
+        ret = Trade(jsn['volume'],
+                    jsn['price'],
+                    [Order.fromJson(x) for x in jsn['maker_orders']],
+                    Order.fromJson(jsn['taker_order']))
+
+        if 'id' in jsn:
+            ret.id = jsn.get('id')
         return ret
 
     @staticmethod
