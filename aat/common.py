@@ -1,6 +1,7 @@
 import os
 import itertools
 import functools
+import pandas as pd  # type: ignore
 
 
 @functools.lru_cache()
@@ -26,3 +27,29 @@ def id_generator():
     def _gen_id():
         return next(__c)
     return _gen_id
+
+
+def _merge(lst1, lst2, sum=True):
+    '''merge two lists of (val, datetime) and accumulate'''
+    df1 = pd.DataFrame(lst1, columns=('val1', 'date1'))
+    df1.set_index('date1', inplace=True)
+    # df1.drop_duplicates(inplace=True)
+
+    df2 = pd.DataFrame(lst2, columns=('val2', 'date2'))
+    df2.set_index('date2', inplace=True)
+    # df2.drop_duplicates(inplace=True)
+
+    df = df1.join(df2, how='outer')
+
+    # df = pd.concat([df1, df2], axis=1)
+    df.fillna(method='ffill', inplace=True)
+    df.fillna(0.0, inplace=True)
+
+    if sum:
+        df = df.sum(axis=1)
+    else:
+        df = df.mean(axis=1)
+
+    df = df.reset_index().values.tolist()
+
+    return [(b, a.to_pydatetime()) for a, b in df]

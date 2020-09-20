@@ -1,3 +1,5 @@
+import os
+import os.path
 from typing import Set
 
 import matplotlib.pyplot as plt  # type: ignore
@@ -55,9 +57,33 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel('Positions')
 
+    def plotPositionsAll(self, ax=None, **plot_kwargs):
+        self._df_size_all = self.portfolio().getSizeAll()
+        self._df_size_all.columns = [c.replace('s:', '') for c in self._df_size_all.columns]
+
+        if not self._df_size_all.empty:
+            self._df_size_all.plot(kind='area', ax=ax, stacked=True, linewidth=0, **plot_kwargs)
+
+        if ax:
+            ax.set_ylabel('Positions')
+
     def plotNotional(self, ax=None, **plot_kwargs):
         df_position_notional = self.portfolio().getSize(self)
         df_position_notional.columns = [c.replace('s:', '') for c in self._df_size.columns]
+
+        for col in df_position_notional.columns:
+            df_position_notional[col] = df_position_notional[col] * self._df_asset_price[col]
+
+        if not df_position_notional.empty:
+            df_position_notional.fillna(method='ffill', inplace=True)
+            df_position_notional.plot(kind='area', ax=ax, stacked=True, linewidth=0, **plot_kwargs)
+
+        if ax:
+            ax.set_ylabel('Notional')
+
+    def plotNotionalAll(self, ax=None, **plot_kwargs):
+        df_position_notional = self.portfolio().getSizeAll()
+        df_position_notional.columns = [c.replace('s:', '') for c in self._df_size_all.columns]
 
         for col in df_position_notional.columns:
             df_position_notional[col] = df_position_notional[col] * self._df_asset_price[col]
@@ -87,11 +113,40 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel('PNL')
 
+    def plotPnlAll(self, ax=None, **plot_kwargs):
+        self._df_pnl_all = self.portfolio().getPnlAll()
+        self._df_pnl_all.fillna(0.0, inplace=True)
+
+        self._df_total_pnl_all = self._df_pnl_all[[c for c in self._df_pnl_all if 'pnl:' in c]]
+        self._df_total_pnl_all.columns = [c.replace('pnl:', '') for c in self._df_total_pnl_all.columns]
+
+        if not self._df_total_pnl_all.empty:
+            self._df_total_pnl_all.plot(ax=ax)
+
+        if ax:
+            ax.set_ylabel('PNL')
+
     def plotUpDown(self, ax=None, **plot_kwargs):
         self._df_pnl = self.portfolio().getPnl(self)
         self._df_pnl.fillna(0.0, inplace=True)
 
         df2 = self._df_pnl[['alpha']]
+        df2['pos'] = df2['alpha']
+        df2['neg'] = df2['alpha']
+        df2['pos'][df2['pos'] <= 0] = np.nan
+        df2['neg'][df2['neg'] > 0] = np.nan
+
+        if not df2.empty:
+            df2.plot(ax=ax, y=['pos', 'neg'], kind='area', stacked=False, color=['green', 'red'], legend=False, linewidth=0, fontsize=5, rot=0, **plot_kwargs)
+
+        if ax:
+            ax.set_ylabel('Alpha')
+
+    def plotUpDownAll(self, ax=None, **plot_kwargs):
+        self._df_pnl_all = self.portfolio().getPnlAll()
+        self._df_pnl_all.fillna(0.0, inplace=True)
+
+        df2 = self._df_pnl_all[['alpha']]
         df2['pos'] = df2['alpha']
         df2['neg'] = df2['alpha']
         df2['pos'][df2['pos'] <= 0] = np.nan
@@ -109,9 +164,25 @@ class CalculationsMixin(object):
 
         df_returns = []
         for col in self._df_notional.columns:
-            self._df_notional[col].drop_duplicates().pct_change(1).fillna(0.0)
             # drop if exactly -100% (e.g. "sold")
-            df_returns.append(self._df_notional[col].drop_duplicates().pct_change(1).fillna(0.0))
+            df_returns.append(self._df_notional[col].drop_duplicates().pct_change(1).dropna().shift(-1).fillna(0.0))
+
+        if df_returns:
+            df_returns = pd.concat(df_returns, axis=1, sort=True)
+            df_returns.sort_index(inplace=True)
+            df_returns = df_returns.groupby(df_returns.index).last()
+            df_returns.drop_duplicates(inplace=True)
+
+        df_returns.plot(kind='hist', ax=ax, sharex=True, stacked=True, bins=10, histtype='bar')
+
+    def plotReturnHistogramsAll(self, ax, **plot_kwargs):
+        self._df_notional_all = self.portfolio().getNotionalAll()
+        self._df_notional_all.columns = [c.replace('n:', '') for c in self._df_notional_all.columns]
+
+        df_returns = []
+        for col in self._df_notional_all.columns:
+            # drop if exactly -100% (e.g. "sold")
+            df_returns.append(self._df_notional_all[col].drop_duplicates().pct_change(1).dropna().shift(-1).fillna(0.0))
 
         if df_returns:
             df_returns = pd.concat(df_returns, axis=1, sort=True)
@@ -132,6 +203,17 @@ class CalculationsMixin(object):
             ax.axhline(total_returns.std())
             ax.set_ylabel('Std.')
 
+    def plotStdDevAll(self, ax, **plot_kwargs):
+        self._df_notional_all = self.portfolio().getNotionalAll()
+        self._df_notional_all.columns = [c.replace('n:', '') for c in self._df_notional_all.columns]
+
+        if not self._df_notional_all.empty:
+            total_returns = self._df_notional_all.sum(axis=1).pct_change(1).fillna(0.0)
+            total_returns_rolling = total_returns.rolling(10)
+            total_returns_rolling.std().plot(ax=ax)
+            ax.axhline(total_returns.std())
+            ax.set_ylabel('Std.')
+
     def plotSharpe(self, ax, **plot_kwargs):
         self._df_notional = self.portfolio().getNotional(self)
         self._df_notional.columns = [c.replace('n:', '') for c in self._df_notional.columns]
@@ -145,7 +227,20 @@ class CalculationsMixin(object):
             ax.axhline(sharpe)
             ax.set_ylabel('Sharpe')
 
-    def performanceByStrategy(self):
+    def plotSharpeAll(self, ax, **plot_kwargs):
+        self._df_notional_all = self.portfolio().getNotionalAll()
+        self._df_notional_all.columns = [c.replace('n:', '') for c in self._df_notional_all.columns]
+
+        if not self._df_notional_all.empty:
+            total_returns = self._df_notional_all.sum(axis=1).pct_change(1).fillna(0.0)
+
+            sharpe = total_returns.values.mean() / total_returns.values.std() * np.sqrt(252)
+            total_returns['sharpe'] = total_returns.rolling(20).mean() / total_returns.rolling(10).std() * np.sqrt(252)
+            total_returns['sharpe'].plot(ax=ax)
+            ax.axhline(sharpe)
+            ax.set_ylabel('Sharpe')
+
+    def performanceByStrategy(self, save=False, save_csv=False):
         fig, axes = plt.subplots(8, 1,
                                  figsize=(7, 10),
                                  gridspec_kw={'height_ratios': [3, 2, 2, 3, 2, 1, 1, 3]})
@@ -178,7 +273,11 @@ class CalculationsMixin(object):
         # Plot returns
         self.plotReturnHistograms(ax=axes[7])
 
-    def performanceByAsset(self):
+        if save:
+            plt.savefig('_aat_perf/{}.pdf'.format(self.name()))
+
+
+    def performanceByAsset(self, save=False, save_csv=False):
         fig, axes = plt.subplots(8, 1,
                                  figsize=(7, 10),
                                  gridspec_kw={'height_ratios': [3, 2, 2, 3, 2, 1, 1, 3]})
@@ -193,40 +292,50 @@ class CalculationsMixin(object):
         self.plotPrice(ax=axes[0])
 
         # Plot Positions
-        # self.plotPositions(ax=axes[1])
+        self.plotPositionsAll(ax=axes[1])
 
         # Plot Notionals
-        # self.plotNotional(ax=axes[2])
+        self.plotNotionalAll(ax=axes[2])
 
         # Plot PNLs
-        # self.plotPnl(ax=axes[3])
+        self.plotPnlAll(ax=axes[3])
 
         # Plot up/down chart
-        # self.plotUpDown(ax=axes[4])
+        self.plotUpDownAll(ax=axes[4])
 
         # rolling stddev
-        # self.plotStdDev(ax=axes[5])
-        # self.plotSharpe(ax=axes[6])
+        self.plotStdDevAll(ax=axes[5])
+        self.plotSharpeAll(ax=axes[6])
 
         # Plot returns
-        # self.plotReturnHistograms(ax=axes[7])
+        self.plotReturnHistogramsAll(ax=axes[7])
 
-    def performanceCharts(self):
+        if save:
+            plt.savefig('_aat_perf/all.pdf'.format(self.name()))
+
+    def performanceCharts(self, render=True, save=False, save_csv=False):
         if self not in CalculationsMixin.__perf_charts:
             self.collectStats()
 
-        if not CalculationsMixin.__perf_charts:
-            # Only run once
-            self.performanceByAsset()
+        if save:
+            os.makedirs('_aat_perf', exist_ok=True)
 
+        if not CalculationsMixin.__perf_charts:
             CalculationsMixin.__total_count = self.__class__._ID_GENERATOR()
 
+            if CalculationsMixin.__total_count > 1:
+                # Only run once
+                self.performanceByAsset(save=save, save_csv=save_csv)
+
         CalculationsMixin.__perf_charts.add(self)
-        self.performanceByStrategy()
+        self.performanceByStrategy(save=save, save_csv=save_csv)
 
         if len(CalculationsMixin.__perf_charts) == CalculationsMixin.__total_count:
-            # Show plot
-            plt.show()
+            if CalculationsMixin.__total_count < 5 and render:
+                # Show plot
+                plt.show()
+            elif render:
+                print('Too many strategies to render, try saving to pdf instead')
 
     def ipython(self):
         import IPython  # type: ignore

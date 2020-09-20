@@ -3,7 +3,7 @@ from typing import Tuple, Union
 
 from ..exchange import ExchangeType
 from ..instrument import Instrument
-from ...common import _in_cpp
+from ...common import _in_cpp, _merge
 
 try:
     from aat.binding import PositionCpp  # type: ignore
@@ -245,10 +245,28 @@ class Position(object):
         assert isinstance(other, Position)
         assert self.instrument == other.instrument
 
-        ret = Position(self.size + other.size,
-                       self.price + other.price,
-                       min(self.timestamp, other.timestamp),
+        # collect histories
+        size_history = _merge(self.__size_history, other.__size_history)
+        notional_history = _merge(self.__notional_history, other.__notional_history)
+        price_history = _merge(self.__price_history, other.__price_history, False)
+        investment_history = _merge(self.__investment_history, other.__investment_history)
+        instrumentPrice_history = _merge(self.__instrumentPrice_history, other.__instrumentPrice_history, False)
+        pnl_history = _merge(self.__pnl_history, other.__pnl_history)
+        unrealizedPnl_history = _merge(self.__unrealizedPnl_history, other.__unrealizedPnl_history)
+
+        ret = Position(size_history[-1][0],
+                       price_history[-1][0],
+                       size_history[-1][1],
                        self.instrument,
                        self.exchange,  # FIXME
                        self.trades + other.trades)
+
+        ret.__size_history = size_history
+        ret.__notional_history = notional_history
+        ret.__price_history = price_history
+        ret.__investment_history = investment_history
+        ret.__instrumentPrice_history = instrumentPrice_history
+        ret.__pnl_history = pnl_history
+        ret.__unrealizedPnl_history = unrealizedPnl_history
+
         return ret

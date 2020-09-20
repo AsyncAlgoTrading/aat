@@ -204,6 +204,7 @@ class IEX(Exchange):
                         continue
 
                     o = Order(volume=volume, price=price, side=Side.BUY, instrument=i, exchange=self.exchange())
+                    o.filled = volume
                     o.timestamp = index.to_pydatetime()
 
                     t = Trade(volume=volume, price=price, taker_order=o, maker_orders=[])

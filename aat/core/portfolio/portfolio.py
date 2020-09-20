@@ -123,7 +123,7 @@ class Portfolio(object):
             ret[position.instrument] = position
         return list(ret.values())
 
-    def _positions(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None):
+    def allPositions(self, instrument: Instrument = None, exchange: ExchangeType = None):
         ret = {}
 
         for position_list in self._active_positions_by_instrument.values():
@@ -198,6 +198,41 @@ class Portfolio(object):
         df_pnl['alpha'] = df_pnl[[c for c in df_pnl.columns if c.startswith('pnl:')]].sum(axis=1)
         return df_pnl
 
+    def getPnlAll(self):
+        portfolio = []
+        pnl_cols = []
+        total_pnl_cols = []
+        for position in self.allPositions():
+            instrument = position.instrument
+
+            #######
+            # Pnl #
+            #######
+            total_pnl_col = 'pnl:{}'.format(instrument.name)
+            unrealized_pnl_col = 'ur:{}'.format(instrument.name)
+            pnl_cols.append(unrealized_pnl_col)
+            unrealized_pnl_history = pd.DataFrame(position.unrealizedPnlHistory, columns=[unrealized_pnl_col, 'when'])
+            unrealized_pnl_history.set_index('when', inplace=True)
+
+            realized_pnl_col = 'r:{}'.format(instrument.name)
+            pnl_cols.append(realized_pnl_col)
+            realized_pnl_history = pd.DataFrame(position.pnlHistory, columns=[realized_pnl_col, 'when'])
+            realized_pnl_history.set_index('when', inplace=True)
+
+            unrealized_pnl_history[realized_pnl_col] = realized_pnl_history[realized_pnl_col]
+            unrealized_pnl_history[total_pnl_col] = unrealized_pnl_history.sum(axis=1)
+            total_pnl_cols.append(total_pnl_col)
+            portfolio.append(unrealized_pnl_history)
+
+        df_pnl = self._constructDf(portfolio, drop_duplicates=False)  # dont drop duplicates
+
+        ################
+        # calculations #
+        ################
+        # calculate total pnl
+        df_pnl['alpha'] = df_pnl[[c for c in df_pnl.columns if c.startswith('pnl:')]].sum(axis=1)
+        return df_pnl
+
     def getInstruments(self, strategy):
         raise NotImplementedError()
 
@@ -217,7 +252,7 @@ class Portfolio(object):
     def getAssetPrice(self, strategy):
         portfolio = []
         price_cols = []
-        for position in self.positions(strategy):
+        for position in self.allPositions():
             instrument = position.instrument
 
             #########
@@ -234,6 +269,28 @@ class Portfolio(object):
         portfolio = []
         size_cols = []
         for position in self.positions(strategy):
+            instrument = position.instrument
+
+            #################
+            # Position Size #
+            #################
+            size_col = 's:{}'.format(instrument.name)
+            size_cols.append(size_col)
+            size_history = pd.DataFrame(position.sizeHistory, columns=[size_col, 'when'])
+            size_history.set_index('when', inplace=True)
+            portfolio.append(size_history)
+
+            price_col = instrument.name
+            price_history = pd.DataFrame(position.instrumentPriceHistory, columns=[price_col, 'when'])
+            price_history.set_index('when', inplace=True)
+            portfolio.append(price_history)
+
+        return self._constructDf(portfolio)[size_cols]
+
+    def getSizeAll(self):
+        portfolio = []
+        size_cols = []
+        for position in self.allPositions():
             instrument = position.instrument
 
             #################
@@ -272,6 +329,27 @@ class Portfolio(object):
             price_history.set_index('when', inplace=True)
             portfolio.append(price_history)
 
+        return self._constructDf(portfolio)[notional_cols]
+
+    def getNotionalAll(self, ):
+        portfolio = []
+        notional_cols = []
+        for position in self.allPositions():
+            instrument = position.instrument
+
+            #################
+            # Position Size #
+            #################
+            notional_col = 'n:{}'.format(instrument.name)
+            notional_cols.append(notional_col)
+            notional_history = pd.DataFrame(position.notionalHistory, columns=[notional_col, 'when'])
+            notional_history.set_index('when', inplace=True)
+            portfolio.append(notional_history)
+
+            price_col = instrument.name
+            price_history = pd.DataFrame(position.instrumentPriceHistory, columns=[price_col, 'when'])
+            price_history.set_index('when', inplace=True)
+            portfolio.append(price_history)
         return self._constructDf(portfolio)[notional_cols]
 
     def getInvestment(self, strategy):
