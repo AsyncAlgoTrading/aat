@@ -15,5 +15,11 @@ namespace core {
     return ss.str();
   }
 
+  json
+  Instrument::toJson() const {
+    json ret;
+    return ret;
+  }
+
 }  // namespace core
 }  // namespace aat

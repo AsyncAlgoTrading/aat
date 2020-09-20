@@ -1,5 +1,6 @@
 import sys
 import os.path
+from aat.common import _in_cpp
 
 
 class TestOfflineCalculations:
@@ -16,4 +17,7 @@ class TestOfflineCalculations:
                     '--strategy', 'MomentumStrategy-0',
                     '--render', 'False']
 
+        if _in_cpp():
+            # TODO
+            return
         main()
