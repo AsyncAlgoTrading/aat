@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Tuple, Union
 
+from .trade import Trade
 from ..exchange import ExchangeType
 from ..instrument import Instrument
 from ...common import _in_cpp, _merge
@@ -239,6 +240,9 @@ class Position(object):
 
     def toJson(self):
         return {
+            "timestamp": self.timestamp.timestamp(),
+            "instrument": self.instrument.toJson(),
+            "exchange": self.exchange.toJson(),
             "size": self.size,
             "size_history": self.sizeHistory,
             "notional": self.notional,
@@ -249,14 +253,39 @@ class Position(object):
             "investment_history": self.investmentHistory,
             "instrumentPrice": self.instrumentPrice,
             "instrumentPrice_history": self.instrumentPriceHistory,
-            "instrument": self.instrument,
-            "exchange": self.exchange,
             "pnl": self.pnl,
             "pnl_history": self.pnlHistory,
             "unrealizedPnl": self.unrealizedPnl,
             "unrealizedPnl_history": self.unrealizedPnlHistory,
-            "trades": self.trades,
+            "trades": [t.toJson() for t in self.trades],
         }
+
+    @staticmethod
+    def fromJson(jsn):
+        kwargs = {}
+        kwargs['size'] = jsn['size']
+        kwargs['price'] = jsn['price']
+        kwargs['timestamp'] = datetime.fromtimestamp(jsn['timestamp'])
+        kwargs['instrument'] = Instrument.fromJson(jsn['instrument'])
+        kwargs['exchange'] = ExchangeType.fromJson(jsn['exchange'])
+        kwargs['trades'] = [Trade.fromJson(x) for x in jsn['trades']]
+
+        ret = Position(**kwargs)
+        ret.__notional = jsn['notional']
+        ret.__investment = jsn['investment']
+        ret.__instrumentPrice = jsn['instrumentPrice']
+        ret.__pnl = jsn['pnl']
+        ret.__unrealizedPnl = jsn['unrealizedPnl']
+
+        ret.__size_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['size_history']]
+        ret.__notional_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['notional_history']]
+        ret.__price_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['price_history']]
+        ret.__investment_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['investment_history']]
+        ret.__instrumentPrice_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['instrumentPrice_history']]
+        ret.__pnl_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['pnl_history']]
+        ret.__unrealizedPnl_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['unrealizedPnl_history']]
+        ret.__size_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['size_history']]
+        return ret
 
     def __repr__(self):
         return f'Position(price={self.price}, size={self.size}, notional={self.notional}, pnl={self.pnl}, unrealizedPnl={self.unrealizedPnl}, instrument={self.instrument}, exchange={self.exchange})'

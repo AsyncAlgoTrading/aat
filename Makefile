@@ -114,6 +114,7 @@ clean: ## clean the repository
 	rm -rf .coverage coverage cover htmlcov logs build dist *.egg-info
 	find . -name "*.so"  | xargs rm -rf
 	make -C ./docs clean
+	rm -rf _aat_BACKTEST_*
 
 # Thanks to Francoise at marmelab.com for this
 .DEFAULT_GOAL := help

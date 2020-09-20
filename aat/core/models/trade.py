@@ -161,7 +161,6 @@ class Trade(object):
 
     @staticmethod
     def fromJson(jsn):
-        print(jsn)
         ret = Trade(jsn['volume'],
                     jsn['price'],
                     [Order.fromJson(x) for x in jsn['maker_orders']],

@@ -416,6 +416,14 @@ class Portfolio(object):
 
         with open('{}.active_by_inst.json'.format(filename_prefix), 'r') as fp:
             jsn = json.load(fp)
+            self._active_positions_by_instrument = {
+                Instrument.fromJson(json.loads(k)): [Position.fromJson(vv) for vv in v] for k, v in jsn.items()
+            }
 
         with open('{}.active_by_strat.json'.format(filename_prefix), 'r') as fp:
             jsn = json.load(fp)
+            self._active_positions_by_strategy = {
+                k: {
+                    Instrument.fromJson(json.loads(kk)): Position.fromJson(vv) for kk, vv in v.items()
+                } for k, v in jsn.items()
+            }

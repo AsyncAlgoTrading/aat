@@ -50,6 +50,9 @@ class CalculationsMixin(object):
         self._df_size_all = self.portfolio().getSizeAll()
         self._df_size_all.columns = [c.replace('s:', '') for c in self._df_size_all.columns]
 
+        self._df_investment = self.portfolio().getInvestment(self)
+        self._df_investment.columns = [c.replace('i:', '') for c in self._df_investment.columns]
+
         if not self._df_size_all.empty:
             self._df_size_all.plot(kind='area', ax=ax, stacked=True, linewidth=0, **plot_kwargs)
 
@@ -57,8 +60,8 @@ class CalculationsMixin(object):
             ax.set_ylabel('Positions')
 
     def plotNotional(self, ax=None, **plot_kwargs):
-        self._df_position_notional = self.portfolio().getSize(self)
         self._df_asset_price = self.portfolio().getAssetPrice(self)
+        self._df_position_notional = self.portfolio().getSize(self)
         self._df_position_notional.columns = [c.replace('s:', '') for c in self._df_size.columns]
 
         for col in self._df_position_notional.columns:
@@ -73,15 +76,15 @@ class CalculationsMixin(object):
 
     def plotNotionalAll(self, ax=None, **plot_kwargs):
         self._df_asset_price = self.portfolio().getAssetPrice(self)
-        self.df_position_notional = self.portfolio().getSizeAll()
-        self.df_position_notional.columns = [c.replace('s:', '') for c in self._df_size_all.columns]
+        self._df_position_notional_all = self.portfolio().getSizeAll()
+        self._df_position_notional_all.columns = [c.replace('s:', '') for c in self._df_size_all.columns]
 
-        for col in self.df_position_notional.columns:
-            self.df_position_notional[col] = self.df_position_notional[col] * self._df_asset_price[col]
+        for col in self._df_position_notional_all.columns:
+            self._df_position_notional_all[col] = self._df_position_notional_all[col] * self._df_asset_price[col]
 
-        if not self.df_position_notional.empty:
-            self.df_position_notional.fillna(method='ffill', inplace=True)
-            self.df_position_notional.plot(kind='area', ax=ax, stacked=True, linewidth=0, **plot_kwargs)
+        if not self._df_position_notional_all.empty:
+            self._df_position_notional_all.fillna(method='ffill', inplace=True)
+            self._df_position_notional_all.plot(kind='area', ax=ax, stacked=True, linewidth=0, **plot_kwargs)
 
         if ax:
             ax.set_ylabel('Notional')
@@ -348,50 +351,46 @@ class CalculationsMixin(object):
 
     def _writeoutPerf(self, filename):
         if filename == 'all':
-            self._df_price.to_csv('{}/{}_df_price'.format(self._save_dir, filename))
-            self._df_pnl_all.to_csv('{}/{}_df_pnl'.format(self._save_dir, filename))
-            self._df_notional_all.to_csv('{}/{}_df_notional'.format(self._save_dir, filename))
-            self._df_investment.to_csv('{}/{}_df_investment'.format(self._save_dir, filename))
-            self._df_size_all.to_csv('{}/{}_df_size'.format(self._save_dir, filename))
-            self._df_position_notional.to_csv('{}/{}_df_position_notional'.format(self._save_dir, filename))
-            self._df_total_pnl_all.to_csv('{}/{}_df_total_pnl'.format(self._save_dir, filename))
-            self._df_up_down_all.to_csv('{}/{}_df_up_down'.format(self._save_dir, filename))
-            self._df_returns_all.to_csv('{}/{}_df_returns'.format(self._save_dir, filename))
-            self._total_returns_all.to_csv('{}/{}_total_returns'.format(self._save_dir, filename))
+            self._df_price.to_csv('{}/{}_df_price.csv'.format(self._save_dir, filename))
+            self._df_pnl_all.to_csv('{}/{}_df_pnl.csv'.format(self._save_dir, filename))
+            self._df_notional_all.to_csv('{}/{}_df_notional.csv'.format(self._save_dir, filename))
+            self._df_size_all.to_csv('{}/{}_df_size.csv'.format(self._save_dir, filename))
+            self._df_total_pnl_all.to_csv('{}/{}_df_total_pnl.csv'.format(self._save_dir, filename))
+            self._df_up_down_all.to_csv('{}/{}_df_up_down.csv'.format(self._save_dir, filename))
+            self._df_returns_all.to_csv('{}/{}_df_returns.csv'.format(self._save_dir, filename))
+            self._total_returns_all.to_csv('{}/{}_total_returns.csv'.format(self._save_dir, filename))
 
-            self._df_price.to_csv('{}/{}_df_price'.format(self._save_dir, filename))
-            self._df_pnl_all.to_csv('{}/{}_df_pnl'.format(self._save_dir, filename))
-            self._df_notional_all.to_csv('{}/{}_df_notional'.format(self._save_dir, filename))
-            self._df_investment.to_csv('{}/{}_df_investment'.format(self._save_dir, filename))
-            self._df_size_all.to_csv('{}/{}_df_size'.format(self._save_dir, filename))
-            self._df_position_notional.to_csv('{}/{}_df_position_notional'.format(self._save_dir, filename))
-            self._df_total_pnl_all.to_csv('{}/{}_df_total_pnl'.format(self._save_dir, filename))
-            self._df_up_down_all.to_csv('{}/{}_df_up_down'.format(self._save_dir, filename))
-            self._df_returns_all.to_csv('{}/{}_df_returns'.format(self._save_dir, filename))
-            self._total_returns_all.to_csv('{}/{}_total_returns'.format(self._save_dir, filename))
+            self._df_price.to_csv('{}/{}_df_price.csv'.format(self._save_dir, filename))
+            self._df_pnl_all.to_csv('{}/{}_df_pnl.csv'.format(self._save_dir, filename))
+            self._df_notional_all.to_csv('{}/{}_df_notional.csv'.format(self._save_dir, filename))
+            self._df_size_all.to_csv('{}/{}_df_size.csv'.format(self._save_dir, filename))
+            self._df_total_pnl_all.to_csv('{}/{}_df_total_pnl.csv'.format(self._save_dir, filename))
+            self._df_up_down_all.to_csv('{}/{}_df_up_down.csv'.format(self._save_dir, filename))
+            self._df_returns_all.to_csv('{}/{}_df_returns.csv'.format(self._save_dir, filename))
+            self._total_returns_all.to_csv('{}/{}_total_returns.csv'.format(self._save_dir, filename))
 
         else:
-            self._df_price.to_csv('{}/{}_df_price'.format(self._save_dir, filename))
-            self._df_pnl.to_csv('{}/{}_df_pnl'.format(self._save_dir, filename))
-            self._df_notional.to_csv('{}/{}_df_notional'.format(self._save_dir, filename))
-            self._df_investment.to_csv('{}/{}_df_investment'.format(self._save_dir, filename))
-            self._df_size.to_csv('{}/{}_df_size'.format(self._save_dir, filename))
-            self._df_position_notional.to_csv('{}/{}_df_position_notional'.format(self._save_dir, filename))
-            self._df_total_pnl.to_csv('{}/{}_df_total_pnl'.format(self._save_dir, filename))
-            self._df_up_down.to_csv('{}/{}_df_up_down'.format(self._save_dir, filename))
-            self._df_returns.to_csv('{}/{}_df_returns'.format(self._save_dir, filename))
-            self._total_returns.to_csv('{}/{}_total_returns'.format(self._save_dir, filename))
+            self._df_price.to_csv('{}/{}_df_price.csv'.format(self._save_dir, filename))
+            self._df_pnl.to_csv('{}/{}_df_pnl.csv'.format(self._save_dir, filename))
+            self._df_notional.to_csv('{}/{}_df_notional.csv'.format(self._save_dir, filename))
+            self._df_investment.to_csv('{}/{}_df_investment.csv'.format(self._save_dir, filename))
+            self._df_size.to_csv('{}/{}_df_size.csv'.format(self._save_dir, filename))
+            self._df_position_notional.to_csv('{}/{}_df_position_notional.csv'.format(self._save_dir, filename))
+            self._df_total_pnl.to_csv('{}/{}_df_total_pnl.csv'.format(self._save_dir, filename))
+            self._df_up_down.to_csv('{}/{}_df_up_down.csv'.format(self._save_dir, filename))
+            self._df_returns.to_csv('{}/{}_df_returns.csv'.format(self._save_dir, filename))
+            self._total_returns.to_csv('{}/{}_total_returns.csv'.format(self._save_dir, filename))
 
-            self._df_price.to_csv('{}/{}_df_price'.format(self._save_dir, filename))
-            self._df_pnl.to_csv('{}/{}_df_pnl'.format(self._save_dir, filename))
-            self._df_notional.to_csv('{}/{}_df_notional'.format(self._save_dir, filename))
-            self._df_investment.to_csv('{}/{}_df_investment'.format(self._save_dir, filename))
-            self._df_size.to_csv('{}/{}_df_size'.format(self._save_dir, filename))
-            self._df_position_notional.to_csv('{}/{}_df_position_notional'.format(self._save_dir, filename))
-            self._df_total_pnl.to_csv('{}/{}_df_total_pnl'.format(self._save_dir, filename))
-            self._df_up_down.to_csv('{}/{}_df_up_down'.format(self._save_dir, filename))
-            self._df_returns.to_csv('{}/{}_df_returns'.format(self._save_dir, filename))
-            self._total_returns.to_csv('{}/{}_total_returns'.format(self._save_dir, filename))
+            self._df_price.to_csv('{}/{}_df_price.csv'.format(self._save_dir, filename))
+            self._df_pnl.to_csv('{}/{}_df_pnl.csv'.format(self._save_dir, filename))
+            self._df_notional.to_csv('{}/{}_df_notional.csv'.format(self._save_dir, filename))
+            self._df_investment.to_csv('{}/{}_df_investment.csv'.format(self._save_dir, filename))
+            self._df_size.to_csv('{}/{}_df_size.csv'.format(self._save_dir, filename))
+            self._df_position_notional.to_csv('{}/{}_df_position_notional.csv'.format(self._save_dir, filename))
+            self._df_total_pnl.to_csv('{}/{}_df_total_pnl.csv'.format(self._save_dir, filename))
+            self._df_up_down.to_csv('{}/{}_df_up_down.csv'.format(self._save_dir, filename))
+            self._df_returns.to_csv('{}/{}_df_returns.csv'.format(self._save_dir, filename))
+            self._total_returns.to_csv('{}/{}_total_returns.csv'.format(self._save_dir, filename))
 
         self.portfolio().save('{}/{}.portfolio'.format(self._save_dir, filename))
 
@@ -419,6 +418,11 @@ def main():
         help='Plot results for this strategy instance',
         required=True)
 
+    parser.add_argument(
+        '--render',
+        help='Plot results?',
+        default=True)
+
     args = parser.parse_args()
 
     portfolio = Portfolio()
@@ -433,7 +437,7 @@ def main():
     calculator.portfolio = types.MethodType(lambda self, p=portfolio: p, calculator)
     calculator.name = types.MethodType(lambda self, name=args.strategy: name, calculator)
 
-    calculator.performanceCharts(args.strategy, True, False, False)
+    calculator.performanceCharts(args.strategy, args.render != "False", False, False)
 
 
 if __name__ == '__main__':
