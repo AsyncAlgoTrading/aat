@@ -97,6 +97,12 @@ def parseConfig(argv: list = None) -> dict:
         default=False)
 
     parser.add_argument(
+        '--aid',
+        action='store_true',
+        help='Run in verbose mode',
+        default=False)
+
+    parser.add_argument(
         '--load_accounts',
         action='store_true',
         help='Load accounts from exchanges',
