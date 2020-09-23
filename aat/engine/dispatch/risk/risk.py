@@ -1,5 +1,6 @@
 from typing import Optional, List
 
+from aat.config import ExitRoutine
 from aat.core import Event, Order, Trade, Position
 from aat.core.handler import EventHandler
 from ..base import ManagerBase
@@ -9,6 +10,9 @@ class RiskManager(ManagerBase):
     def __init__(self):
         # Track active (open) orders
         self._active_orders = []
+
+        # Restricted hours
+        self._restricted_trading_hours = {}
 
     def _setManager(self, manager):
         '''install manager'''
@@ -20,6 +24,17 @@ class RiskManager(ManagerBase):
 
     def updateCash(self, positions: List[Position]) -> None:
         '''update cash positions from exchange'''
+        pass
+
+    def restrictTradingHours(self,
+                             strategy,
+                             start_second: Optional[int] = None,
+                             start_minute: Optional[int] = None,
+                             start_hour: Optional[int] = None,
+                             end_second: Optional[int] = None,
+                             end_minute: Optional[int] = None,
+                             end_hour: Optional[int] = None,
+                             on_end_of_day: ExitRoutine = ExitRoutine.NONE):
         pass
 
     # *********************

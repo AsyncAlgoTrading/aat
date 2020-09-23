@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 from typing import List, Callable, Union, Optional, TYPE_CHECKING
 
+from aat.config import ExitRoutine
 from aat.core import Instrument
 from aat.exchange import Exchange
 from aat.config import InstrumentType, TradingType
@@ -120,3 +121,14 @@ class StrategyManagerUtilsMixin(object):
         periodic = Periodic(self.loop(), self._engine._latest, function, second, minute, hour)
         self._periodics.append(periodic)
         return periodic
+
+    def restrictTradingHours(self,
+                             strategy,
+                             start_second: Optional[int] = None,
+                             start_minute: Optional[int] = None,
+                             start_hour: Optional[int] = None,
+                             end_second: Optional[int] = None,
+                             end_minute: Optional[int] = None,
+                             end_hour: Optional[int] = None,
+                             on_end_of_day: ExitRoutine = ExitRoutine.NONE):
+        pass
