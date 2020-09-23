@@ -16,17 +16,16 @@ try:
 except ImportError:
     PerspectiveManager, PerspectiveTornadoHandler = None, None  # type: ignore
 
-from .manager import StrategyManager
-from ..execution import OrderManager
-from ..handler import EventHandler, PrintHandler
-from ..models import Event, Error
-from ..portfolio import PortfolioManager
-from ..risk import RiskManager
-from ..table import TableHandler
-from ...config import TradingType, EventType, getStrategies, getExchanges
-from ...exchange import Exchange
+from aat.core.handler import EventHandler, PrintHandler
+from aat.core.models import Event, Error
+from aat.core.table import TableHandler
+from aat.config import TradingType, EventType, getStrategies, getExchanges
+from aat.exchange import Exchange
+from aat.strategy import Strategy
 # from aat.strategy import Strategy
-from ...ui import ServerApplication
+from aat.ui import ServerApplication
+
+from .dispatch import StrategyManager, OrderManager, PortfolioManager, RiskManager
 
 try:
     import uvloop  # type: ignore
@@ -53,6 +52,7 @@ class TradingEngine(Application):
     portfolio_manager = Instance(PortfolioManager, args=(), kwargs={})
     exchanges = List(trait=Instance(klass=Exchange))
     event_handlers = List(trait=Instance(EventHandler), default_value=[])
+    strategies = List(trait=Instance(Strategy), default_value=[])
 
     # API application
     api_application = Instance(klass=TornadoApplication)
@@ -91,11 +91,14 @@ class TradingEngine(Application):
         # Trading type
         self.trading_type = TradingType(config.get('general', {}).get('trading_type', 'simulation').upper())
 
+        # Load account information from exchanges
+        self._load_accounts = config.get('general', {}).get('load_accounts', False)
+
         # Load exchange instances
         self.exchanges = getExchanges(config.get('exchange', {}).get('exchanges', []), trading_type=self.trading_type, verbose=self.verbose)
 
         # instantiate the Strategy Manager
-        self.manager = StrategyManager(self, self.trading_type, self.exchanges)
+        self.manager = StrategyManager(self, self.trading_type, self.exchanges, self._load_accounts)
 
         # set event loop to use uvloop
         if uvloop:
@@ -114,8 +117,8 @@ class TradingEngine(Application):
         self.registerHandler(self.manager)
 
         # install event handlers
-        strategies = getStrategies(config.get('strategy', {}).get('strategies', []))
-        for strategy in strategies:
+        self.strategies = getStrategies(config.get('strategy', {}).get('strategies', []))
+        for strategy in self.strategies:
             self.log.critical("Installing strategy: {}".format(strategy))
             self.registerHandler(strategy)
 

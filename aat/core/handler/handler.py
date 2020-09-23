@@ -6,7 +6,7 @@ from ...config import EventType
 
 if TYPE_CHECKING:
     # Circular import
-    from ..engine import StrategyManager
+    from aat.engine import StrategyManager
 
 
 class EventHandler(metaclass=ABCMeta):

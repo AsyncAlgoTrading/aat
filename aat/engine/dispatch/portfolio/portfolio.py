@@ -124,7 +124,7 @@ class Portfolio(object):
     def positions(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None):
         ret = {}
 
-        for position in self._active_positions_by_strategy[strategy.name()].values():
+        for position in self._active_positions_by_strategy.get(strategy.name(), {}).values():
             if instrument and position.instrument != instrument:
                 # Skip if not asking for this instrument
                 continue

@@ -2,8 +2,8 @@ from typing import Optional
 
 from aat.core import Order, Event
 from aat.core.handler import EventHandler
-from aat.core.engine.manager import ManagerBase
 from aat.exchange import Exchange
+from ..base import ManagerBase
 
 
 class OrderManager(ManagerBase):

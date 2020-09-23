@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, List
 
-from aat.core import Event, Order, Trade
+from aat.core import Event, Order, Trade, Position
 from aat.core.handler import EventHandler
-from aat.core.engine.manager import ManagerBase
+from ..base import ManagerBase
 
 
 class RiskManager(ManagerBase):
@@ -13,6 +13,14 @@ class RiskManager(ManagerBase):
     def _setManager(self, manager):
         '''install manager'''
         self._manager = manager
+
+    def updateAccount(self, positions: List[Position]) -> None:
+        '''update positions tracking with a position from the exchange'''
+        pass
+
+    def updateCash(self, positions: List[Position]) -> None:
+        '''update cash positions from exchange'''
+        pass
 
     # *********************
     # Risk Methods        *

@@ -1,10 +1,10 @@
 import pandas as pd  # type: ignore
-from typing import Optional
+from typing import Optional, List
 
-from aat.core import Event, Trade, Instrument, ExchangeType
+from aat.core import Event, Trade, Instrument, ExchangeType, Position
 from aat.core.handler import EventHandler
-from aat.core.engine.manager import ManagerBase
 
+from ..base import ManagerBase
 from .portfolio import Portfolio
 
 
@@ -27,7 +27,17 @@ class PortfolioManager(ManagerBase):
         self._manager = manager
 
     def newPosition(self, strategy, trade: Trade):
+        '''create and track a new position, or update the pnl/price of
+        an existing position'''
         self._portfolio.newPosition(strategy, trade)
+
+    def updateAccount(self, positions: List[Position]) -> None:
+        '''update positions tracking with a position from the exchange'''
+        pass
+
+    def updateCash(self, positions: List[Position]) -> None:
+        '''update cash positions from exchange'''
+        pass
 
     # *********************
     # Risk Methods        *
@@ -35,8 +45,8 @@ class PortfolioManager(ManagerBase):
     def portfolio(self):
         return self._portfolio
 
-    def positions(self, instrument: Instrument = None, exchange: ExchangeType = None):
-        return self._portfolio.positions(instrument=instrument, exchange=exchange)
+    def positions(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None):
+        return self._portfolio.positions(strategy=strategy, instrument=instrument, exchange=exchange)
 
     def priceHistory(self, instrument: Instrument = None):
         if instrument:

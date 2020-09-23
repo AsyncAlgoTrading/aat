@@ -1,10 +1,14 @@
-from typing import Union, Callable, Optional
+from typing import Union, Callable, Optional, TYPE_CHECKING
 from ..config import Side, TradingType
-from ..core import Trade, Instrument, ExchangeType, StrategyManager
+from ..core import Trade, Instrument, ExchangeType
+
+
+if TYPE_CHECKING:
+    from aat.engine import StrategyManager
 
 
 class StrategyUtilsMixin(object):
-    _manager: StrategyManager
+    _manager: 'StrategyManager'
 
     def orders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         '''select all open orders

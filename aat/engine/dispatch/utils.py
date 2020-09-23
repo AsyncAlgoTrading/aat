@@ -9,7 +9,7 @@ from aat.config import InstrumentType, TradingType
 from .periodic import Periodic
 
 if TYPE_CHECKING:
-    from aat.core import TradingEngine
+    from aat.engine import TradingEngine
 
 
 class StrategyManagerUtilsMixin(object):

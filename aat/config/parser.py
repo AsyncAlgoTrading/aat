@@ -36,6 +36,7 @@ def _args_to_dict(args):
     ret['general'] = {}
     ret['general']['verbose'] = args.verbose
     ret['general']['trading_type'] = args.trading_type
+    ret['general']['load_accounts'] = args.load_accounts
     ret['exchange'] = {'exchanges': list(_.split(',') for _ in itertools.chain.from_iterable(args.exchanges))}
     ret['strategy'] = {'strategies': list(itertools.chain.from_iterable(args.strategies))}
     return ret
@@ -93,6 +94,12 @@ def parseConfig(argv: list = None) -> dict:
         '--verbose',
         action='store_true',
         help='Run in verbose mode',
+        default=False)
+
+    parser.add_argument(
+        '--load_accounts',
+        action='store_true',
+        help='Load accounts from exchanges',
         default=False)
 
     parser.add_argument(
