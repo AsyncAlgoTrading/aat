@@ -140,6 +140,9 @@ class StrategyManager(StrategyManagerOrderEntryMixin, StrategyManagerRiskMixin, 
         await self._order_mgr.onExit(event)
 
     async def onStart(self, event):
+        # Initialize strategies
+        self._portfolio_mgr.updateStrategies(self.strategies())
+
         # Initialize positions
         for exchange in self.exchanges():
             if self._load_accounts:

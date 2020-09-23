@@ -31,13 +31,17 @@ class PortfolioManager(ManagerBase):
         an existing position'''
         self._portfolio.newPosition(strategy, trade)
 
+    def updateStrategies(self, strategies: List) -> None:
+        '''update with list of strategies'''
+        self._portfolio.updateStrategies(strategies)
+
     def updateAccount(self, positions: List[Position]) -> None:
         '''update positions tracking with a position from the exchange'''
-        pass
+        self._portfolio.updateAccount(positions)
 
     def updateCash(self, positions: List[Position]) -> None:
         '''update cash positions from exchange'''
-        pass
+        self._portfolio.updateCash(positions)
 
     # *********************
     # Risk Methods        *

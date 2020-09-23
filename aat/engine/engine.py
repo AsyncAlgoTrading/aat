@@ -140,16 +140,19 @@ class TradingEngine(Application):
                 table_handler.installTables(self.table_manager)
                 self.registerHandler(table_handler)
 
-            self.api_handlers.append((r"/", RedirectHandler, {"url": "/index.html"}))
+            self.api_handlers.append((r"/", RedirectHandler, {"url": "index.html"}))
             self.api_handlers.append((r"/api/v1/ws", PerspectiveTornadoHandler, {"manager": self.table_manager, "check_origin": True}))
-            self.api_handlers.append((r"/static/js/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'assets', 'static', 'js')}))
-            self.api_handlers.append((r"/static/css/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'assets', 'static', 'css')}))
-            self.api_handlers.append((r"/static/fonts/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'assets', 'static', 'fonts')}))
-            self.api_handlers.append((r"/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'assets', 'static', 'html')}))
+            self.api_handlers.append((r"/static/js/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', 'ui', 'assets', 'static', 'js')}))
+            self.api_handlers.append((r"/static/css/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', 'ui', 'assets', 'static', 'css')}))
+            self.api_handlers.append((r"/static/fonts/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', 'ui', 'assets', 'static', 'fonts')}))
+            self.api_handlers.append((r"/(.*)", StaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), '..', 'ui', 'assets', 'static', 'html')}))
+
             self.api_application = ServerApplication(handlers=self.api_handlers)
+
             self.log.critical('.......')
             self.log.critical(f'listening on 0.0.0.0:{self.port}')
             self.log.critical('.......')
+
             self.api_application.listen(self.port)
 
     def _offline(self):
