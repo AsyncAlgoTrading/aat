@@ -159,7 +159,15 @@ class SyntheticExchange(Exchange):
             while self._pending_cancel_orders:
                 order = self._pending_cancel_orders.popleft()
                 self._jumptime(order)
-                self._orderbooks[order.instrument].cancel(order)
+
+                try:
+                    self._orderbooks[order.instrument].cancel(order)
+                except KeyboardInterrupt:
+                    raise
+                except BaseException:
+                    continue
+
+                yield Event(EventType.CANCEL, order)
                 await asyncio.sleep(self._sleep)
 
             while self._events:
