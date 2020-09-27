@@ -62,14 +62,14 @@ class StrategyManagerOrderEntryMixin(object):
 
     # TODO ugly private method
 
-    async def _onRejected(self, strategy, order: Order):
+    async def _onCanceled(self, strategy, order: Order):
         '''callback method for if your order fails to execute
 
         Args:
             order (Order): the order you attempted to make
         '''
         # push event to loop
-        ev = Event(type=Event.Types.REJECTED, target=order)
+        ev = Event(type=Event.Types.CANCELED, target=order)
         self._engine.pushTargetedEvent(strategy, ev)
 
         # synchronize state when engine processes this

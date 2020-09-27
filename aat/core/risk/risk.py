@@ -26,6 +26,7 @@ class RiskManager(ManagerBase):
     # *********************
     async def newOrder(self, strategy, order: Order):
         # TODO
+        print('adding order: {}'.format(order))
         self._active_orders.append(order)  # TODO use strategy
         return order, True
 
@@ -89,4 +90,5 @@ class RiskManager(ManagerBase):
 
     async def onCanceled(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
         order: Order = event.target  # type: ignore
+        print('cancelling order: {}'.format(order))
         self._active_orders.remove(order)
