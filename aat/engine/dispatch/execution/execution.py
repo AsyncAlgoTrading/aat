@@ -44,6 +44,7 @@ class OrderManager(ManagerBase):
 
         await exchange.cancelOrder(order)
         self._pending_orders.pop(order.id, None)
+        await self._manager._onCanceled(strategy, order)
         return order
 
     # **********************
