@@ -1,8 +1,10 @@
-from ..core import StrategyManager
+import typing
+if typing.TYPE_CHECKING:
+    from aat.engine import StrategyManager
 
 
 class StrategyRiskMixin(object):
-    _manager: StrategyManager
+    _manager: 'StrategyManager'
 
     ################
     # Risk Methods #

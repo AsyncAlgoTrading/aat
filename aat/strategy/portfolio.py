@@ -1,9 +1,13 @@
-from ..core import Instrument, ExchangeType, StrategyManager
-from ..core.portfolio import Portfolio
+import typing
+from aat.core import Instrument, ExchangeType
+
+if typing.TYPE_CHECKING:
+    from aat.engine import StrategyManager
+    from aat.engine.dispatch import Portfolio
 
 
 class StrategyPortfolioMixin(object):
-    _manager: StrategyManager
+    _manager: 'StrategyManager'
 
     def positions(self, instrument: Instrument = None, exchange: ExchangeType = None):
         '''select all positions
@@ -14,9 +18,9 @@ class StrategyPortfolioMixin(object):
         Returns:
             list (Position): list of positions
         '''
-        return self._manager.positions(instrument=instrument, exchange=exchange)
+        return self._manager.positions(strategy=self, instrument=instrument, exchange=exchange)
 
-    def portfolio(self) -> Portfolio:
+    def portfolio(self) -> 'Portfolio':
         '''Get portfolio object'''
         return self._manager.portfolio()
 

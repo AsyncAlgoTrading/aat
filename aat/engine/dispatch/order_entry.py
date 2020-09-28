@@ -1,14 +1,15 @@
 from typing import List, TYPE_CHECKING
 
 from aat.core import Instrument, ExchangeType, Event, Order, Trade
-from aat.core.execution import OrderManager
-from aat.core.portfolio import PortfolioManager
-from aat.core.risk import RiskManager
 from aat.config import Side
 from aat.exchange import Exchange
 
+from .execution import OrderManager
+from .portfolio import PortfolioManager
+from .risk import RiskManager
+
 if TYPE_CHECKING:
-    from aat.core import TradingEngine
+    from aat.engine import TradingEngine
 
 
 class StrategyManagerOrderEntryMixin(object):

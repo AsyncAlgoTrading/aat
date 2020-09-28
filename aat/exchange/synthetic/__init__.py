@@ -4,8 +4,9 @@ import string
 from datetime import datetime, timedelta
 from collections import deque
 from random import choice, random, randint
+from typing import List
 from ..exchange import Exchange
-from ...core import Instrument, OrderBook, Order, Event, ExchangeType
+from ...core import Instrument, OrderBook, Order, Event, ExchangeType, Position
 from ...config import TradingType, Side, EventType, OrderType
 
 
@@ -17,7 +18,18 @@ def _getName(n=1):
 class SyntheticExchange(Exchange):
     _inst = 0
 
-    def __init__(self, trading_type=None, verbose=False, inst_count=3, cycles=10000, **kwargs):
+    def __init__(self, trading_type=None, verbose=False, inst_count=3, cycles=10000, positions=False, **kwargs):
+        '''A synthetic exchange. Runs a limit order book for a number of randomly generated assets,
+        takes random walks.
+
+        Args:
+            trading_type (TradingType); Trading type. Should be in (SIMULATION, BACKTEST)
+            verbose (bool); run in verbose mode (prints order books every tick)
+            inst_count (int); number of random instruments to use
+            cycles (int); number of random cycles to go through, each cycle
+                          it will randomly generate an order event.
+            positions (bool); randomly generate starting positions
+        '''
         super().__init__(ExchangeType('synthetic{}'.format(SyntheticExchange._inst)))
         print('using synthetic exchange: {}'.format(self.exchange()))
 
@@ -39,6 +51,8 @@ class SyntheticExchange(Exchange):
 
         self._omit_cancel = set()
         self._trend = ['buy'] * 5 + ['sell'] * 4
+
+        self._generate_positions = positions
 
     def _seed(self, symbols=None):
         self._instruments = {symbol: Instrument(symbol) for symbol in symbols or _getName(self._inst_count)}
@@ -369,6 +383,21 @@ class SyntheticExchange(Exchange):
     async def cancelOrder(self, order: Order):
         self._pending_cancel_orders.append(order)
         return order
+
+    async def accounts(self) -> List[Position]:
+        if self._generate_positions:
+            ret = []
+
+            for instrument in self._instruments.values():
+                pos = Position(randint(0, 10),
+                               self._orderbooks[instrument].topOfBook()[Side.BUY][0],
+                               self._time,
+                               instrument,
+                               self.exchange(),
+                               [])
+                ret.append(pos)
+            return ret
+        return []
 
 
 Exchange.registerExchange('synthetic', SyntheticExchange)

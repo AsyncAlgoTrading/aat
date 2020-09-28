@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 
-from aat.core import Event, Order, Trade
+from aat.config import ExitRoutine
+from aat.core import Event, Order, Trade, Position
 from aat.core.handler import EventHandler
-from aat.core.engine.manager import ManagerBase
+from ..base import ManagerBase
 
 
 class RiskManager(ManagerBase):
@@ -10,9 +11,31 @@ class RiskManager(ManagerBase):
         # Track active (open) orders
         self._active_orders = []
 
+        # Restricted hours
+        self._restricted_trading_hours = {}
+
     def _setManager(self, manager):
         '''install manager'''
         self._manager = manager
+
+    def updateAccount(self, positions: List[Position]) -> None:
+        '''update positions tracking with a position from the exchange'''
+        pass
+
+    def updateCash(self, positions: List[Position]) -> None:
+        '''update cash positions from exchange'''
+        pass
+
+    def restrictTradingHours(self,
+                             strategy,
+                             start_second: Optional[int] = None,
+                             start_minute: Optional[int] = None,
+                             start_hour: Optional[int] = None,
+                             end_second: Optional[int] = None,
+                             end_minute: Optional[int] = None,
+                             end_hour: Optional[int] = None,
+                             on_end_of_day: ExitRoutine = ExitRoutine.NONE):
+        pass
 
     # *********************
     # Risk Methods        *

@@ -12,6 +12,3 @@ try:
     from ..binding import InstrumentCpp, DataCpp, EventCpp, OrderCpp, TradeCpp, OrderBookCpp  # type: ignore # noqa: F401
 except ImportError:
     pass
-
-# import last
-from .engine import TradingEngine, StrategyManager  # noqa: F401
