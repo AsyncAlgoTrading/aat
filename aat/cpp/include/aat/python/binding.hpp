@@ -84,6 +84,11 @@ PYBIND11_MODULE(binding, m) {
     .value("IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL)
     .export_values();
 
+  py::enum_<ExitRoutine>(m, "ExitRoutineCpp", py::arithmetic())
+    .value("NONE", ExitRoutine::NONE)
+    .value("CLOSE_ALL", ExitRoutine::CLOSE_ALL)
+    .export_values();
+
   /*******************************
    * OrderBook
    ******************************/

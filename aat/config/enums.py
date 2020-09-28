@@ -110,3 +110,8 @@ class OrderFlag(BaseEnum):
     FILL_OR_KILL = 'FILL_OR_KILL'
     ALL_OR_NONE = 'ALL_OR_NONE'
     IMMEDIATE_OR_CANCEL = 'IMMEDIATE_OR_CANCEL'
+
+
+class ExitRoutine(BaseEnum):
+    NONE = 'NONE'
+    CLOSE_ALL = 'CLOSE_ALL'

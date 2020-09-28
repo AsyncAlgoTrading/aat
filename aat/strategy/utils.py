@@ -1,10 +1,14 @@
-from typing import Union, Callable, Optional
-from ..config import Side, TradingType
-from ..core import Trade, Instrument, ExchangeType, StrategyManager
+from typing import Union, Callable, Optional, TYPE_CHECKING
+from ..config import Side, TradingType, ExitRoutine
+from ..core import Trade, Instrument, ExchangeType
+
+
+if TYPE_CHECKING:
+    from aat.engine import StrategyManager
 
 
 class StrategyUtilsMixin(object):
-    _manager: StrategyManager
+    _manager: 'StrategyManager'
 
     def orders(self, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
         '''select all open orders
@@ -103,6 +107,35 @@ class StrategyUtilsMixin(object):
                     periodic(0, 45, '*')
         '''
         return self._manager.periodic(function, second, minute, hour)
+
+    def restrictTradingHours(self,
+                             start_second: Optional[int] = None,
+                             start_minute: Optional[int] = None,
+                             start_hour: Optional[int] = None,
+                             end_second: Optional[int] = None,
+                             end_minute: Optional[int] = None,
+                             end_hour: Optional[int] = None,
+                             on_end_of_day: ExitRoutine = ExitRoutine.NONE):
+        '''Restrict a strategy's trading hours to [start_hour:start_minute:start_second, end_hour:end_minute:end_second]
+        NOTE: precise timing is NOT guaranteed due to event loop scheduling.
+
+        Args:
+            start_second (Optional[int]); starting second
+            start_minute (Optional[int]); starting minute
+            start_second (Optional[int]); starting hour
+            end_second (Optional[int]); ending second
+            end_second (Optional[int]); ending minute
+            end_second (Optional[int]); ending hour
+            on_end_of_day (ExitRoutine); what to do when you hit the end time
+        '''
+        self._manager.restrictTradingHours(self,
+                                           start_second=start_second,
+                                           start_minute=start_minute,
+                                           start_hour=start_hour,
+                                           end_second=end_second,
+                                           end_minute=end_minute,
+                                           end_hour=end_hour,
+                                           on_end_of_day=on_end_of_day)
 
     def slippage(self, trade: Trade):
         '''method to inject slippage when backtesting

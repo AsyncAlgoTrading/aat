@@ -96,6 +96,11 @@ namespace config {
     IMMEDIATE_OR_CANCEL = 3,
   };
 
+  enum class ExitRoutine {
+    NONE = 0,
+    CLOSE_ALL = 1,
+  };
+
   static const std::vector<str_t> TradingType_names = {
     "LIVE",
     "SIMULATION",
@@ -166,6 +171,11 @@ namespace config {
     "FILL_OR_KILL",
     "ALL_OR_NONE",
     "IMMEDIATE_OR_CANCEL",
+  };
+
+  static const std::vector<str_t> ExitRoutine_names = {
+    "NONE",
+    "CLOSE_ALL",
   };
 
   static std::unordered_map<str_t, TradingType> _TradingType_mapping = {
@@ -240,6 +250,11 @@ namespace config {
     {"IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL},
   };
 
+  static std::unordered_map<str_t, ExitRoutine> _ExitRoutine_mapping = {
+    {"NONE", ExitRoutine::NONE},
+    {"CLOSE_ALL", ExitRoutine::CLOSE_ALL},
+  };
+
   ENUM_TO_STRING(TradingType)
   ENUM_TO_STRING(Side)
   ENUM_TO_STRING(OptionType)
@@ -255,5 +270,6 @@ namespace config {
   ENUM_FROM_STRING(InstrumentType)
   ENUM_FROM_STRING(OrderType)
   ENUM_FROM_STRING(OrderFlag)
+  ENUM_FROM_STRING(ExitRoutine)
 }  // namespace config
 }  // namespace aat

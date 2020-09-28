@@ -2,6 +2,8 @@ import pandas as pd  # type: ignore
 import json
 from datetime import datetime
 from json import JSONEncoder
+from typing import List
+
 from aat.config import Side
 from aat.core import Order, Trade, Instrument, ExchangeType, Position
 
@@ -23,7 +25,15 @@ class Portfolio(object):
     def __init__(self):
         # Track prices over time
         self._prices = {}
+
+        # Track trades
         self._trades = {}
+
+        # List of all running strategies
+        self._strategies = []
+
+        # Cash on hand
+        self._cash = []
 
         # Track active positions by instrument
         self._active_positions_by_instrument = {}
@@ -34,6 +44,46 @@ class Portfolio(object):
     # *****************
     # Manager Methods #
     # *****************
+    def updateStrategies(self, strategies: List) -> None:
+        '''update with list of strategies'''
+        self._strategies.extend([s.name() for s in strategies])
+        for strategy in self._strategies:
+            self._active_positions_by_strategy[strategy] = {}
+
+    def updateAccount(self, positions: List[Position]) -> None:
+        '''update positions tracking with a position from the exchange'''
+        options = {
+            i: s for i, s in enumerate(self._strategies)
+        }
+
+        print('Attribute positions:')
+        for position in positions:
+            print("Position:\n{}".format(position))
+
+            try:
+                choice = int(input("Select a strategy to attribute to:\n{}\n...".format(options)))
+            except KeyboardInterrupt:
+                raise
+            except BaseException:
+                print("Ignoring position...")
+                continue
+
+            if choice not in options:
+                print("Ignoring position...")
+                continue
+            else:
+                print("Attributing to strategy: {}".format(options[choice]))
+                self._active_positions_by_instrument[position.instrument] = [position]
+
+                if position.instrument not in self._active_positions_by_strategy[options[choice]]:
+                    self._active_positions_by_strategy[options[choice]] = {}
+
+                self._active_positions_by_strategy[options[choice]][position.instrument] = position
+
+    def updateCash(self, positions: List[Position]) -> None:
+        '''update cash positions from exchange'''
+        self._cash.extend(positions)
+
     def newPosition(self, trade, strategy):
         my_order: Order = trade.my_order
         if trade.instrument in self._active_positions_by_instrument and \
@@ -124,7 +174,7 @@ class Portfolio(object):
     def positions(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None):
         ret = {}
 
-        for position in self._active_positions_by_strategy[strategy.name()].values():
+        for position in self._active_positions_by_strategy.get(strategy.name(), {}).values():
             if instrument and position.instrument != instrument:
                 # Skip if not asking for this instrument
                 continue

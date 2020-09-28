@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
 
-from aat.core.portfolio import Portfolio
-
 
 class CalculationsMixin(object):
     __perf_charts: Set[object] = set()  # TODO move
@@ -405,6 +403,7 @@ class CalculationsMixin(object):
 def main():
     import argparse
     from aat.common import id_generator
+    from aat.engine.dispatch import Portfolio
 
     parser = argparse.ArgumentParser()
 

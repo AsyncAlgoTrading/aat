@@ -1,5 +1,5 @@
 from .config import parseConfig
-from .core import TradingEngine
+from .engine import TradingEngine
 
 
 def main() -> None:
