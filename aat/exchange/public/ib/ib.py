@@ -1,26 +1,31 @@
 import asyncio
 import threading
+from datetime import datetime
 from queue import Queue
 from random import randint
 
 from ibapi.client import EClient  # type: ignore
 from ibapi.wrapper import EWrapper  # type: ignore
+from ibapi.contract import Contract  # type: ignore
 
 from aat.exchange import Exchange
 from aat.config import EventType, TradingType, Side
-from aat.core import ExchangeType, Event, Trade, Order
+from aat.core import ExchangeType, Event, Trade, Order, Position
 
 from .utils import _constructContract, _constructContractAndOrder, _constructInstrument
 
 
 class _API(EWrapper, EClient):
-    def __init__(self, account, delayed, order_event_queue, market_data_queue, contract_info_queue):
+    def __init__(self, account, exchange, delayed, order_event_queue, market_data_queue, contract_info_queue, account_position_queue):
         EClient.__init__(self, self)
         self.nextOrderId = None
         self.nextReqId = 1
 
         # account # if more than one
         self._account = account
+
+        # exchange
+        self._exchange = exchange
 
         # delayed data?
         self._delayed = delayed
@@ -31,6 +36,12 @@ class _API(EWrapper, EClient):
         self._order_event_queue = order_event_queue
         self._market_data_queue = market_data_queue
         self._contract_info_queue = contract_info_queue
+        self._account_position_queue = account_position_queue
+
+        self._positions = []
+
+    def reqPositions(self):
+        super().reqPositions()
 
     def nextValidId(self, orderId: int):
         super().nextValidId(orderId)
@@ -94,6 +105,19 @@ class _API(EWrapper, EClient):
                 price=price
             ))
 
+    def position(self, account: str, contract: Contract, position: float, avgCost: float):
+        super().position(account, contract, position, avgCost)
+        self._positions.append(Position(size=position,
+                                        price=avgCost / position,
+                                        timestamp=datetime.now(),
+                                        instrument=_constructInstrument(contract),
+                                        exchange=self._exchange,
+                                        trades=[]))
+
+    def accountSummaryEnd(self, reqId):
+        self._account_position_queue.put(self._positions)
+        self._positions = []
+
 
 class InteractiveBrokersExchange(Exchange):
     '''Interactive Brokers Exchange'''
@@ -114,7 +138,8 @@ class InteractiveBrokersExchange(Exchange):
         self._order_event_queue = Queue()
         self._market_data_queue = Queue()
         self._contract_lookup_queue = Queue()
-        self._api = _API(account, delayed, self._order_event_queue, self._market_data_queue, self._contract_lookup_queue)
+        self._account_position_queue = Queue()
+        self._api = _API(account, self.exchange(), delayed, self._order_event_queue, self._market_data_queue, self._contract_lookup_queue, self._account_position_queue)
 
     # *************** #
     # General methods #
@@ -223,7 +248,14 @@ class InteractiveBrokersExchange(Exchange):
     # ******************* #
     async def accounts(self):
         '''get accounts from source'''
-        return []
+        self._api.reqPositions()
+        i = 0
+        while i < 5:
+            if self._account_position_queue.qsize() > 0:
+                return self._account_position_queue.get()
+            else:
+                await asyncio.sleep(1)
+                i += 1
 
     async def newOrder(self, order):
         '''submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id
