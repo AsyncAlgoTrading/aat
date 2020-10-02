@@ -26,6 +26,9 @@ iexlive:    ## Clean and make target, run target
 ib:    ## Clean and make target, run target
 	$(PYTHON) -m aat  --config ./config/ib.cfg
 
+ibpositions:    ## Clean and make target, run target
+	$(PYTHON) -m aat  --config ./config/ib_positions.cfg
+
 coinbasesandbox:    ## Clean and make target, run target
 	$(PYTHON) -m aat --config  ./config/coinbase_sandbox.cfg
 
