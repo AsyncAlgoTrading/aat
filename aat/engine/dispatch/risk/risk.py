@@ -106,7 +106,7 @@ class RiskManager(ManagerBase):
     async def onTraded(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
         trade: Trade = event.target  # type: ignore
 
-        if trade.my_order in self._active_orders:
+        if trade.my_order in self._active_orders and trade.my_order.filled >= trade.my_order.volume:
             self._active_orders.remove(trade.my_order)
 
     async def onRejected(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
