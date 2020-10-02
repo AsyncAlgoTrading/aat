@@ -188,7 +188,7 @@ class InteractiveBrokersExchange(Exchange):
                     pass
 
                 elif status in ('Cancelled',):
-                    e = Event(type=EventType.REJECTED, target=order)
+                    e = Event(type=EventType.CANCELED, target=order)
                     yield e
 
                 elif status in ('Filled',):
