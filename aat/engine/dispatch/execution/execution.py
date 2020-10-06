@@ -79,7 +79,9 @@ class OrderManager(ManagerBase):
             else:
                 # TODO ugly private method
                 await self._manager._onBought(strat, event.target)
-            del self._pending_orders[order.id]
+
+            if order.finished():
+                del self._pending_orders[order.id]
 
     async def onCancel(self, event):
         order = event.target
