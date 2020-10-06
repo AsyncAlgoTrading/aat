@@ -34,6 +34,7 @@ class Order(object):
         "__order_type",
         "__flag",
         "__stop_target",
+        "__force_done",
     ]
 
     # for convenience
