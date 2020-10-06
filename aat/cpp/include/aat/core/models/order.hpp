@@ -19,6 +19,9 @@ namespace core {
       ExchangeType& exchange = NullExchange, double notional = 0.0, OrderType order_type = OrderType::MARKET,
       OrderFlag flag = OrderFlag::NONE, std::shared_ptr<Order> stop_target = nullptr);
 
+    bool finished() const;
+    void finish();
+
     virtual str_t toString() const;
     virtual json toJson() const;
     virtual json perspectiveSchema() const;
@@ -39,6 +42,7 @@ namespace core {
     double notional = 0.0;
 
     double filled = 0.0;
+    bool force_done = false;
   };
 
 }  // namespace core

@@ -77,6 +77,7 @@ class Order(object):
         self.__stop_target = stop_target
 
         self.__filled = 0.0
+        self.__force_done = False
 
     # TODO
     # @validator("notional")
@@ -123,6 +124,14 @@ class Order(object):
     @property
     def stop_target(self) -> Union['Order', None]:
         return self.__stop_target
+
+    def finished(self) -> bool:
+        return (self.volume == self.filled) or self.__force_done
+
+    def finish(self) -> None:
+        '''force this order to mark itself as "finished", even if it
+        isn't fully filled (e.g. with certain flags)'''
+        self.__force_done = True
 
     # ***********#
     # Read/write #
