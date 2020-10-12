@@ -5,8 +5,8 @@
 #include <vector>
 
 #include <aat/core/order_book/collector.hpp>
-#include <aat/core/models/event.hpp>
-#include <aat/core/models/order.hpp>
+#include <aat/core/data/event.hpp>
+#include <aat/core/data/order.hpp>
 
 namespace aat {
 namespace core {

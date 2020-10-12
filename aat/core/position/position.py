@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Tuple, Union
+from typing import Tuple, Union, Mapping, Type
 
-from .trade import Trade
+from ..data import Trade
 from ..exchange import ExchangeType
 from ..instrument import Instrument
 from ...common import _in_cpp, _merge
@@ -284,8 +284,22 @@ class Position(object):
         ret.__instrumentPrice_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['instrumentPrice_history']]
         ret.__pnl_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['pnl_history']]
         ret.__unrealizedPnl_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['unrealizedPnl_history']]
-        ret.__size_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['size_history']]
         return ret
+
+    @staticmethod
+    def perspectiveSchema() -> Mapping[str, Type]:
+        return {
+            "timestamp": int,
+            "instrument": str,
+            "exchange": str,
+            "size": float,
+            "notional": float,
+            "price": float,
+            "investment": float,
+            "instrumentPrice": float,
+            "pnl": float,
+            "unrealizedPnl": float,
+        }
 
     def __repr__(self):
         return f'Position(price={self.price}, size={self.size}, notional={self.notional}, pnl={self.pnl}, unrealizedPnl={self.unrealizedPnl}, instrument={self.instrument}, exchange={self.exchange})'

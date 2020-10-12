@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from inspect import isabstract
 from typing import TYPE_CHECKING
-from ..models import Event
+from ..data import Event
 from ...config import EventType
 
 if TYPE_CHECKING:

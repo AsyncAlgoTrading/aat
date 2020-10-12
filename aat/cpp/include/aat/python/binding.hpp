@@ -15,11 +15,12 @@
 
 #include <aat/common.hpp>
 #include <aat/config/enums.hpp>
-#include <aat/core/models/data.hpp>
-#include <aat/core/models/event.hpp>
-#include <aat/core/models/order.hpp>
-#include <aat/core/models/position.hpp>
-#include <aat/core/models/trade.hpp>
+#include <aat/core/data/data.hpp>
+#include <aat/core/data/event.hpp>
+#include <aat/core/data/order.hpp>
+#include <aat/core/data/trade.hpp>
+#include <aat/core/position/cash.hpp>
+#include <aat/core/position/position.hpp>
 #include <aat/core/order_book/order_book.hpp>
 
 namespace py = pybind11;
@@ -98,8 +99,7 @@ PYBIND11_MODULE(binding, m) {
     .def(py::init<Instrument&, ExchangeType&>())
     .def(py::init<Instrument&, ExchangeType&, std::function<void(std::shared_ptr<Event>)>>())
     .def("__repr__", &OrderBook::toString)
-    .def(
-      "__iter__", [](const OrderBook& o) { return py::make_iterator(o.begin(), o.end()); },
+    .def("__iter__", [](const OrderBook& o) { return py::make_iterator(o.begin(), o.end()); },
       py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
     .def("setCallback", &OrderBook::setCallback)
     .def("add", &OrderBook::add)
@@ -115,8 +115,7 @@ PYBIND11_MODULE(binding, m) {
    ******************************/
   py::class_<PriceLevel>(m, "_PriceLevelCpp")
     .def(py::init<double, Collector&>())
-    .def(
-      "__iter__", [](const PriceLevel& pl) { return py::make_iterator(pl.cbegin(), pl.cend()); },
+    .def("__iter__", [](const PriceLevel& pl) { return py::make_iterator(pl.cbegin(), pl.cend()); },
       py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
     .def("__getitem__", &PriceLevel::operator[])
     .def("__bool__", &PriceLevel::operator bool)
@@ -159,7 +158,7 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("type", &Instrument::exchanges);
 
   /*******************************
-   * Models
+   * Data
    ******************************/
   py::class_<Data, std::shared_ptr<Data>>(m, "DataCpp")
     .def(py::init<uint_t, timestamp_t, Instrument&, ExchangeType&>())
@@ -226,11 +225,20 @@ PYBIND11_MODULE(binding, m) {
     .def_readwrite("taker_order", &Trade::taker_order)
     .def_readwrite("my_order", &Trade::my_order);
 
+  /*******************************
+   * Position
+   ******************************/
   py::class_<Position>(m, "PositionCpp")
     .def(py::init<double, double, timestamp_t, Instrument&, ExchangeType&, std::vector<std::shared_ptr<Trade>>&>())
     .def("__repr__", &Position::toString)
     .def("toJson", &Position::toJson)
     .def("perspectiveSchema", &Position::perspectiveSchema);
+
+  py::class_<CashPosition>(m, "CashPositionCpp")
+    .def(py::init<double, timestamp_t, Instrument&, ExchangeType&>())
+    .def("__repr__", &CashPosition::toString)
+    .def("toJson", &CashPosition::toJson)
+    .def("perspectiveSchema", &CashPosition::perspectiveSchema);
 
   /*******************************
    * Helpers

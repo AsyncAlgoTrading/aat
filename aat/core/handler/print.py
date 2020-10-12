@@ -1,5 +1,5 @@
 from .handler import EventHandler
-from ..models import Event
+from ..data import Event
 
 
 class PrintHandler(EventHandler):

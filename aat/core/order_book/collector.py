@@ -1,5 +1,5 @@
 from collections import deque
-from ..models import Event, Trade
+from ..data import Event, Trade
 from ...common import _in_cpp
 from ...config import EventType
 

@@ -4,6 +4,7 @@ from aat.core import ExchangeType, Order
 from aat.config import TradingType, OrderType, OrderFlag, InstrumentType
 from aat.exchange import Exchange
 from .instruments import _get_instruments
+from .define import _REST, _REST_SANDBOX, _WS, _WS_SANDBOX
 
 
 class CoinbaseProExchange(Exchange):
@@ -24,20 +25,23 @@ class CoinbaseProExchange(Exchange):
 
         if self._trading_type == TradingType.SANDBOX:
             super().__init__(ExchangeType('coinbaseprosandbox'))
+            self._api_url = _REST
+            self._ws_url = _WS
         else:
             super().__init__(ExchangeType('coinbasepro'))
+            self._api_url = _REST_SANDBOX
+            self._ws_url = _WS_SANDBOX
 
         auth = api_key and api_secret and api_passphrase
         self._public_client = PublicClient()
 
-        if trading_type == TradingType.SANDBOX:
-            self._auth_client = AuthenticatedClient(api_key, api_secret, api_passphrase, api_url="https://api-public.sandbox.pro.coinbase.com") if auth else None
-        else:
-            self._auth_client = AuthenticatedClient(api_key, api_secret, api_passphrase) if auth else None
+        self._auth_client = AuthenticatedClient(api_key, api_secret, api_passphrase, api_url=self._api_url) if auth else None
 
         # TODO
         self._subscriptions = []
-        self._ws_client = WebsocketClient(url="wss://ws-feed.pro.coinbase.com", products="BTC-USD")
+
+        # wait until start to instantiate
+        self._ws_client = WebsocketClient(url=self._ws_url, products="BTC-USD")
 
     # *************** #
     # General methods #

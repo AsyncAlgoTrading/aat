@@ -10,8 +10,8 @@
 #include <aat/core/order_book/price_level.hpp>
 #include <aat/core/order_book/collector.hpp>
 #include <aat/core/exchange/exchange.hpp>
-#include <aat/core/models/event.hpp>
-#include <aat/core/models/order.hpp>
+#include <aat/core/data/event.hpp>
+#include <aat/core/data/order.hpp>
 
 using namespace aat::common;
 
