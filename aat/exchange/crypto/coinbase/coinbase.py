@@ -1,3 +1,4 @@
+import os
 from cbpro import PublicClient, AuthenticatedClient, WebsocketClient  # type: ignore
 
 from aat.core import ExchangeType, Order
@@ -20,6 +21,10 @@ class CoinbaseProExchange(Exchange):
         self._trading_type = trading_type
         self._verbose = verbose
 
+        self._api_key = api_key or os.environ.get('API_KEY', '')
+        self._api_secret = api_key or os.environ.get('API_SECRET', '')
+        self._api_passphrase = api_key or os.environ.get('API_PASSPHRASE', '')
+
         if trading_type == TradingType.BACKTEST:
             raise NotImplementedError()
 
@@ -32,10 +37,9 @@ class CoinbaseProExchange(Exchange):
             self._api_url = _REST_SANDBOX
             self._ws_url = _WS_SANDBOX
 
-        auth = api_key and api_secret and api_passphrase
+        auth = self._api_key and self._api_secret and self._api_passphrase
         self._public_client = PublicClient()
-
-        self._auth_client = AuthenticatedClient(api_key, api_secret, api_passphrase, api_url=self._api_url) if auth else None
+        self._auth_client = AuthenticatedClient(self._api_key, self._api_secret, self._api_passphrase, api_url=self._api_url) if auth else None
 
         # TODO
         self._subscriptions = []
