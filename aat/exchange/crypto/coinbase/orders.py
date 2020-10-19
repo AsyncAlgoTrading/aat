@@ -61,7 +61,6 @@ def _cancel_order(client, order):
 
 
 def _order_book(client, instrument):
-    ob = client.orderBook(instrument.brokerId)
-    print(ob)
-    import pdb
-    pdb.set_trace()
+    # ob = client.orderBook(instrument.brokerId)
+    # print(ob)
+    return []
