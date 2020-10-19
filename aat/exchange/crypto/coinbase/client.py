@@ -56,3 +56,20 @@ class CoinbaseExchangeAuth(AuthBase):
         if resp.status_code == 200:
             return True
         return False
+
+    def subscription(self, subscription):
+        timestamp = str(time.time())
+        message = timestamp + 'GET' + '/users/self/verify'
+        hmac_key = base64.b64decode(self.secret_key)
+        signature = hmac.new(hmac_key, message.encode(), hashlib.sha256)
+        signature_b64 = base64.b64encode(signature.digest()).decode()
+
+        subscription.update({
+            'signature': signature_b64,
+            'timestamp': timestamp,
+            'key': self.api_key,
+            'passphrase': self.passphrase,
+        })
+
+    def orderBook(self, id):
+        return requests.get('{}/{}/{}/book?level=3'.format(self.api_url, 'products', id), auth=self).json()

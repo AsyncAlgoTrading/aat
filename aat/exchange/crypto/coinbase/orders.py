@@ -58,3 +58,10 @@ def _cancel_order(client, order):
     jsn['client_oid'] = order.id
     jsn['product_id'] = order.instrument.brokerId
     return client.cancelOrder(jsn)
+
+
+def _order_book(client, instrument):
+    ob = client.orderBook(instrument.brokerId)
+    print(ob)
+    import pdb
+    pdb.set_trace()

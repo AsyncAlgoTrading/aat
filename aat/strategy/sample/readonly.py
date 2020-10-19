@@ -12,6 +12,9 @@ class ReadOnlyStrategy(Strategy):
         pprint(self.instruments())
         pprint(self.positions())
 
+        for i in self.instruments():
+            await self.subscribe(i)
+
     async def onTrade(self, event: Event) -> None:
         pprint(event)
 

@@ -56,7 +56,9 @@ class Portfolio(object):
             i: s for i, s in enumerate(self._strategies)
         }
 
-        print('Attribute positions:')
+        if positions:
+            print('Attribute positions:')
+
         for position in positions:
             print("Position:\n{}".format(position))
 

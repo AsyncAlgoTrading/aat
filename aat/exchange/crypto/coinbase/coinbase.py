@@ -1,12 +1,17 @@
+import aiohttp
 import os
-from aat.core import ExchangeType, Order
-from aat.config import TradingType
+import json
+from collections import deque
+
+from aat.core import ExchangeType, Order, Event
+from aat.config import TradingType, EventType, InstrumentType
 from aat.exchange import Exchange
+
 from .accounts import _get_accounts
 from .client import CoinbaseExchangeAuth
-from .define import _REST, _REST_SANDBOX, _WS, _WS_SANDBOX
+from .define import _REST, _REST_SANDBOX, _WS, _WS_SANDBOX, _SUBSCRIPTION
 from .instruments import _get_instruments
-from .orders import _new_order, _cancel_order
+from .orders import _new_order, _cancel_order, _order_book
 
 
 class CoinbaseProExchange(Exchange):
@@ -45,6 +50,8 @@ class CoinbaseProExchange(Exchange):
 
         self._client = CoinbaseExchangeAuth(self._api_url, self._ws_url, self._api_key, self._api_secret, self._api_passphrase)
 
+        self._order_events = deque()
+
         # TODO
         self._subscriptions = []
 
@@ -61,14 +68,39 @@ class CoinbaseProExchange(Exchange):
         # TODO
         raise NotImplementedError()
 
+    def _ob(self):
+        for sub in self._subscriptions:
+            _order_book(self._client, sub)
+
+    def _ws_subscription(self):
+        subscription = _SUBSCRIPTION.copy()
+        for sub in self._subscriptions:
+            subscription['product_ids'].append(sub.brokerId)
+        self._client.subscription(subscription)
+        return subscription
+
     # ******************* #
     # Market Data Methods #
     # ******************* #
     async def tick(self):
         '''return data from exchange'''
+        for item in self._ob():
+            yield item
+
+        session = aiohttp.ClientSession()
+        async with session.ws_connect(self._ws_url) as ws:
+            await ws.send_str(json.dumps(self._ws_subscription()))
+
+            async for msg in ws:
+                if msg.type == aiohttp.WSMsgType.TEXT:
+                    x = msg.data
+                    print(x)
+
+        yield
 
     async def subscribe(self, instrument):
-        self._subscriptions.append(instrument)
+        if instrument.type == InstrumentType.PAIR:
+            self._subscriptions.append(instrument)
 
     # ******************* #
     # Order Entry Methods #
@@ -79,7 +111,13 @@ class CoinbaseProExchange(Exchange):
 
     async def newOrder(self, order):
         '''submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id'''
-        _ = _new_order(self._client, order)  # TODO
+        ret = _new_order(self._client, order)  # TODO
+        if ret:
+            # order succesful
+            self._order_events.append(Event(type=EventType.RECEIVED, target=order))
+        else:
+            # order failute
+            self._order_events.append(Event(type=EventType.REJECTED, target=order))
 
     async def cancelOrder(self, order: Order):
         '''cancel a previously submitted order to the exchange.'''
