@@ -8,6 +8,11 @@ using namespace aat::common;
 
 namespace aat {
 namespace core {
+  bool
+  Trade::finished() const {
+    return taker_order->finished();
+  }
+
   str_t
   Trade::toString() const {
     sstream_t ss;

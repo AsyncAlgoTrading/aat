@@ -94,6 +94,9 @@ class Trade(object):
     def notional(self):
         return self.price * self.volume
 
+    def finished(self):
+        return self.taker_order.finished
+
     # ***********#
     # Read/write #
     # ***********#

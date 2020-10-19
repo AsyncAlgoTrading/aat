@@ -4,9 +4,11 @@ from datetime import datetime
 from queue import Queue
 from random import randint
 
-from ibapi.client import EClient  # type: ignore
-from ibapi.wrapper import EWrapper  # type: ignore
 from ibapi.contract import Contract  # type: ignore
+from ibapi.client import EClient  # type: ignore
+from ibapi.execution import Execution, ExecutionFilter  # type: ignore
+from ibapi.commission_report import CommissionReport  # type: ignore
+from ibapi.wrapper import EWrapper  # type: ignore
 
 from aat.exchange import Exchange
 from aat.config import EventType, TradingType, Side
@@ -64,14 +66,15 @@ class _API(EWrapper, EClient):
         self._order_event_queue.put(dict(orderId=orderId,
                                          status=status,
                                          filled=filled,
-                                         remaining=remaining,
+                                         #  remaining=remaining,  # TODO not used
                                          avgFillPrice=avgFillPrice,
-                                         permId=permId,
-                                         parentId=parentId,
-                                         lastFillPrice=lastFillPrice,
-                                         clientId=clientId,
-                                         whyHeld=whyHeld,
-                                         mktCapPrice=mktCapPrice))
+                                         #  permId=permId,  # TODO not used
+                                         #  parentId=parentId,  # TODO not used
+                                         #  lastFillPrice=lastFillPrice,  # TODO not used
+                                         #  clientId=clientId,  # TODO not used
+                                         #  whyHeld=whyHeld,  # TODO not used
+                                         #  mktCapPrice=mktCapPrice  # TODO not used
+                                         ))
 
     def subscribeMarketData(self, instrument):
         contract = _constructContract(instrument)
@@ -89,6 +92,33 @@ class _API(EWrapper, EClient):
         self.cancelMktData(id)
         del self._mkt_data_map_rev[contract]
         del self._mkt_data_map[id]
+
+    def reqExecutions(self):
+        super().reqExecutions(self.nextReqId, ExecutionFilter())
+        self.nextReqId += 1
+
+    def execDetails(self, reqId: int, contract: Contract, execution: Execution):
+        super().execDetails(reqId, contract, execution)
+        self._order_event_queue.put(dict(orderId=execution.orderId,
+                                         status="Execution",
+                                         filled=execution.cumQty,
+                                         #  remaining=-1,  # TODO not available here
+                                         avgFillPrice=execution.avgPrice,  # TODO execution.price?
+                                         #  permId=permId,  # TODO not used
+                                         #  parentId=parentId,  # TODO not used
+                                         #  lastFillPrice=lastFillPrice,  # TODO not used
+                                         #  clientId=clientId,  # TODO not used
+                                         #  whyHeld=whyHeld,  # TODO not used
+                                         #  mktCapPrice=mktCapPrice  # TODO not used
+                                         ))
+
+    def commissionReport(self, commissionReport: CommissionReport):
+        super().commissionReport(commissionReport)
+        # TODO?
+
+    def execDetailsEnd(self, reqId: int):
+        super().execDetailsEnd(reqId)
+        # TODO?
 
     def tickPrice(self, reqId, tickType, price, attrib):
         # TODO implement more of order book
@@ -217,6 +247,18 @@ class InteractiveBrokersExchange(Exchange):
                     yield e
 
                 elif status in ('Filled',):
+                    # this is the filled from orderStatus, but we
+                    # want to use the one from execDetails
+
+                    # From the IB Docs:
+                    # "There are not guaranteed to be orderStatus
+                    # callbacks for every change in order status"
+                    # It is recommended to use execDetails
+
+                    # ignore
+                    pass
+
+                elif status in ('Execution',):
                     # set filled
                     order.filled = order_data['filled']
 

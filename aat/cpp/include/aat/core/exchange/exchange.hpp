@@ -31,7 +31,6 @@ namespace core {
     str_t name;
   };
 
-
   static ExchangeType NullExchange = ExchangeType("");
 
 }  // namespace core

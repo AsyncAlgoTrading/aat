@@ -191,6 +191,8 @@ PYBIND11_MODULE(binding, m) {
       py::arg("exchange").none(false), py::arg("notional").none(false), py::arg("order_type").none(false),
       py::arg("flag").none(false), py::arg("stop_target").none(true))
     .def("__repr__", &Order::toString)
+    .def("finished", &Order::finished)
+    .def("finish", &Order::finish)
     .def("toJson", &Order::toJson)
     .def("perspectiveSchema", &Order::perspectiveSchema)
     .def_readwrite("id", &Order::id)
@@ -212,6 +214,7 @@ PYBIND11_MODULE(binding, m) {
     .def("__repr__", &Trade::toString)
     .def("slippage", &Trade::slippage)
     .def("transactionCost", &Trade::transactionCost)
+    .def("finished", &Trade::finished)
     .def("toJson", &Trade::toJson)
     .def("perspectiveSchema", &Trade::perspectiveSchema)
     .def_readwrite("id", &Trade::id)

@@ -36,6 +36,16 @@ namespace core {
     }
   }
 
+  bool
+  Order::finished() const {
+    return (volume == filled) || force_done;
+  }
+
+  void
+  Order::finish() {
+    force_done = true;
+  }
+
   str_t
   Order::toString() const {
     sstream_t ss;

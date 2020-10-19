@@ -43,6 +43,8 @@ namespace core {
       return 0.0;
     }
 
+    bool finished() const;
+
     virtual str_t toString() const;
     virtual json toJson() const;
     virtual json perspectiveSchema() const;
