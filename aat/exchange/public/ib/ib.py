@@ -238,9 +238,8 @@ class InteractiveBrokersExchange(Exchange):
                     continue
 
                 elif status in ('Submitted',):
-                    # TODO more granular order events api?
-                    # ignore
-                    pass
+                    e = Event(type=EventType.RECEIVED, target=order)
+                    yield e
 
                 elif status in ('Cancelled',):
                     e = Event(type=EventType.CANCELED, target=order)
