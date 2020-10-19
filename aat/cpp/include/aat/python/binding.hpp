@@ -19,6 +19,7 @@
 #include <aat/core/data/event.hpp>
 #include <aat/core/data/order.hpp>
 #include <aat/core/data/trade.hpp>
+#include <aat/core/position/account.hpp>
 #include <aat/core/position/cash.hpp>
 #include <aat/core/position/position.hpp>
 #include <aat/core/order_book/order_book.hpp>
