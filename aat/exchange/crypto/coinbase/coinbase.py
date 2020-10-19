@@ -1,4 +1,4 @@
-import aiohttp
+import aiohttp  # type: ignore
 import os
 import json
 from collections import deque
