@@ -39,6 +39,7 @@ class EventHandler(metaclass=ABCMeta):
                 # Order Entry
                 EventType.BOUGHT: (self._valid_callback('onBought'), self._valid_callback('onTraded')),
                 EventType.SOLD: (self._valid_callback('onSold'), self._valid_callback('onTraded')),
+                EventType.RECEIVED: self._valid_callback('onReceived'),
                 EventType.REJECTED: self._valid_callback('onRejected'),
                 EventType.CANCELED: self._valid_callback('onCanceled'),
             }.get(event_type, None)
@@ -113,6 +114,10 @@ class EventHandler(metaclass=ABCMeta):
         '''Called on my order bought or sold'''
         pass
 
+    async def onReceived(self, event: Event):
+        '''Called on my order received by exchange'''
+        pass
+
     async def onRejected(self, event: Event):
         '''Called on my order rejected'''
         pass
@@ -141,5 +146,6 @@ setattr(EventHandler.onExit, '_original', 1)
 
 setattr(EventHandler.onBought, '_original', 1)
 setattr(EventHandler.onSold, '_original', 1)
+setattr(EventHandler.onReceived, '_original', 1)
 setattr(EventHandler.onRejected, '_original', 1)
 setattr(EventHandler.onTraded, '_original', 1)

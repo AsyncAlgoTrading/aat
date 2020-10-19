@@ -1,11 +1,12 @@
 import os
-from cbpro import PublicClient, AuthenticatedClient, WebsocketClient  # type: ignore
-
 from aat.core import ExchangeType, Order
-from aat.config import TradingType, OrderType, OrderFlag, InstrumentType
+from aat.config import TradingType
 from aat.exchange import Exchange
-from .instruments import _get_instruments
+from .accounts import _get_accounts
+from .client import CoinbaseExchangeAuth
 from .define import _REST, _REST_SANDBOX, _WS, _WS_SANDBOX
+from .instruments import _get_instruments
+from .orders import _new_order, _cancel_order
 
 
 class CoinbaseProExchange(Exchange):
@@ -33,28 +34,27 @@ class CoinbaseProExchange(Exchange):
             self._api_url = _REST
             self._ws_url = _WS
         else:
+            print('*' * 100)
+            print('*' * 100)
+            print('WARNING: LIVE TRADING')
+            print('*' * 100)
+            print('*' * 100)
             super().__init__(ExchangeType('coinbasepro'))
             self._api_url = _REST_SANDBOX
             self._ws_url = _WS_SANDBOX
 
-        auth = self._api_key and self._api_secret and self._api_passphrase
-        self._public_client = PublicClient()
-        self._auth_client = AuthenticatedClient(self._api_key, self._api_secret, self._api_passphrase, api_url=self._api_url) if auth else None
+        self._client = CoinbaseExchangeAuth(self._api_url, self._ws_url, self._api_key, self._api_secret, self._api_passphrase)
 
         # TODO
         self._subscriptions = []
-
-        # wait until start to instantiate
-        self._ws_client = WebsocketClient(url=self._ws_url, products="BTC-USD")
 
     # *************** #
     # General methods #
     # *************** #
     async def connect(self):
         '''connect to exchange. should be asynchronous.'''
-
         # instantiate instruments
-        _get_instruments(self._public_client, self.exchange())
+        _get_instruments(self._client, self.exchange())
 
     async def lookup(self, instrument):
         '''lookup an instrument on the exchange'''
@@ -75,51 +75,15 @@ class CoinbaseProExchange(Exchange):
     # ******************* #
     async def accounts(self):
         '''get accounts from source'''
-        # TODO
-        raise NotImplementedError()
+        return _get_accounts(self._client, self.exchange())
 
     async def newOrder(self, order):
         '''submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id'''
-        if not self._auth_client:
-            raise NotImplementedError()
-
-        if order.instrument.type != InstrumentType.PAIR:
-            raise NotImplementedError()
-
-        if order.type == OrderType.LIMIT:
-            time_in_force = 'GTC'
-            if order.flag == OrderFlag.FILL_OR_KILL:
-                time_in_force = 'FOK'
-            elif order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
-                time_in_force = 'IOC'
-
-            ret = self._auth_client.place_limit_order(product_id='{}-{}'.format(order.instrument.leg1.name, order.instrument.leg2.name),
-                                                      side=order.side.value.lower(),
-                                                      price=order.price,
-                                                      size=order.volume,
-                                                      time_in_force=time_in_force)
-
-        elif order.type == OrderType.MARKET:
-            ret = self._auth_client.place_limit_order(product_id='{}-{}'.format(order.instrument.leg1.name, order.instrument.leg2.name),
-                                                      side=order.side.value.lower(),
-                                                      funds=order.price * order.volume)
-
-        elif order.type == OrderType.STOP:
-            # TODO
-            raise NotImplementedError()
-            # self._auth_client.place_stop_order(product_id='BTC-USD',
-            #                             side='buy',
-            #                             price='200.00',
-            #                             size='0.01')
-
-        # Set ID
-        order.id = ret['id']
-        return order
+        _ = _new_order(self._client, order)  # TODO
 
     async def cancelOrder(self, order: Order):
         '''cancel a previously submitted order to the exchange.'''
-        self._auth_client.cancel_order(order.id)
-        return order
+        _ = _cancel_order(self._client, order)  # TODO
 
 
 Exchange.registerExchange('coinbase', CoinbaseProExchange)

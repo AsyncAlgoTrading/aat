@@ -57,8 +57,9 @@ namespace config {
     // Order Events
     BOUGHT = 12,
     SOLD = 13,
-    REJECTED = 14,
-    CANCELED = 15
+    RECEIVED = 14,
+    REJECTED = 15,
+    CANCELED = 16
   };
 
   enum class DataType {
@@ -134,6 +135,7 @@ namespace config {
     "EXIT",
     "BOUGHT",
     "SOLD",
+    "RECEIVED",
     "REJECTED",
     "CANCELED",
   };
@@ -211,6 +213,7 @@ namespace config {
     {"EXIT", EventType::EXIT},
     {"BOUGHT", EventType::BOUGHT},
     {"SOLD", EventType::SOLD},
+    {"RECEIVED", EventType::RECEIVED},
     {"REJECTED", EventType::REJECTED},
     {"CANCELED", EventType::CANCELED},
   };

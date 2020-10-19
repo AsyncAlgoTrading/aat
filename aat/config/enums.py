@@ -55,6 +55,7 @@ class EventType(BaseEnum):
     # Order Events
     BOUGHT = 'BOUGHT'
     SOLD = 'SOLD'
+    RECEIVED = 'RECEIVED'
     REJECTED = 'REJECTED'
     CANCELED = 'CANCELED'
 

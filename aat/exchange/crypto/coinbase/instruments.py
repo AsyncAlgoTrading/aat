@@ -8,19 +8,19 @@ def _get_currency(symbol):
 
 
 @lru_cache(None)
-def _get_instruments(public_client, exchange):
+def _get_instruments(client, exchange):
     ret = []
 
-    products = public_client.get_products()
+    products = client.products()
 
     for product in products:
         first = product['base_currency']
         second = product['quote_currency']
-
         ret.append(
             Instrument(name='{}/{}'.format(first, second),
                        type=InstrumentType.PAIR,
                        exchange=exchange,
+                       brokerId=product['id'],
                        leg1=_get_currency(first),
                        leg2=_get_currency(second),
                        leg1_side=Side.BUY,

@@ -135,6 +135,10 @@ class OrderManager(ManagerBase):
         # TODO
         pass
 
+    async def onReceived(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
+        # TODO
+        pass
+
     async def onRejected(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
         # TODO
         pass

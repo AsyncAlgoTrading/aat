@@ -200,6 +200,19 @@ class StrategyManagerOrderEntryMixin(object):
         await self._risk_mgr.onTraded(event, strategy)
         await self._order_mgr.onTraded(event, strategy)
 
+    async def onReceived(self, event: Event):
+        # synchronize state
+        if event in self._alerted_events:
+            strategy, order = self._alerted_events[event]
+            # remove from list of open orders
+            self._strategy_open_orders[strategy].remove(order)
+        else:
+            strategy = None
+
+        await self._portfolio_mgr.onReceived(event, strategy)
+        await self._risk_mgr.onReceived(event, strategy)
+        await self._order_mgr.onReceived(event, strategy)
+
     async def onRejected(self, event: Event):
         # synchronize state
         if event in self._alerted_events:

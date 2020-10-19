@@ -66,8 +66,8 @@ aat/ui/assets/static/
 notes.txt
 ref
 coinbase.sh
+coinbase_sandbox.sh
 keys
-data/
 old
 
 .ipynb_checkpoints

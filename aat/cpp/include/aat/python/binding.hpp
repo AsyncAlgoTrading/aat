@@ -56,6 +56,7 @@ PYBIND11_MODULE(binding, m) {
     .value("EXIT", EventType::EXIT)
     .value("BOUGHT", EventType::BOUGHT)
     .value("SOLD", EventType::SOLD)
+    .value("RECEIVED", EventType::RECEIVED)
     .value("REJECTED", EventType::REJECTED)
     .value("CANCELED", EventType::CANCELED)
     .export_values();
@@ -230,6 +231,12 @@ PYBIND11_MODULE(binding, m) {
   /*******************************
    * Position
    ******************************/
+  py::class_<Account>(m, "AccountCpp")
+    .def(py::init<str_t, ExchangeType&, std::vector<std::shared_ptr<Position>>&>())
+    .def("__repr__", &Account::toString)
+    .def("toJson", &Account::toJson)
+    .def("perspectiveSchema", &Account::perspectiveSchema);
+
   py::class_<Position>(m, "PositionCpp")
     .def(py::init<double, double, timestamp_t, Instrument&, ExchangeType&, std::vector<std::shared_ptr<Trade>>&>())
     .def("__repr__", &Position::toString)

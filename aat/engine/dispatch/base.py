@@ -21,6 +21,10 @@ class ManagerBase(EventHandler):
         '''Called on my order bought or sold'''
         pass
 
+    async def onReceived(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
+        '''Called on my order received'''
+        pass
+
     async def onRejected(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
         '''Called on my order rejected'''
         pass
