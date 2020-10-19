@@ -76,6 +76,7 @@ sources = [
     'aat/cpp/src/core/data/event.cpp',
     'aat/cpp/src/core/data/order.cpp',
     'aat/cpp/src/core/data/trade.cpp',
+    'aat/cpp/src/core/position/account.cpp',
     'aat/cpp/src/core/position/cash.cpp',
     'aat/cpp/src/core/position/position.cpp',
     'aat/cpp/src/core/order_book/price_level.cpp',

@@ -17,14 +17,12 @@ namespace core {
   str_t
   Account::toString() const {
     sstream_t ss;
-    ss << "Account+(price=" << price << ", size=" << size << ", notional=" << notional << ", pnl=" << pnl
-       << ", unrealizedPnl=" << unrealizedPnl << ", instrument=" << instrument.toString()
-       << ", exchange=" << exchange.toString() << ")";
+    ss << "Account+(id=" << id << ", exchange=" << exchange.toString() << ")";
     return ss.str();
   }
 
   json
-  Position::toJson() const {
+  Account::toJson() const {
     json ret;
     ret["id"] = id;
     ret["exchange"] = exchange.toJson();
@@ -32,7 +30,7 @@ namespace core {
   }
 
   json
-  Position::perspectiveSchema() const {
+  Account::perspectiveSchema() const {
     json ret;
     ret["id"] = "str";
     ret["exchange"] = "str";
