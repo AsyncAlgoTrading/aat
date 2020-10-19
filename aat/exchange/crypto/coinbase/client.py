@@ -24,8 +24,7 @@ _SUBSCRIPTION = {
     "product_ids": [
     ],
     "channels": [
-        "level2",
-        "matches",
+        "full",
         "user",
         "heartbeat",
     ]
@@ -240,9 +239,11 @@ class CoinbaseExchangeClient(AuthBase):
                         # Skip
                         continue
                     elif x['type'] == 'received':
-                        print(x)
                         if x['order_type'] == 'market':
                             if 'size' in x and float(x['size']) <= 0:
+                                continue
+                            elif 'size' not in x and 'funds' in x:
+                                print('TODO: funds')
                                 continue
                             o = Order(float(x['size']), 0., Side(x['side'].upper()), Instrument(x['product_id'], InstrumentType.PAIR, self.exchange), self.exchange)
                         else:
@@ -251,9 +252,14 @@ class CoinbaseExchangeClient(AuthBase):
                         yield e
                     elif x['type'] == 'done':
                         if x['reason'] == 'canceled':
+                            if 'price' not in x:
+                                print('TODO: noprice')
+                                continue
                             o = Order(float(x['remaining_size']), float(x['price']), Side(x['side'].upper()), Instrument(x['product_id'], InstrumentType.PAIR, self.exchange), self.exchange)
                             e = Event(type=EventType.CANCEL, target=o)
                             yield e
+                        elif x['reason'] == 'filled':
+                            continue
                         else:
                             print(x)
                     elif x['type'] == 'match':
@@ -261,6 +267,10 @@ class CoinbaseExchangeClient(AuthBase):
                         o.filled = o.volume
                         t = Trade(float(x['size']), float(x['price']), [], o)
                         e = Event(type=EventType.TRADE, target=t)
+                        yield e
+                    elif x['type'] == 'open':
+                        o = Order(float(x['remaining_size']), float(x['price']), Side(x['side'].upper()), Instrument(x['product_id'], InstrumentType.PAIR, self.exchange), self.exchange)
+                        e = Event(type=EventType.OPEN, target=o)
                         yield e
                     else:
                         print(x)
