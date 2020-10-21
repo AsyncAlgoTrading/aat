@@ -5,10 +5,10 @@ import hmac
 import json
 import requests
 import time
-from requests.auth import AuthBase
 from datetime import datetime
 from functools import lru_cache
-from typing import List
+from requests.auth import AuthBase
+from typing import Dict, List, Union
 
 # from aat import Instrument, InstrumentType, Account, Position
 from aat import TradingType, ExchangeType, Instrument, InstrumentType, Position, Order, Trade, Side, OrderType, OrderFlag, Event, EventType
@@ -21,13 +21,8 @@ _WS_SANDBOX = 'wss://ws-feed-public.sandbox.pro.coinbase.com'
 
 _SUBSCRIPTION = {
     "type": "subscribe",
-    "product_ids": [
-    ],
-    "channels": [
-        "full",
-        "user",
-        "heartbeat",
-    ]
+    "product_ids": [],
+    "channels": ["full", "user", "heartbeat"]
 }
 
 
@@ -63,7 +58,7 @@ class CoinbaseExchangeClient(AuthBase):
         self.order_id = 0
 
         # sequence number for order book
-        self.seqnum = {}
+        self.seqnum: Dict[Instrument, int] = {}
 
     def __call__(self, request):
         # This is used by `requests` to sign the requests
@@ -199,13 +194,13 @@ class CoinbaseExchangeClient(AuthBase):
 
     def newOrder(self, order: Order):
         '''given an aat Order, construct a coinbase order json'''
-        jsn = {}
+        jsn: Dict[str, Union[str, int, float]] = {}
 
         if order.type == OrderType.LIMIT:
             jsn['type'] = 'limit'
             jsn['side'] = order.side.value.lower()
             jsn['price'] = order.price
-            jsn['size'] = order.size
+            jsn['size'] = order.volume
 
             # From the coinbase docs
             if order.flag == OrderFlag.FILL_OR_KILL:
@@ -218,21 +213,22 @@ class CoinbaseExchangeClient(AuthBase):
         elif order.type == OrderType.MARKET:
             jsn['type'] = 'market'
             jsn['side'] = order.side.value.lower()
-            jsn['size'] = order.size
+            jsn['size'] = order.volume
 
         else:
-            jsn['type'] = order.stop_target.side.value.lower()
-            jsn['price'] = order.stop_target.price
-            jsn['size'] = order.stop_target.size
+            stop_order: Order = order.stop_target  # type: ignore
+            jsn['type'] = stop_order.side.value.lower()
+            jsn['price'] = stop_order.price
+            jsn['size'] = stop_order.volume
 
-            if order.stop_target.side == Side.BUY:
+            if stop_order.side == Side.BUY:
                 jsn['stop'] = 'entry'
             else:
                 jsn['stop'] = 'loss'
 
             jsn['stop_price'] = order.price
 
-            if order.stop_target.type == OrderType.LIMIT:
+            if stop_order.type == OrderType.LIMIT:
                 jsn['type'] = 'limit'
                 if order.flag == OrderFlag.FILL_OR_KILL:
                     jsn['time_in_force'] = 'FOK'
@@ -241,7 +237,7 @@ class CoinbaseExchangeClient(AuthBase):
                 else:
                     jsn['time_in_force'] = 'GTC'
 
-            elif order.stop_target.type == OrderType.MARKET:
+            elif stop_order.type == OrderType.MARKET:
                 jsn['type'] = 'market'
 
         # submit the order json
@@ -275,7 +271,7 @@ class CoinbaseExchangeClient(AuthBase):
 
             # set the last sequence number for when we
             # connect to websocket later
-            self.seqnum[sub] = ob['sequence']
+            self.seqnum[sub] = ob['sequence']  # type: ignore
 
             # generate an open limit order for each bid
             for (bid, qty, id) in ob['bids']:
@@ -295,7 +291,7 @@ class CoinbaseExchangeClient(AuthBase):
 
         # for each subcription, add symbol to product_ids
         for sub in subscriptions:
-            subscription['product_ids'].append(sub.brokerId)
+            subscription['product_ids'].append(sub.brokerId)  # type: ignore
 
         # sign the message in a similar way to the rest api, but
         # using the message of GET/users/self/verify
