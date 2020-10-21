@@ -29,6 +29,9 @@ ib:    ## Clean and make target, run target
 ibpositions:    ## Clean and make target, run target
 	$(PYTHON) -m aat  --config ./config/ib_positions.cfg
 
+coinbase:    ## Clean and make target, run target
+	$(PYTHON) -m aat --config  ./config/coinbase.cfg
+
 coinbasesandbox:    ## Clean and make target, run target
 	$(PYTHON) -m aat --config  ./config/coinbase_sandbox.cfg
 

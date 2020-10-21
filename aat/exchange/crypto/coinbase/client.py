@@ -46,13 +46,21 @@ class CoinbaseExchangeClient(AuthBase):
             self.api_url = _REST
             self.ws_url = _WS
 
+        # the coinbase ExchangeType
         self.exchange = exchange
 
+        # coinbase api key
         self.api_key = api_key
+        # coinbase api secret
         self.secret_key = secret_key
+        # coinbase api passphrase
         self.passphrase = passphrase
 
+        # user defined order id for mapping my orders to the messages the exchange sends me
         self.order_id = 0
+
+        # sequence number for order book
+        self.seqnum = {}
 
     def __call__(self, request):
         timestamp = str(time.time())
@@ -107,7 +115,7 @@ class CoinbaseExchangeClient(AuthBase):
             first = product['base_currency']
             second = product['quote_currency']
             ret.append(
-                Instrument(name='{}/{}'.format(first, second),
+                Instrument(name='{}-{}'.format(first, second),
                            type=InstrumentType.PAIR,
                            exchange=self.exchange,
                            brokerId=product['id'],
@@ -206,10 +214,17 @@ class CoinbaseExchangeClient(AuthBase):
         return self._cancelOrder(jsn)
 
     def orderBook(self, subscriptions: List[Instrument]):
-        # for sub in subscriptions:
-        # ob = self._orderBook(instrument.brokerId)
-        # print(ob)
-        return []
+        for sub in subscriptions:
+            ob = self._orderBook(sub.brokerId)
+            self.seqnum[sub] = ob['sequence']
+            for (bid, qty, id) in ob['bids']:
+                o = Order(float(qty), float(bid), Side.BUY, sub, self.exchange, order_type=OrderType.LIMIT)
+                yield Event(type=EventType.OPEN,
+                            target=o)
+            for (bid, qty, id) in ob['asks']:
+                o = Order(float(qty), float(bid), Side.SELL, sub, self.exchange, order_type=OrderType.LIMIT)
+                yield Event(type=EventType.OPEN,
+                            target=o)
 
     async def websocket(self, subscriptions: List[Instrument]):
         subscription = _SUBSCRIPTION.copy()
@@ -235,6 +250,12 @@ class CoinbaseExchangeClient(AuthBase):
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     x = json.loads(msg.data)
+                    if 'sequence' in x:
+                        inst = Instrument(x['product_id'], InstrumentType.PAIR, self.exchange)
+                        if x.get('sequence', float('inf')) < self.seqnum.get(inst, 0):
+                            # if msg has a sequence number, and that number is < the last sequence number
+                            # of the order book snapshot, ignore
+                            continue
                     if x['type'] in ('subscriptions', 'heartbeat'):
                         # Skip
                         continue
