@@ -1,6 +1,6 @@
 import os
 from collections import deque
-from typing import List, Mapping
+from typing import List
 
 from aat.core import ExchangeType, Order, Event, Instrument
 from aat.config import TradingType, InstrumentType, EventType
