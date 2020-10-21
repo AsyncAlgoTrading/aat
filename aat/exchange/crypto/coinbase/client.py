@@ -1,4 +1,4 @@
-import aiohttp
+import aiohttp  # type: ignore
 import base64
 import hashlib
 import hmac
