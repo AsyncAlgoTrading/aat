@@ -99,12 +99,14 @@ class CoinbaseExchangeClient(AuthBase):
         self.order_id += 1
 
         # post my order to the rest endpoint
-        resp = requests.post('{}/{}'.format(self.api_url, 'orders'), data=order_jsn, auth=self)
+        resp = requests.post('{}/{}'.format(self.api_url, 'orders'), json=order_jsn, auth=self)
 
         # if successful, return new order id
         if resp.status_code == 200:
             return order_jsn['client_oid']
 
+        # TODO
+        print(resp.text)
         # return -1 indicating unsuccessful
         return -1
 
@@ -195,12 +197,13 @@ class CoinbaseExchangeClient(AuthBase):
     def newOrder(self, order: Order):
         '''given an aat Order, construct a coinbase order json'''
         jsn: Dict[str, Union[str, int, float]] = {}
+        jsn['product_id'] = order.instrument.name
 
-        if order.type == OrderType.LIMIT:
+        if order.order_type == OrderType.LIMIT:
             jsn['type'] = 'limit'
             jsn['side'] = order.side.value.lower()
             jsn['price'] = order.price
-            jsn['size'] = order.volume
+            jsn['size'] = round(order.volume, 8)
 
             # From the coinbase docs
             if order.flag == OrderFlag.FILL_OR_KILL:
@@ -210,16 +213,16 @@ class CoinbaseExchangeClient(AuthBase):
             else:
                 jsn['time_in_force'] = 'GTC'
 
-        elif order.type == OrderType.MARKET:
+        elif order.order_type == OrderType.MARKET:
             jsn['type'] = 'market'
             jsn['side'] = order.side.value.lower()
-            jsn['size'] = order.volume
+            jsn['size'] = round(order.volume, 8)
 
         else:
             stop_order: Order = order.stop_target  # type: ignore
             jsn['type'] = stop_order.side.value.lower()
             jsn['price'] = stop_order.price
-            jsn['size'] = stop_order.volume
+            jsn['size'] = round(stop_order.volume, 8)
 
             if stop_order.side == Side.BUY:
                 jsn['stop'] = 'entry'
@@ -228,7 +231,7 @@ class CoinbaseExchangeClient(AuthBase):
 
             jsn['stop_price'] = order.price
 
-            if stop_order.type == OrderType.LIMIT:
+            if stop_order.order_type == OrderType.LIMIT:
                 jsn['type'] = 'limit'
                 if order.flag == OrderFlag.FILL_OR_KILL:
                     jsn['time_in_force'] = 'FOK'
@@ -237,7 +240,7 @@ class CoinbaseExchangeClient(AuthBase):
                 else:
                     jsn['time_in_force'] = 'GTC'
 
-            elif stop_order.type == OrderType.MARKET:
+            elif stop_order.order_type == OrderType.MARKET:
                 jsn['type'] = 'market'
 
         # submit the order json
