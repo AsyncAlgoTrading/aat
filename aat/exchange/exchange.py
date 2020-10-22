@@ -16,7 +16,7 @@ class Exchange(_MarketData, _OrderEntry):
         exchanges can be queried for data, or send data
     '''
 
-    def __init__(self, exchange: str):
+    def __init__(self, exchange):
         self._exchange = exchange
 
     def exchange(self):
@@ -40,12 +40,19 @@ class Exchange(_MarketData, _OrderEntry):
 
         For OrderEntry-only, can just return None
         '''
+
+    async def lookup(self, instrument):
+        '''lookup an instrument on the exchange'''
+        return []
+
     # ****************** #
     # Inherited  methods #
 
     # From _MarketData
     #
     # async def tick(self):
+    # def instruments(self):
+    # def subscribe(self, instrument):
 
     # From _OrderEntry
     #

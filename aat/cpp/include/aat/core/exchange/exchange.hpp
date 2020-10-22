@@ -21,8 +21,13 @@ namespace core {
       : name(name) {}
 
     str_t toString() const;
-    bool operator==(const ExchangeType& other) const {return name == other.name; }
-    explicit operator bool() const {return name != ""; }
+    virtual json toJson() const;
+
+    bool
+    operator==(const ExchangeType& other) const {
+      return name == other.name;
+    }
+    explicit operator bool() const { return name != ""; }
     str_t name;
   };
 

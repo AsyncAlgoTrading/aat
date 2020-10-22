@@ -22,7 +22,8 @@ class TestOrderBook:
         data = Order(volume=5.0,
                      price=4.5,
                      side=Order.Sides.SELL,
-                     instrument=_INSTRUMENT)
+                     instrument=_INSTRUMENT,
+                     order_type=Order.Types.LIMIT)
         ob.add(data)
 
         print(ob)
@@ -33,7 +34,8 @@ class TestOrderBook:
         data = Order(volume=4.0,
                      price=5.5,
                      side=Order.Sides.BUY,
-                     instrument=_INSTRUMENT)
+                     instrument=_INSTRUMENT,
+                     order_type=Order.Types.LIMIT)
         ob.add(data)
 
         print(ob)
@@ -52,7 +54,8 @@ class TestOrderBook:
         data = Order(volume=100.0,
                      price=0.0,
                      side=Order.Sides.SELL,
-                     instrument=_INSTRUMENT)
+                     instrument=_INSTRUMENT,
+                     order_type=Order.Types.LIMIT)
         ob.add(data)
 
         print(ob)
@@ -60,3 +63,23 @@ class TestOrderBook:
         assert ob.topOfBook() == {Side.BUY: [0.0, 0.0], Side.SELL: [0.0, 90.0]}
         print(ob.levels(3))
         assert ob.levels(3) == {Side.BUY: [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], Side.SELL: [[0.0, 90.0], [5.5, 1.0], [6.0, 1.0]]}
+
+    # def test_order_book_iter(self):
+    #     ob = OrderBook(Instrument('TEST'),
+    #                    ExchangeType(""))
+
+    #     orders = [Order(10 + i,
+    #                     5,
+    #                     Side.BUY,
+    #                     Instrument('TEST'),
+    #                     ExchangeType(""),
+    #                     0.0,
+    #                     OrderType.LIMIT,
+    #                     OrderFlag.NONE,
+    #                     None) for i in range(100)]
+
+    #     for o in orders:  # This causes a segfault
+    #         ob.add(o)
+
+    #     for o, op in zip(orders, ob):
+    #         assert o == op

@@ -62,7 +62,7 @@ namespace core {
     // check if order is in level
     if (order->price != price || std::find(orders.begin(), orders.end(), order) == orders.end()) {
       // something is wrong
-      throw AATCPPException("Order note found in price level!");
+      throw AATCPPException("Order not found in price level!");
     }
     // remove order
     orders.erase(std::find(orders.begin(), orders.end(), order));  // FIXME c++
@@ -79,7 +79,7 @@ namespace core {
     // check if order is in level
     if (order->price != price || std::find(orders.begin(), orders.end(), order) == orders.end()) {
       // something is wrong
-      throw AATCPPException("Order note found in price level!");
+      throw AATCPPException("Order not found in price level!");
     }
     // remove order
     orders.erase(std::find(orders.begin(), orders.end(), order));  // FIXME c++
@@ -98,11 +98,13 @@ namespace core {
       return nullptr;
     }
 
-    if (taker_order->filled >= taker_order->volume) {
+    if (taker_order->filled == taker_order->volume) {
       // already filled
       for (std::shared_ptr<Order> order : stop_orders)
         secondaries.push_back(order);
       return nullptr;
+    } else if (taker_order->filled > taker_order->volume) {
+      throw AATCPPException("Unknown error occurred - order book is corrupt");
     }
 
     while (taker_order->filled < taker_order->volume && orders.size() > 0) {
@@ -124,17 +126,25 @@ namespace core {
         if (maker_order->flag == OrderFlag::FILL_OR_KILL || maker_order->flag == OrderFlag::ALL_OR_NONE) {
           // kill the maker order and continue
           collector.pushCancel(maker_order);
+
+          // won't fill anything from that order
+          orders_filled_staged.push_back(0.0);
+
           continue;
+
         } else {
           // maker_order is partially executed
           maker_order->filled += to_fill;
+
+          // won't fill anything from that order
+          orders_filled_staged.push_back(to_fill);
 
           // will exit loop
           taker_order->filled = taker_order->volume;
           collector.pushFill(taker_order);
 
           // change event
-          collector.pushChange(maker_order, true);
+          collector.pushChange(maker_order, true, to_fill);
 
           if (maker_order->flag == OrderFlag::IMMEDIATE_OR_CANCEL) {
             // cancel maker event, don't put in queue
@@ -160,29 +170,39 @@ namespace core {
           return nullptr;
         } else {
           // maker_order is fully executed
+          maker_order->filled = maker_order->volume;
+
+          // append filled in case need to revert
+          orders_filled_staged.push_back(maker_order->volume);
+
           // don't append to deque
           // tell maker order filled
           collector.pushChange(taker_order);
-          collector.pushFill(maker_order, true);
+          collector.pushFill(maker_order, true, maker_remaining);
         }
       } else {
         // exactly equal
         maker_order->filled += to_fill;
         taker_order->filled += maker_remaining;
 
+        // won't fill anything from that order
+        orders_filled_staged.push_back(to_fill);
+
         collector.pushFill(taker_order);
-        collector.pushFill(maker_order, true);
+        collector.pushFill(maker_order, true, to_fill);
       }
     }
 
-    if (taker_order->filled >= taker_order->volume) {
+    if (taker_order->filled == taker_order->volume) {
       // execute the taker order
-      collector.pushTrade(taker_order);
+      collector.pushTrade(taker_order, taker_order->filled);
 
       // return nothing to signify to stop
       for (std::shared_ptr<Order> order : stop_orders)
         secondaries.push_back(order);
       return nullptr;
+    } else if (taker_order->filled > taker_order->volume) {
+      throw AATCPPException("Unknown error occurred - order book is corrupt");
     }
 
     // return order, this level is cleared and the order still has volume
@@ -195,6 +215,7 @@ namespace core {
   PriceLevel::clear() {
     orders.clear();
     orders_staged.clear();
+    orders_filled_staged.clear();
     stop_orders.clear();
     stop_orders_staged.clear();
   }
@@ -206,14 +227,25 @@ namespace core {
 
   void
   PriceLevel::revert() {
+    // reset orders
     orders.clear();
     orders.insert(
       orders.begin(), std::make_move_iterator(orders_staged.begin()), std::make_move_iterator(orders_staged.end()));
-    orders_staged.clear();
 
+    // deduct filled amount
+    for (std::size_t i = 0; i < orders.size(); ++i)
+      orders[i]->filled -= orders_filled_staged[i];
+
+    // reset staged
+    orders_staged.clear();
+    orders_filled_staged.clear();
+
+    // reset stop orders
     stop_orders.clear();
     stop_orders.insert(stop_orders.begin(), std::make_move_iterator(stop_orders_staged.begin()),
       std::make_move_iterator(stop_orders_staged.end()));
+
+    // reset staged
     stop_orders_staged.clear();
   }
 

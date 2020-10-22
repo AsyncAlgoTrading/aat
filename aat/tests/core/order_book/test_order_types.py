@@ -64,7 +64,8 @@ class TestStopLoss:
                          volume=0.5,
                          price=5.0,
                          side=Order.Sides.SELL,
-                         instrument=_INSTRUMENT
+                         instrument=_INSTRUMENT,
+                         order_type=Order.Types.LIMIT
                      ),
                      instrument=_INSTRUMENT)
         print(ob)
@@ -103,7 +104,8 @@ class TestStopLoss:
                          volume=0.5,
                          price=4.5,
                          side=Order.Sides.SELL,
-                         instrument=_INSTRUMENT
+                         instrument=_INSTRUMENT,
+                         order_type=Order.Types.LIMIT
                      ),
                      instrument=_INSTRUMENT)
         print(ob)

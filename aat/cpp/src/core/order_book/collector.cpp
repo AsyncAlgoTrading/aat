@@ -22,6 +22,7 @@ namespace core {
     volume = 0.0;
     orders.clear();
     price_levels.clear();
+    taker_order = nullptr;
   }
 
   void
@@ -40,31 +41,31 @@ namespace core {
   }
 
   void
-  Collector::pushFill(std::shared_ptr<Order> order, bool accumulate) {
+  Collector::pushFill(std::shared_ptr<Order> order, bool accumulate, double filled_in_txn) {
     if (accumulate) {
-      _accumulate(order);
+      _accumulate(order, filled_in_txn);
     }
     push(std::make_shared<Event>(EventType::FILL, order));
   }
 
   void
-  Collector::pushChange(std::shared_ptr<Order> order, bool accumulate) {
+  Collector::pushChange(std::shared_ptr<Order> order, bool accumulate, double filled_in_txn) {
     if (accumulate) {
-      _accumulate(order);
+      _accumulate(order, filled_in_txn);
     }
     push(std::make_shared<Event>(EventType::CHANGE, order));
   }
 
   void
-  Collector::pushCancel(std::shared_ptr<Order> order, bool accumulate) {
+  Collector::pushCancel(std::shared_ptr<Order> order, bool accumulate, double filled_in_txn) {
     if (accumulate) {
-      _accumulate(order);
+      _accumulate(order, filled_in_txn);
     }
     push(std::make_shared<Event>(EventType::CANCEL, order));
   }
 
   void
-  Collector::pushTrade(std::shared_ptr<Order> taker_order) {
+  Collector::pushTrade(std::shared_ptr<Order> taker_order, double filled_in_txn) {
     if (orders.size() == 0) {
       throw AATCPPException("No maker orders provied!");
     }
@@ -73,14 +74,19 @@ namespace core {
       throw AATCPPException("No Trade occurred");
     }
 
-    push(std::make_shared<Event>(EventType::TRADE, std::make_shared<Trade>(0, datetime::now(), orders, taker_order)));
+    if (filled_in_txn < volume) {
+      throw AATCPPException("Accumulation error occurred");
+    }
+
+    push(std::make_shared<Event>(EventType::TRADE, std::make_shared<Trade>(0, price, volume, orders, taker_order)));
+    this->taker_order = taker_order;
   }
 
   void
-  Collector::_accumulate(std::shared_ptr<Order> order) {
-    price = (volume + order->filled > 0) ? ((price * volume + order->price * order->filled) / (volume + order->filled))
+  Collector::_accumulate(std::shared_ptr<Order> order, double filled_in_txn) {
+    price = (volume + filled_in_txn > 0) ? ((price * volume + order->price * filled_in_txn) / (volume + filled_in_txn))
                                          : 0.0;
-    volume += order->filled;
+    volume += filled_in_txn;
     orders.push_back(order);
   }
 
@@ -110,6 +116,10 @@ namespace core {
   Collector::revert() {
     for (std::shared_ptr<PriceLevel> pl : price_levels)
       pl->revert();
+
+    for (std::shared_ptr<Order> order : orders)
+      order->filled = 0.0;
+
     reset();
   }
 
@@ -126,6 +136,11 @@ namespace core {
   double
   Collector::getVolume() const {
     return volume;
+  }
+
+  std::shared_ptr<Order>
+  Collector::getTakerOrder() const {
+    return taker_order;
   }
 
   std::deque<std::shared_ptr<Order>>

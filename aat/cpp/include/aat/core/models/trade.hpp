@@ -16,19 +16,21 @@ using namespace aat::config;
 namespace aat {
 namespace core {
   struct Trade : public _EventTarget {
-    Trade(uint_t id, timestamp_t timestamp,
+    Trade(uint_t id, double volume, double price,
       std::deque<std::shared_ptr<Order>> maker_orders = std::deque<std::shared_ptr<Order>>(),
       std::shared_ptr<Order> taker_order = nullptr)
       : id(id)
-      , timestamp(timestamp)
+      , timestamp(taker_order->timestamp)
       , type(DataType::TRADE)
+      , volume(volume)
+      , price(price)
       , maker_orders(maker_orders)
       , taker_order(taker_order)
       , my_order(nullptr)
       , _slippage(0.0)
       , _transaction_cost(0.0) {
       // enforce that stop target match stop type
-      assert(maker_orders.size() > 0);
+      // assert(maker_orders.size() > 0);  // not necessarily
     }
 
     double
@@ -41,6 +43,8 @@ namespace core {
       return 0.0;
     }
 
+    bool finished() const;
+
     virtual str_t toString() const;
     virtual json toJson() const;
     virtual json perspectiveSchema() const;
@@ -48,6 +52,9 @@ namespace core {
     uint_t id;
     timestamp_t timestamp;
     const DataType type;
+
+    double volume;
+    double price;
 
     std::deque<std::shared_ptr<Order>> maker_orders;
     std::shared_ptr<Order> taker_order;

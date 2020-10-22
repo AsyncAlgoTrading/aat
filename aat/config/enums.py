@@ -5,13 +5,32 @@ class BaseEnum(Enum):
     def __str__(self):
         return f'{self.value}'
 
+    @classmethod
+    def members(cls):
+        return list(cls.__members__.keys())
+
+
+class TradingType(BaseEnum):
+    LIVE = 'LIVE'
+    SIMULATION = 'SIMULATION'
+    SANDBOX = 'SANDBOX'
+    BACKTEST = 'BACKTEST'
+
 
 class Side(BaseEnum):
     BUY = 'BUY'
     SELL = 'SELL'
 
 
+class OptionType(BaseEnum):
+    CALL = 'CALL'
+    PUT = 'PUT'
+
+
 class EventType(BaseEnum):
+    # Heartbeat events
+    HEARTBEAT = 'HEARTBEAT'
+
     # Trade events
     TRADE = 'TRADE'
 
@@ -37,6 +56,7 @@ class EventType(BaseEnum):
     BOUGHT = 'BOUGHT'
     SOLD = 'SOLD'
     REJECTED = 'REJECTED'
+    CANCELED = 'CANCELED'
 
 
 class DataType(BaseEnum):
@@ -49,12 +69,32 @@ class DataType(BaseEnum):
 
 class InstrumentType(BaseEnum):
     OTHER = 'OTHER'
+
     EQUITY = 'EQUITY'
+
+    # TODO ETF separate?
+
     BOND = 'BOND'
+
     OPTION = 'OPTION'
+
     FUTURE = 'FUTURE'
-    CURRENCY = 'CURRENCY'
+
     PAIR = 'PAIR'
+
+    SPREAD = 'SPREAD'
+
+    FUTURESOPTION = 'FUTURESOPTION'
+
+    MUTUALFUND = 'MUTUALFUND'
+
+    COMMODITY = 'COMMODITY'
+
+    # TODO Warrant?
+
+    # Non-tradeable
+    CURRENCY = 'CURRENCY'
+    INDEX = 'INDEX'
 
 
 class OrderType(BaseEnum):
@@ -70,3 +110,8 @@ class OrderFlag(BaseEnum):
     FILL_OR_KILL = 'FILL_OR_KILL'
     ALL_OR_NONE = 'ALL_OR_NONE'
     IMMEDIATE_OR_CANCEL = 'IMMEDIATE_OR_CANCEL'
+
+
+class ExitRoutine(BaseEnum):
+    NONE = 'NONE'
+    CLOSE_ALL = 'CLOSE_ALL'

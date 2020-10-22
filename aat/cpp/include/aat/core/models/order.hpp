@@ -15,9 +15,12 @@ using namespace aat::config;
 namespace aat {
 namespace core {
   struct Order : public _EventTarget {
-    Order(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
-      ExchangeType exchange = NullExchange, double notional = 0.0, OrderType order_type = OrderType::LIMIT,
+    Order(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument& instrument,
+      ExchangeType& exchange = NullExchange, double notional = 0.0, OrderType order_type = OrderType::MARKET,
       OrderFlag flag = OrderFlag::NONE, std::shared_ptr<Order> stop_target = nullptr);
+
+    bool finished() const;
+    void finish();
 
     virtual str_t toString() const;
     virtual json toJson() const;
@@ -33,12 +36,13 @@ namespace core {
     double price;
     const Side side;
 
-    const OrderType order_type = OrderType::LIMIT;
+    const OrderType order_type = OrderType::MARKET;
     const OrderFlag flag = OrderFlag::NONE;
     const std::shared_ptr<Order> stop_target = nullptr;
     double notional = 0.0;
 
     double filled = 0.0;
+    bool force_done = false;
   };
 
 }  // namespace core

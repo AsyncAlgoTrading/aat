@@ -1,11 +1,10 @@
-import sys
 from .config import parseConfig
-from .core import TradingEngine
+from .engine import TradingEngine
 
 
-def main(argv: list) -> None:
+def main() -> None:
     # Parse the command line config
-    config = parseConfig(argv)
+    config = parseConfig()
 
     # Instantiate trading engine
     #
@@ -19,4 +18,4 @@ def main(argv: list) -> None:
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()

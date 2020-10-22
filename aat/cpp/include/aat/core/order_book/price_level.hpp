@@ -40,12 +40,33 @@ namespace core {
     }
 
     std::shared_ptr<Order> operator[](int i) { return orders[i]; }
+    explicit operator bool() const { return orders.size() > 0; }
+    using iterator = std::deque<std::shared_ptr<Order>>::iterator;
+    using const_iterator = std::deque<std::shared_ptr<Order>>::const_iterator;
+
+    iterator
+    begin() noexcept {
+      return orders.begin();
+    }
+    const_iterator
+    cbegin() const noexcept {
+      return orders.cbegin();
+    }
+    iterator
+    end() noexcept {
+      return orders.end();
+    }
+    const_iterator
+    cend() const noexcept {
+      return orders.cend();
+    }
 
    private:
     double price;
     Collector& collector;
     std::deque<std::shared_ptr<Order>> orders{};
     std::deque<std::shared_ptr<Order>> orders_staged;
+    std::deque<double> orders_filled_staged;
     std::vector<std::shared_ptr<Order>> stop_orders;
     std::vector<std::shared_ptr<Order>> stop_orders_staged;
   };

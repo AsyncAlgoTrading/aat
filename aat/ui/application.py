@@ -14,6 +14,8 @@ class ServerApplication(tornado.web.Application):
                  *args,
                  **kwargs):
 
+        handlers = handlers or []
+
         logging.getLogger('tornado.access').disabled = False
 
         # SQLAlchemy Login Configuration
@@ -26,7 +28,8 @@ class ServerApplication(tornado.web.Application):
         settings = {"cookie_secret": cookie_secret,
                     "login_url": basepath + "login",
                     "debug": debug}
+
         settings.update(**kwargs)
 
-        super(ServerApplication, self).__init__(handlers or [],
+        super(ServerApplication, self).__init__(handlers,
                                                 **settings)

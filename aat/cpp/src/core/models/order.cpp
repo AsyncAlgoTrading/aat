@@ -8,8 +8,8 @@ using namespace aat::common;
 
 namespace aat {
 namespace core {
-  Order::Order(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument instrument,
-    ExchangeType exchange, double notional, OrderType order_type, OrderFlag flag, std::shared_ptr<Order> stop_target)
+  Order::Order(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument& instrument,
+    ExchangeType& exchange, double notional, OrderType order_type, OrderFlag flag, std::shared_ptr<Order> stop_target)
     : id(id)
     , timestamp(timestamp)
     , type(DataType::ORDER)
@@ -34,6 +34,16 @@ namespace core {
       // override notional
       notional = price * volume;
     }
+  }
+
+  bool
+  Order::finished() const {
+    return (volume == filled) || force_done;
+  }
+
+  void
+  Order::finish() {
+    force_done = true;
   }
 
   str_t

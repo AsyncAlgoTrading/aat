@@ -92,3 +92,5 @@ aat.db
 python_junit.xml
 .mypy_cache
 .vscode
+private_config
+_aat_BACKTEST*

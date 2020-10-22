@@ -37,5 +37,14 @@ class ExchangeType(object):
     def __hash__(self):
         return hash(str(self))
 
+    def toJson(self):
+        return {
+            "name": self.name
+        }
+
+    @staticmethod
+    def fromJson(jsn):
+        return ExchangeType(name=jsn['name'])
+
     def __repr__(self) -> str:
         return "Exchange({})".format(self.__name) if self.__name else "No Exchange"

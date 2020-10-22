@@ -17,7 +17,9 @@ jobs:
     matrix:
       Python37:
         python.version: '3.7'
-
+      Python38:
+        python.version: '3.8'
+  
   steps:
     - task: UsePythonVersion@0
       inputs:
@@ -40,7 +42,7 @@ jobs:
       displayName: 'Install JS dependencies'
 
     - script: |
-        python -m pip install --upgrade pip numpy pyarrow==0.15.1 cpplint
+        python -m pip install --upgrade pip numpy pyarrow==0.16.0 cpplint
         pip install -e .[dev]
       displayName: 'Install Python Dependencies'
 
@@ -53,12 +55,16 @@ jobs:
       displayName: 'Lint JS'
 
     - script: |
+        make annotate
+      displayName: 'Type Annotate'
+
+    - script: |
         make tests
       displayName: 'Test'
 
     - script: |
-        make annotate
-      displayName: 'Type Annotate'
+        make testruns
+      displayName: 'Live tests'
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()
@@ -73,12 +79,14 @@ jobs:
 
 - job: 'Mac'
   pool:
-    vmImage: 'macos-10.14'
+    vmImage: 'macos-10.15'
 
   strategy:
     matrix:
       Python37:
         python.version: '3.7'
+      Python38:
+        python.version: '3.8'
 
   steps:
     - task: UsePythonVersion@0
@@ -101,7 +109,7 @@ jobs:
       displayName: 'Install JS dependencies'
 
     - script: |
-        python -m pip install --upgrade pip numpy pyarrow==0.15.1 cpplint
+        python -m pip install --upgrade pip numpy pyarrow==0.16.0 cpplint
         pip install -e .[dev]
       displayName: 'Install Python Dependencies'
 
@@ -118,16 +126,20 @@ jobs:
       displayName: 'Lint C++'
 
     - script: |
-        make tests
-      displayName: 'Test'
-
-    - script: |
         make annotate
       displayName: 'Type Annotate'
 
     - script: |
+        make tests
+      displayName: 'Test'
+
+    - script: |
         make testpycpp
       displayName: 'Test C++'
+
+    - script: |
+        make testruns
+      displayName: 'Live tests'
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()
@@ -148,7 +160,9 @@ jobs:
     matrix:
       Python37:
         python.version: '3.7'
-
+      Python38:
+        python.version: '3.8'
+  
   steps:
     - task: UsePythonVersion@0
       inputs:
@@ -174,7 +188,7 @@ jobs:
       displayName: 'Install JS dependencies'
 
     - script: |
-        python -m pip install --upgrade pip numpy pyarrow==0.15.1 cpplint
+        python -m pip install --upgrade pip numpy pyarrow==0.16.0 cpplint
         pip install -e .[dev]
       displayName: 'Install Python Dependencies'
       env:
@@ -199,16 +213,20 @@ jobs:
       displayName: 'Lint C++'
 
     - script: |
-        make tests
-      displayName: 'Test'
-
-    - script: |
         make annotate
       displayName: 'Type Annotate'
 
     - script: |
+        make tests
+      displayName: 'Test'
+
+    - script: |
         make testpycpp
       displayName: 'Test C++'
+
+    - script: |
+        make testruns
+      displayName: 'Live tests'
 
     - task: PublishTestResults@2
       condition: succeededOrFailed()

@@ -1,4 +1,6 @@
+import argparse
 import importlib
+import itertools
 import os
 import os.path
 from configparser import ConfigParser
@@ -29,11 +31,31 @@ def _config_to_dict(filename: str) -> Dict[str, Dict[str, Union[str, List[str], 
     return ret
 
 
+def _args_to_dict(args):
+    ret = {}
+    ret['general'] = {}
+    ret['general']['verbose'] = args.verbose
+    ret['general']['trading_type'] = args.trading_type
+    ret['general']['load_accounts'] = args.load_accounts
+    ret['general']['api'] = args.api
+    ret['exchange'] = {'exchanges': list(_.split(',') for _ in itertools.chain.from_iterable(args.exchanges))}
+    ret['strategy'] = {'strategies': list(itertools.chain.from_iterable(args.strategies))}
+    return ret
+
+
 def getStrategies(strategies: List) -> List:
     strategy_instances = []
+
+    if not strategies:
+        raise Exception('Must provide strategies')
+
     for strategy in strategies:
-        mod, clazz_and_args = strategy.split(':')
-        clazz, args = clazz_and_args.split(',') if ',' in clazz_and_args else clazz_and_args, ()
+        if isinstance(strategy, list):
+            mod, clazz = strategy[0].split(':')
+            args = strategy[1:]
+        else:
+            mod, clazz = strategy.split(':')
+            args = []
         mod = importlib.import_module(mod)
         clazz = getattr(mod, clazz)
         strategy_instances.append(clazz(*args))
@@ -42,18 +64,75 @@ def getStrategies(strategies: List) -> List:
 
 def getExchanges(exchanges: List, trading_type, verbose: bool = False) -> List:
     exchange_instances = []
+
+    if not exchanges:
+        raise Exception('Must provide exchanges')
+
     for exchange in exchanges:
-        mod, clazz_and_args = exchange.split(':')
-        clazz, args = clazz_and_args.split(',') if ',' in clazz_and_args else clazz_and_args, ()
+        if isinstance(exchange, list):
+            mod, clazz = exchange[0].split(':')
+            args = exchange[1:]
+        else:
+            mod, clazz = exchange.split(':')
+            args = []
         mod = importlib.import_module(mod)
         clazz = getattr(mod, clazz)
-        exchange_instances.append(clazz(*args, trading_type=trading_type, verbose=verbose))
+        exchange_instances.append(clazz(trading_type, verbose, *args))
     return exchange_instances
 
 
-def parseConfig(argv: list) -> dict:
+def parseConfig(argv: list = None) -> dict:
+    from aat import TradingType
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--config',
+        help='Config file',
+        default='')
+
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Run in verbose mode',
+        default=False)
+
+    parser.add_argument(
+        '--api',
+        action='store_true',
+        help='Enable HTTP server',
+        default=False)
+
+    parser.add_argument(
+        '--load_accounts',
+        action='store_true',
+        help='Load accounts from exchanges',
+        default=False)
+
+    parser.add_argument(
+        '--trading_type',
+        help='Trading Type in ("live", "sandbox", "simulation", "backtest")',
+        choices=[_.lower() for _ in TradingType.members()],
+        default='simulation')
+
+    parser.add_argument(
+        '--strategies',
+        action='append',
+        nargs='+',
+        help='Strategies to run in form <path.to.module:Class,args,for,strat>',
+        default=[])
+
+    parser.add_argument(
+        '--exchanges',
+        action='append',
+        nargs='+',
+        help='Exchanges to run on',
+        default=[])
+
+    args = parser.parse_args(argv)
+
     # Every engine run requires a static config object
-    if len(argv) != 2:
-        print('usage: <python executable> -m aat <config file>')
-        raise Exception(f'Invalid command line: {argv}')
-    return _config_to_dict(argv[-1])
+    if args.config:
+        return _config_to_dict(args.config)
+
+    return _args_to_dict(args)

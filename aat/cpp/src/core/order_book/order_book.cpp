@@ -3,7 +3,8 @@
 namespace aat {
 namespace core {
 
-  OrderBookIterator& OrderBookIterator::operator++() {
+  OrderBookIterator&
+  OrderBookIterator::operator++() {
     // TODO
 
     return *this;
@@ -57,8 +58,23 @@ namespace core {
     std::unordered_map<double, std::shared_ptr<PriceLevel>>& prices = (order->side == Side::BUY) ? buys : sells;
     std::unordered_map<double, std::shared_ptr<PriceLevel>>& prices_cross = (order->side == Side::BUY) ? sells : buys;
 
+    // set order price appropriately
+    double order_price;
+    if (order->order_type == OrderType::MARKET) {
+      if (order->flag == OrderFlag::NONE) {
+        // price goes infinite "fill however you want"
+        order_price
+          = (order->side == Side::BUY) ? std::numeric_limits<double>::max() : std::numeric_limits<double>::min();
+      } else {
+        // with a flag, the price dictates the "max allowed price" to AON or FOK under
+        order_price = order->price;
+      }
+    } else {
+      order_price = order->price;
+    }
+
     // check if crosses
-    while (top > 0.0 && ((order->side == Side::BUY) ? order->price >= top : order->price <= top)) {
+    while (top > 0.0 && ((order->side == Side::BUY) ? order_price >= top : order_price <= top)) {
       // execute order against level
       // if returns trade, it cleared the level
       // else, order was fully executed
@@ -91,7 +107,7 @@ namespace core {
         } else {
           // market order, partial
           if (order->filled > 0)
-            collector.pushTrade(order);
+            collector.pushTrade(order, order->filled);
 
           // clear levels
           clearOrders(order, collector.getClearedLevels());
@@ -101,8 +117,10 @@ namespace core {
           collector.commit();
 
           // execute secondaries
-          for (std::shared_ptr<Order> secondary : secondaries)
+          for (std::shared_ptr<Order> secondary : secondaries) {
+            secondary->timestamp = order->timestamp;  // adjust trigger time
             add(secondary);
+          }
         }
       } else {
         // Limit Orders
@@ -128,8 +146,10 @@ namespace core {
             prices[order->price]->add(order);
 
             // execute secondaries
-            for (std::shared_ptr<Order> secondary : secondaries)
+            for (std::shared_ptr<Order> secondary : secondaries) {
+              secondary->timestamp = order->timestamp;  // adjust trigger time
               add(secondary);
+            }
           }
         } else if (order->flag == OrderFlag::ALL_OR_NONE) {
           if (order->filled > 0) {
@@ -153,8 +173,10 @@ namespace core {
             prices[order->price]->add(order);
 
             // execute secondaries
-            for (std::shared_ptr<Order> secondary : secondaries)
+            for (std::shared_ptr<Order> secondary : secondaries) {
+              secondary->timestamp = order->timestamp;  // adjust trigger time
               add(secondary);
+            }
           }
         } else if (order->flag == OrderFlag::IMMEDIATE_OR_CANCEL) {
           if (order->filled > 0) {
@@ -166,8 +188,10 @@ namespace core {
             collector.commit();
 
             // execute secondaries
-            for (std::shared_ptr<Order> secondary : secondaries)
+            for (std::shared_ptr<Order> secondary : secondaries) {
+              secondary->timestamp = order->timestamp;  // adjust trigger time
               add(secondary);
+            }
 
           } else {
             // add to book
@@ -182,8 +206,10 @@ namespace core {
             prices[order->price]->add(order);
 
             // execute secondaries
-            for (std::shared_ptr<Order> secondary : secondaries)
+            for (std::shared_ptr<Order> secondary : secondaries) {
+              secondary->timestamp = order->timestamp;  // adjust trigger time
               add(secondary);
+            }
           }
         } else {
           // clear levels
@@ -202,8 +228,10 @@ namespace core {
           prices[order->price]->add(order);
 
           // execute secondaries
-          for (std::shared_ptr<Order> secondary : secondaries)
+          for (std::shared_ptr<Order> secondary : secondaries) {
+            secondary->timestamp = order->timestamp;  // adjust trigger time
             add(secondary);
+          }
         }
       }
     } else {
@@ -216,8 +244,10 @@ namespace core {
       collector.commit();
 
       // execute secondaries
-      for (std::shared_ptr<Order> secondary : secondaries)
+      for (std::shared_ptr<Order> secondary : secondaries) {
+        secondary->timestamp = order->timestamp;  // adjust trigger time
         add(secondary);
+      }
     }
 
     // clear the collector
@@ -361,7 +391,7 @@ namespace core {
     ret[Side::BUY] = std::vector<std::vector<double>>();
     ret[Side::SELL] = std::vector<std::vector<double>>();
 
-    for (int i = 0; i < levels; ++i) {
+    for (std::uint64_t i = 0; i < levels; ++i) {
       auto _level = level((std::uint64_t)i);
 
       // bid
@@ -385,7 +415,7 @@ namespace core {
     // ask
     ret.push_back(std::vector<double>());
 
-    for (auto i = 0; i < levels; ++i) {
+    for (std::uint64_t i = 0; i < levels; ++i) {
       auto _level = level((std::uint64_t)i);
       ret[0].push_back(_level[0]);
       ret[0].push_back(_level[1]);
@@ -438,7 +468,7 @@ namespace core {
     auto count = 5;
     auto orig = 5;
 
-    for (auto i = 0; i < sell_levels.size(); ++i) {
+    for (std::uint64_t i = 0; i < sell_levels.size(); ++i) {
       if (i < 5) {
         // append to list
         sells_to_print.push_back(sells.at(sell_levels[i]));

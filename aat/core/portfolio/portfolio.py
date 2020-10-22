@@ -1,2 +1,0 @@
-class PortfolioManager(object):
-    pass

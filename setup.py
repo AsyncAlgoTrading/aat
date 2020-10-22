@@ -12,6 +12,19 @@ here = os.path.abspath(os.path.dirname(__file__))
 PREFIX = sysconfig.get_config_vars()['prefix']
 name = 'aat'
 
+CPU_COUNT = os.cpu_count()
+# *************************************** #
+# Numpy build path and compiler toolchain #
+# *************************************** #
+try:
+    # enable numpy faster compiler
+    from numpy.distutils.ccompiler import CCompiler_compile
+    import distutils.ccompiler
+    distutils.ccompiler.CCompiler.compile = CCompiler_compile
+    os.environ['NPY_NUM_BUILD_JOBS'] = str(CPU_COUNT)
+except ImportError:
+    pass  # no numpy
+
 
 def get_version(file, name='__version__'):
     path = os.path.realpath(file)
@@ -31,9 +44,13 @@ if sys.version_info.major < 3 or sys.version_info.minor < 7:
 
 requires = [
     'aiostream>=0.3.1',
+    'matplotlib>2.2',
     'numpy>=1.11.0',
+    'pandas>=0.24.1'
     'perspective-python>=0.4.8',
     'pybind11>=2',
+    'temporal-cache>=0.1.1',
+    'tornado>=6.0',
     'traitlets>=4.3.3',
 ]
 
@@ -42,8 +59,9 @@ requires_dev = [
     'mock>=3.0.5',
     'mypy>=0.782',
     'pybind11>=2.4.3',
-    'pytest>=5.4.1',
+    'pytest>=6.0.1',
     'pytest-cov>=2.8.1',
+    'pytest-faulthandler>=2.0.1',
     'Sphinx>=1.8.4',
     'sphinx-markdown-builder>=0.5.2',
 ] + requires
@@ -106,6 +124,7 @@ setup(
         'console_scripts': [
             'aat=aat:main',
             'aat-synthetic-server=aat.exchange.synthetic.server:main',
+            'aat-view-strategy-results=aat.strategy.calculations:main',
 
         ],
     },

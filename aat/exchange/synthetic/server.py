@@ -17,17 +17,17 @@ def _main(port=5000):
         while True:
             for item in exchange.snapshot():
                 print('sending snapshot: {}'.format(item))
-                await websocket.send(ujson.dumps(item.to_json()))
+                await websocket.send(ujson.dumps(item.toJson()))
 
             async for item in exchange.tick(snapshot=True):
                 print('sending {}'.format(item))
-                await websocket.send(ujson.dumps(item.to_json()))
+                await websocket.send(ujson.dumps(item.toJson()))
                 try:
                     data = await asyncio.wait_for(websocket.recv(), timeout=.1)
                     order = Order.from_json(ujson.loads(data))
                     print("received order: {}".format(order))
                     ret = await exchange.newOrder(order)
-                    await websocket.send(ujson.dumps(ret.to_json()))
+                    await websocket.send(ujson.dumps(ret.toJson()))
                 except asyncio.TimeoutError:
                     pass
 

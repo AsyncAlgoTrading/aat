@@ -11,34 +11,54 @@ using namespace aat::common;
 namespace aat {
 namespace config {
 
-  enum class Side { NONE = 0, BUY = 1, SELL = 2 };
+  enum class TradingType {
+    LIVE = 0,
+    SIMULATION = 1,
+    SANDBOX = 2,
+    BACKTEST = 3,
+  };
+
+  enum class Side {
+    NONE = 0,
+    BUY = 1,
+    SELL = 2,
+  };
+
+  enum class OptionType {
+    CALL = 0,
+    PUT = 0,
+  };
 
   enum class EventType {
+    // Heartbeat events
+    HEARTBEAT = 0,
+
     // Trade events
-    TRADE = 0,
+    TRADE = 1,
 
     // Order events
-    OPEN = 1,
-    CANCEL = 2,
-    CHANGE = 3,
-    FILL = 4,
+    OPEN = 2,
+    CANCEL = 3,
+    CHANGE = 4,
+    FILL = 5,
 
     // Other data events
-    DATA = 5,
+    DATA = 6,
 
     // System events
-    HALT = 6,
-    CONTINUE = 7,
+    HALT = 7,
+    CONTINUE = 8,
 
     // Engine events
-    ERROR = 8,
-    START = 9,
-    EXIT = 10,
+    ERROR = 9,
+    START = 10,
+    EXIT = 11,
 
     // Order Events
-    BOUGHT = 11,
-    SOLD = 12,
-    REJECTED = 13
+    BOUGHT = 12,
+    SOLD = 13,
+    REJECTED = 14,
+    CANCELED = 15
   };
 
   enum class DataType {
@@ -54,8 +74,13 @@ namespace config {
     BOND = 2,
     OPTION = 3,
     FUTURE = 4,
-    CURRENCY = 5,
-    PAIR = 6
+    PAIR = 6,
+    SPREAD = 7,
+    FUTURESOPTION = 8,
+    MUTUALFUND = 9,
+    COMMODITY = 10,
+    CURRENCY = 11,
+    INDEX = 12,
   };
 
   enum class OrderType {
@@ -71,12 +96,31 @@ namespace config {
     IMMEDIATE_OR_CANCEL = 3,
   };
 
+  enum class ExitRoutine {
+    NONE = 0,
+    CLOSE_ALL = 1,
+  };
+
+  static const std::vector<str_t> TradingType_names = {
+    "LIVE",
+    "SIMULATION",
+    "SANDBOX",
+    "BACKTEST",
+  };
+
   static const std::vector<str_t> Side_names = {
+    "NONE",
     "BUY",
     "SELL",
   };
 
+  static const std::vector<str_t> OptionType_names = {
+    "CALL",
+    "PUT",
+  };
+
   static const std::vector<str_t> EventType_names = {
+    "HEARTBEAT",
     "TRADE",
     "OPEN",
     "CANCEL",
@@ -91,6 +135,7 @@ namespace config {
     "BOUGHT",
     "SOLD",
     "REJECTED",
+    "CANCELED",
   };
 
   static const std::vector<str_t> DataType_names = {
@@ -106,8 +151,13 @@ namespace config {
     "BOND",
     "OPTION",
     "FUTURE",
+    "PAIR",
+    "SPREAD",
+    "FUTURESOPTION",
+    "MUTUALFUND",
+    "COMMODITY",
     "CURRENCY",
-    "PAIR"
+    "INDEX",
   };
 
   static const std::vector<str_t> OrderType_names = {
@@ -123,12 +173,31 @@ namespace config {
     "IMMEDIATE_OR_CANCEL",
   };
 
+  static const std::vector<str_t> ExitRoutine_names = {
+    "NONE",
+    "CLOSE_ALL",
+  };
+
+  static std::unordered_map<str_t, TradingType> _TradingType_mapping = {
+    {"LIVE", TradingType::LIVE},
+    {"SIMULATION", TradingType::SIMULATION},
+    {"SANDBOX", TradingType::SANDBOX},
+    {"BACKTEST", TradingType::BACKTEST},
+  };
+
   static std::unordered_map<str_t, Side> _Side_mapping = {
+    {"NONE", Side::NONE},
     {"BUY", Side::BUY},
     {"SELL", Side::SELL},
   };
 
+  static std::unordered_map<str_t, OptionType> _OptionType_mapping = {
+    {"CALL", OptionType::CALL},
+    {"PUT", OptionType::PUT},
+  };
+
   static std::unordered_map<str_t, EventType> _EventType_mapping = {
+    {"HEARTBEAT", EventType::HEARTBEAT},
     {"TRADE", EventType::TRADE},
     {"OPEN", EventType::OPEN},
     {"CANCEL", EventType::CANCEL},
@@ -143,6 +212,7 @@ namespace config {
     {"BOUGHT", EventType::BOUGHT},
     {"SOLD", EventType::SOLD},
     {"REJECTED", EventType::REJECTED},
+    {"CANCELED", EventType::CANCELED},
   };
 
   static std::unordered_map<str_t, DataType> _DataType_mapping = {
@@ -158,8 +228,13 @@ namespace config {
     {"BOND", InstrumentType::BOND},
     {"OPTION", InstrumentType::OPTION},
     {"FUTURE", InstrumentType::FUTURE},
+    {"PAIR", InstrumentType::PAIR},
+    {"SPREAD", InstrumentType::SPREAD},
+    {"FUTURESOPTION", InstrumentType::FUTURESOPTION},
+    {"MUTUALFUND", InstrumentType::MUTUALFUND},
+    {"COMMODITY", InstrumentType::COMMODITY},
     {"CURRENCY", InstrumentType::CURRENCY},
-    {"PAIR", InstrumentType::PAIR}
+    {"INDEX", InstrumentType::INDEX},
   };
 
   static std::unordered_map<str_t, OrderType> _OrderType_mapping = {
@@ -175,7 +250,14 @@ namespace config {
     {"IMMEDIATE_OR_CANCEL", OrderFlag::IMMEDIATE_OR_CANCEL},
   };
 
+  static std::unordered_map<str_t, ExitRoutine> _ExitRoutine_mapping = {
+    {"NONE", ExitRoutine::NONE},
+    {"CLOSE_ALL", ExitRoutine::CLOSE_ALL},
+  };
+
+  ENUM_TO_STRING(TradingType)
   ENUM_TO_STRING(Side)
+  ENUM_TO_STRING(OptionType)
   ENUM_TO_STRING(EventType)
   ENUM_TO_STRING(DataType)
   ENUM_TO_STRING(InstrumentType)
@@ -188,5 +270,6 @@ namespace config {
   ENUM_FROM_STRING(InstrumentType)
   ENUM_FROM_STRING(OrderType)
   ENUM_FROM_STRING(OrderFlag)
+  ENUM_FROM_STRING(ExitRoutine)
 }  // namespace config
 }  // namespace aat

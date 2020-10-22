@@ -1,15 +1,48 @@
-PYTHON=python3.7
+PYTHON=python
 CONFIG=./config/synthetic.cfg
 
 
-run:  build  ## Clean and make target, run target
-	$(PYTHON) -m aat $(CONFIG)
+run:    ## Clean and make target, run target
+	$(PYTHON) -m aat --config $(CONFIG)
+
+iex:    ## Clean and make target, run target
+	$(PYTHON) -m aat  --config ./config/iex.cfg
+
+iexintraday:    ## Clean and make target, run target
+	$(PYTHON) -m aat  --config ./config/iex_intraday.cfg
+
+iexpintraday:    ## Clean and make target, run target
+	$(PYTHON) -m aat  --config ./private_config/iex_intraday.cfg
+
+iexmomentum:    ## Clean and make target, run target
+	$(PYTHON) -m aat  --config ./config/iex_intraday_momentum.cfg
+
+iexpmomentum:    ## Clean and make target, run target
+	$(PYTHON) -m aat  --config ./private_config/iex_intraday_momentum.cfg
+
+iexlive:    ## Clean and make target, run target
+	$(PYTHON) -m aat  --config ./config/iex_live.cfg
+
+ib:    ## Clean and make target, run target
+	$(PYTHON) -m aat  --config ./config/ib.cfg
+
+ibpositions:    ## Clean and make target, run target
+	$(PYTHON) -m aat  --config ./config/ib_positions.cfg
+
+coinbasesandbox:    ## Clean and make target, run target
+	$(PYTHON) -m aat --config  ./config/coinbase_sandbox.cfg
 
 runcpp:  build  ## Clean and make target, run target
-	AAT_USE_CPP=1 $(PYTHON) -m aat $(CONFIG)
+	AAT_USE_CPP=1 $(PYTHON) -m aat  --config $(CONFIG)
 
 rundebug:  debug  ## Clean and make debug target, run target
-	$(PYTHON) -m aat $(CONFIG)
+	$(PYTHON) -m aat  --config $(CONFIG)
+
+stratres:  ## View strategy results offline
+	$(PYTHON) -m aat.strategy.calculations
+
+buildextf: ## build the package extensions
+	$(PYTHON) setup.py build_ext -j8 --inplace -f
 
 buildext: ## build the package extensions
 	$(PYTHON) setup.py build_ext -j8 --inplace
@@ -33,10 +66,13 @@ testpy: ## Make unit tests
 
 testpycpp: ## Make unit tests
 	# AAT_USE_CPP=1 $(PYTHON) -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch --capture=no
-	AAT_USE_CPP=1 $(PYTHON) -m pytest -s ./aat/tests
+	AAT_USE_CPP=1 $(PYTHON) -m pytest -vs ./aat/tests
 
 testjs:  ## Make js tests
 	cd js; yarn test
+
+testruns:  ## Run a few examples as a live end-to-end test
+	$(PYTHON) -m aat.strategy.sample.readonly
 
 lint: lintpy lintjs lintcpp  ## run all linters
 
@@ -73,7 +109,7 @@ docs:  ## Build the sphinx docs
 dist:  ## dist to pypi
 	rm -rf dist build
 	$(PYTHON) setup.py sdist bdist_wheel
-	twine check dist/* && twine upload dist/*
+	$(PYTHON) -m twine check dist/* && twine upload dist/*
 
 clean: ## clean the repository
 	find . -name "__pycache__" | xargs rm -rf
@@ -81,6 +117,7 @@ clean: ## clean the repository
 	rm -rf .coverage coverage cover htmlcov logs build dist *.egg-info
 	find . -name "*.so"  | xargs rm -rf
 	make -C ./docs clean
+	rm -rf _aat_BACKTEST_*
 
 # Thanks to Francoise at marmelab.com for this
 .DEFAULT_GOAL := help
