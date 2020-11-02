@@ -78,7 +78,7 @@ namespace core {
       throw AATCPPException("Accumulation error occurred");
     }
 
-    push(std::make_shared<Event>(EventType::TRADE, std::make_shared<Trade>(0, price, volume, orders, taker_order)));
+    push(std::make_shared<Event>(EventType::TRADE, std::make_shared<Trade>("", price, volume, orders, taker_order)));
     this->taker_order = taker_order;
   }
 
