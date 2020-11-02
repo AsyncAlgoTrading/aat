@@ -160,11 +160,12 @@ set(SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/src/config/parser.cpp
     ${CMAKE_SOURCE_DIR}/src/core/instrument/instrument.cpp
     ${CMAKE_SOURCE_DIR}/src/core/exchange/exchange.cpp
-    ${CMAKE_SOURCE_DIR}/src/core/models/data.cpp
-    ${CMAKE_SOURCE_DIR}/src/core/models/event.cpp
-    ${CMAKE_SOURCE_DIR}/src/core/models/order.cpp
-    ${CMAKE_SOURCE_DIR}/src/core/models/position.cpp
-    ${CMAKE_SOURCE_DIR}/src/core/models/trade.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/data/data.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/data/event.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/data/order.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/data/trade.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/position/position.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/position/cash.cpp
     ${CMAKE_SOURCE_DIR}/src/core/order_book/price_level.cpp
     ${CMAKE_SOURCE_DIR}/src/core/order_book/collector.cpp
     ${CMAKE_SOURCE_DIR}/src/core/order_book/order_book.cpp

@@ -1,5 +1,5 @@
 from typing import Tuple
-from .models import Event, Order, Trade
+from .data import Event, Order, Trade
 from .handler import EventHandler
 
 try:

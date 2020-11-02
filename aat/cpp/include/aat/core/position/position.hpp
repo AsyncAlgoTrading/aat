@@ -8,7 +8,7 @@
 #include <aat/config/enums.hpp>
 #include <aat/core/instrument/instrument.hpp>
 #include <aat/core/exchange/exchange.hpp>
-#include <aat/core/models/trade.hpp>
+#include <aat/core/data/trade.hpp>
 
 using namespace aat::common;
 using namespace aat::config;
@@ -24,6 +24,7 @@ namespace core {
     json toJson() const;
     json perspectiveSchema() const;
 
+    timestamp_t timestamp;
     const Instrument instrument;
     const ExchangeType exchange;
 

@@ -5,7 +5,7 @@ from .collector import _Collector
 from .price_level import _PriceLevel
 from .utils import _insort
 from ..exchange import ExchangeType
-from ..models import Order
+from ..data import Order
 from ...config import Side, OrderFlag, OrderType
 from ...common import _in_cpp
 

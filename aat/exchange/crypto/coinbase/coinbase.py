@@ -1,9 +1,12 @@
-from cbpro import PublicClient, AuthenticatedClient, WebsocketClient  # type: ignore
+import os
+from collections import deque
+from typing import List
 
-from aat.core import ExchangeType, Order
-from aat.config import TradingType, OrderType, OrderFlag, InstrumentType
+from aat.core import ExchangeType, Order, Event, Instrument
+from aat.config import TradingType, InstrumentType, EventType
 from aat.exchange import Exchange
-from .instruments import _get_instruments
+
+from .client import CoinbaseExchangeClient
 
 
 class CoinbaseProExchange(Exchange):
@@ -19,34 +22,52 @@ class CoinbaseProExchange(Exchange):
         self._trading_type = trading_type
         self._verbose = verbose
 
+        # coinbase keys
+        self._api_key = api_key or os.environ.get('API_KEY', '')
+        self._api_secret = api_key or os.environ.get('API_SECRET', '')
+        self._api_passphrase = api_key or os.environ.get('API_PASSPHRASE', '')
+
+        # enforce authentication, otherwise we don't get enough
+        # data to be interesting
+        if not (self._api_key and self._api_secret and self._api_passphrase):
+            raise Exception('No coinbase auth!')
+
+        # don't implement backtest for now
         if trading_type == TradingType.BACKTEST:
             raise NotImplementedError()
 
         if self._trading_type == TradingType.SANDBOX:
+            # Coinbase sandbox
             super().__init__(ExchangeType('coinbaseprosandbox'))
         else:
+            # Coinbase Live trading
+            print('*' * 100)
+            print('*' * 100)
+            print('WARNING: LIVE TRADING')
+            print('*' * 100)
+            print('*' * 100)
             super().__init__(ExchangeType('coinbasepro'))
 
-        auth = api_key and api_secret and api_passphrase
-        self._public_client = PublicClient()
+        # Create an exchange client based on the coinbase docs
+        # Note: cbpro doesnt seem to work as well as I remember,
+        # and ccxt has moved to a "freemium" model where coinbase
+        # pro now costs money for full access, so here i will just
+        # implement the api myself.
+        self._client = CoinbaseExchangeClient(self._trading_type, self.exchange(), self._api_key, self._api_secret, self._api_passphrase)
 
-        if trading_type == TradingType.SANDBOX:
-            self._auth_client = AuthenticatedClient(api_key, api_secret, api_passphrase, api_url="https://api-public.sandbox.pro.coinbase.com") if auth else None
-        else:
-            self._auth_client = AuthenticatedClient(api_key, api_secret, api_passphrase) if auth else None
+        # store client order events in a deque
+        self._order_events = deque()
 
-        # TODO
-        self._subscriptions = []
-        self._ws_client = WebsocketClient(url="wss://ws-feed.pro.coinbase.com", products="BTC-USD")
+        # list of market data subscriptions
+        self._subscriptions: List[Instrument] = []
 
     # *************** #
     # General methods #
     # *************** #
     async def connect(self):
         '''connect to exchange. should be asynchronous.'''
-
         # instantiate instruments
-        _get_instruments(self._public_client, self.exchange())
+        self._client.instruments()
 
     async def lookup(self, instrument):
         '''lookup an instrument on the exchange'''
@@ -59,59 +80,50 @@ class CoinbaseProExchange(Exchange):
     async def tick(self):
         '''return data from exchange'''
 
+        # First, roll through order book snapshot
+        for item in self._client.orderBook(self._subscriptions):
+            yield item
+
+        # then stream in live updates
+        async for tick in self._client.websocket(self._subscriptions):
+            yield tick
+
+            # drain order events ASAP
+            while len(self._order_events) > 0:
+                _ = self._order_events.popleft()
+                yield _
+
     async def subscribe(self, instrument):
-        self._subscriptions.append(instrument)
+        # can only subscribe to pair data
+        if instrument.type == InstrumentType.PAIR:
+            self._subscriptions.append(instrument)
 
     # ******************* #
     # Order Entry Methods #
     # ******************* #
     async def accounts(self):
         '''get accounts from source'''
-        # TODO
-        raise NotImplementedError()
+        return self._client.accounts()
 
     async def newOrder(self, order):
         '''submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id'''
-        if not self._auth_client:
-            raise NotImplementedError()
-
-        if order.instrument.type != InstrumentType.PAIR:
-            raise NotImplementedError()
-
-        if order.type == OrderType.LIMIT:
-            time_in_force = 'GTC'
-            if order.flag == OrderFlag.FILL_OR_KILL:
-                time_in_force = 'FOK'
-            elif order.flag == OrderFlag.IMMEDIATE_OR_CANCEL:
-                time_in_force = 'IOC'
-
-            ret = self._auth_client.place_limit_order(product_id='{}-{}'.format(order.instrument.leg1.name, order.instrument.leg2.name),
-                                                      side=order.side.value.lower(),
-                                                      price=order.price,
-                                                      size=order.volume,
-                                                      time_in_force=time_in_force)
-
-        elif order.type == OrderType.MARKET:
-            ret = self._auth_client.place_limit_order(product_id='{}-{}'.format(order.instrument.leg1.name, order.instrument.leg2.name),
-                                                      side=order.side.value.lower(),
-                                                      funds=order.price * order.volume)
-
-        elif order.type == OrderType.STOP:
-            # TODO
-            raise NotImplementedError()
-            # self._auth_client.place_stop_order(product_id='BTC-USD',
-            #                             side='buy',
-            #                             price='200.00',
-            #                             size='0.01')
-
-        # Set ID
-        order.id = ret['id']
-        return order
+        ret = self._client.newOrder(order)
+        if ret:
+            # order succesful
+            self._order_events.append(Event(type=EventType.RECEIVED, target=order))
+        else:
+            # order failure
+            self._order_events.append(Event(type=EventType.REJECTED, target=order))
 
     async def cancelOrder(self, order: Order):
         '''cancel a previously submitted order to the exchange.'''
-        self._auth_client.cancel_order(order.id)
-        return order
+        ret = self._client.cancelOrder(order)
+        if ret:
+            # cancel succesful
+            self._order_events.append(Event(type=EventType.CANCELED, target=order))
+        else:
+            # cancel rejected
+            self._order_events.append(Event(type=EventType.REJECTED, target=order))
 
 
 Exchange.registerExchange('coinbase', CoinbaseProExchange)

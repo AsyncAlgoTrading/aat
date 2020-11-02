@@ -17,7 +17,7 @@ except ImportError:
     PerspectiveManager, PerspectiveTornadoHandler = None, None  # type: ignore
 
 from aat.core.handler import EventHandler, PrintHandler
-from aat.core.models import Event, Error
+from aat.core.data import Event, Error
 from aat.core.table import TableHandler
 from aat.config import TradingType, EventType, getStrategies, getExchanges
 from aat.exchange import Exchange

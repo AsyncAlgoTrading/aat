@@ -4,9 +4,9 @@
 #include <string>
 
 #include <aat/core/order_book/price_level.hpp>
-#include <aat/core/models/event.hpp>
-#include <aat/core/models/order.hpp>
-#include <aat/core/models/trade.hpp>
+#include <aat/core/data/event.hpp>
+#include <aat/core/data/order.hpp>
+#include <aat/core/data/trade.hpp>
 
 namespace aat {
 namespace core {

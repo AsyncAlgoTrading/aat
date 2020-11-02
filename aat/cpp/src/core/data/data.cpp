@@ -1,7 +1,7 @@
 #include <sstream>
 
 #include <aat/config/enums.hpp>
-#include <aat/core/models/data.hpp>
+#include <aat/core/data/data.hpp>
 
 namespace aat {
 namespace core {

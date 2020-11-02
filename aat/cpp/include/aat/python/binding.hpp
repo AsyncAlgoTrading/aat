@@ -15,11 +15,13 @@
 
 #include <aat/common.hpp>
 #include <aat/config/enums.hpp>
-#include <aat/core/models/data.hpp>
-#include <aat/core/models/event.hpp>
-#include <aat/core/models/order.hpp>
-#include <aat/core/models/position.hpp>
-#include <aat/core/models/trade.hpp>
+#include <aat/core/data/data.hpp>
+#include <aat/core/data/event.hpp>
+#include <aat/core/data/order.hpp>
+#include <aat/core/data/trade.hpp>
+#include <aat/core/position/account.hpp>
+#include <aat/core/position/cash.hpp>
+#include <aat/core/position/position.hpp>
 #include <aat/core/order_book/order_book.hpp>
 
 namespace py = pybind11;
@@ -55,6 +57,7 @@ PYBIND11_MODULE(binding, m) {
     .value("EXIT", EventType::EXIT)
     .value("BOUGHT", EventType::BOUGHT)
     .value("SOLD", EventType::SOLD)
+    .value("RECEIVED", EventType::RECEIVED)
     .value("REJECTED", EventType::REJECTED)
     .value("CANCELED", EventType::CANCELED)
     .export_values();
@@ -159,7 +162,7 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("type", &Instrument::exchanges);
 
   /*******************************
-   * Models
+   * Data
    ******************************/
   py::class_<Data, std::shared_ptr<Data>>(m, "DataCpp")
     .def(py::init<uint_t, timestamp_t, Instrument&, ExchangeType&>())
@@ -226,11 +229,26 @@ PYBIND11_MODULE(binding, m) {
     .def_readwrite("taker_order", &Trade::taker_order)
     .def_readwrite("my_order", &Trade::my_order);
 
+  /*******************************
+   * Position
+   ******************************/
+  py::class_<Account>(m, "AccountCpp")
+    .def(py::init<str_t, ExchangeType&, std::vector<std::shared_ptr<Position>>&>())
+    .def("__repr__", &Account::toString)
+    .def("toJson", &Account::toJson)
+    .def("perspectiveSchema", &Account::perspectiveSchema);
+
   py::class_<Position>(m, "PositionCpp")
     .def(py::init<double, double, timestamp_t, Instrument&, ExchangeType&, std::vector<std::shared_ptr<Trade>>&>())
     .def("__repr__", &Position::toString)
     .def("toJson", &Position::toJson)
     .def("perspectiveSchema", &Position::perspectiveSchema);
+
+  py::class_<CashPosition>(m, "CashPositionCpp")
+    .def(py::init<double, timestamp_t, Instrument&, ExchangeType&>())
+    .def("__repr__", &CashPosition::toString)
+    .def("toJson", &CashPosition::toJson)
+    .def("perspectiveSchema", &CashPosition::perspectiveSchema);
 
   /*******************************
    * Helpers

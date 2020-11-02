@@ -100,6 +100,10 @@ class Strategy(metaclass=ABCMeta):
         '''Called on my order bought or sold'''
         pass
 
+    async def onReceived(self, event: Event):
+        '''Called on my order received'''
+        pass
+
     async def onRejected(self, event: Event):
         '''Called on my order rejected'''
         pass
@@ -237,6 +241,7 @@ There are several callbacks for order entry:
 - onTraded: called when a strategy's order is bought or sold
 - onBought: called when a strategy's order is bought
 - onSold: called when a strategy's order is sold
+- onReceived: called when a strategy's order is received
 - onRejected: called when a strategy's order is rejected
 - onCanceled: called when a strategy's order is canceled
 

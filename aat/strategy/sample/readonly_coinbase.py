@@ -1,6 +1,6 @@
 import os
 import os.path
-from aat import Strategy, Event
+from aat import Strategy, Event, Instrument, InstrumentType
 from pprint import pprint
 
 
@@ -12,14 +12,14 @@ class ReadOnlyStrategy(Strategy):
         pprint(self.instruments())
         pprint(self.positions())
 
-        for i in self.instruments():
-            await self.subscribe(i)
+        await self.subscribe(Instrument('BTC-USD', InstrumentType.PAIR))
 
     async def onTrade(self, event: Event) -> None:
         pprint(event)
 
     async def onOrder(self, event):
-        pprint(event)
+        # pprint(event)
+        pass
 
     async def onExit(self, event: Event) -> None:
         print('Finishing...')

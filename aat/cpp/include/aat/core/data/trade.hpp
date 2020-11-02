@@ -7,8 +7,8 @@
 #include <aat/config/enums.hpp>
 #include <aat/core/instrument/instrument.hpp>
 #include <aat/core/exchange/exchange.hpp>
-#include <aat/core/models/data.hpp>
-#include <aat/core/models/order.hpp>
+#include <aat/core/data/data.hpp>
+#include <aat/core/data/order.hpp>
 
 using namespace aat::common;
 using namespace aat::config;

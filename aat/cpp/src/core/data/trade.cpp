@@ -2,7 +2,7 @@
 
 #include <aat/common.hpp>
 #include <aat/config/enums.hpp>
-#include <aat/core/models/trade.hpp>
+#include <aat/core/data/trade.hpp>
 
 using namespace aat::common;
 

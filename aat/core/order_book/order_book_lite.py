@@ -2,7 +2,7 @@ from typing import Callable, List, Mapping, Optional
 
 from .base import OrderBookBase
 from ..exchange import ExchangeType
-from ..models import Order
+from ..data import Order
 from ...config import Side
 
 

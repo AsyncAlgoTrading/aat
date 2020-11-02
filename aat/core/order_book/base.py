@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Mapping, Optional
 
 from ...config import Side
-from ..models import Order
+from ..data import Order
 
 
 class OrderBookBase(ABC):
