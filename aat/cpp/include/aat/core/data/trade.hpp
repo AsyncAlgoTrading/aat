@@ -16,7 +16,7 @@ using namespace aat::config;
 namespace aat {
 namespace core {
   struct Trade : public _EventTarget {
-    Trade(uint_t id, double volume, double price,
+    Trade(str_t id, double volume, double price,
       std::deque<std::shared_ptr<Order>> maker_orders = std::deque<std::shared_ptr<Order>>(),
       std::shared_ptr<Order> taker_order = nullptr)
       : id(id)
@@ -49,7 +49,7 @@ namespace core {
     virtual json toJson() const;
     virtual json perspectiveSchema() const;
 
-    uint_t id;
+    str_t id;
     timestamp_t timestamp;
     const DataType type;
 

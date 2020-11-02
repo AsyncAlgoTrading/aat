@@ -41,7 +41,7 @@ class Trade(object):
         return super(Trade, cls).__new__(cls)
 
     def __init__(self, volume, price, maker_orders, taker_order):
-        self.__id = -1  # on construction, provide no ID until exchange assigns one
+        self.__id = ""  # on construction, provide no ID until exchange assigns one
         self.__type = DataType.TRADE
 
         assert(isinstance(price, (float, int)))
@@ -101,13 +101,13 @@ class Trade(object):
     # Read/write #
     # ***********#
     @property
-    def id(self) -> int:
+    def id(self) -> str:
         return self.__id
 
     @id.setter
-    def id(self, id: int) -> None:
-        assert isinstance(id, int)
-        self.__id = id
+    def id(self, id: str) -> None:
+        assert isinstance(id, (str, int))
+        self.__id = str(id)
 
     @property
     def maker_orders(self) -> List[Order]:

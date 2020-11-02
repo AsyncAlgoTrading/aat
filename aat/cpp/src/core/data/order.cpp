@@ -8,7 +8,7 @@ using namespace aat::common;
 
 namespace aat {
 namespace core {
-  Order::Order(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument& instrument,
+  Order::Order(str_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument& instrument,
     ExchangeType& exchange, double notional, OrderType order_type, OrderFlag flag, std::shared_ptr<Order> stop_target)
     : id(id)
     , timestamp(timestamp)
@@ -70,7 +70,7 @@ namespace core {
   json
   Order::perspectiveSchema() const {
     json ret;
-    ret["id"] = "int";
+    ret["id"] = "str";
     ret["timestamp"] = "int";
     ret["volume"] = "float";
     ret["price"] = "float";

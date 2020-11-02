@@ -15,7 +15,7 @@ class BuyAndHoldCBStrategy(Strategy):
 
     async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
-        pprint(event)
+        # pprint(event)
         trade: Trade = event.target  # type: ignore
 
         # no past trades, no current orders

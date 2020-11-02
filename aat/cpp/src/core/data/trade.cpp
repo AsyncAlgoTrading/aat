@@ -42,7 +42,7 @@ namespace core {
   json
   Trade::perspectiveSchema() const {
     json ret;
-    ret["id"] = "int";
+    ret["id"] = "str";
     ret["timestamp"] = "int";
     ret["volume"] = "float";
     ret["price"] = "float";

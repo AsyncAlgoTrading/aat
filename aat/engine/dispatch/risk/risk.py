@@ -49,7 +49,6 @@ class RiskManager(ManagerBase):
     # *********************
     async def newOrder(self, strategy, order: Order):
         # TODO
-        print('adding order: {}'.format(order))
         self._active_orders.append(order)  # TODO use strategy
         return order, True
 
