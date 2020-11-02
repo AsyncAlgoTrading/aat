@@ -51,7 +51,7 @@ class CSV(Exchange):
         if self._trading_type == TradingType.LIVE:
             raise NotImplementedError("Live OE not available for CSV")
 
-        order.id = self._order_id
+        order.id = str(self._order_id)
         self._order_id += 1
         self._queued_orders.append(order)
         return order
