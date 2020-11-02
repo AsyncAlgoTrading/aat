@@ -187,7 +187,7 @@ PYBIND11_MODULE(binding, m) {
     .def_readonly("target", &Event::target);
 
   py::class_<Order, std::shared_ptr<Order>>(m, "OrderCpp")
-    .def(py::init<uint_t, timestamp_t, double, double, Side, Instrument&, ExchangeType&, double, OrderType, OrderFlag,
+    .def(py::init<str_t, timestamp_t, double, double, Side, Instrument&, ExchangeType&, double, OrderType, OrderFlag,
            std::shared_ptr<Order>>(),
       py::arg("id").none(false), py::arg("timestamp").none(false), py::arg("volume").none(false),
       py::arg("price").none(false), py::arg("side").none(false), py::arg("instrument").none(false),
@@ -213,7 +213,7 @@ PYBIND11_MODULE(binding, m) {
     .def_readwrite("notional", &Order::notional);
 
   py::class_<Trade, std::shared_ptr<Trade>>(m, "TradeCpp")
-    .def(py::init<uint_t, double, double, std::deque<std::shared_ptr<Order>>, std::shared_ptr<Order>>())
+    .def(py::init<str_t, double, double, std::deque<std::shared_ptr<Order>>, std::shared_ptr<Order>>())
     .def("__repr__", &Trade::toString)
     .def("slippage", &Trade::slippage)
     .def("transactionCost", &Trade::transactionCost)

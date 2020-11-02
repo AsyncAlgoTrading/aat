@@ -16,7 +16,7 @@ except ImportError:
 
 def _make_cpp_order(volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.MARKET, flag=OrderFlag.NONE, stop_target=None):
     '''helper method to ensure all arguments are setup'''
-    return OrderCpp(0, datetime.now(), volume, price, side, instrument, exchange, notional, order_type, flag, stop_target)
+    return OrderCpp("0", datetime.now(), volume, price, side, instrument, exchange, notional, order_type, flag, stop_target)
 
 
 class Order(object):
@@ -69,8 +69,8 @@ class Order(object):
         assert (order_type != OrderType.STOP and stop_target is None) or (isinstance(stop_target, Order) and order_type == OrderType.STOP and stop_target.order_type != OrderType.STOP)
         assert order_type != OrderType.STOP or (isinstance(stop_target.instrument, Instrument))
 
-        self.__volume = volume
-        self.__price = price
+        self.__volume = round(volume, 8)
+        self.__price = round(price, 4)
         self.__side = side
         self.__notional = notional
         self.__order_type = order_type
@@ -138,13 +138,13 @@ class Order(object):
     # Read/write #
     # ***********#
     @property
-    def id(self) -> int:
+    def id(self) -> str:
         return self.__id
 
     @id.setter
-    def id(self, id: int) -> None:
-        assert isinstance(id, int)
-        self.__id = id
+    def id(self, id: Union[str, int]) -> None:
+        assert isinstance(id, (int, str))
+        self.__id = str(id)
 
     @property
     def timestamp(self) -> datetime:
@@ -163,7 +163,10 @@ class Order(object):
     def volume(self, volume: float) -> None:
         assert isinstance(volume, (int, float))
         assert volume < float('inf') and (volume > 0 or self.order_type == OrderType.STOP)
+        volume = round(volume, 8)
+
         assert volume >= self.filled
+
         self.__volume = volume
 
     @property
@@ -173,6 +176,7 @@ class Order(object):
     @filled.setter
     def filled(self, filled: float) -> None:
         assert isinstance(filled, (int, float))
+        filled = round(filled, 8)
         assert filled <= self.volume
         self.__filled = filled
 
@@ -239,7 +243,7 @@ class Order(object):
     @staticmethod
     def perspectiveSchema() -> Mapping[str, Type]:
         return {
-            "id": int,
+            "id": str,
             "timestamp": int,
             "volume": float,
             "price": float,

@@ -15,7 +15,7 @@ using namespace aat::config;
 namespace aat {
 namespace core {
   struct Order : public _EventTarget {
-    Order(uint_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument& instrument,
+    Order(str_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument& instrument,
       ExchangeType& exchange = NullExchange, double notional = 0.0, OrderType order_type = OrderType::MARKET,
       OrderFlag flag = OrderFlag::NONE, std::shared_ptr<Order> stop_target = nullptr);
 
@@ -26,7 +26,7 @@ namespace core {
     virtual json toJson() const;
     virtual json perspectiveSchema() const;
 
-    uint_t id;
+    str_t id;
     timestamp_t timestamp;
     const DataType type;
     const Instrument instrument;

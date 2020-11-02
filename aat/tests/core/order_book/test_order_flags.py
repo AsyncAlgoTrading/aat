@@ -18,7 +18,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.MARKET,
                      flag=Order.Flags.FILL_OR_KILL,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -31,7 +31,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.MARKET,
                      flag=Order.Flags.FILL_OR_KILL,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -45,7 +45,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.LIMIT,
                      flag=Order.Flags.FILL_OR_KILL,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -58,7 +58,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.LIMIT,
                      flag=Order.Flags.FILL_OR_KILL,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -72,7 +72,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.MARKET,
                      flag=Order.Flags.ALL_OR_NONE,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -85,7 +85,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.MARKET,
                      flag=Order.Flags.ALL_OR_NONE,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -99,7 +99,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.LIMIT,
                      flag=Order.Flags.ALL_OR_NONE,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -112,7 +112,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.LIMIT,
                      flag=Order.Flags.ALL_OR_NONE,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -126,7 +126,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.MARKET,
                      flag=Order.Flags.IMMEDIATE_OR_CANCEL,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -139,7 +139,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.MARKET,
                      flag=Order.Flags.IMMEDIATE_OR_CANCEL,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -153,7 +153,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.LIMIT,
                      flag=Order.Flags.IMMEDIATE_OR_CANCEL,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -166,7 +166,7 @@ class TestOrderFlagsTaker:
                      order_type=Order.Types.LIMIT,
                      flag=Order.Flags.IMMEDIATE_OR_CANCEL,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -185,7 +185,7 @@ class TestOrderFlagsMaker:
                      side=Order.Sides.SELL,
                      order_type=Order.Types.LIMIT,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -197,7 +197,7 @@ class TestOrderFlagsMaker:
                      side=Order.Sides.SELL,
                      order_type=Order.Types.LIMIT,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
@@ -241,7 +241,7 @@ class TestOrderFlagsMaker:
                      side=Order.Sides.SELL,
                      order_type=Order.Types.LIMIT,
                      instrument=_INSTRUMENT)
-        data.id = 1
+        data.id = "1"
         print(self.ob)
         self.ob.add(data)
 
