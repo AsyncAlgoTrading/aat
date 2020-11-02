@@ -13,6 +13,6 @@ def _seed(ob, instrument, flag=OrderFlag.NONE):
                       exchange=ExchangeType(""),
                       order_type=OrderType.LIMIT,
                       flag=flag)
-        order.id = 1
+        order.id = "1"
         ob.add(order)
         x += .5

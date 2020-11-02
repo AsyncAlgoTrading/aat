@@ -16,7 +16,7 @@ except ImportError:
 
 def _make_cpp_order(volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.MARKET, flag=OrderFlag.NONE, stop_target=None):
     '''helper method to ensure all arguments are setup'''
-    return OrderCpp(0, datetime.now(), volume, price, side, instrument, exchange, notional, order_type, flag, stop_target)
+    return OrderCpp("0", datetime.now(), volume, price, side, instrument, exchange, notional, order_type, flag, stop_target)
 
 
 class Order(object):
