@@ -1,5 +1,6 @@
 import csv
 from collections import deque
+from datetime import datetime
 from typing import List
 from aat.config import EventType, InstrumentType, Side, TradingType
 from aat.core import ExchangeType, Event, Instrument, Trade, Order
@@ -37,6 +38,12 @@ class CSV(Exchange):
                 )
                 )
                 order.filled = float(row['volume'])
+                if 'time' in row:
+                    order.timestamp = datetime.fromtimestamp(float(row['time']))
+                elif 'date' in row:
+                    order.timestamp = datetime.fromisoformat(row['date'])
+                elif 'datetime' in row:
+                    order.timestamp = datetime.fromisoformat(row['datetime'])
 
                 self._data.append(Trade(volume=float(row['volume']),
                                         price=float(row['close']),

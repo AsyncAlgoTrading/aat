@@ -4,6 +4,7 @@ import traceback
 from typing import List, TYPE_CHECKING
 
 from .order_entry import StrategyManagerOrderEntryMixin
+from .periodic import PeriodicManagerMixin
 from .portfolio import StrategyManagerPortfolioMixin
 from .risk import StrategyManagerRiskMixin
 from .utils import StrategyManagerUtilsMixin
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
     from aat.engine import TradingEngine
 
 
-class StrategyManager(StrategyManagerOrderEntryMixin, StrategyManagerRiskMixin, StrategyManagerPortfolioMixin, StrategyManagerUtilsMixin, EventHandler):
+class StrategyManager(StrategyManagerOrderEntryMixin, StrategyManagerRiskMixin, StrategyManagerPortfolioMixin, StrategyManagerUtilsMixin, PeriodicManagerMixin, EventHandler):
     def __init__(self,
                  trading_engine: 'TradingEngine',
                  trading_type: TradingType,
