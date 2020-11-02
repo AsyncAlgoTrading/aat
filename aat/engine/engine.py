@@ -6,7 +6,7 @@ import os.path
 from aiostream.stream import merge  # type: ignore
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timedelta
 from traitlets.config.application import Application  # type: ignore
 from traitlets import validate, TraitError, Unicode, Bool, List, Instance  # type: ignore
 from tornado.web import StaticFileHandler, RedirectHandler, Application as TornadoApplication
@@ -236,6 +236,24 @@ class TradingEngine(Application):
         async with merge(*(exch.tick() for exch in self.exchanges + [self] if inspect.isasyncgenfunction(exch.tick))).stream() as stream:
             # stream through all events
             async for event in stream:
+                # TODO move out of critical path
+                if self._offline():
+                    # inject periodics
+                    # TODO optimize
+                    # Manager should keep track of the intervals for its periodics,
+                    # then we don't need to go through seconds (which is what the
+                    # live engine's `tick` method does below). Instead we can just
+                    # calculate exactly the intervals
+                    if self._latest != datetime.fromtimestamp(0) and hasattr(event, 'target') and hasattr(event.target, 'timestamp'):
+                        # TODO in progress optimization
+                        intervals = self.manager.periodicIntervals()
+
+                        # not the first tick
+                        for _ in range(int((event.target.timestamp - self._latest).total_seconds() / intervals)):
+                            self._latest = self._latest + timedelta(seconds=1 * intervals)
+                            if any(p.expires(self._latest) for p in self.manager.periodics()):
+                                await asyncio.gather(*(asyncio.create_task(p.execute(self._latest)) for p in self.manager.periodics() if p.expires(self._latest)))
+
                 # tick exchange event to handlers
                 await self.processEvent(event)
 
@@ -262,7 +280,7 @@ class TradingEngine(Application):
                     await self.processEvent(event, strat)
 
                 # process any periodics
-                await asyncio.gather(*(asyncio.create_task(p.execute(self._latest)) for p in self.manager._periodics))
+                await asyncio.gather(*(asyncio.create_task(p.execute(self._latest)) for p in self.manager.periodics() if p.expires(self._latest)))
 
         # Before engine shutdown, send an exit event
         await self.processEvent(Event(type=EventType.EXIT, target=None))
@@ -304,8 +322,8 @@ class TradingEngine(Application):
         '''helper method to ensure periodic methods execute periodically in absence
         of market data'''
 
-        # TODO periodic strategies in backtest/simulation
         if self._offline():
+            # periodics injected manually, see main event loop above
             return
 
         while True:
@@ -326,5 +344,6 @@ class TradingEngine(Application):
             self.event_loop.run_until_complete(self.run())
         except KeyboardInterrupt:
             pass
+
         # send exit event to all callbacks
         asyncio.ensure_future(self.processEvent(Event(type=EventType.EXIT, target=None)))
