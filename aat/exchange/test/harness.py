@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import List
 from aat import Strategy
 from aat.config import EventType, InstrumentType, Side
 from aat.core import ExchangeType, Event, Instrument, Trade, Order
@@ -57,8 +58,8 @@ class Harness(Exchange):
 class TestStrategy(Strategy):
     def __init__(self, *args, **kwargs) -> None:
         super(TestStrategy, self).__init__(*args, **kwargs)
-        self._orders = []
-        self._trades = []
+        self._orders: List[Order] = []
+        self._trades: List[Trade] = []
 
     async def onStart(self, event: Event) -> None:
         self.periodic(self.onPeriodic, second=0, minute=30)
@@ -67,7 +68,7 @@ class TestStrategy(Strategy):
         pass
 
     async def onTraded(self, event: Event) -> None:
-        self._trades.append(event.target)
+        self._trades.append(event.target)  # type: ignore
 
     async def onPeriodic(self):
         o = await self.newOrder(Order(
