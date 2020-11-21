@@ -38,15 +38,16 @@ class Data(object):
             return _make_cpp_data(*args, **kwargs)
         return super(Data, cls).__new__(cls)
 
-    def __init__(self, instrument=None, exchange=ExchangeType(""), data={}):
-        self.__id = _ID_GENERATOR()
-        self.__timestamp = datetime.now()
+    def __init__(self, instrument=None, exchange=ExchangeType(""), data={}, **kwargs):
+        self.__id = kwargs.get('id', _ID_GENERATOR())
+        self.__timestamp = kwargs.get('timestamp', datetime.now())
 
         assert instrument is None or isinstance(instrument, Instrument)
         assert isinstance(exchange, ExchangeType)
         self.__type = DataType.DATA
         self.__instrument = instrument
         self.__exchange = exchange
+        self.__data = data
 
     # ******** #
     # Readonly #
@@ -70,6 +71,10 @@ class Data(object):
     @property
     def exchange(self):
         return self.__exchange
+
+    @property
+    def data(self):
+        return self.__data
 
     def __repr__(self) -> str:
         return f'Data( id={self.id}, timestamp={self.timestamp}, instrument={self.instrument}, exchange={self.exchange})'
