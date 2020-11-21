@@ -118,7 +118,7 @@ dist:  ## dist to pypi
 clean: ## clean the repository
 	find . -name "__pycache__" | xargs rm -rf
 	find . -name "*.pyc" | xargs rm -rf
-	rm -rf .coverage coverage cover htmlcov logs build dist *.egg-info
+	rm -rf .coverage coverage cover htmlcov logs build dist *.egg-info coverage.xml .mypy_cache
 	find . -name "*.so"  | xargs rm -rf
 	make -C ./docs clean
 	rm -rf _aat_BACKTEST_*

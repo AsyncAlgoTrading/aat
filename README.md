@@ -1,8 +1,8 @@
 
-<img src="https://raw.githubusercontent.com/AsyncAlgoTrading/aat/master/docs/img/icon.png" width="200px"></img>
+<img src="https://raw.githubusercontent.com/AsyncAlgoTrading/aat/main/docs/img/icon.png" width="200px"></img>
 
-[![Build Status](https://dev.azure.com/tpaine154/aat/_apis/build/status/AsyncAlgoTrading.aat?branchName=master)](https://dev.azure.com/tpaine154/aat/_build/latest?definitionId=19&branchName=master)
-[![Coverage](https://img.shields.io/azure-devops/coverage/tpaine154/aat/19/master)](https://dev.azure.com/tpaine154/aat/_apis/build/status/AsyncAlgoTrading.aat?branchName=master)
+[![Build Status](https://dev.azure.com/tpaine154/aat/_apis/build/status/AsyncAlgoTrading.aat?branchName=main)](https://dev.azure.com/tpaine154/aat/_build/latest?definitionId=19&branchName=main)
+[![Coverage](https://img.shields.io/azure-devops/coverage/tpaine154/aat/19/main)](https://dev.azure.com/tpaine154/aat/_apis/build/status/AsyncAlgoTrading.aat?branchName=main)
 [![License](https://img.shields.io/github/license/timkpaine/aat.svg)](https://pypi.python.org/pypi/aat)
 [![PyPI](https://img.shields.io/pypi/v/aat.svg)](https://pypi.python.org/pypi/aat)
 [![Docs](https://img.shields.io/readthedocs/aat.svg)](http://aat.readthedocs.io/en/latest/)
@@ -603,9 +603,9 @@ We can run any number of strategies against any number of exchanges, including c
 ## Other Features
 
 ### Trade/Portfolio Analysis
-![](https://raw.githubusercontent.com/AsyncAlgoTrading/aat/master/docs/img/tearsheet.png)
+![](https://raw.githubusercontent.com/AsyncAlgoTrading/aat/main/docs/img/tearsheet.png)
 
-![](https://raw.githubusercontent.com/AsyncAlgoTrading/aat/master/docs/img/rethist.png)
+![](https://raw.githubusercontent.com/AsyncAlgoTrading/aat/main/docs/img/rethist.png)
 
 
 ### API Access
