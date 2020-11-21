@@ -38,7 +38,7 @@ class Data(object):
             return _make_cpp_data(*args, **kwargs)
         return super(Data, cls).__new__(cls)
 
-    def __init__(self, instrument=None, exchange=ExchangeType("")):
+    def __init__(self, instrument=None, exchange=ExchangeType(""), data={}):
         self.__id = _ID_GENERATOR()
         self.__timestamp = datetime.now()
 
