@@ -40,8 +40,8 @@ class Trade(object):
             return _make_cpp_trade(*args, **kwargs)
         return super(Trade, cls).__new__(cls)
 
-    def __init__(self, volume, price, maker_orders, taker_order):
-        self.__id = ""  # on construction, provide no ID until exchange assigns one
+    def __init__(self, volume, price, taker_order, maker_orders=None, **kwargs):
+        self.__id = kwargs.get('id', "0")  # on construction, provide no ID until exchange assigns one
         self.__type = DataType.TRADE
 
         assert(isinstance(price, (float, int)))
@@ -52,7 +52,7 @@ class Trade(object):
 
         self.__price = price
         self.__volume = volume
-        self.__maker_orders = maker_orders
+        self.__maker_orders = maker_orders or []
         self.__taker_order = taker_order
 
         self.__my_order = None
@@ -166,8 +166,8 @@ class Trade(object):
     def fromJson(jsn):
         ret = Trade(jsn['volume'],
                     jsn['price'],
-                    [Order.fromJson(x) for x in jsn['maker_orders']],
-                    Order.fromJson(jsn['taker_order']))
+                    Order.fromJson(jsn['taker_order']),
+                    [Order.fromJson(x) for x in jsn['maker_orders']])
 
         if 'id' in jsn:
             ret.id = jsn.get('id')

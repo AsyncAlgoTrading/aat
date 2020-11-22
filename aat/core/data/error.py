@@ -13,8 +13,8 @@ class Error(object):
         "__type",
     ]
 
-    def __init__(self, target, exception, callback, handler):
-        self.__timestamp = datetime.now()
+    def __init__(self, target, exception, callback, handler, **kwargs):
+        self.__timestamp = kwargs.get('timestamp', datetime.now())
         self.__type = DataType.ERROR
         self.__target = target
         self.__exception = exception

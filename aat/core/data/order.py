@@ -47,9 +47,9 @@ class Order(object):
             return _make_cpp_order(*args, **kwargs)
         return super(Order, cls).__new__(cls)
 
-    def __init__(self, volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.MARKET, flag=OrderFlag.NONE, stop_target=None):
-        self.__id = 0  # on construction, provide no ID until exchange assigns one
-        self.__timestamp = datetime.now()
+    def __init__(self, volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.MARKET, flag=OrderFlag.NONE, stop_target=None, **kwargs):
+        self.__id = kwargs.get('id', 0)  # on construction, provide no ID until exchange assigns one
+        self.__timestamp = kwargs.get('timestamp', datetime.now())
         self.__type = DataType.ORDER
 
         assert isinstance(instrument, Instrument)
