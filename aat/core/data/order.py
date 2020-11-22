@@ -25,11 +25,13 @@ def _make_cpp_order(
     order_type=OrderType.MARKET,
     flag=OrderFlag.NONE,
     stop_target=None,
+    id=None,
+    timestamp=None,
 ):
     """helper method to ensure all arguments are setup"""
     return OrderCpp(
-        "0",
-        datetime.now(),
+        id or "0",
+        timestamp or datetime.now(),
         volume,
         price,
         side,
