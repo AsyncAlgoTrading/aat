@@ -3,7 +3,7 @@ from enum import Enum
 
 class BaseEnum(Enum):
     def __str__(self):
-        return f'{self.value}'
+        return f"{self.value}"
 
     @classmethod
     def members(cls):
@@ -11,108 +11,108 @@ class BaseEnum(Enum):
 
 
 class TradingType(BaseEnum):
-    LIVE = 'LIVE'
-    SIMULATION = 'SIMULATION'
-    SANDBOX = 'SANDBOX'
-    BACKTEST = 'BACKTEST'
+    LIVE = "LIVE"
+    SIMULATION = "SIMULATION"
+    SANDBOX = "SANDBOX"
+    BACKTEST = "BACKTEST"
 
 
 class Side(BaseEnum):
-    BUY = 'BUY'
-    SELL = 'SELL'
+    BUY = "BUY"
+    SELL = "SELL"
 
 
 class OptionType(BaseEnum):
-    CALL = 'CALL'
-    PUT = 'PUT'
+    CALL = "CALL"
+    PUT = "PUT"
 
 
 class EventType(BaseEnum):
     # Heartbeat events
-    HEARTBEAT = 'HEARTBEAT'
+    HEARTBEAT = "HEARTBEAT"
 
     # Trade events
-    TRADE = 'TRADE'
+    TRADE = "TRADE"
 
     # Order events
-    OPEN = 'OPEN'
-    CANCEL = 'CANCEL'
-    CHANGE = 'CHANGE'
-    FILL = 'FILL'
+    OPEN = "OPEN"
+    CANCEL = "CANCEL"
+    CHANGE = "CHANGE"
+    FILL = "FILL"
 
     # Other data events
-    DATA = 'DATA'
+    DATA = "DATA"
 
     # System events
-    HALT = 'HALT'
-    CONTINUE = 'CONTINUE'
+    HALT = "HALT"
+    CONTINUE = "CONTINUE"
 
     # Engine events
-    ERROR = 'ERROR'
-    START = 'START'
-    EXIT = 'EXIT'
+    ERROR = "ERROR"
+    START = "START"
+    EXIT = "EXIT"
 
     # Order Events
-    BOUGHT = 'BOUGHT'
-    SOLD = 'SOLD'
-    RECEIVED = 'RECEIVED'
-    REJECTED = 'REJECTED'
-    CANCELED = 'CANCELED'
+    BOUGHT = "BOUGHT"
+    SOLD = "SOLD"
+    RECEIVED = "RECEIVED"
+    REJECTED = "REJECTED"
+    CANCELED = "CANCELED"
 
 
 class DataType(BaseEnum):
-    DATA = 'DATA'
-    ERROR = 'ERROR'
+    DATA = "DATA"
+    ERROR = "ERROR"
 
-    ORDER = 'ORDER'
-    TRADE = 'TRADE'
+    ORDER = "ORDER"
+    TRADE = "TRADE"
 
 
 class InstrumentType(BaseEnum):
-    OTHER = 'OTHER'
+    OTHER = "OTHER"
 
-    EQUITY = 'EQUITY'
+    EQUITY = "EQUITY"
 
     # TODO ETF separate?
 
-    BOND = 'BOND'
+    BOND = "BOND"
 
-    OPTION = 'OPTION'
+    OPTION = "OPTION"
 
-    FUTURE = 'FUTURE'
+    FUTURE = "FUTURE"
 
-    PAIR = 'PAIR'
+    PAIR = "PAIR"
 
-    SPREAD = 'SPREAD'
+    SPREAD = "SPREAD"
 
-    FUTURESOPTION = 'FUTURESOPTION'
+    FUTURESOPTION = "FUTURESOPTION"
 
-    MUTUALFUND = 'MUTUALFUND'
+    MUTUALFUND = "MUTUALFUND"
 
-    COMMODITY = 'COMMODITY'
+    COMMODITY = "COMMODITY"
 
     # TODO Warrant?
 
     # Non-tradeable
-    CURRENCY = 'CURRENCY'
-    INDEX = 'INDEX'
+    CURRENCY = "CURRENCY"
+    INDEX = "INDEX"
 
 
 class OrderType(BaseEnum):
     # Order Types
-    LIMIT = 'LIMIT'
-    MARKET = 'MARKET'
-    STOP = 'STOP'
+    LIMIT = "LIMIT"
+    MARKET = "MARKET"
+    STOP = "STOP"
 
 
 class OrderFlag(BaseEnum):
     # Order Flag
-    NONE = 'NONE'
-    FILL_OR_KILL = 'FILL_OR_KILL'
-    ALL_OR_NONE = 'ALL_OR_NONE'
-    IMMEDIATE_OR_CANCEL = 'IMMEDIATE_OR_CANCEL'
+    NONE = "NONE"
+    FILL_OR_KILL = "FILL_OR_KILL"
+    ALL_OR_NONE = "ALL_OR_NONE"
+    IMMEDIATE_OR_CANCEL = "IMMEDIATE_OR_CANCEL"
 
 
 class ExitRoutine(BaseEnum):
-    NONE = 'NONE'
-    CLOSE_ALL = 'CLOSE_ALL'
+    NONE = "NONE"
+    CLOSE_ALL = "CLOSE_ALL"

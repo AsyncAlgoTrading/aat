@@ -18,11 +18,11 @@ class OrderManager(ManagerBase):
         self._past_orders = []
 
     def addExchange(self, exchange: Exchange):
-        '''add an exchange'''
+        """add an exchange"""
         self._exchanges[exchange.exchange()] = exchange
 
     def _setManager(self, manager):
-        '''install manager'''
+        """install manager"""
         self._manager = manager
 
     # *********************
@@ -31,7 +31,7 @@ class OrderManager(ManagerBase):
     async def newOrder(self, strategy, order: Order):
         exchange = self._exchanges.get(order.exchange)
         if not exchange:
-            raise Exception('Exchange not installed: {}'.format(order.exchange))
+            raise Exception("Exchange not installed: {}".format(order.exchange))
 
         await exchange.newOrder(order)
         self._pending_orders[order.id] = (order, strategy)
@@ -40,7 +40,7 @@ class OrderManager(ManagerBase):
     async def cancelOrder(self, strategy, order: Order):
         exchange = self._exchanges.get(order.exchange)
         if not exchange:
-            raise Exception('Exchange not installed: {}'.format(order.exchange))
+            raise Exception("Exchange not installed: {}".format(order.exchange))
 
         await exchange.cancelOrder(order)
         self._pending_orders.pop(order.id, None)
@@ -51,7 +51,7 @@ class OrderManager(ManagerBase):
     # EventHandler methods *
     # **********************
     async def onTrade(self, event):
-        '''Match trade with order'''
+        """Match trade with order"""
         action, strat, order = False, None, None
         for order in event.target.maker_orders:
             if order.id in self._pending_orders:
@@ -131,18 +131,26 @@ class OrderManager(ManagerBase):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onTraded(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
+    async def onTraded(
+        self, event: Event, strategy: Optional[EventHandler]
+    ):  # type: ignore[override]
         # TODO
         pass
 
-    async def onReceived(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
+    async def onReceived(
+        self, event: Event, strategy: Optional[EventHandler]
+    ):  # type: ignore[override]
         # TODO
         pass
 
-    async def onRejected(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
+    async def onRejected(
+        self, event: Event, strategy: Optional[EventHandler]
+    ):  # type: ignore[override]
         # TODO
         pass
 
-    async def onCanceled(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
+    async def onCanceled(
+        self, event: Event, strategy: Optional[EventHandler]
+    ):  # type: ignore[override]
         # TODO
         pass

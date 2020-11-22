@@ -7,22 +7,19 @@ from ...config import Side
 
 
 class OrderBookLite(OrderBookBase):
-    '''A partial order book for clients of exchanges that don't
+    """A partial order book for clients of exchanges that don't
     provide order events but provide snapshots or overall state.
 
     Args:
         instrument (Instrument): the instrument for the book
         exchange_name (str): name of the exchange
         callback (Function): callback on events
-    '''
+    """
 
-    def __init__(self,
-                 instrument,
-                 exchange_name='',
-                 callback: Callable = print):
+    def __init__(self, instrument, exchange_name="", callback: Callable = print):
 
         self._instrument = instrument
-        self._exchange_name = exchange_name or ExchangeType('')
+        self._exchange_name = exchange_name or ExchangeType("")
         self._callback = callback
 
         # reset levels

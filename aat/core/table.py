@@ -5,6 +5,7 @@ from .handler import EventHandler
 try:
     from perspective import Table  # type: ignore
 except ImportError:
+
     class Table(object):  # type: ignore
         def __init__(*args, **kwargs):
             pass
@@ -36,21 +37,21 @@ class TableHandler(EventHandler):
         return self._trades, self._orders
 
     def onTrade(self, event: Event):
-        '''onTrade'''
+        """onTrade"""
         self._trades.update([event.target.toJson()])
 
     def onOpen(self, event: Event):
-        '''onOpen'''
+        """onOpen"""
         self._orders.update([event.target.toJson()])
 
     def onCancel(self, event: Event):
-        '''onCancel'''
+        """onCancel"""
         self._orders.remove([event.target.id])
 
     def onChange(self, event: Event):
-        '''onChange'''
+        """onChange"""
         self._orders.update([event.target.toJson()])
 
     def onFill(self, event: Event):
-        '''onFill'''
+        """onFill"""
         self._orders.remove([event.target.id])

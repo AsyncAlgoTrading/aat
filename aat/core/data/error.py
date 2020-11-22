@@ -14,7 +14,7 @@ class Error(object):
     ]
 
     def __init__(self, target, exception, callback, handler, **kwargs):
-        self.__timestamp = kwargs.get('timestamp', datetime.now())
+        self.__timestamp = kwargs.get("timestamp", datetime.now())
         self.__type = DataType.ERROR
         self.__target = target
         self.__exception = exception
@@ -49,4 +49,4 @@ class Error(object):
         return self.__handler
 
     def __repr__(self) -> str:
-        return f'Error( timestamp={self.timestamp}, callback={self.callback}, handler={self.handler}, exception={format_exception(type(self.exception), self.exception, self.exception.__traceback__)})'
+        return f"Error( timestamp={self.timestamp}, callback={self.callback}, handler={self.handler}, exception={format_exception(type(self.exception), self.exception, self.exception.__traceback__)})"

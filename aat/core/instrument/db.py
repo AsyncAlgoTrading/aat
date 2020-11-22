@@ -8,11 +8,11 @@ if TYPE_CHECKING:
 
 
 class InstrumentDB(object):
-    '''instrument registration'''
+    """instrument registration"""
 
     def __init__(self):
-        self._name_map: Mapping[str, 'Instrument'] = {}
-        self._map: Mapping[Tuple[str, InstrumentType], 'Instrument'] = {}
+        self._name_map: Mapping[str, "Instrument"] = {}
+        self._map: Mapping[Tuple[str, InstrumentType], "Instrument"] = {}
 
     def add(self, instrument):
         if instrument.name in self._name_map:
@@ -20,12 +20,14 @@ class InstrumentDB(object):
         self._name_map[instrument.name] = instrument
         self._map[instrument.name, instrument.type] = instrument
 
-    def instruments(self,
-                    name="",
-                    type: InstrumentType = InstrumentType.EQUITY,
-                    exchange: ExchangeType = ExchangeType(""),
-                    *args,
-                    **kwargs):
+    def instruments(
+        self,
+        name="",
+        type: InstrumentType = InstrumentType.EQUITY,
+        exchange: ExchangeType = ExchangeType(""),
+        *args,
+        **kwargs
+    ):
         if not name and not type and not exchange:
             return list(self._map.values())
         elif name:
@@ -38,12 +40,15 @@ class InstrumentDB(object):
             ret = [r for r in ret if exchange in r.exchanges]
         return ret
 
-    def get(self,
-            name="",
-            type: InstrumentType = InstrumentType.EQUITY,
-            exchange: ExchangeType = ExchangeType(""),
-            *args,
-            **kwargs):
+    def get(
+        self,
+        name="",
+        type: InstrumentType = InstrumentType.EQUITY,
+        exchange: ExchangeType = ExchangeType(""),
+        *args,
+        **kwargs
+    ):
         return self._name_map[name]
+
 
 # TODO allow for multiple exchange's distinct instrument representation

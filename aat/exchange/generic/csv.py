@@ -8,10 +8,10 @@ from aat.exchange import Exchange
 
 
 class CSV(Exchange):
-    '''CSV File Exchange'''
+    """CSV File Exchange"""
 
     def __init__(self, trading_type, verbose, filename: str):
-        super().__init__(ExchangeType('csv-{}'.format(filename)))
+        super().__init__(ExchangeType("csv-{}".format(filename)))
         self._trading_type = trading_type
         self._verbose = verbose
         self._filename = filename
@@ -20,35 +20,40 @@ class CSV(Exchange):
         self._order_id = 1
 
     async def instruments(self):
-        '''get list of available instruments'''
+        """get list of available instruments"""
         return list(set(_.instrument for _ in self._data))
 
     async def connect(self):
         with open(self._filename) as csvfile:
-            self._reader = csv.DictReader(csvfile, delimiter=',')
+            self._reader = csv.DictReader(csvfile, delimiter=",")
 
             for row in self._reader:
-                order = Order(volume=float(row['volume']),
-                              price=float(row['close']),
-                              side=Side.BUY,
-                              exchange=self.exchange(),
-                              instrument=Instrument(
-                    row['symbol'].split('-')[0],
-                    InstrumentType(row['symbol'].split('-')[1].upper())
+                order = Order(
+                    volume=float(row["volume"]),
+                    price=float(row["close"]),
+                    side=Side.BUY,
+                    exchange=self.exchange(),
+                    instrument=Instrument(
+                        row["symbol"].split("-")[0],
+                        InstrumentType(row["symbol"].split("-")[1].upper()),
+                    ),
+                    filled=float(row["volume"]),
                 )
-                )
-                order.filled = float(row['volume'])
-                if 'time' in row:
-                    order.timestamp = datetime.fromtimestamp(float(row['time']))
-                elif 'date' in row:
-                    order.timestamp = datetime.fromisoformat(row['date'])
-                elif 'datetime' in row:
-                    order.timestamp = datetime.fromisoformat(row['datetime'])
+                if "time" in row:
+                    order.timestamp = datetime.fromtimestamp(float(row["time"]))
+                elif "date" in row:
+                    order.timestamp = datetime.fromisoformat(row["date"])
+                elif "datetime" in row:
+                    order.timestamp = datetime.fromisoformat(row["datetime"])
 
-                self._data.append(Trade(volume=float(row['volume']),
-                                        price=float(row['close']),
-                                        maker_orders=[],
-                                        taker_order=order))
+                self._data.append(
+                    Trade(
+                        volume=float(row["volume"]),
+                        price=float(row["close"]),
+                        maker_orders=[],
+                        taker_order=order,
+                    )
+                )
 
     async def tick(self):
         for item in self._data:
@@ -64,40 +69,4 @@ class CSV(Exchange):
         return order
 
 
-class CSV2(Exchange):
-    '''CSV File Exchange'''
-
-    def __init__(self, trading_type, verbose, filename: str, value_field=''):
-        super().__init__(ExchangeType('csv-{}'.format(filename)))
-        self._trading_type = trading_type
-        self._verbose = verbose
-        self._filename = filename
-        self._data: List[Trade] = []
-        self._value_field = value_field
-
-    async def instruments(self):
-        '''get list of available instruments'''
-        return list(set(_.instrument for _ in self._data))
-
-    async def connect(self):
-        with open(self._filename) as csvfile:
-            self._reader = csv.DictReader(csvfile, delimiter=',')
-
-            for row in self._reader:
-                if self._value_field:
-                    value = row[self._value_field]
-                if 'value' in row:
-                    value = row['value']
-                elif 'price' in row:
-                    value = row['price']
-                elif 'close' in row:
-                    # OHLC data
-                    value = row['close']
-                else:
-                    raise Exception('Must provide a value field or "value", "price", "close"')
-
-                _ = value
-                # TODO make this smarter or more configureable
-
-
-Exchange.registerExchange('csv', CSV)
+Exchange.registerExchange("csv", CSV)

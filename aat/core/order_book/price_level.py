@@ -5,13 +5,14 @@ from ...config import OrderType, OrderFlag
 
 try:
     from aat.binding import _PriceLevelCpp  # type: ignore
+
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
 
 
 def _make_cpp_price_level(price, collector):
-    '''helper method to ensure all arguments are setup'''
+    """helper method to ensure all arguments are setup"""
     return _PriceLevelCpp(price, collector)
 
 
@@ -23,7 +24,7 @@ class _PriceLevel(object):
         "_orders_filled_staged",
         "_stop_orders",
         "_stop_orders_staged",
-        "_collector"
+        "_collector",
     ]
 
     def __new__(cls, *args, **kwargs):
@@ -75,7 +76,7 @@ class _PriceLevel(object):
         # check if order is in level
         if order.price != self._price or order.id not in (o.id for o in self._orders):
             # something is wrong
-            raise Exception(f'Order not found in price level {self._price}: {order}')
+            raise Exception(f"Order not found in price level {self._price}: {order}")
 
         # modify order
         for o in self._orders:
@@ -93,7 +94,7 @@ class _PriceLevel(object):
         # check if order is in level
         if order.price != self._price or order not in self._orders:
             # something is wrong
-            raise Exception(f'Order not found in price level {self._price}: {order}')
+            raise Exception(f"Order not found in price level {self._price}: {order}")
 
         # remove order
         self._orders.remove(order)
@@ -105,14 +106,14 @@ class _PriceLevel(object):
         return order
 
     def cross(self, taker_order):
-        '''Cross the spread
+        """Cross the spread
 
         Args:
             taker_order (Order): the order crossing the spread
         Returns:
             order (Order or None): the order crossing, if there is some remaining
             secondary_orders (List[Order] or None): Orders that get triggered as a result of the crossing (e.g. stop orders)
-        '''
+        """
         if taker_order.order_type == OrderType.STOP:
             self.add(taker_order)
             return None, ()
@@ -217,7 +218,7 @@ class _PriceLevel(object):
         return taker_order, self._get_stop_orders()
 
     def clear(self):
-        '''clear queues'''
+        """clear queues"""
         self._orders.clear()
         self._orders_staged.clear()
         self._orders_filled_staged.clear()
@@ -232,11 +233,11 @@ class _PriceLevel(object):
         return []
 
     def commit(self):
-        '''staged orders accepted, clear'''
+        """staged orders accepted, clear"""
         self.clear()
 
     def revert(self):
-        '''staged order reverted, unstage the orders'''
+        """staged order reverted, unstage the orders"""
         assert len(self._orders) == 0
 
         # reset orders
@@ -257,18 +258,18 @@ class _PriceLevel(object):
         self._stop_orders_staged = []
 
     def __bool__(self):
-        '''use deque size as truth value'''
+        """use deque size as truth value"""
         return len(self._orders) > 0
 
     def __iter__(self):
-        '''iterate through orders'''
+        """iterate through orders"""
         for order in self._orders:
             yield order
 
     def __len__(self):
-        '''get number of orders'''
+        """get number of orders"""
         return len(self._orders)
 
     def __getitem__(self, index):
-        '''get item'''
+        """get item"""
         return self._orders[index]

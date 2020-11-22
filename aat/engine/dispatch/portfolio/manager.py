@@ -23,24 +23,24 @@ class PortfolioManager(ManagerBase):
         self._active_positions = {}
 
     def _setManager(self, manager):
-        '''install manager'''
+        """install manager"""
         self._manager = manager
 
     def newPosition(self, strategy, trade: Trade):
-        '''create and track a new position, or update the pnl/price of
-        an existing position'''
+        """create and track a new position, or update the pnl/price of
+        an existing position"""
         self._portfolio.newPosition(strategy, trade)
 
     def updateStrategies(self, strategies: List) -> None:
-        '''update with list of strategies'''
+        """update with list of strategies"""
         self._portfolio.updateStrategies(strategies)
 
     def updateAccount(self, positions: List[Position]) -> None:
-        '''update positions tracking with a position from the exchange'''
+        """update positions tracking with a position from the exchange"""
         self._portfolio.updateAccount(positions)
 
     def updateCash(self, positions: List[Position]) -> None:
-        '''update cash positions from exchange'''
+        """update cash positions from exchange"""
         self._portfolio.updateCash(positions)
 
     # *********************
@@ -49,13 +49,22 @@ class PortfolioManager(ManagerBase):
     def portfolio(self):
         return self._portfolio
 
-    def positions(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None):
-        return self._portfolio.positions(strategy=strategy, instrument=instrument, exchange=exchange)
+    def positions(
+        self, strategy, instrument: Instrument = None, exchange: ExchangeType = None
+    ):
+        return self._portfolio.positions(
+            strategy=strategy, instrument=instrument, exchange=exchange
+        )
 
     def priceHistory(self, instrument: Instrument = None):
         if instrument:
-            return pd.DataFrame(self._prices[instrument], columns=[instrument.name, 'when'])
-        return {i: pd.DataFrame(self._prices[i], columns=[i.name, 'when']) for i in self._prices}
+            return pd.DataFrame(
+                self._prices[instrument], columns=[instrument.name, "when"]
+            )
+        return {
+            i: pd.DataFrame(self._prices[i], columns=[i.name, "when"])
+            for i in self._prices
+        }
 
     # **********************
     # EventHandler methods *
@@ -107,6 +116,8 @@ class PortfolioManager(ManagerBase):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onTraded(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
+    async def onTraded(
+        self, event: Event, strategy: Optional[EventHandler]
+    ):  # type: ignore[override]
         trade: Trade = event.target  # type: ignore
         self._portfolio.onTraded(trade, strategy)

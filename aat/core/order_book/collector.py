@@ -6,13 +6,14 @@ from ...config import EventType
 
 try:
     from aat.binding import _CollectorCpp  # type: ignore
+
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
 
 
 def _make_cpp_collector(callback=lambda *args: args):
-    '''helper method to ensure all arguments are setup'''
+    """helper method to ensure all arguments are setup"""
     return _CollectorCpp(callback)
 
 
@@ -66,48 +67,53 @@ class _Collector(object):
         self._callback = callback
 
     def push(self, event):
-        '''push event to queue'''
+        """push event to queue"""
         self._event_queue.append(event)
 
     def pushOpen(self, order):
-        '''push order open'''
+        """push order open"""
         self.push(Event(type=EventType.OPEN, target=order))
 
     def pushFill(self, order, accumulate=False, filled_in_txn=0.0):
-        '''push order fill'''
+        """push order fill"""
         if accumulate:
             self.accumulate(order, filled_in_txn)
         self.push(Event(type=EventType.FILL, target=order))
 
     def pushChange(self, order, accumulate=False, filled_in_txn=0.0):
-        '''push order change'''
+        """push order change"""
         if accumulate:
             self.accumulate(order, filled_in_txn)
         self.push(Event(type=EventType.CHANGE, target=order))
 
     def pushCancel(self, order, accumulate=False, filled_in_txn=0.0):
-        '''push order cancellation'''
+        """push order cancellation"""
         if accumulate:
             self.accumulate(order, filled_in_txn)
-        self.push(Event(type=EventType.CANCEL,
-                        target=order))
+        self.push(Event(type=EventType.CANCEL, target=order))
 
     def pushTrade(self, taker_order, filled_in_txn):
-        '''push taker order trade'''
+        """push taker order trade"""
         if not self.orders():
-            raise Exception('No maker orders provided')
+            raise Exception("No maker orders provided")
 
         if taker_order.filled <= 0:
-            raise Exception('No trade occurred')
+            raise Exception("No trade occurred")
 
         if filled_in_txn != self.volume():
-            raise Exception('Accumulation error occurred')
+            raise Exception("Accumulation error occurred")
 
-        self.push(Event(type=EventType.TRADE,
-                        target=Trade(volume=self.volume(),
-                                     price=self.price(),
-                                     maker_orders=self.orders().copy(),
-                                     taker_order=taker_order)))
+        self.push(
+            Event(
+                type=EventType.TRADE,
+                target=Trade(
+                    volume=self.volume(),
+                    price=self.price(),
+                    maker_orders=self.orders().copy(),
+                    taker_order=taker_order,
+                ),
+            )
+        )
 
         self._taker_order = taker_order
 
@@ -115,7 +121,14 @@ class _Collector(object):
         assert filled_in_txn > 0
 
         # FIXME price change/volume down?
-        self._price = ((self._price * self._volume + order.price * filled_in_txn) / (self._volume + filled_in_txn)) if (self._volume + filled_in_txn > 0) else 0.0
+        self._price = (
+            (
+                (self._price * self._volume + order.price * filled_in_txn)
+                / (self._volume + filled_in_txn)
+            )
+            if (self._volume + filled_in_txn > 0)
+            else 0.0
+        )
         self._volume += filled_in_txn
         self._orders.append(order)
 
@@ -124,7 +137,7 @@ class _Collector(object):
         return len(self._price_levels)
 
     def commit(self):
-        '''flush the event queue'''
+        """flush the event queue"""
         while self._event_queue:
             ev = self._event_queue.popleft()
             self._callback(ev)
@@ -135,26 +148,27 @@ class _Collector(object):
         self.reset()
 
     def revert(self):
-        '''revert the event queue'''
+        """revert the event queue"""
         for pl in self._price_levels:
             pl.revert()
 
         self.reset()
 
     def clear(self):
-        '''clear the event queue'''
+        """clear the event queue"""
         self.reset()
+
     ####################
 
     ###############
     # Order Stats #
     ###############
     def price(self):
-        '''VWAP'''
+        """VWAP"""
         return self._price
 
     def volume(self):
-        '''volume'''
+        """volume"""
         return self._volume
 
     def orders(self):

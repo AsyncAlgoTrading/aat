@@ -24,20 +24,29 @@ class ReadOnlyStrategy(Strategy):
         pprint(event)
 
     async def onExit(self, event: Event) -> None:
-        print('Finishing...')
+        print("Finishing...")
 
     async def onPeriodic(self):
-        print('here: {}'.format(self.count))
+        print("here: {}".format(self.count))
         self.count += 1
 
 
 if __name__ == "__main__":
     from aat import TradingEngine, parseConfig
-    cfg = parseConfig(['--trading_type', 'backtest',
-                       '--load_accounts',
-                       '--exchanges', 'aat.exchange.generic:CSV,{}'.format(os.path.join(os.path.dirname(__file__), 'data', 'aapl.csv')),
-                       '--strategies', 'aat.strategy.sample.readonly_periodic:ReadOnlyStrategy'
-                       ])
+
+    cfg = parseConfig(
+        [
+            "--trading_type",
+            "backtest",
+            "--load_accounts",
+            "--exchanges",
+            "aat.exchange.generic:CSV,{}".format(
+                os.path.join(os.path.dirname(__file__), "data", "aapl.csv")
+            ),
+            "--strategies",
+            "aat.strategy.sample.readonly_periodic:ReadOnlyStrategy",
+        ]
+    )
     print(cfg)
     t = TradingEngine(**cfg)
     t.start()

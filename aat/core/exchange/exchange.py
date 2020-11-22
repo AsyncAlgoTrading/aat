@@ -2,15 +2,14 @@ from ...common import _in_cpp
 
 try:
     from ...binding import ExchangeTypeCpp  # type: ignore
+
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
 
 
 class ExchangeType(object):
-    __slots__ = [
-        "__name"
-    ]
+    __slots__ = ["__name"]
 
     def __new__(cls, *args, **kwargs):
         if _CPP:
@@ -38,13 +37,11 @@ class ExchangeType(object):
         return hash(str(self))
 
     def toJson(self):
-        return {
-            "name": self.name
-        }
+        return {"name": self.name}
 
     @staticmethod
     def fromJson(jsn):
-        return ExchangeType(name=jsn['name'])
+        return ExchangeType(name=jsn["name"])
 
     def __repr__(self) -> str:
         return "Exchange({})".format(self.__name) if self.__name else "No Exchange"
