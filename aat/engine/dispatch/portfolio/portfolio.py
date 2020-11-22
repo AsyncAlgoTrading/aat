@@ -478,7 +478,9 @@ class Portfolio(object):
 
         return self._constructDf(portfolio)[notional_cols]
 
-    def getNotionalAll(self,):
+    def getNotionalAll(
+        self,
+    ):
         portfolio = []
         notional_cols = []
         for position in self.allPositions():

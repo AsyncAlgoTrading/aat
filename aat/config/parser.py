@@ -8,7 +8,7 @@ from typing import List, Dict, Union
 
 
 def _config_to_dict(
-    filename: str
+    filename: str,
 ) -> Dict[str, Dict[str, Union[str, List[str], List[List[str]]]]]:
     if not os.path.exists(filename):
         raise Exception(f"File does not exist {filename}")
