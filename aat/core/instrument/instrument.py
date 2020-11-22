@@ -213,8 +213,8 @@ class Instrument(object):
             )
         elif kwargs.get("price_increment") is not None:
             self.__price_increment = float(
-                kwargs.get("price_increment")
-            )  # type: ignore
+                kwargs.get("price_increment")  # type: ignore
+            )
         else:
             self.__price_increment = None
 

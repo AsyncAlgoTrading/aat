@@ -8,14 +8,14 @@ from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from traitlets.config.application import Application  # type: ignore
-from traitlets import (
+from traitlets import (  # type: ignore
     validate,
     TraitError,
     Unicode,
     Bool,
     List,
     Instance,
-)  # type: ignore
+)
 from tornado.web import (
     StaticFileHandler,
     RedirectHandler,
@@ -23,10 +23,10 @@ from tornado.web import (
 )
 
 try:
-    from perspective import (
+    from perspective import (  # type: ignore
         PerspectiveManager,
         PerspectiveTornadoHandler,
-    )  # type: ignore
+    )
 except ImportError:
     PerspectiveManager, PerspectiveTornadoHandler = None, None  # type: ignore
 

@@ -131,26 +131,26 @@ class OrderManager(ManagerBase):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onTraded(
+    async def onTraded(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         # TODO
         pass
 
-    async def onReceived(
+    async def onReceived(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         # TODO
         pass
 
-    async def onRejected(
+    async def onRejected(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         # TODO
         pass
 
-    async def onCanceled(
+    async def onCanceled(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         # TODO
         pass

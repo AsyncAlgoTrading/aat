@@ -258,9 +258,9 @@ class Order(object):
             "filled": self.filled,
             "order_type": self.order_type.value,
             "flag": self.flag.value,
-            "stop_target": self.stop_target.toJson()
+            "stop_target": self.stop_target.toJson()  # type: ignore
             if self.stop_target
-            else "",  # type: ignore
+            else "",
         }
 
     @staticmethod

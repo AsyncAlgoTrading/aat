@@ -83,10 +83,10 @@ class MomentumStrategy(Strategy):
 
         # determine if we trade
         cur_perf = (
-            (self._last_price - self._initial_price) / self._initial_price
+            (self._last_price - self._initial_price) / self._initial_price  # type: ignore
             if self._initial_price != 0.0
             else None
-        )  # type: ignore
+        )
 
         if cur_perf is None:
             # don't handle 0 price
@@ -111,8 +111,8 @@ class MomentumStrategy(Strategy):
                 # close to stop
                 print("exiting to stop loss")
                 side = (
-                    Side.SELL if self._enter_order.side == Side.BUY else Side.BUY
-                )  # type: ignore
+                    Side.SELL if self._enter_order.side == Side.BUY else Side.BUY  # type: ignore
+                )
                 self._exit_order = Order(
                     side=side,
                     price=trade.price,

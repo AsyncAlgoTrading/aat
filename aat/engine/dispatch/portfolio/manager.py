@@ -116,8 +116,8 @@ class PortfolioManager(ManagerBase):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onTraded(
+    async def onTraded(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         trade: Trade = event.target  # type: ignore
         self._portfolio.onTraded(trade, strategy)

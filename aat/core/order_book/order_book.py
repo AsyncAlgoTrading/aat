@@ -222,9 +222,9 @@ class OrderBook(OrderBookBase):
                         # limit order, put on books
                         if _insort(levels, order.price):
                             # new price level
-                            prices[order.price] = _PriceLevel(
+                            prices[order.price] = _PriceLevel(  # type: ignore
                                 order.price, collector=self._collector
-                            )  # type: ignore
+                            )
 
                         # add order to price level
                         prices[order.price].add(order)
@@ -254,9 +254,9 @@ class OrderBook(OrderBookBase):
                         # limit order, put on books
                         if _insort(levels, order.price):
                             # new price level
-                            prices[order.price] = _PriceLevel(
+                            prices[order.price] = _PriceLevel(  # type: ignore
                                 order.price, collector=self._collector
-                            )  # type: ignore
+                            )
 
                         # add order to price level
                         prices[order.price].add(order)
@@ -289,9 +289,9 @@ class OrderBook(OrderBookBase):
                         # limit order, put on books
                         if _insort(levels, order.price):
                             # new price level
-                            prices[order.price] = _PriceLevel(
+                            prices[order.price] = _PriceLevel(  # type: ignore
                                 order.price, collector=self._collector
-                            )  # type: ignore
+                            )
 
                         # add order to price level
                         prices[order.price].add(order)
@@ -311,9 +311,9 @@ class OrderBook(OrderBookBase):
                     # limit order, put on books
                     if _insort(levels, order.price):
                         # new price level
-                        prices[order.price] = _PriceLevel(
+                        prices[order.price] = _PriceLevel(  # type: ignore
                             order.price, collector=self._collector
-                        )  # type: ignore
+                        )
 
                     # add order to price level
                     prices[order.price].add(order)

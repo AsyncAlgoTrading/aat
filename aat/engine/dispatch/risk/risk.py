@@ -104,9 +104,9 @@ class RiskManager(ManagerBase):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onTraded(
+    async def onTraded(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         trade: Trade = event.target  # type: ignore
 
         if (
@@ -115,23 +115,23 @@ class RiskManager(ManagerBase):
         ):
             self._active_orders.remove(trade.my_order)
 
-    async def onReceived(
+    async def onReceived(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         # TODO
         pass
 
-    async def onRejected(
+    async def onRejected(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         order: Order = event.target  # type: ignore
 
         if order in self._active_orders:
             self._active_orders.remove(order)
 
-    async def onCanceled(
+    async def onCanceled(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         order: Order = event.target  # type: ignore
 
         if order in self._active_orders:

@@ -9,38 +9,38 @@ class ManagerBase(EventHandler):
     def _setManager(self, mgr):
         """set the root manager"""
 
-    async def onBought(
+    async def onBought(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         """Called on my order bought"""
         pass
 
-    async def onSold(
+    async def onSold(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         """Called on my order sold"""
         pass
 
-    async def onTraded(
+    async def onTraded(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         """Called on my order bought or sold"""
         pass
 
-    async def onReceived(
+    async def onReceived(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         """Called on my order received"""
         pass
 
-    async def onRejected(
+    async def onRejected(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         """Called on my order rejected"""
         pass
 
-    async def onCanceled(
+    async def onCanceled(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):  # type: ignore[override]
+    ):
         """Called on my order canceled"""
         pass

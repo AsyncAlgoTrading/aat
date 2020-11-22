@@ -9,15 +9,15 @@ def _in_cpp():
     _cpp = os.environ.get("AAT_USE_CPP", "").lower() in ("1", "on")
 
     try:
-        from aat.binding import (  # noqa: F401
+        from aat.binding import (  # type: ignore # noqa: F401
             SideCpp,
             EventTypeCpp,
             DataTypeCpp,
-            InstrumentTypeCpp,  # type: ignore # noqa: F401
+            InstrumentTypeCpp,
             OrderTypeCpp,
             OrderFlagCpp,
             OrderBookCpp,
-            ExchangeTypeCpp,  # noqa: F401
+            ExchangeTypeCpp,
             InstrumentCpp,
             DataCpp,
             EventCpp,

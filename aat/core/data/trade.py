@@ -166,8 +166,8 @@ class Trade(object):
         else:
             ret["taker_order"] = self.taker_order.toJson()  # type: ignore
             ret["maker_orders"] = [
-                m.toJson() for m in self.maker_orders
-            ]  # type: ignore
+                m.toJson() for m in self.maker_orders  # type: ignore
+            ]
 
         return ret
 
