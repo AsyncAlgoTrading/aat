@@ -22,7 +22,11 @@ namespace core {
 
   struct Data : public _EventTarget {
    public:
-    Data(uint_t id, timestamp_t timestamp, Instrument& instrument, ExchangeType& exchange = NullExchange, json data = nullptr)
+    Data(uint_t id,
+         timestamp_t timestamp,
+         Instrument& instrument,
+         ExchangeType& exchange = NullExchange,
+         json data = nullptr)
       : id(id)
       , timestamp(timestamp)
       , type(DataType::DATA)
