@@ -9,14 +9,39 @@ from ...config import DataType, OrderFlag, OrderType, Side
 
 try:
     from aat.binding import OrderCpp  # type: ignore
+
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
 
 
-def _make_cpp_order(volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.MARKET, flag=OrderFlag.NONE, stop_target=None):
-    '''helper method to ensure all arguments are setup'''
-    return OrderCpp("0", datetime.now(), volume, price, side, instrument, exchange, notional, order_type, flag, stop_target)
+def _make_cpp_order(
+    volume,
+    price,
+    side,
+    instrument,
+    exchange=ExchangeType(""),
+    notional=0.0,
+    order_type=OrderType.MARKET,
+    flag=OrderFlag.NONE,
+    stop_target=None,
+    id=None,
+    timestamp=None,
+):
+    """helper method to ensure all arguments are setup"""
+    return OrderCpp(
+        id or "0",
+        timestamp or datetime.now(),
+        volume,
+        price,
+        side,
+        instrument,
+        exchange,
+        notional,
+        order_type,
+        flag,
+        stop_target,
+    )
 
 
 class Order(object):
@@ -47,9 +72,23 @@ class Order(object):
             return _make_cpp_order(*args, **kwargs)
         return super(Order, cls).__new__(cls)
 
-    def __init__(self, volume, price, side, instrument, exchange=ExchangeType(""), notional=0.0, order_type=OrderType.MARKET, flag=OrderFlag.NONE, stop_target=None):
-        self.__id = 0  # on construction, provide no ID until exchange assigns one
-        self.__timestamp = datetime.now()
+    def __init__(
+        self,
+        volume,
+        price,
+        side,
+        instrument,
+        exchange=ExchangeType(""),
+        notional=0.0,
+        order_type=OrderType.MARKET,
+        flag=OrderFlag.NONE,
+        stop_target=None,
+        **kwargs,
+    ):
+        self.__id = kwargs.get(
+            "id", 0
+        )  # on construction, provide no ID until exchange assigns one
+        self.__timestamp = kwargs.get("timestamp", datetime.now())
         self.__type = DataType.ORDER
 
         assert isinstance(instrument, Instrument)
@@ -58,16 +97,27 @@ class Order(object):
         self.__exchange = exchange
 
         assert isinstance(volume, (int, float))
-        assert volume < float('inf') and ((volume > 0 and order_type != OrderType.STOP) or (order_type == OrderType.STOP and volume == 0))
-        assert order_type == OrderType.STOP or ((volume > 0.0) and (volume < float('inf')))
+        assert volume < float("inf") and (
+            (volume > 0 and order_type != OrderType.STOP)
+            or (order_type == OrderType.STOP and volume == 0)
+        )
+        assert order_type == OrderType.STOP or (
+            (volume > 0.0) and (volume < float("inf"))
+        )
         assert isinstance(price, (int, float))
-        assert price < float('inf')
+        assert price < float("inf")
         assert isinstance(side, Side)
         assert isinstance(notional, (int, float))
         assert isinstance(order_type, OrderType)
         assert isinstance(flag, OrderFlag)
-        assert (order_type != OrderType.STOP and stop_target is None) or (isinstance(stop_target, Order) and order_type == OrderType.STOP and stop_target.order_type != OrderType.STOP)
-        assert order_type != OrderType.STOP or (isinstance(stop_target.instrument, Instrument))
+        assert (order_type != OrderType.STOP and stop_target is None) or (
+            isinstance(stop_target, Order)
+            and order_type == OrderType.STOP
+            and stop_target.order_type != OrderType.STOP
+        )
+        assert order_type != OrderType.STOP or (
+            isinstance(stop_target.instrument, Instrument)
+        )
 
         self.__volume = round(volume, 8)
         self.__price = round(price, 4)
@@ -77,7 +127,7 @@ class Order(object):
         self.__flag = flag
         self.__stop_target = stop_target
 
-        self.__filled = 0.0
+        self.__filled = kwargs.get("filled", 0.0)
         self.__force_done = False
 
     # TODO
@@ -123,15 +173,15 @@ class Order(object):
         return self.__flag
 
     @property
-    def stop_target(self) -> Union['Order', None]:
+    def stop_target(self) -> Union["Order", None]:
         return self.__stop_target
 
     def finished(self) -> bool:
         return (self.volume == self.filled) or self.__force_done
 
     def finish(self) -> None:
-        '''force this order to mark itself as "finished", even if it
-        isn't fully filled (e.g. with certain flags)'''
+        """force this order to mark itself as "finished", even if it
+        isn't fully filled (e.g. with certain flags)"""
         self.__force_done = True
 
     # ***********#
@@ -162,7 +212,9 @@ class Order(object):
     @volume.setter
     def volume(self, volume: float) -> None:
         assert isinstance(volume, (int, float))
-        assert volume < float('inf') and (volume > 0 or self.order_type == OrderType.STOP)
+        assert volume < float("inf") and (
+            volume > 0 or self.order_type == OrderType.STOP
+        )
         volume = round(volume, 8)
 
         assert volume >= self.filled
@@ -181,62 +233,66 @@ class Order(object):
         self.__filled = filled
 
     def __repr__(self) -> str:
-        return f'Order( instrument={self.instrument}, timestamp={self.timestamp}, {self.volume}@{self.price}, side={self.side}, exchange={self.exchange})'
+        return f"Order( instrument={self.instrument}, timestamp={self.timestamp}, {self.volume}@{self.price}, side={self.side}, exchange={self.exchange})"
 
     def __eq__(self, other) -> bool:
         assert isinstance(other, Order)
-        return self.id == other.id and \
-            self.instrument == other.instrument and \
-            self.exchange == other.exchange and \
-            self.price == other.price and \
-            self.volume == other.volume and \
-            self.notional == other.notional and \
-            self.filled == other.filled
+        return (
+            self.id == other.id
+            and self.instrument == other.instrument
+            and self.exchange == other.exchange
+            and self.price == other.price
+            and self.volume == other.volume
+            and self.notional == other.notional
+            and self.filled == other.filled
+        )
 
     def toJson(self) -> Mapping[str, Union[str, int, float]]:
-        return \
-            {'id': self.id,
-             'timestamp': self.timestamp.timestamp(),
-             'volume': self.volume,
-             'price': self.price,
-             'side': self.side.value,
-             'instrument': self.instrument.toJson(),
-             'exchange': self.exchange.toJson(),
-             'notional': self.notional,
-             'filled': self.filled,
-             'order_type': self.order_type.value,
-             'flag': self.flag.value,
-             'stop_target': self.stop_target.toJson() if self.stop_target else ''  # type: ignore
-             }
+        return {
+            "id": self.id,
+            "timestamp": self.timestamp.timestamp(),
+            "volume": self.volume,
+            "price": self.price,
+            "side": self.side.value,
+            "instrument": self.instrument.toJson(),
+            "exchange": self.exchange.toJson(),
+            "notional": self.notional,
+            "filled": self.filled,
+            "order_type": self.order_type.value,
+            "flag": self.flag.value,
+            "stop_target": self.stop_target.toJson()  # type: ignore
+            if self.stop_target
+            else "",
+        }
 
     @staticmethod
     def fromJson(jsn):
         kwargs = {}
-        kwargs['volume'] = jsn['volume']
-        kwargs['price'] = jsn['price']
-        kwargs['side'] = Side(jsn['side'])
-        kwargs['instrument'] = Instrument.fromJson(jsn['instrument'])
-        kwargs['exchange'] = ExchangeType.fromJson(jsn['exchange'])
+        kwargs["volume"] = jsn["volume"]
+        kwargs["price"] = jsn["price"]
+        kwargs["side"] = Side(jsn["side"])
+        kwargs["instrument"] = Instrument.fromJson(jsn["instrument"])
+        kwargs["exchange"] = ExchangeType.fromJson(jsn["exchange"])
 
-        if 'notional' in jsn and jsn['notional']:
-            kwargs['notional'] = jsn['notional']
+        if "notional" in jsn and jsn["notional"]:
+            kwargs["notional"] = jsn["notional"]
 
-        if 'flag' in jsn and jsn['flag']:
-            kwargs['flag'] = OrderFlag(jsn['flag'])
+        if "flag" in jsn and jsn["flag"]:
+            kwargs["flag"] = OrderFlag(jsn["flag"])
 
-        if 'stop_target' in jsn and jsn['stop_target']:
-            kwargs['stop_target'] = Order.fromJson(jsn['stop_target'])
+        if "stop_target" in jsn and jsn["stop_target"]:
+            kwargs["stop_target"] = Order.fromJson(jsn["stop_target"])
 
-        if 'order_type' in jsn and jsn['order_type']:
-            kwargs['order_type'] = OrderType(jsn['order_type'])
+        if "order_type" in jsn and jsn["order_type"]:
+            kwargs["order_type"] = OrderType(jsn["order_type"])
 
         ret = Order(**kwargs)
 
-        if 'notional' in jsn and jsn['notional']:
-            ret.notional = jsn['notional']
+        if "notional" in jsn and jsn["notional"]:
+            ret.notional = jsn["notional"]
 
-        if 'filled' in jsn and jsn['filled']:
-            ret.filled = jsn['filled']
+        if "filled" in jsn and jsn["filled"]:
+            ret.filled = jsn["filled"]
 
         return ret
 

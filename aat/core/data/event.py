@@ -7,16 +7,14 @@ from ...common import _in_cpp
 
 try:
     from aat.binding import EventCpp  # type: ignore
+
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
 
 
 class Event(object):
-    __slots__ = [
-        "__type",
-        "__target",
-    ]
+    __slots__ = ["__type", "__target"]
 
     # for convenience
     Types = EventType
@@ -43,12 +41,16 @@ class Event(object):
         # ignore None type so typing is happy in other parts
 
     def __repr__(self):
-        return f'Event(type={self.type}, target={self.target})'
+        return f"Event(type={self.type}, target={self.target})"
 
     def toJson(self) -> Mapping[str, Union[str, int, float]]:
-        target = {'target.' + k: v for k, v in self.target.toJson().items()} if self.target else {'target': ''}
+        target = (
+            {"target." + k: v for k, v in self.target.toJson().items()}
+            if self.target
+            else {"target": ""}
+        )
 
-        ret = {'type': self.type.value}
+        ret = {"type": self.type.value}
 
         ret.update(target)
         return ret

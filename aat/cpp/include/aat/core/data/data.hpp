@@ -22,21 +22,17 @@ namespace core {
 
   struct Data : public _EventTarget {
    public:
-    Data(uint_t id, Instrument& instrument, ExchangeType& exchange = NullExchange)
-      : id(id)
-      , timestamp(datetime::now())
-      , type(DataType::DATA)
-      , instrument(instrument)
-      , exchange(exchange)
-      , data(nullptr) {}
-
-    Data(uint_t id, timestamp_t timestamp, Instrument& instrument, ExchangeType& exchange = NullExchange)
+    Data(uint_t id,
+         timestamp_t timestamp,
+         Instrument& instrument,
+         ExchangeType& exchange = NullExchange,
+         json data = nullptr)
       : id(id)
       , timestamp(timestamp)
       , type(DataType::DATA)
       , instrument(instrument)
       , exchange(exchange)
-      , data(nullptr) {}
+      , data(data) {}
 
     bool operator==(const Data& other);
     virtual str_t toString() const;
@@ -48,7 +44,7 @@ namespace core {
     const DataType type;
     const Instrument instrument;
     const ExchangeType exchange;
-    void* data;
+    json data;
   };
 
 }  // namespace core

@@ -92,7 +92,7 @@ lintcpp: ## run cpp linter
 fix: fixpy fixjs fixcpp  ## run all fixers
 
 fixpy:  ## run autopep8 fix
-	$(PYTHON) -m autopep8 --in-place -r -a -a aat/ setup.py
+	$(PYTHON) -m black aat/ setup.py
 
 fixcpp:  ## run clang-format
 	clang-format -i -style=file `find ./aat/cpp/{src,include} -name "*.*pp"`

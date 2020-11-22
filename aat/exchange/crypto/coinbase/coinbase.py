@@ -10,27 +10,29 @@ from .client import CoinbaseExchangeClient
 
 
 class CoinbaseProExchange(Exchange):
-    '''Coinbase Pro Exchange'''
+    """Coinbase Pro Exchange"""
 
-    def __init__(self,
-                 trading_type,
-                 verbose,
-                 api_key='',
-                 api_secret='',
-                 api_passphrase='',
-                 **kwargs):
+    def __init__(
+        self,
+        trading_type,
+        verbose,
+        api_key="",
+        api_secret="",
+        api_passphrase="",
+        **kwargs
+    ):
         self._trading_type = trading_type
         self._verbose = verbose
 
         # coinbase keys
-        self._api_key = api_key or os.environ.get('API_KEY', '')
-        self._api_secret = api_key or os.environ.get('API_SECRET', '')
-        self._api_passphrase = api_key or os.environ.get('API_PASSPHRASE', '')
+        self._api_key = api_key or os.environ.get("API_KEY", "")
+        self._api_secret = api_key or os.environ.get("API_SECRET", "")
+        self._api_passphrase = api_key or os.environ.get("API_PASSPHRASE", "")
 
         # enforce authentication, otherwise we don't get enough
         # data to be interesting
         if not (self._api_key and self._api_secret and self._api_passphrase):
-            raise Exception('No coinbase auth!')
+            raise Exception("No coinbase auth!")
 
         # don't implement backtest for now
         if trading_type == TradingType.BACKTEST:
@@ -38,22 +40,28 @@ class CoinbaseProExchange(Exchange):
 
         if self._trading_type == TradingType.SANDBOX:
             # Coinbase sandbox
-            super().__init__(ExchangeType('coinbaseprosandbox'))
+            super().__init__(ExchangeType("coinbaseprosandbox"))
         else:
             # Coinbase Live trading
-            print('*' * 100)
-            print('*' * 100)
-            print('WARNING: LIVE TRADING')
-            print('*' * 100)
-            print('*' * 100)
-            super().__init__(ExchangeType('coinbasepro'))
+            print("*" * 100)
+            print("*" * 100)
+            print("WARNING: LIVE TRADING")
+            print("*" * 100)
+            print("*" * 100)
+            super().__init__(ExchangeType("coinbasepro"))
 
         # Create an exchange client based on the coinbase docs
         # Note: cbpro doesnt seem to work as well as I remember,
         # and ccxt has moved to a "freemium" model where coinbase
         # pro now costs money for full access, so here i will just
         # implement the api myself.
-        self._client = CoinbaseExchangeClient(self._trading_type, self.exchange(), self._api_key, self._api_secret, self._api_passphrase)
+        self._client = CoinbaseExchangeClient(
+            self._trading_type,
+            self.exchange(),
+            self._api_key,
+            self._api_secret,
+            self._api_passphrase,
+        )
 
         # store client order events in a deque
         self._order_events = deque()
@@ -65,12 +73,12 @@ class CoinbaseProExchange(Exchange):
     # General methods #
     # *************** #
     async def connect(self):
-        '''connect to exchange. should be asynchronous.'''
+        """connect to exchange. should be asynchronous."""
         # instantiate instruments
         self._client.instruments()
 
     async def lookup(self, instrument):
-        '''lookup an instrument on the exchange'''
+        """lookup an instrument on the exchange"""
         # TODO
         raise NotImplementedError()
 
@@ -78,7 +86,7 @@ class CoinbaseProExchange(Exchange):
     # Market Data Methods #
     # ******************* #
     async def tick(self):
-        '''return data from exchange'''
+        """return data from exchange"""
 
         # First, roll through order book snapshot
         for item in self._client.orderBook(self._subscriptions):
@@ -102,11 +110,11 @@ class CoinbaseProExchange(Exchange):
     # Order Entry Methods #
     # ******************* #
     async def accounts(self):
-        '''get accounts from source'''
+        """get accounts from source"""
         return self._client.accounts()
 
     async def newOrder(self, order):
-        '''submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id'''
+        """submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id"""
         ret = self._client.newOrder(order)
         if ret:
             # order succesful
@@ -116,7 +124,7 @@ class CoinbaseProExchange(Exchange):
             self._order_events.append(Event(type=EventType.REJECTED, target=order))
 
     async def cancelOrder(self, order: Order):
-        '''cancel a previously submitted order to the exchange.'''
+        """cancel a previously submitted order to the exchange."""
         ret = self._client.cancelOrder(order)
         if ret:
             # cancel succesful
@@ -126,4 +134,4 @@ class CoinbaseProExchange(Exchange):
             self._order_events.append(Event(type=EventType.REJECTED, target=order))
 
 
-Exchange.registerExchange('coinbase', CoinbaseProExchange)
+Exchange.registerExchange("coinbase", CoinbaseProExchange)

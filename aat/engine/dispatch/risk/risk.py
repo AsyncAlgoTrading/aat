@@ -15,26 +15,28 @@ class RiskManager(ManagerBase):
         self._restricted_trading_hours = {}
 
     def _setManager(self, manager):
-        '''install manager'''
+        """install manager"""
         self._manager = manager
 
     def updateAccount(self, positions: List[Position]) -> None:
-        '''update positions tracking with a position from the exchange'''
+        """update positions tracking with a position from the exchange"""
         pass
 
     def updateCash(self, positions: List[Position]) -> None:
-        '''update cash positions from exchange'''
+        """update cash positions from exchange"""
         pass
 
-    def restrictTradingHours(self,
-                             strategy,
-                             start_second: Optional[int] = None,
-                             start_minute: Optional[int] = None,
-                             start_hour: Optional[int] = None,
-                             end_second: Optional[int] = None,
-                             end_minute: Optional[int] = None,
-                             end_hour: Optional[int] = None,
-                             on_end_of_day: ExitRoutine = ExitRoutine.NONE):
+    def restrictTradingHours(
+        self,
+        strategy,
+        start_second: Optional[int] = None,
+        start_minute: Optional[int] = None,
+        start_hour: Optional[int] = None,
+        end_second: Optional[int] = None,
+        end_minute: Optional[int] = None,
+        end_hour: Optional[int] = None,
+        on_end_of_day: ExitRoutine = ExitRoutine.NONE,
+    ):
         pass
 
     # *********************
@@ -102,23 +104,34 @@ class RiskManager(ManagerBase):
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onTraded(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
+    async def onTraded(  # type: ignore[override]
+        self, event: Event, strategy: Optional[EventHandler]
+    ):
         trade: Trade = event.target  # type: ignore
 
-        if trade.my_order in self._active_orders and trade.my_order.filled >= trade.my_order.volume:
+        if (
+            trade.my_order in self._active_orders
+            and trade.my_order.filled >= trade.my_order.volume
+        ):
             self._active_orders.remove(trade.my_order)
 
-    async def onReceived(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
+    async def onReceived(  # type: ignore[override]
+        self, event: Event, strategy: Optional[EventHandler]
+    ):
         # TODO
         pass
 
-    async def onRejected(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
+    async def onRejected(  # type: ignore[override]
+        self, event: Event, strategy: Optional[EventHandler]
+    ):
         order: Order = event.target  # type: ignore
 
         if order in self._active_orders:
             self._active_orders.remove(order)
 
-    async def onCanceled(self, event: Event, strategy: Optional[EventHandler]):  # type: ignore[override]
+    async def onCanceled(  # type: ignore[override]
+        self, event: Event, strategy: Optional[EventHandler]
+    ):
         order: Order = event.target  # type: ignore
 
         if order in self._active_orders:

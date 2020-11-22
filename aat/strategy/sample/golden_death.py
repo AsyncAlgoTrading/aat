@@ -4,7 +4,16 @@ from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
 
 
 class GoldenDeathStrategy(Strategy):
-    def __init__(self, symbol, long_ma=30, short_ma=10, bail_hour=15, bail_minute=45, *args, **kwargs):
+    def __init__(
+        self,
+        symbol,
+        long_ma=30,
+        short_ma=10,
+        bail_hour=15,
+        bail_minute=45,
+        *args,
+        **kwargs
+    ):
         super(GoldenDeathStrategy, self).__init__(*args, **kwargs)
 
         # Long moving average size
@@ -38,7 +47,7 @@ class GoldenDeathStrategy(Strategy):
         self.subscribe(Instrument(name=self._symbol, type=InstrumentType.EQUITY))
 
     async def onTrade(self, event: Event):
-        '''Called whenever a `Trade` event is received'''
+        """Called whenever a `Trade` event is received"""
         trade: Trade = event.target  # type: ignore
 
         # append prices
@@ -46,8 +55,8 @@ class GoldenDeathStrategy(Strategy):
         self._short_ma_list.append(trade.price)
 
         # adding to list
-        self._long_ma_list = self._long_ma_list[-self._long_ma:]
-        self._short_ma_list = self._short_ma_list[-self._short_ma:]
+        self._long_ma_list = self._long_ma_list[-self._long_ma :]
+        self._short_ma_list = self._short_ma_list[-self._short_ma :]
 
         if len(self._long_ma_list) < self._long_ma:
             return
@@ -56,9 +65,19 @@ class GoldenDeathStrategy(Strategy):
         if self.now().hour == 9 and self.now().minute <= 45:
             return
 
-        long_mvg_av = pd.Series(self._long_ma_list).rolling(self._long_ma, min_periods=self._long_ma).mean().iloc[-1]
-        short_mvg_av = pd.Series(self._short_ma_list).rolling(self._short_ma, min_periods=self._short_ma).mean().iloc[-1]
-        long_mvg_av = long_mvg_av + (long_mvg_av * .005)
+        long_mvg_av = (
+            pd.Series(self._long_ma_list)
+            .rolling(self._long_ma, min_periods=self._long_ma)
+            .mean()
+            .iloc[-1]
+        )
+        short_mvg_av = (
+            pd.Series(self._short_ma_list)
+            .rolling(self._short_ma, min_periods=self._short_ma)
+            .mean()
+            .iloc[-1]
+        )
+        long_mvg_av = long_mvg_av + (long_mvg_av * 0.005)
         # States
         #
         # Not Entered, Not Triggered -> if long_ma > short_ma -> Not Entered, Triggered (Wait for short av to move above)
@@ -83,41 +102,51 @@ class GoldenDeathStrategy(Strategy):
                     # Not Entered, Triggered -> if long_ma <= short_ma -> Entered, Triggered (BUY)
                     if not self.orders(trade.instrument):
                         self._volume = math.ceil(1000 / trade.price)
-                        self._buy_order = Order(side=Side.BUY,
-                                                price=trade.price,
-                                                volume=self._volume,
-                                                instrument=trade.instrument,
-                                                order_type=Order.Types.MARKET,
-                                                exchange=trade.exchange)
-                        print('submitting buy order: {}'.format(self._buy_order))
+                        self._buy_order = Order(
+                            side=Side.BUY,
+                            price=trade.price,
+                            volume=self._volume,
+                            instrument=trade.instrument,
+                            order_type=Order.Types.MARKET,
+                            exchange=trade.exchange,
+                        )
+                        print("submitting buy order: {}".format(self._buy_order))
                         await self.newOrder(self._buy_order)
         else:
             if not self._triggered:
-                raise Exception('Never in this state')
+                raise Exception("Never in this state")
             else:
                 if long_mvg_av > short_mvg_av:
                     # Entered, Triggered -> if long_ma > short_ma -> Not Entered, Triggered (SELL)
                     if not self._sell_order:
-                        self._sell_order = Order(side=Side.SELL,
-                                                 price=trade.price,
-                                                 volume=self._volume,
-                                                 instrument=trade.instrument,
-                                                 order_type=Order.Types.MARKET,
-                                                 exchange=trade.exchange)
-                        print('submitting sell order: {}'.format(self._sell_order))
+                        self._sell_order = Order(
+                            side=Side.SELL,
+                            price=trade.price,
+                            volume=self._volume,
+                            instrument=trade.instrument,
+                            order_type=Order.Types.MARKET,
+                            exchange=trade.exchange,
+                        )
+                        print("submitting sell order: {}".format(self._sell_order))
                         await self.newOrder(self._sell_order)
                 else:
                     # Entered, Triggered -> if long_ma <= short_ma -> Entered, Triggered (Wait for short to move below)
 
                     # exit if time to bail
-                    if not self._sell_order and self.now().hour == self._bail_hour and self.now().minute >= self._bail_minute:
-                        self._sell_order = Order(side=Side.SELL,
-                                                 price=trade.price,
-                                                 volume=self._volume,
-                                                 instrument=trade.instrument,
-                                                 order_type=Order.Types.MARKET,
-                                                 exchange=trade.exchange)
-                        print('submitting sell order: {}'.format(self._sell_order))
+                    if (
+                        not self._sell_order
+                        and self.now().hour == self._bail_hour
+                        and self.now().minute >= self._bail_minute
+                    ):
+                        self._sell_order = Order(
+                            side=Side.SELL,
+                            price=trade.price,
+                            volume=self._volume,
+                            instrument=trade.instrument,
+                            order_type=Order.Types.MARKET,
+                            exchange=trade.exchange,
+                        )
+                        print("submitting sell order: {}".format(self._sell_order))
                         await self.newOrder(self._sell_order)
 
     async def onTraded(self, event: Event):
@@ -130,11 +159,12 @@ class GoldenDeathStrategy(Strategy):
             self._sell_order = None
 
     async def onRejected(self, event: Event):
-        print('order rejected')
+        print("order rejected")
         import sys
+
         sys.exit(0)
 
     async def onExit(self, event: Event):
-        print('Finishing...')
+        print("Finishing...")
 
         self.performanceCharts()

@@ -6,13 +6,15 @@ from aat.core import Instrument
 
 
 def _constructContract(instrument):
-    '''Construct an IB contract and order from an Order object'''
+    """Construct an IB contract and order from an Order object"""
     contract = Contract()
 
     if instrument.type == InstrumentType.EQUITY:
         contract.symbol = instrument.name
         contract.secType = "STK"
-        contract.currency = (instrument.currency.name if instrument.currency else '') or "USD"
+        contract.currency = (
+            instrument.currency.name if instrument.currency else ""
+        ) or "USD"
         contract.exchange = instrument.brokerExchange or "SMART"
 
     elif instrument.type == InstrumentType.BOND:
@@ -26,7 +28,9 @@ def _constructContract(instrument):
         # contract.symbol = "GOOG"
         contract.secType = "OPT"
         contract.exchange = instrument.brokerExchange or "SMART"
-        contract.currency = (instrument.currency.name if instrument.currency else '') or "USD"
+        contract.currency = (
+            instrument.currency.name if instrument.currency else ""
+        ) or "USD"
         # contract.lastTradeDateOrContractMonth = "20170120"
         # contract.strike = 615
         # contract.right = "C"
@@ -39,7 +43,9 @@ def _constructContract(instrument):
         # contract.symbol = "ES";
         contract.secType = "FUT"
         contract.exchange = instrument.brokerExchange or "SMART"
-        contract.currency = (instrument.currency.name if instrument.currency else '') or "USD"
+        contract.currency = (
+            instrument.currency.name if instrument.currency else ""
+        ) or "USD"
         # contract.lastTradeDateOrContractMonth = "201803";
         # contract.Multiplier = "5";
 
@@ -56,7 +62,9 @@ def _constructContract(instrument):
         # contract.symbol = instrument.symbol
         contract.secType = "FOP"
         contract.exchange = instrument.brokerExchange
-        contract.currency = (instrument.currency.name if instrument.currency else '') or "USD"
+        contract.currency = (
+            instrument.currency.name if instrument.currency else ""
+        ) or "USD"
         # contract.lastTradeDateOrContractMonth = instrument.contractDate.strftime('%Y%m%d')
         # contract.strike = instrument.strike
         # contract.right = instrument.callOrPut
@@ -67,45 +75,63 @@ def _constructContract(instrument):
         contract.symbol = instrument.name  # "VINIX"
         contract.secType = "FUND"
         contract.exchange = instrument.brokerExchange or "FUNDSERV"
-        contract.currency = (instrument.currency.name if instrument.currency else '') or "USD"
+        contract.currency = (
+            instrument.currency.name if instrument.currency else ""
+        ) or "USD"
 
     elif instrument.type == InstrumentType.COMMODITY:
         contract.symbol = instrument.name  # "XAUUSD"
         contract.secType = "CMDTY"
         contract.exchange = instrument.brokerExchange or "SMART"
-        contract.currency = (instrument.currency.name if instrument.currency else '') or "USD"
+        contract.currency = (
+            instrument.currency.name if instrument.currency else ""
+        ) or "USD"
 
     elif instrument.type == InstrumentType.SPREAD:
-        if instrument.leg1 and \
-           instrument.leg1.type == InstrumentType.FUTURE and \
-           instrument.leg1.underlying and \
-           instrument.leg1.underlying.type == InstrumentType.COMMODITY and \
-           instrument.leg2 and \
-           instrument.leg2.type == InstrumentType.FUTURE and \
-           instrument.leg2.underlying and \
-           instrument.leg2.underlying.type == InstrumentType.COMMODITY and \
-           instrument.leg1.underlying != instrument.leg2.underlying:
+        if (
+            instrument.leg1
+            and instrument.leg1.type == InstrumentType.FUTURE
+            and instrument.leg1.underlying
+            and instrument.leg1.underlying.type == InstrumentType.COMMODITY
+            and instrument.leg2
+            and instrument.leg2.type == InstrumentType.FUTURE
+            and instrument.leg2.underlying
+            and instrument.leg2.underlying.type == InstrumentType.COMMODITY
+            and instrument.leg1.underlying != instrument.leg2.underlying
+        ):
             # Intercommodity futures use A.B
-            contract.symbol = '{}.{}'.format(instrument.leg1.underlying.name,
-                                             instrument.leg2.underlying.name)
+            contract.symbol = "{}.{}".format(
+                instrument.leg1.underlying.name, instrument.leg2.underlying.name
+            )
 
-        elif instrument.leg1 and instrument.leg1.underlying and \
-                instrument.leg2 and instrument.leg2.underlying and \
-                (instrument.leg1.underlying == instrument.leg2.underlying):
+        elif (
+            instrument.leg1
+            and instrument.leg1.underlying
+            and instrument.leg2
+            and instrument.leg2.underlying
+            and (instrument.leg1.underlying == instrument.leg2.underlying)
+        ):
             # most other spreads just use the underlying
             contract.symbol = instrument.leg1.underlying.name
 
-        elif instrument.leg1 and instrument.leg2 and \
-            (instrument.leg1.type == InstrumentType.EQUITY and
-             instrument.leg2.type == InstrumentType.EQUITY):
+        elif (
+            instrument.leg1
+            and instrument.leg2
+            and (
+                instrument.leg1.type == InstrumentType.EQUITY
+                and instrument.leg2.type == InstrumentType.EQUITY
+            )
+        ):
             # Stock spreads use A,B
-            contract.symbol = '{},{}'.format(instrument.leg1.name, instrument.leg2.name)
+            contract.symbol = "{},{}".format(instrument.leg1.name, instrument.leg2.name)
 
         else:
             contract.symbol = instrument.name
 
         contract.secType = "BAG"
-        contract.currency = (instrument.currency.name if instrument.currency else '') or "USD"
+        contract.currency = (
+            instrument.currency.name if instrument.currency else ""
+        ) or "USD"
         contract.exchange = instrument.brokerExchange or "SMART"
 
         leg1 = ComboLeg()
@@ -202,5 +228,5 @@ def _constructInstrument(contract):
         exchanges=[],
         brokerExchange=brokerExchange,
         brokerId=brokerId,
-        currency=currency
+        currency=currency,
     )

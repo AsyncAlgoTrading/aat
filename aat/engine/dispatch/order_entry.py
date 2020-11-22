@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class StrategyManagerOrderEntryMixin(object):
-    _engine: 'TradingEngine'
+    _engine: "TradingEngine"
     _exchanges: List[Exchange]
     _strategy_trades: dict
     _strategy_open_orders: dict
@@ -29,11 +29,11 @@ class StrategyManagerOrderEntryMixin(object):
     # TODO ugly private method
 
     async def _onBought(self, strategy, trade: Trade):
-        '''callback method for when/if your order executes.
+        """callback method for when/if your order executes.
 
         Args:
             order_or_trade (Union[Order, Trade]): the trade/s as your order completes, and/or a cancellation order
-        '''
+        """
         # append to list of trades
         self._strategy_trades[strategy].append(trade)
 
@@ -46,11 +46,11 @@ class StrategyManagerOrderEntryMixin(object):
 
     # TODO ugly private method
     async def _onSold(self, strategy, trade: Trade):
-        '''callback method for when/if your order executes.
+        """callback method for when/if your order executes.
 
         Args:
             order_or_trade (Union[Order, Trade]): the trade/s as your order completes, and/or a cancellation order
-        '''
+        """
         # append to list of trades
         self._strategy_trades[strategy].append(trade)
 
@@ -64,11 +64,11 @@ class StrategyManagerOrderEntryMixin(object):
     # TODO ugly private method
 
     async def _onCanceled(self, strategy, order: Order):
-        '''callback method for if your order fails to execute
+        """callback method for if your order fails to execute
 
         Args:
             order (Order): the order you attempted to make
-        '''
+        """
         # push event to loop
         ev = Event(type=Event.Types.CANCELED, target=order)
         self._engine.pushTargetedEvent(strategy, ev)
@@ -81,7 +81,7 @@ class StrategyManagerOrderEntryMixin(object):
     # *********************
 
     async def newOrder(self, strategy, order: Order):
-        '''helper method, defers to buy/sell'''
+        """helper method, defers to buy/sell"""
         # ensure has list
         if strategy not in self._strategy_open_orders:
             self._strategy_open_orders[strategy] = []
@@ -112,11 +112,17 @@ class StrategyManagerOrderEntryMixin(object):
         return None
 
     async def cancelOrder(self, strategy, order: Order):
-        '''cancel an open order'''
+        """cancel an open order"""
         await self._order_mgr.cancelOrder(strategy, order)
 
-    def orders(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
-        '''select all open orders
+    def orders(
+        self,
+        strategy,
+        instrument: Instrument = None,
+        exchange: ExchangeType = None,
+        side: Side = None,
+    ):
+        """select all open orders
 
         Args:
             instrument (Instrument): filter open orders by instrument
@@ -124,7 +130,7 @@ class StrategyManagerOrderEntryMixin(object):
             side (Side): filter open orders by side
         Returns:
             list (Order): list of open orders
-        '''
+        """
         # ensure has list
         if strategy not in self._strategy_open_orders:
             self._strategy_open_orders[strategy] = []
@@ -138,8 +144,14 @@ class StrategyManagerOrderEntryMixin(object):
             ret = [r for r in ret if r.side == side]
         return ret
 
-    def pastOrders(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
-        '''select all past orders
+    def pastOrders(
+        self,
+        strategy,
+        instrument: Instrument = None,
+        exchange: ExchangeType = None,
+        side: Side = None,
+    ):
+        """select all past orders
 
         Args:
             instrument (Instrument): filter open orders by instrument
@@ -147,7 +159,7 @@ class StrategyManagerOrderEntryMixin(object):
             side (Side): filter open orders by side
         Returns:
             list (Order): list of open orders
-        '''
+        """
         # ensure has list
         if strategy not in self._strategy_past_orders:
             self._strategy_past_orders[strategy] = []
@@ -161,8 +173,14 @@ class StrategyManagerOrderEntryMixin(object):
             ret = [r for r in ret if r.side == side]
         return ret
 
-    def trades(self, strategy, instrument: Instrument = None, exchange: ExchangeType = None, side: Side = None):
-        '''select all past trades
+    def trades(
+        self,
+        strategy,
+        instrument: Instrument = None,
+        exchange: ExchangeType = None,
+        side: Side = None,
+    ):
+        """select all past trades
 
         Args:
             instrument (Instrument): filter trades by instrument
@@ -170,7 +188,7 @@ class StrategyManagerOrderEntryMixin(object):
             side (Side): filter trades by side
         Returns:
             list (Trade): list of trades
-        '''
+        """
         # ensure has list
         if strategy not in self._strategy_trades:
             self._strategy_trades[strategy] = []

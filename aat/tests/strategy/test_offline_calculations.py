@@ -12,10 +12,16 @@ class TestOfflineCalculations:
 
     def test_calculations(self):
         from aat.strategy.calculations import main
-        sys.argv = ['aat.strategy.calculations',
-                    '--folder', os.path.join(os.path.dirname(__file__), '_aat_BACKTEST_test'),
-                    '--strategy', 'MomentumStrategy-0',
-                    '--render', 'False']
+
+        sys.argv = [
+            "aat.strategy.calculations",
+            "--folder",
+            os.path.join(os.path.dirname(__file__), "_aat_BACKTEST_test"),
+            "--strategy",
+            "MomentumStrategy-0",
+            "--render",
+            "False",
+        ]
 
         if _in_cpp():
             # TODO

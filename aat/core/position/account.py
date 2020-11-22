@@ -6,17 +6,14 @@ from ...common import _in_cpp
 
 try:
     from aat.binding import AccountCpp  # type: ignore
+
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
 
 
 class Account(object):
-    __slots__ = [
-        "__id",
-        "__exchange",
-        "__positions",
-    ]
+    __slots__ = ["__id", "__exchange", "__positions"]
 
     def __new__(cls, *args, **kwargs):
         if _CPP:
@@ -61,19 +58,16 @@ class Account(object):
     @staticmethod
     def fromJson(jsn):
         kwargs = {}
-        kwargs['id'] = jsn['id']
-        kwargs['exchange'] = ExchangeType.fromJson(jsn['exchange'])
-        kwargs['positions'] = [Position.fromJson(x) for x in jsn['positions']]
+        kwargs["id"] = jsn["id"]
+        kwargs["exchange"] = ExchangeType.fromJson(jsn["exchange"])
+        kwargs["positions"] = [Position.fromJson(x) for x in jsn["positions"]]
 
         ret = Account(**kwargs)
         return ret
 
     @staticmethod
     def perspectiveSchema() -> Mapping[str, Type]:
-        return {
-            "id": str,
-            "exchange": str,
-        }
+        return {"id": str, "exchange": str}
 
     def __repr__(self):
-        return f'Account(id={self.id}, exchange={self.exchange})'
+        return f"Account(id={self.id}, exchange={self.exchange})"

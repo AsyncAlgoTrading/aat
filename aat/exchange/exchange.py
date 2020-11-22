@@ -7,14 +7,14 @@ _EXCHANGES = {}
 
 
 class Exchange(_MarketData, _OrderEntry):
-    '''Generic representation of an exchange. There are two primary functionalities of an exchange.
+    """Generic representation of an exchange. There are two primary functionalities of an exchange.
 
     Market Data Source:
         exchanges can stream data to the engine
 
     Order Entry Sink:
         exchanges can be queried for data, or send data
-    '''
+    """
 
     def __init__(self, exchange):
         self._exchange = exchange
@@ -30,19 +30,19 @@ class Exchange(_MarketData, _OrderEntry):
     def exchanges(exchange=None):
         if exchange:
             if exchange not in _EXCHANGES:
-                raise Exception(f'Unknown exchange type: {exchange}')
+                raise Exception(f"Unknown exchange type: {exchange}")
             return _EXCHANGES[exchange]
         return list(_EXCHANGES.keys())
 
     @abstractmethod
     async def connect(self):
-        '''connect to exchange. should be asynchronous.
+        """connect to exchange. should be asynchronous.
 
         For OrderEntry-only, can just return None
-        '''
+        """
 
     async def lookup(self, instrument):
-        '''lookup an instrument on the exchange'''
+        """lookup an instrument on the exchange"""
         return []
 
     # ****************** #

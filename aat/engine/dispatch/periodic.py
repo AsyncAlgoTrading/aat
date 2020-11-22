@@ -17,7 +17,9 @@ class Periodic(object):
         self._continue = False
 
     def expires(self, timestamp):
-        return should_expire(self._last, timestamp, self._second, self._minute, self._hour)
+        return should_expire(
+            self._last, timestamp, self._second, self._minute, self._hour
+        )
 
     async def execute(self, timestamp):
         if self.expires(timestamp):
@@ -32,17 +34,17 @@ class PeriodicManagerMixin(object):
         return self._periodics
 
     def periodicIntervals(self) -> int:
-        '''return the interval required for periodics, to optimize call times
+        """return the interval required for periodics, to optimize call times
         1 - secondly
         60 - minutely
         3600 - hourly
-        '''
+        """
         ret = 3600
         for p in self._periodics:
-            if p._second == '*':
+            if p._second == "*":
                 # if any secondly, return 0 right away
                 return 1
-            elif p._minute == '*':
+            elif p._minute == "*":
                 # if any require minutely, drop to 1
                 ret = 60
         return ret

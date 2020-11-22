@@ -9,27 +9,33 @@ if TYPE_CHECKING:
 
 
 class PositionDB(object):
-    '''Position registration'''
+    """Position registration"""
 
     def __init__(self):
         self._inst_map: Mapping[Instrument, Union[Position, CashPosition]] = {}
-        self._exch_map: Mapping[Tuple[ExchangeType, Instrument], Union[Position, CashPosition]] = {}
+        self._exch_map: Mapping[
+            Tuple[ExchangeType, Instrument], Union[Position, CashPosition]
+        ] = {}
 
     def add(self, position):
         pass
 
-    def positions(self,
-                  name="",
-                  type: InstrumentType = InstrumentType.CURRENCY,
-                  exchange: ExchangeType = ExchangeType(""),
-                  *args,
-                  **kwargs):
+    def positions(
+        self,
+        name="",
+        type: InstrumentType = InstrumentType.CURRENCY,
+        exchange: ExchangeType = ExchangeType(""),
+        *args,
+        **kwargs
+    ):
         pass
 
-    def get(self,
-            name="",
-            type: InstrumentType = InstrumentType.CURRENCY,
-            exchange: ExchangeType = ExchangeType(""),
-            *args,
-            **kwargs):
+    def get(
+        self,
+        name="",
+        type: InstrumentType = InstrumentType.CURRENCY,
+        exchange: ExchangeType = ExchangeType(""),
+        *args,
+        **kwargs
+    ):
         pass

@@ -7,18 +7,14 @@ from ...common import _in_cpp, _merge
 
 try:
     from aat.binding import CashPositionCpp  # type: ignore
+
     _CPP = _in_cpp()
 except ImportError:
     _CPP = False
 
 
 class CashPosition(object):
-    __slots__ = [
-        "__notional",
-        "__notional_history",
-        "__instrument",
-        "__exchange",
-    ]
+    __slots__ = ["__notional", "__notional_history", "__instrument", "__exchange"]
 
     def __new__(cls, *args, **kwargs):
         if _CPP:
@@ -50,7 +46,7 @@ class CashPosition(object):
 
     @property
     def timestamp(self):
-        '''time of creation of initial position'''
+        """time of creation of initial position"""
         return self.__notional_history[0][1]
 
     @property
@@ -65,8 +61,10 @@ class CashPosition(object):
         return self.__notional
 
     @notional.setter
-    def notional(self, notional: Union[Tuple[Union[int, float], datetime], Union[int, float]]):
-        '''Tuple as we need temporal information for history'''
+    def notional(
+        self, notional: Union[Tuple[Union[int, float], datetime], Union[int, float]]
+    ):
+        """Tuple as we need temporal information for history"""
         assert isinstance(notional, tuple)
         notional, when = notional
 
@@ -88,30 +86,31 @@ class CashPosition(object):
     @staticmethod
     def fromJson(jsn):
         kwargs = {}
-        kwargs['notional'] = jsn['notional']
-        kwargs['timestamp'] = datetime.fromtimestamp(jsn['timestamp'])
-        kwargs['instrument'] = Instrument.fromJson(jsn['instrument'])
-        kwargs['exchange'] = ExchangeType.fromJson(jsn['exchange'])
+        kwargs["notional"] = jsn["notional"]
+        kwargs["timestamp"] = datetime.fromtimestamp(jsn["timestamp"])
+        kwargs["instrument"] = Instrument.fromJson(jsn["instrument"])
+        kwargs["exchange"] = ExchangeType.fromJson(jsn["exchange"])
 
         ret = CashPosition(**kwargs)
-        ret.__notional_history = [(x, datetime.fromtimestamp(y)) for x, y in jsn['notional_history']]
+        ret.__notional_history = [
+            (x, datetime.fromtimestamp(y)) for x, y in jsn["notional_history"]
+        ]
         return ret
 
     def __repr__(self):
-        return f'Cash(notional={self.notional}, instrument={self.instrument}, exchange={self.exchange})'
+        return f"Cash(notional={self.notional}, instrument={self.instrument}, exchange={self.exchange})"
 
     def __add__(self, other):
-        '''Adding positions should give you the net position'''
+        """Adding positions should give you the net position"""
         assert isinstance(other, CashPosition)
         assert self.instrument == other.instrument
 
         # collect histories
         notional_history = _merge(self.__notional_history, other.__notional_history)
 
-        ret = CashPosition(notional_history[-1][0],
-                           self.instrument,
-                           self.exchange  # FIXME
-                           )
+        ret = CashPosition(
+            notional_history[-1][0], self.instrument, self.exchange  # FIXME
+        )
 
         ret.__notional_history = notional_history
         return ret

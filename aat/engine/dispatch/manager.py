@@ -17,20 +17,29 @@ if TYPE_CHECKING:
     from aat.engine import TradingEngine
 
 
-class StrategyManager(StrategyManagerOrderEntryMixin, StrategyManagerRiskMixin, StrategyManagerPortfolioMixin, StrategyManagerUtilsMixin, PeriodicManagerMixin, EventHandler):
-    def __init__(self,
-                 trading_engine: 'TradingEngine',
-                 trading_type: TradingType,
-                 exchanges: List[Exchange],
-                 load_accounts: bool = False):
-        '''The Manager sits between the strategies and the engine and manages state
+class StrategyManager(
+    StrategyManagerOrderEntryMixin,
+    StrategyManagerRiskMixin,
+    StrategyManagerPortfolioMixin,
+    StrategyManagerUtilsMixin,
+    PeriodicManagerMixin,
+    EventHandler,
+):
+    def __init__(
+        self,
+        trading_engine: "TradingEngine",
+        trading_type: TradingType,
+        exchanges: List[Exchange],
+        load_accounts: bool = False,
+    ):
+        """The Manager sits between the strategies and the engine and manages state
 
         Args:
             trading_engine (TradingEngine); the trading engine instance
             trading_type (TradingType); the trading type
             exchanges (List[Exchange]); a list of exchanges to dispatch to
             load_accounts (bool); load positions from accounts on startup
-        '''
+        """
 
         # store trading engine
         self._engine = trading_engine
@@ -131,8 +140,12 @@ class StrategyManager(StrategyManagerOrderEntryMixin, StrategyManagerRiskMixin, 
         await self._order_mgr.onData(event)
 
     async def onError(self, event):
-        print('\n\nA Fatal Error has occurred:')
-        traceback.print_exception(type(event.target.exception), event.target.exception, event.target.exception.__traceback__)
+        print("\n\nA Fatal Error has occurred:")
+        traceback.print_exception(
+            type(event.target.exception),
+            event.target.exception,
+            event.target.exception.__traceback__,
+        )
         sys.exit(1)
 
     async def onExit(self, event):

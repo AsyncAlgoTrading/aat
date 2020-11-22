@@ -1,4 +1,3 @@
-
 class StrategyManagerRiskMixin(object):
     # *********************
     # Risk Methods        *

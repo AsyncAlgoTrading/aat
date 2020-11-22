@@ -7,23 +7,23 @@ from aat.exchange import Exchange
 
 
 class Harness(Exchange):
-    '''Test harness exchange
+    """Test harness exchange
 
     This is a synthetic exchange that runs through a sequence of data objects and
-    asserts some specific behavior in the strategies under test'''
+    asserts some specific behavior in the strategies under test"""
 
     def __init__(self, trading_type, verbose):
-        super().__init__(ExchangeType('testharness'))
+        super().__init__(ExchangeType("testharness"))
         self._trading_type = trading_type
         self._verbose = verbose
-        self._instrument = Instrument('Test.inst', InstrumentType.EQUITY)
+        self._instrument = Instrument("Test.inst", InstrumentType.EQUITY)
 
         self._id = 0
         self._start = datetime.now() - timedelta(days=30)
         self._client_order = None
 
     async def instruments(self):
-        '''get list of available instruments'''
+        """get list of available instruments"""
         return [self._instrument]
 
     async def connect(self):
@@ -41,10 +41,16 @@ class Harness(Exchange):
                 yield Event(type=EventType.TRADE, target=t)
                 continue
 
-            o = Order(1, i, Side.BUY, self._instrument, self.exchange())
-            o.filled = 1
-            o.timestamp = now
-            t = Trade(1, i, [], o)
+            o = Order(
+                1,
+                i,
+                Side.BUY,
+                self._instrument,
+                self.exchange(),
+                timestamp=now,
+                filled=1,
+            )
+            t = Trade(1, i, o, [])
             yield Event(type=EventType.TRADE, target=t)
             now += timedelta(minutes=30)
 
@@ -71,13 +77,9 @@ class TestStrategy(Strategy):
         self._trades.append(event.target)  # type: ignore
 
     async def onPeriodic(self):
-        o = await self.newOrder(Order(
-            1,
-            1,
-            Side.BUY,
-            self.instruments()[0],
-            ExchangeType('testharness')
-        ))
+        o = await self.newOrder(
+            Order(1, 1, Side.BUY, self.instruments()[0], ExchangeType("testharness"))
+        )
         self._orders.append(o)
 
     async def onExit(self, event: Event) -> None:
@@ -90,10 +92,17 @@ class TestStrategy(Strategy):
 
 if __name__ == "__main__":
     from aat import TradingEngine, parseConfig
-    cfg = parseConfig(['--trading_type', 'backtest',
-                       '--exchanges', 'aat.exchange.test.harness:Harness',
-                       '--strategies', 'aat.exchange.test.harness:TestStrategy'
-                       ])
+
+    cfg = parseConfig(
+        [
+            "--trading_type",
+            "backtest",
+            "--exchanges",
+            "aat.exchange.test.harness:Harness",
+            "--strategies",
+            "aat.exchange.test.harness:TestStrategy",
+        ]
+    )
     print(cfg)
     t = TradingEngine(**cfg)
     t.start()
