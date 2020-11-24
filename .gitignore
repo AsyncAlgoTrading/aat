@@ -94,3 +94,5 @@ python_junit.xml
 .vscode
 private_config
 _aat_BACKTEST*
+
+venv/
