@@ -208,9 +208,9 @@ class Instrument(object):
             self.__expiration = kwargs.get("expiration")
 
         if hasattr(self, "_Instrument__price_increment"):
-            assert kwargs.get("price_increment") is None or self.__price_increment == kwargs.get(
+            assert kwargs.get(
                 "price_increment"
-            )
+            ) is None or self.__price_increment == kwargs.get("price_increment")
         elif kwargs.get("price_increment") is not None:
             self.__price_increment = float(
                 kwargs.get("price_increment")  # type: ignore
