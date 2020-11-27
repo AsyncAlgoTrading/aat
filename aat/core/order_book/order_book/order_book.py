@@ -64,7 +64,11 @@ class OrderBook(OrderBookBase):
     ):
 
         self._instrument = instrument
-        self._exchange_name = exchange_name or ExchangeType("")
+        self._exchange_name: ExchangeType = (
+            exchange_name
+            if isinstance(exchange_name, ExchangeType)
+            else ExchangeType(exchange_name or "")
+        )
         self._callback = callback or self._push
 
         # reset levels and collector
@@ -72,6 +76,18 @@ class OrderBook(OrderBookBase):
 
         # default callback is to enqueue
         self._queue: "Queue[Event]" = Queue()
+
+    @property
+    def instrument(self) -> Instrument:
+        return self._instrument
+
+    @property
+    def exchange(self) -> ExchangeType:
+        return self._exchange_name
+
+    @property
+    def callback(self) -> Callable:
+        return self._callback
 
     @property
     def queue(self) -> Queue:

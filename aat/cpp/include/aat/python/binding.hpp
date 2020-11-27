@@ -105,6 +105,10 @@ PYBIND11_MODULE(binding, m) {
       "__iter__", [](const OrderBook& o) { return py::make_iterator(o.begin(), o.end()); },
       py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
     .def("setCallback", &OrderBook::setCallback)
+    .def_property("instrument", &OrderBook::getInstrument, nullptr)
+    .def_property("exchange", &OrderBook::getExchange, nullptr)
+    .def_property("callback", &OrderBook::getCallback, nullptr)
+    .def("reset", &OrderBook::reset)
     .def("add", &OrderBook::add)
     .def("cancel", &OrderBook::cancel)
     .def("topOfBook", &OrderBook::topOfBookMap)

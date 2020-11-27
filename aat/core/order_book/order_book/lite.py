@@ -1,16 +1,18 @@
-from queue import Queue
 from typing import Callable, List, Mapping, Optional
 
-from aat.core import ExchangeType, Order, Instrument, Event
-from aat.config import Side
+from aat.core import Order, Instrument
+from aat.config import Side, OrderType
 
-from ..price_level import PriceLevelRO
-from ..base import OrderBookBase
+from ..price_level import PriceLevelRO, _PriceLevel
+from .order_book import OrderBook
 
 
-class OrderBookLite(OrderBookBase):
+class OrderBookLite(OrderBook):
     """A partial order book for clients of exchanges that don't
     provide order events but provide snapshots or overall state.
+
+    This order book is composed of price levels with the volume
+    simulated with a single, flag-less limit order.
 
     Args:
         instrument (Instrument): the instrument for the book
@@ -24,53 +26,87 @@ class OrderBookLite(OrderBookBase):
         exchange_name: str = "",
         callback: Optional[Callable] = None,
     ):
-
-        self._instrument = instrument
-        self._exchange_name = exchange_name or ExchangeType("")
-        self._callback = callback or self._push
-
-        # reset levels and collector
-        self.reset()
-
-        # default callback is to enqueue
-        self._queue: "Queue[Event]" = Queue()
-
-    @property
-    def queue(self) -> Queue:
-        return self._queue
-
-    def _push(self, event) -> None:
-        self._queue.put(event)
-
-    def add(self, order: Order) -> None:
-        raise NotImplementedError()
-
-    def cancel(self, order: Order) -> None:
-        raise NotImplementedError()
-
-    def change(self, order: Order) -> None:
-        raise NotImplementedError()
-
-    def find(self, order: Order) -> Optional[Order]:
-        raise NotImplementedError()
-
-    def topOfBook(self) -> Mapping[Side, List[float]]:
-        raise NotImplementedError()
-
-    def spread(self) -> float:
-        raise NotImplementedError()
-
-    def level(self, level: int = 0, price: float = None):
-        raise NotImplementedError()
-
-    def levels(self, levels=0):
-        raise NotImplementedError()
-
-    def __iter__(self):
-        raise NotImplementedError()
+        super().__init__(
+            instrument=instrument, exchange_name=exchange_name, callback=callback
+        )
 
     @staticmethod
     def fromPriceLevels(
-        self, price_levels: Mapping[Side, List[PriceLevelRO]]
+        self,
+        instrument: Instrument,
+        exchange_name: str = "",
+        callback: Optional[Callable] = None,
+        price_levels: Optional[Mapping[Side, List[PriceLevelRO]]] = None,
     ) -> "OrderBookLite":
-        pass
+        """construct order book from price levels"""
+        price_levels = price_levels or {}
+        obl = OrderBookLite(instrument, exchange_name, callback)
+
+        # create one order per price level
+        for level in price_levels[Side.SELL]:
+            self.add(
+                Order(
+                    level.volume,
+                    level.price,
+                    Side.SELL,
+                    obl.instrument,
+                    obl.exchange,
+                    order_type=OrderType.LIMIT,
+                )
+            )
+
+        # create one order per price level
+        for level in price_levels[Side.BUY]:
+            self.add(
+                Order(
+                    level.volume,
+                    level.price,
+                    Side.BUY,
+                    obl.instrument,
+                    obl.exchange,
+                    order_type=OrderType.LIMIT,
+                )
+            )
+
+        # return newly constructed order book
+        return obl
+
+    @staticmethod
+    def fromOrderBook(self, ob: OrderBook) -> "OrderBookLite":
+        # TODO
+        raise NotImplementedError()
+
+    def clone(self):
+        """clone an order book. useful when you want to do experiments on an orderbook without destroying it"""
+        obl = OrderBookLite(self.instrument, self.exchange_name, self.callback)
+
+        # create one order per price level
+        for level in self._sell_levels:
+            pl: _PriceLevel = self._sells[level]
+            self.add(
+                Order(
+                    pl.volume,
+                    pl.price,
+                    Side.SELL,
+                    self.instrument,
+                    self.exchange,
+                    order_type=OrderType.LIMIT,
+                )
+            )
+
+        # create one order per price level
+        for level in self._buy_levels:
+            pl: _PriceLevel = self._buys[level]
+            self.add(
+                Order(
+                    pl.volume,
+                    pl.price,
+                    Side.BUY,
+                    self.instrument,
+                    self.exchange,
+                    order_type=OrderType.LIMIT,
+                )
+            )
+
+        # return newly constructed order book
+        return obl
