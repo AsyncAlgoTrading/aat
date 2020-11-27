@@ -43,5 +43,13 @@ class OrderBookBase(ABC):
         pass
 
     @abstractmethod
+    def bids(self, levels=0):
+        pass
+
+    @abstractmethod
+    def asks(self, levels=0):
+        pass
+
+    @abstractmethod
     def __iter__(self):
         pass

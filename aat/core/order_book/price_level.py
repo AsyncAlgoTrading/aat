@@ -16,6 +16,21 @@ def _make_cpp_price_level(price, collector):
     return _PriceLevelCpp(price, collector)
 
 
+class PriceLevelRO(object):
+    '''Readonly Price Level'''
+
+    __slots__ = [
+        "_price",
+        "_volume",
+        "_number_of_orders",
+    ]
+
+    def __init__(self, price, volume, number_of_orders):
+        self._price = price
+        self._volume = volume
+        self._number_of_orders = number_of_orders
+
+
 class _PriceLevel(object):
     __slots__ = [
         "_price",

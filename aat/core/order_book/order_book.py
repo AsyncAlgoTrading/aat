@@ -409,15 +409,8 @@ class OrderBook(OrderBookBase):
             value (dict): returns {BUY: tuple, SELL: tuple}
         """
         return {
-            Side.BUY: [self._buy_levels[-1], self._buys[self._buy_levels[-1]].volume()]
-            if len(self._buy_levels) > 0
-            else [0, 0],
-            Side.SELL: [
-                self._sell_levels[0],
-                self._sells[self._sell_levels[0]].volume(),
-            ]
-            if len(self._sell_levels) > 0
-            else [float("inf"), 0],
+            Side.BUY: self.bids(levels=0),
+            Side.SELL: self.asks(levels=0)
         }
 
     def spread(self) -> float:
@@ -458,6 +451,35 @@ class OrderBook(OrderBookBase):
             if len(self._buy_levels) > level
             else [0.0, 0.0],
         )
+
+    def bids(self, levels=0):
+        """return bid levels starting at top
+
+        Args:
+            levels (int): number of levels to return
+        Returns:
+            value (dict of list): returns [levels in order] for `levels` number of levels
+        """
+        if levels <= 0:
+            return [self._buy_levels[-1], self._buys[self._buy_levels[-1]].volume()] if len(self._buy_levels) > 0 else [0, 0]
+        return [
+            (self._buy_levels[-i-1], self._buys[self._buy_levels[-i - 1]].volume()) if len(self._buy_levels) > i else None for i in range(levels)
+        ]
+        
+
+    def asks(self, levels=0):
+        """return ask levels starting at top
+
+        Args:
+            levels (int): number of levels to return
+        Returns:
+            value (dict of list): returns [levels in order] for `levels` number of levels
+        """
+        if levels <= 0:
+            return [self._sell_levels[0], self._sells[self._sell_levels[0]].volume()] if len(self._sell_levels) > 0 else [float("inf"), 0]
+        return [
+            (self._sell_levels[level], self._sells[self._sell_levels[level]].volume()) if len(self._sell_levels) > i else None for i in range(levels)
+        ]
 
     def levels(self, levels=0):
         """return book levels starting at top
