@@ -1,25 +1,14 @@
 from typing import Callable, List, Mapping, Optional
 
-from .base import OrderBookBase
-from .collector import _Collector
-from .price_level import _PriceLevel
-from .utils import _insort
-from ..exchange import ExchangeType
-from ..data import Order
-from ...config import Side, OrderFlag, OrderType
-from ...common import _in_cpp
+from aat.core.exchange import ExchangeType
+from aat.core.data import Order
+from aat.config import Side, OrderFlag, OrderType
 
-try:
-    from aat.binding import OrderBookCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
-
-
-def _make_cpp_orderbook(instrument, exchange_name="", callback=lambda x: print(x)):
-    """helper method to ensure all arguments are setup"""
-    return OrderBookCpp(instrument, exchange_name or ExchangeType(""), callback)
+from ..base import OrderBookBase
+from ..cpp import _CPP, _make_cpp_orderbook
+from ..collector import _Collector
+from ..price_level import _PriceLevel
+from ..utils import _insort
 
 
 class OrderBook(OrderBookBase):
@@ -408,10 +397,7 @@ class OrderBook(OrderBookBase):
         Returns:
             value (dict): returns {BUY: tuple, SELL: tuple}
         """
-        return {
-            Side.BUY: self.bids(levels=0),
-            Side.SELL: self.asks(levels=0)
-        }
+        return {Side.BUY: self.bids(levels=0), Side.SELL: self.asks(levels=0)}
 
     def spread(self) -> float:
         """return the spread
@@ -441,12 +427,12 @@ class OrderBook(OrderBookBase):
             )
 
         return (
-            [self._sell_levels[level], self._sells[self._sell_levels[level]].volume()]
+            [self._sell_levels[level], self._sells[self._sell_levels[level]].volume]
             if len(self._sell_levels) > level
             else [0.0, 0.0],
             [
                 self._buy_levels[-level - 1],
-                self._buys[self._buy_levels[-level - 1]].volume(),
+                self._buys[self._buy_levels[-level - 1]].volume,
             ]
             if len(self._buy_levels) > level
             else [0.0, 0.0],
@@ -461,11 +447,17 @@ class OrderBook(OrderBookBase):
             value (dict of list): returns [levels in order] for `levels` number of levels
         """
         if levels <= 0:
-            return [self._buy_levels[-1], self._buys[self._buy_levels[-1]].volume()] if len(self._buy_levels) > 0 else [0, 0]
+            return (
+                [self._buy_levels[-1], self._buys[self._buy_levels[-1]].volume]
+                if len(self._buy_levels) > 0
+                else [0, 0]
+            )
         return [
-            (self._buy_levels[-i-1], self._buys[self._buy_levels[-i - 1]].volume()) if len(self._buy_levels) > i else None for i in range(levels)
+            (self._buy_levels[-i - 1], self._buys[self._buy_levels[-i - 1]].volume)
+            if len(self._buy_levels) > i
+            else None
+            for i in range(levels)
         ]
-        
 
     def asks(self, levels=0):
         """return ask levels starting at top
@@ -476,9 +468,16 @@ class OrderBook(OrderBookBase):
             value (dict of list): returns [levels in order] for `levels` number of levels
         """
         if levels <= 0:
-            return [self._sell_levels[0], self._sells[self._sell_levels[0]].volume()] if len(self._sell_levels) > 0 else [float("inf"), 0]
+            return (
+                [self._sell_levels[0], self._sells[self._sell_levels[0]].volume]
+                if len(self._sell_levels) > 0
+                else [float("inf"), 0]
+            )
         return [
-            (self._sell_levels[level], self._sells[self._sell_levels[level]].volume()) if len(self._sell_levels) > i else None for i in range(levels)
+            (self._sell_levels[i], self._sells[self._sell_levels[i]].volume)
+            if len(self._sell_levels) > i
+            else None
+            for i in range(levels)
         ]
 
     def levels(self, levels=0):
@@ -568,11 +567,11 @@ class OrderBook(OrderBookBase):
             if isinstance(item, list):
                 # just aggregate these upper levels
                 if len(item) > 1:
-                    ret += f"\t\t{item[0].price():.2f} - {item[-1].price():.2f}\t{sum(i.volume() for i in item):.2f}"
+                    ret += f"\t\t{item[0].price:.2f} - {item[-1].price:.2f}\t{sum(i.volume for i in item):.2f}"
                 else:
-                    ret += f"\t\t{item[0].price():.2f}\t\t{item[0].volume():.2f}"
+                    ret += f"\t\t{item[0].price:.2f}\t\t{item[0].volume:.2f}"
             else:
-                ret += f"\t\t{item.price():.2f}\t\t{item.volume():.2f}"
+                ret += f"\t\t{item.price:.2f}\t\t{item.volume:.2f}"
             ret += "\n"
 
         ret += "-----------------------------------------------------\n"
@@ -582,11 +581,11 @@ class OrderBook(OrderBookBase):
             if isinstance(item, list):
                 # just aggregate these lower levels
                 if len(item) > 1:
-                    ret += f"{sum(i.volume() for i in item):.2f}\t\t{item[0].price():.2f} - {item[-1].price():.2f}\t"
+                    ret += f"{sum(i.volume for i in item):.2f}\t\t{item[0].price:.2f} - {item[-1].price:.2f}\t"
                 else:
-                    ret += f"{item[0].volume():.2f}\t\t{item[0].price():.2f}"
+                    ret += f"{item[0].volume:.2f}\t\t{item[0].price:.2f}"
             else:
-                ret += f"{item.volume():.2f}\t\t{item.price():.2f}"
+                ret += f"{item.volume:.2f}\t\t{item.price:.2f}"
             ret += "\n"
 
         return ret

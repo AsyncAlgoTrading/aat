@@ -1,27 +1,13 @@
-import logging
 from datetime import datetime
 from typing import Mapping, Union, Type
 
+from .cpp import _CPP, _make_cpp_data
 from ..exchange import ExchangeType
 from ..instrument import Instrument
-from ...common import _in_cpp, id_generator
+from ...common import id_generator
 from ...config import DataType
 
 _ID_GENERATOR = id_generator()
-
-try:
-    from aat.binding import DataCpp  # type: ignore
-
-    _CPP = _in_cpp()
-
-except ImportError:
-    logging.critical("Could not load C++ extension")
-    _CPP = False
-
-
-def _make_cpp_data(id, timestamp, instrument, exchange, data):
-    """helper method to ensure all arguments are setup"""
-    return DataCpp(id, timestamp, instrument, exchange, data)
 
 
 class Data(object):

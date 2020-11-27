@@ -1,9 +1,10 @@
 from typing import Callable, List, Mapping, Optional
 
-from .base import OrderBookBase
-from ..exchange import ExchangeType
-from ..data import Order
-from ...config import Side
+from aat.core.data import Order
+from aat.core.exchange import ExchangeType
+from aat.config import Side
+
+from ..base import OrderBookBase
 
 
 class OrderBookLite(OrderBookBase):

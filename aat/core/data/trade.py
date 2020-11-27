@@ -1,21 +1,9 @@
-from collections import deque
 from datetime import datetime
 from typing import Mapping, Type, Union, List, Dict
+
+from .cpp import _CPP, _make_cpp_trade
 from .order import Order
 from ...config import DataType, Side
-from ...common import _in_cpp
-
-try:
-    from aat.binding import TradeCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
-
-
-def _make_cpp_trade(id, timestamp, maker_orders=None, taker_order=None):
-    """helper method to ensure all arguments are setup"""
-    return TradeCpp(id, timestamp, maker_orders or deque(), taker_order)
 
 
 class Trade(object):

@@ -123,8 +123,8 @@ PYBIND11_MODULE(binding, m) {
       py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
     .def("__getitem__", &PriceLevel::operator[])
     .def("__bool__", &PriceLevel::operator bool)
-    .def("getPrice", &PriceLevel::getPrice)
-    .def("getVolume", &PriceLevel::getVolume)
+    .def_property("price", &PriceLevel::getPrice)
+    .def_property("volume", &PriceLevel::getVolume)
     .def("add", &PriceLevel::add);
 
   /*******************************
@@ -136,7 +136,7 @@ PYBIND11_MODULE(binding, m) {
     .def("pushOpen", &Collector::pushOpen)
     .def("pushChange", &Collector::pushChange, py::arg("order").none(false), py::arg("accumulate") = false,
       py::arg("filled_in_txn") = 0.0)
-    .def("getVolume", &Collector::getVolume);
+    .def_property("volume", &Collector::getVolume);
 
   /*******************************
    * Exchange

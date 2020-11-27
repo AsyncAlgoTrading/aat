@@ -1,34 +1,11 @@
 from collections import deque
-from ...common import _in_cpp
-from ...config import OrderType, OrderFlag
+from typing import Dict, Optional, List, Tuple, Union
 
+from aat.core.data import Order
+from aat.config import OrderType, OrderFlag
 
-try:
-    from aat.binding import _PriceLevelCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
-
-
-def _make_cpp_price_level(price, collector):
-    """helper method to ensure all arguments are setup"""
-    return _PriceLevelCpp(price, collector)
-
-
-class PriceLevelRO(object):
-    '''Readonly Price Level'''
-
-    __slots__ = [
-        "_price",
-        "_volume",
-        "_number_of_orders",
-    ]
-
-    def __init__(self, price, volume, number_of_orders):
-        self._price = price
-        self._volume = volume
-        self._number_of_orders = number_of_orders
+from .ro import PriceLevelRO
+from ..cpp import _CPP, _make_cpp_price_level
 
 
 class _PriceLevel(object):
@@ -56,13 +33,15 @@ class _PriceLevel(object):
         self._stop_orders_staged = []
         self._collector = collector
 
-    def price(self):
+    @property
+    def price(self) -> float:
         return self._price
 
-    def volume(self):
+    @property
+    def volume(self) -> float:
         return sum((x.volume - x.filled) for x in self._orders)
 
-    def add(self, order):
+    def add(self, order) -> None:
         # append order to deque
         if order.order_type == OrderType.STOP:
             if order.stop_target in self._stop_orders:
@@ -77,7 +56,7 @@ class _PriceLevel(object):
                     self._orders.append(order)
                     self._collector.pushOpen(order)
 
-    def find(self, order):
+    def find(self, order) -> Optional[Order]:
         # check if order is in level
         if order.price != self._price:
             # order not here/not here anymore
@@ -87,7 +66,7 @@ class _PriceLevel(object):
             if o.id == order.id:
                 return o
 
-    def modify(self, order):
+    def modify(self, order) -> Order:
         # check if order is in level
         if order.price != self._price or order.id not in (o.id for o in self._orders):
             # something is wrong
@@ -105,7 +84,7 @@ class _PriceLevel(object):
         # return the order
         return order
 
-    def remove(self, order):
+    def remove(self, order) -> Order:
         # check if order is in level
         if order.price != self._price or order not in self._orders:
             # something is wrong
@@ -120,7 +99,7 @@ class _PriceLevel(object):
         # return the order
         return order
 
-    def cross(self, taker_order):
+    def cross(self, taker_order) -> Tuple[Optional[Order], List[Order]]:
         """Cross the spread
 
         Args:
@@ -232,7 +211,7 @@ class _PriceLevel(object):
         # return order, this level is cleared and the order still has volume
         return taker_order, self._get_stop_orders()
 
-    def clear(self):
+    def clear(self) -> None:
         """clear queues"""
         self._orders.clear()
         self._orders_staged.clear()
@@ -240,18 +219,18 @@ class _PriceLevel(object):
         self._stop_orders = []
         self._stop_orders_staged = []
 
-    def _get_stop_orders(self):
+    def _get_stop_orders(self) -> List[Order]:
         if self._stop_orders:
             self._stop_orders_staged = self._stop_orders.copy()
             self._stop_orders = []
             return self._stop_orders_staged
         return []
 
-    def commit(self):
+    def commit(self) -> None:
         """staged orders accepted, clear"""
         self.clear()
 
-    def revert(self):
+    def revert(self) -> None:
         """staged order reverted, unstage the orders"""
         assert len(self._orders) == 0
 
@@ -272,7 +251,7 @@ class _PriceLevel(object):
         # reset staged
         self._stop_orders_staged = []
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """use deque size as truth value"""
         return len(self._orders) > 0
 
@@ -281,10 +260,16 @@ class _PriceLevel(object):
         for order in self._orders:
             yield order
 
-    def __len__(self):
+    def __len__(self) -> int:
         """get number of orders"""
         return len(self._orders)
 
     def __getitem__(self, index):
         """get item"""
         return self._orders[index]
+
+    def ro(self) -> PriceLevelRO:
+        return PriceLevelRO(self.price, self.volume, len(self))
+
+    def toDict(self) -> Dict[str, Union[int, float]]:
+        raise NotImplementedError()

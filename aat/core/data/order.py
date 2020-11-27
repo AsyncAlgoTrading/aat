@@ -1,47 +1,10 @@
 from datetime import datetime
 from typing import Mapping, Union, Type
 
+from .cpp import _CPP, _make_cpp_order
 from ..exchange import ExchangeType
 from ..instrument import Instrument
-from ...common import _in_cpp
 from ...config import DataType, OrderFlag, OrderType, Side
-
-
-try:
-    from aat.binding import OrderCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
-
-
-def _make_cpp_order(
-    volume,
-    price,
-    side,
-    instrument,
-    exchange=ExchangeType(""),
-    notional=0.0,
-    order_type=OrderType.MARKET,
-    flag=OrderFlag.NONE,
-    stop_target=None,
-    id=None,
-    timestamp=None,
-):
-    """helper method to ensure all arguments are setup"""
-    return OrderCpp(
-        id or "0",
-        timestamp or datetime.now(),
-        volume,
-        price,
-        side,
-        instrument,
-        exchange,
-        notional,
-        order_type,
-        flag,
-        stop_target,
-    )
 
 
 class Order(object):
