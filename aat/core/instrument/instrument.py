@@ -213,7 +213,6 @@ class Instrument(object):
             self.__price_increment = None
 
         if hasattr(self, "_Instrument__unit_value"):
-            print(kwargs.get("unit_value"), self.__unit_value)
             assert kwargs.get("unit_value") is None or self.__unit_value == kwargs.get(
                 "unit_value"
             )
@@ -321,7 +320,6 @@ class Instrument(object):
         return hash(str(self))
 
     def json(self):
-        print(self)
         return {
             "name": self.name,
             "type": self.type.value,
