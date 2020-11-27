@@ -210,20 +210,20 @@ class Order(object):
             and self.filled == other.filled
         )
 
-    def toJson(self) -> Mapping[str, Union[str, int, float]]:
+    def json(self) -> Mapping[str, Union[str, int, float]]:
         return {
             "id": self.id,
             "timestamp": self.timestamp.timestamp(),
             "volume": self.volume,
             "price": self.price,
             "side": self.side.value,
-            "instrument": self.instrument.toJson(),
-            "exchange": self.exchange.toJson(),
+            "instrument": self.instrument.json(),
+            "exchange": self.exchange.json(),
             "notional": self.notional,
             "filled": self.filled,
             "order_type": self.order_type.value,
             "flag": self.flag.value,
-            "stop_target": self.stop_target.toJson()  # type: ignore
+            "stop_target": self.stop_target.json()  # type: ignore
             if self.stop_target
             else "",
         }
@@ -260,7 +260,7 @@ class Order(object):
         return ret
 
     @staticmethod
-    def perspectiveSchema() -> Mapping[str, Type]:
+    def schema() -> Mapping[str, Type]:
         return {
             "id": str,
             "timestamp": int,

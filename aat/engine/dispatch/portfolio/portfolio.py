@@ -11,7 +11,7 @@ from aat.core import Order, Trade, Instrument, ExchangeType, Position
 class _Serializer(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (Trade, Instrument, Position, ExchangeType)):
-            return obj.toJson()
+            return obj.json()
         elif isinstance(obj, datetime):
             return obj.timestamp()
         else:
@@ -534,14 +534,14 @@ class Portfolio(object):
     def save(self, filename_prefix):
         with open("{}.prices.json".format(filename_prefix), "w") as fp:
             json.dump(
-                {json.dumps(k.toJson()): v for k, v in self._prices.items()},
+                {json.dumps(k.json()): v for k, v in self._prices.items()},
                 fp,
                 cls=_Serializer,
             )
 
         with open("{}.trades.json".format(filename_prefix), "w") as fp:
             json.dump(
-                {json.dumps(k.toJson()): v for k, v in self._trades.items()},
+                {json.dumps(k.json()): v for k, v in self._trades.items()},
                 fp,
                 cls=_Serializer,
             )
@@ -549,7 +549,7 @@ class Portfolio(object):
         with open("{}.active_by_inst.json".format(filename_prefix), "w") as fp:
             json.dump(
                 {
-                    json.dumps(k.toJson()): v
+                    json.dumps(k.json()): v
                     for k, v in self._active_positions_by_instrument.items()
                 },
                 fp,
@@ -559,7 +559,7 @@ class Portfolio(object):
         with open("{}.active_by_strat.json".format(filename_prefix), "w") as fp:
             json.dump(
                 {
-                    k: {json.dumps(kk.toJson()): vv for kk, vv in v.items()}
+                    k: {json.dumps(kk.json()): vv for kk, vv in v.items()}
                     for k, v in self._active_positions_by_strategy.items()
                 },
                 fp,

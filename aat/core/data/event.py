@@ -36,9 +36,9 @@ class Event(object):
     def __repr__(self):
         return f"Event(type={self.type}, target={self.target})"
 
-    def toJson(self) -> Mapping[str, Union[str, int, float]]:
+    def json(self) -> Mapping[str, Union[str, int, float]]:
         target = (
-            {"target." + k: v for k, v in self.target.toJson().items()}
+            {"target." + k: v for k, v in self.target.json().items()}
             if self.target
             else {"target": ""}
         )

@@ -1,16 +1,11 @@
 from datetime import datetime
 from typing import Tuple, Union
 
-from ..exchange import ExchangeType
-from ..instrument import Instrument
-from ...common import _in_cpp, _merge
+from aat.core.exchange import ExchangeType
+from aat.core.instrument import Instrument
+from aat.common import _merge
 
-try:
-    from aat.binding import CashPositionCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
+from .cpp import _CPP, _make_cpp_cash
 
 
 class CashPosition(object):
@@ -18,7 +13,7 @@ class CashPosition(object):
 
     def __new__(cls, *args, **kwargs):
         if _CPP:
-            return CashPositionCpp(*args, **kwargs)
+            return _make_cpp_cash(*args, **kwargs)
         return super(CashPosition, cls).__new__(cls)
 
     def __init__(self, notional, timestamp, instrument, exchange):
@@ -74,11 +69,11 @@ class CashPosition(object):
         self.__notional = notional
         self.__notional_history.append((self.notional, when))
 
-    def toJson(self):
+    def json(self):
         return {
             "timestamp": self.timestamp.timestamp(),
-            "instrument": self.instrument.toJson(),
-            "exchange": self.exchange.toJson(),
+            "instrument": self.instrument.json(),
+            "exchange": self.exchange.json(),
             "notional": self.notional,
             "notional_history": self.notionalHistory,
         }

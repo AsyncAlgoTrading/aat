@@ -70,7 +70,7 @@ class Data(object):
         assert isinstance(other, Data)
         return self.id == other.id
 
-    def toJson(self) -> Mapping[str, Union[str, int, float]]:
+    def json(self) -> Mapping[str, Union[str, int, float]]:
         return {
             "id": self.id,
             "timestamp": self.timestamp,
@@ -80,7 +80,7 @@ class Data(object):
         }
 
     @staticmethod
-    def perspectiveSchema() -> Mapping[str, Type]:
+    def schema() -> Mapping[str, Type]:
         return {
             "id": int,
             "timestamp": int,

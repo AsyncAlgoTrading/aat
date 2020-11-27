@@ -124,7 +124,7 @@ class Trade(object):
         assert isinstance(other, Trade)
         return self.id == other.id and self.timestamp == other.timestamp
 
-    def toJson(self, flat=False) -> Mapping[str, Union[str, int, float]]:
+    def json(self, flat=False) -> Mapping[str, Union[str, int, float]]:
         """convert trade to flat json"""
         ret: Dict[str, Union[str, int, float]] = {
             "id": self.id,
@@ -136,11 +136,11 @@ class Trade(object):
         if flat:
             # Typings here to enforce flatness of json
             taker_order: Dict[str, Union[str, int, float]] = {
-                "taker_order." + k: v for k, v in self.taker_order.toJson().items()
+                "taker_order." + k: v for k, v in self.taker_order.json().items()
             }
 
             maker_orders: List[Dict[str, Union[str, int, float]]] = [
-                {"maker_order{}." + k: v for k, v in order.toJson().items()}
+                {"maker_order{}." + k: v for k, v in order.json().items()}
                 for i, order in enumerate(self.maker_orders)
             ]
 
@@ -152,10 +152,8 @@ class Trade(object):
                 ret.update(maker_order)
 
         else:
-            ret["taker_order"] = self.taker_order.toJson()  # type: ignore
-            ret["maker_orders"] = [
-                m.toJson() for m in self.maker_orders  # type: ignore
-            ]
+            ret["taker_order"] = self.taker_order.json()  # type: ignore
+            ret["maker_orders"] = [m.json() for m in self.maker_orders]  # type: ignore
 
         return ret
 
@@ -173,7 +171,7 @@ class Trade(object):
         return ret
 
     @staticmethod
-    def perspectiveSchema() -> Mapping[str, Type]:
+    def schema() -> Mapping[str, Type]:
         # FIXME
         # this varies from the json schema
         return {"id": int, "timestamp": int, "volume": float, "price": float}

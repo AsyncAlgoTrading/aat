@@ -1,7 +1,7 @@
+from queue import Queue
 from typing import Callable, List, Mapping, Optional
 
-from aat.core.data import Order
-from aat.core.exchange import ExchangeType
+from aat.core import ExchangeType, Order, Instrument
 from aat.config import Side
 
 from ..base import OrderBookBase
@@ -17,14 +17,29 @@ class OrderBookLite(OrderBookBase):
         callback (Function): callback on events
     """
 
-    def __init__(self, instrument, exchange_name="", callback: Callable = print):
+    def __init__(
+        self,
+        instrument: Instrument,
+        exchange_name: str = "",
+        callback: Optional[Callable] = None,
+    ):
 
         self._instrument = instrument
         self._exchange_name = exchange_name or ExchangeType("")
-        self._callback = callback
+        self._callback = callback or self._push
 
-        # reset levels
+        # reset levels and collector
         self.reset()
+
+        # default callback is to enqueue
+        self._queue = Queue()
+
+    @property
+    def queue(self) -> None:
+        return self._queue
+
+    def _push(self, event) -> None:
+        self._queue.put(event)
 
     def add(self, order: Order) -> None:
         raise NotImplementedError()
