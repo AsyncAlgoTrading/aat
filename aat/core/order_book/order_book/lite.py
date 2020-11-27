@@ -44,6 +44,7 @@ class OrderBookLite(OrderBook):
 
         # create one order per price level
         for level in price_levels[Side.SELL]:
+            level = level if isinstance(level, PriceLevelRO) else PriceLevelRO(level[0], level[1], 1)  # type: ignore
             self.add(
                 Order(
                     level.volume,
@@ -57,6 +58,7 @@ class OrderBookLite(OrderBook):
 
         # create one order per price level
         for level in price_levels[Side.BUY]:
+            level = level if isinstance(level, PriceLevelRO) else PriceLevelRO(level[0], level[1], 1)  # type: ignore
             self.add(
                 Order(
                     level.volume,
