@@ -65,6 +65,7 @@ class _PriceLevel(object):
         for o in self._orders:
             if o.id == order.id:
                 return o
+        return None
 
     def modify(self, order) -> Order:
         # check if order is in level
@@ -110,7 +111,7 @@ class _PriceLevel(object):
         """
         if taker_order.order_type == OrderType.STOP:
             self.add(taker_order)
-            return None, ()
+            return None, []
 
         if taker_order.filled == taker_order.volume:
             # already filled:

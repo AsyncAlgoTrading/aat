@@ -1,9 +1,10 @@
 from queue import Queue
 from typing import Callable, List, Mapping, Optional
 
-from aat.core import ExchangeType, Order, Instrument
+from aat.core import ExchangeType, Order, Instrument, Event
 from aat.config import Side
 
+from ..price_level import PriceLevelRO
 from ..base import OrderBookBase
 
 
@@ -32,10 +33,10 @@ class OrderBookLite(OrderBookBase):
         self.reset()
 
         # default callback is to enqueue
-        self._queue = Queue()
+        self._queue: "Queue[Event]" = Queue()
 
     @property
-    def queue(self) -> None:
+    def queue(self) -> Queue:
         return self._queue
 
     def _push(self, event) -> None:
@@ -67,3 +68,9 @@ class OrderBookLite(OrderBookBase):
 
     def __iter__(self):
         raise NotImplementedError()
+
+    @staticmethod
+    def fromPriceLevels(
+        self, price_levels: Mapping[Side, List[PriceLevelRO]]
+    ) -> "OrderBookLite":
+        pass

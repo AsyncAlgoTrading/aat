@@ -1,7 +1,7 @@
 from queue import Queue
 from typing import Callable, List, Mapping, Optional
 
-from aat.core import ExchangeType, Order, Instrument
+from aat.core import ExchangeType, Order, Instrument, Event
 from aat.config import Side, OrderFlag, OrderType
 
 from ..base import OrderBookBase
@@ -71,10 +71,10 @@ class OrderBook(OrderBookBase):
         self.reset()
 
         # default callback is to enqueue
-        self._queue = Queue()
+        self._queue: "Queue[Event]" = Queue()
 
     @property
-    def queue(self) -> None:
+    def queue(self) -> Queue:
         return self._queue
 
     def _push(self, event) -> None:
@@ -336,7 +336,7 @@ class OrderBook(OrderBookBase):
             raise Exception("Order cannot be None")
 
         # secondary triggered orders
-        secondaries = []
+        secondaries: List[Order] = []
 
         # get the top price on the opposite side of book
         top = self._getTop(order.side, self._collector.clearedLevels())
@@ -364,11 +364,11 @@ class OrderBook(OrderBookBase):
             # execute order against level
             # if returns trade, it cleared the level
             # else, order was fully executed
-            trade, secondary = prices_cross[top].cross(order)
+            trade, new_secondaries = prices_cross[top].cross(order)
 
-            if secondary:
+            if new_secondaries:
                 # append to secondaries
-                secondaries.extend(secondary)
+                secondaries.extend(new_secondaries)
 
             if trade:
                 # clear sell level
