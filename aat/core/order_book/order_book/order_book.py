@@ -1,25 +1,14 @@
+from queue import Queue
 from typing import Callable, List, Mapping, Optional
 
-from .base import OrderBookBase
-from .collector import _Collector
-from .price_level import _PriceLevel
-from .utils import _insort
-from ..exchange import ExchangeType
-from ..data import Order
-from ...config import Side, OrderFlag, OrderType
-from ...common import _in_cpp
+from aat.core import ExchangeType, Order, Instrument, Event
+from aat.config import Side, OrderFlag, OrderType
 
-try:
-    from aat.binding import OrderBookCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
-
-
-def _make_cpp_orderbook(instrument, exchange_name="", callback=lambda x: print(x)):
-    """helper method to ensure all arguments are setup"""
-    return OrderBookCpp(instrument, exchange_name or ExchangeType(""), callback)
+from ..base import OrderBookBase
+from ..cpp import _CPP, _make_cpp_orderbook
+from ..collector import _Collector
+from ..price_level import _PriceLevel, PriceLevelRO
+from ..utils import _insort
 
 
 class OrderBook(OrderBookBase):
@@ -67,14 +56,45 @@ class OrderBook(OrderBookBase):
             return _make_cpp_orderbook(*args, **kwargs)
         return super(OrderBook, cls).__new__(cls)
 
-    def __init__(self, instrument, exchange_name="", callback=print):
+    def __init__(
+        self,
+        instrument: Instrument,
+        exchange_name: str = "",
+        callback: Optional[Callable] = None,
+    ):
 
         self._instrument = instrument
-        self._exchange_name = exchange_name or ExchangeType("")
-        self._callback = callback
+        self._exchange_name: ExchangeType = (
+            exchange_name
+            if isinstance(exchange_name, ExchangeType)
+            else ExchangeType(exchange_name or "")
+        )
+        self._callback = callback or self._push
 
         # reset levels and collector
         self.reset()
+
+        # default callback is to enqueue
+        self._queue: "Queue[Event]" = Queue()
+
+    @property
+    def instrument(self) -> Instrument:
+        return self._instrument
+
+    @property
+    def exchange(self) -> ExchangeType:
+        return self._exchange_name
+
+    @property
+    def callback(self) -> Callable:
+        return self._callback
+
+    @property
+    def queue(self) -> Queue:
+        return self._queue
+
+    def _push(self, event) -> None:
+        self._queue.put(event)
 
     def reset(self) -> None:
         """reset the order book to its base state"""
@@ -92,6 +112,212 @@ class OrderBook(OrderBookBase):
     def setCallback(self, callback: Callable) -> None:
         self._callback = callback
         self._collector.setCallback(callback)
+
+    def find(self, order: Order) -> Optional[Order]:
+        """find an order in the order book
+        Args:
+            order (Data): order to find in orderbook
+        """
+        price = order.price
+        side = order.side
+        levels = self._buy_levels if side == Side.BUY else self._sell_levels
+        prices = self._buys if side == Side.BUY else self._sells
+
+        if price not in levels:
+            return None
+
+        # find order from price level
+        return prices[price].find(order)
+
+    def topOfBook(self) -> Mapping[Side, List[float]]:
+        """return top of both sides
+
+        Args:
+
+        Returns:
+            value (dict): returns {BUY: tuple, SELL: tuple}
+        """
+        return {Side.BUY: self.bids(levels=0), Side.SELL: self.asks(levels=0)}
+
+    def spread(self) -> float:
+        """return the spread
+
+        Args:
+
+        Returns:
+            value (float): spread between bid and ask
+        """
+        tob = self.topOfBook()
+        return tob[Side.SELL][0] - tob[Side.BUY][0]
+
+    def level(self, level: int = 0, price: float = None):
+        """return book level
+
+        Args:
+            level (int): depth of book to return
+            price (float): price level to look for
+        Returns:
+            value (tuple): returns ask, bid
+        """
+        # collect bids and asks at `level`
+        if price is not None:
+            return (
+                PriceLevelRO(
+                    self._sells[price].price,
+                    self._sells[price].volume,
+                    len(self._sells[price]),
+                )
+                if price in self._sell_levels
+                else None,
+                PriceLevelRO(
+                    self._buys[price].price,
+                    self._buys[price].volume,
+                    len(self._buys[price]),
+                )
+                if price in self._buy_levels
+                else None,
+            )
+
+        return (
+            PriceLevelRO(
+                self._sell_levels[level],
+                self._sells[self._sell_levels[level]].volume,
+                len(self._sells[self._sell_levels[level]]),
+            )
+            if len(self._sell_levels) > level
+            else PriceLevelRO(0.0, 0.0, 0),
+            PriceLevelRO(
+                self._buy_levels[-level - 1],
+                self._buys[self._buy_levels[-level - 1]].volume,
+                len(self._buys[self._buy_levels[-level - 1]]),
+            )
+            if len(self._buy_levels) > level
+            else PriceLevelRO(0.0, 0.0, 0),
+        )
+
+    def bids(self, levels=0):
+        """return bid levels starting at top
+
+        Args:
+            levels (int): number of levels to return
+        Returns:
+            value (dict of list): returns [levels in order] for `levels` number of levels
+        """
+        if levels <= 0:
+            return (
+                PriceLevelRO(
+                    self._buy_levels[-1],
+                    self._buys[self._buy_levels[-1]].volume,
+                    len(self._buys[self._buy_levels[-1]]),
+                )
+                if len(self._buy_levels) > 0
+                else PriceLevelRO(0, 0, 0)
+            )
+        return [
+            PriceLevelRO(
+                self._buy_levels[-i - 1],
+                self._buys[self._buy_levels[-i - 1]].volume,
+                len(self._buys[self._buy_levels[-i - 1]]),
+            )
+            if len(self._buy_levels) > i
+            else None
+            for i in range(levels)
+        ]
+
+    def asks(self, levels=0):
+        """return ask levels starting at top
+
+        Args:
+            levels (int): number of levels to return
+        Returns:
+            value (dict of list): returns [levels in order] for `levels` number of levels
+        """
+        if levels <= 0:
+            return (
+                PriceLevelRO(
+                    self._sell_levels[0],
+                    self._sells[self._sell_levels[0]].volume,
+                    len(self._sells[self._sell_levels[0]]),
+                )
+                if len(self._sell_levels) > 0
+                else PriceLevelRO(float("inf"), 0, 0)
+            )
+        return [
+            PriceLevelRO(
+                self._sell_levels[i],
+                self._sells[self._sell_levels[i]].volume,
+                len(self._sells[self._sell_levels[i]]),
+            )
+            if len(self._sell_levels) > i
+            else None
+            for i in range(levels)
+        ]
+
+    def levels(self, levels=0):
+        """return book levels starting at top
+
+        Args:
+            levels (int): number of levels to return
+        Returns:
+            value (dict of list): returns {"ask": [levels in order], "bid": [levels in order]} for `levels` number of levels
+        """
+        if levels <= 0:
+            return self.topOfBook()
+
+        ret: Mapping[Side, List[List[float]]] = {}
+        ret[Side.BUY] = []
+        ret[Side.SELL] = []
+        for _ in range(levels):
+            ask, bid = self.level(_)
+            if ask:
+                ret[Side.SELL].append(ask)
+
+            if bid:
+                ret[Side.BUY].append(bid)
+        return ret
+
+    def change(self, order: Order) -> None:
+        """modify an order on the order book, potentially triggering events:
+            EventType.CHANGE: the change event for this
+        Args:
+            order (Data): order to submit to orderbook
+        """
+        assert order.volume > 0.0  # otherwise use cancel
+
+        price = order.price
+        side = order.side
+        levels = self._buy_levels if side == Side.BUY else self._sell_levels
+        prices = self._buys if side == Side.BUY else self._sells
+
+        if price not in levels:
+            raise Exception("Orderbook out of sync")
+
+        # modify order in price level
+        prices[price].modify(order)
+
+    def cancel(self, order: Order) -> None:
+        """remove an order from the order book, potentially triggering events:
+            EventType.CANCEL: the cancel event for this
+        Args:
+            order (Data): order to submit to orderbook
+        """
+        price = order.price
+        side = order.side
+        levels = self._buy_levels if side == Side.BUY else self._sell_levels
+        prices = self._buys if side == Side.BUY else self._sells
+
+        if price not in levels:
+            # what to do here?
+            # order has already executed or been cancelled
+            # raise Exception('Orderbook out of sync')
+            return
+
+        # remove order from price level
+        prices[price].remove(order)
+
+        # delete level if no more volume
+        if not prices[price]:
+            levels.remove(price)
 
     def _clearOrders(self, order: Order, amount: int) -> None:
         """internal"""
@@ -126,7 +352,7 @@ class OrderBook(OrderBookBase):
             raise Exception("Order cannot be None")
 
         # secondary triggered orders
-        secondaries = []
+        secondaries: List[Order] = []
 
         # get the top price on the opposite side of book
         top = self._getTop(order.side, self._collector.clearedLevels())
@@ -154,11 +380,11 @@ class OrderBook(OrderBookBase):
             # execute order against level
             # if returns trade, it cleared the level
             # else, order was fully executed
-            trade, secondary = prices_cross[top].cross(order)
+            trade, new_secondaries = prices_cross[top].cross(order)
 
-            if secondary:
+            if new_secondaries:
                 # append to secondaries
-                secondaries.extend(secondary)
+                secondaries.extend(new_secondaries)
 
             if trade:
                 # clear sell level
@@ -341,147 +567,6 @@ class OrderBook(OrderBookBase):
         # clear the collector
         self._collector.clear()
 
-    def change(self, order: Order) -> None:
-        """modify an order on the order book, potentially triggering events:
-            EventType.CHANGE: the change event for this
-        Args:
-            order (Data): order to submit to orderbook
-        """
-        assert order.volume > 0.0  # otherwise use cancel
-
-        price = order.price
-        side = order.side
-        levels = self._buy_levels if side == Side.BUY else self._sell_levels
-        prices = self._buys if side == Side.BUY else self._sells
-
-        if price not in levels:
-            raise Exception("Orderbook out of sync")
-
-        # modify order in price level
-        prices[price].modify(order)
-
-    def cancel(self, order: Order) -> None:
-        """remove an order from the order book, potentially triggering events:
-            EventType.CANCEL: the cancel event for this
-        Args:
-            order (Data): order to submit to orderbook
-        """
-        price = order.price
-        side = order.side
-        levels = self._buy_levels if side == Side.BUY else self._sell_levels
-        prices = self._buys if side == Side.BUY else self._sells
-
-        if price not in levels:
-            # what to do here?
-            # order has already executed or been cancelled
-            # raise Exception('Orderbook out of sync')
-            return
-
-        # remove order from price level
-        prices[price].remove(order)
-
-        # delete level if no more volume
-        if not prices[price]:
-            levels.remove(price)
-
-    def find(self, order: Order) -> Optional[Order]:
-        """find an order in the order book
-        Args:
-            order (Data): order to find in orderbook
-        """
-        price = order.price
-        side = order.side
-        levels = self._buy_levels if side == Side.BUY else self._sell_levels
-        prices = self._buys if side == Side.BUY else self._sells
-
-        if price not in levels:
-            return None
-
-        # find order from price level
-        return prices[price].find(order)
-
-    def topOfBook(self) -> Mapping[Side, List[float]]:
-        """return top of both sides
-
-        Args:
-
-        Returns:
-            value (dict): returns {BUY: tuple, SELL: tuple}
-        """
-        return {
-            Side.BUY: [self._buy_levels[-1], self._buys[self._buy_levels[-1]].volume()]
-            if len(self._buy_levels) > 0
-            else [0, 0],
-            Side.SELL: [
-                self._sell_levels[0],
-                self._sells[self._sell_levels[0]].volume(),
-            ]
-            if len(self._sell_levels) > 0
-            else [float("inf"), 0],
-        }
-
-    def spread(self) -> float:
-        """return the spread
-
-        Args:
-
-        Returns:
-            value (float): spread between bid and ask
-        """
-        tob = self.topOfBook()
-        return tob[Side.SELL][0] - tob[Side.BUY][0]
-
-    def level(self, level: int = 0, price: float = None):
-        """return book level
-
-        Args:
-            level (int): depth of book to return
-            price (float): price level to look for
-        Returns:
-            value (tuple): returns ask, bid
-        """
-        # collect bids and asks at `level`
-        if price is not None:
-            return (
-                self._sells[price] if price in self._sell_levels else None,
-                self._buys[price] if price in self._buy_levels else None,
-            )
-
-        return (
-            [self._sell_levels[level], self._sells[self._sell_levels[level]].volume()]
-            if len(self._sell_levels) > level
-            else [0.0, 0.0],
-            [
-                self._buy_levels[-level - 1],
-                self._buys[self._buy_levels[-level - 1]].volume(),
-            ]
-            if len(self._buy_levels) > level
-            else [0.0, 0.0],
-        )
-
-    def levels(self, levels=0):
-        """return book levels starting at top
-
-        Args:
-            levels (int): number of levels to return
-        Returns:
-            value (dict of list): returns {"ask": [levels in order], "bid": [levels in order]} for `levels` number of levels
-        """
-        if levels <= 0:
-            return self.topOfBook()
-
-        ret: Mapping[Side, List[List[float]]] = {}
-        ret[Side.BUY] = []
-        ret[Side.SELL] = []
-        for _ in range(levels):
-            ask, bid = self.level(_)
-            if ask:
-                ret[Side.SELL].append(ask)
-
-            if bid:
-                ret[Side.BUY].append(bid)
-        return ret
-
     def __iter__(self):
         """iterate through asks then bids by level"""
         for level in self._sell_levels:
@@ -546,11 +631,11 @@ class OrderBook(OrderBookBase):
             if isinstance(item, list):
                 # just aggregate these upper levels
                 if len(item) > 1:
-                    ret += f"\t\t{item[0].price():.2f} - {item[-1].price():.2f}\t{sum(i.volume() for i in item):.2f}"
+                    ret += f"\t\t{item[0].price:.2f} - {item[-1].price:.2f}\t{sum(i.volume for i in item):.2f}"
                 else:
-                    ret += f"\t\t{item[0].price():.2f}\t\t{item[0].volume():.2f}"
+                    ret += f"\t\t{item[0].price:.2f}\t\t{item[0].volume:.2f}"
             else:
-                ret += f"\t\t{item.price():.2f}\t\t{item.volume():.2f}"
+                ret += f"\t\t{item.price:.2f}\t\t{item.volume:.2f}"
             ret += "\n"
 
         ret += "-----------------------------------------------------\n"
@@ -560,11 +645,11 @@ class OrderBook(OrderBookBase):
             if isinstance(item, list):
                 # just aggregate these lower levels
                 if len(item) > 1:
-                    ret += f"{sum(i.volume() for i in item):.2f}\t\t{item[0].price():.2f} - {item[-1].price():.2f}\t"
+                    ret += f"{sum(i.volume for i in item):.2f}\t\t{item[0].price:.2f} - {item[-1].price:.2f}\t"
                 else:
-                    ret += f"{item[0].volume():.2f}\t\t{item[0].price():.2f}"
+                    ret += f"{item[0].volume:.2f}\t\t{item[0].price:.2f}"
             else:
-                ret += f"{item.volume():.2f}\t\t{item.price():.2f}"
+                ret += f"{item.volume:.2f}\t\t{item.price:.2f}"
             ret += "\n"
 
         return ret

@@ -1,20 +1,9 @@
 from collections import deque
-from ..data import Event, Trade
-from ...common import _in_cpp
-from ...config import EventType
 
+from aat.core.data import Event, Trade
+from aat.config import EventType
 
-try:
-    from aat.binding import _CollectorCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
-
-
-def _make_cpp_collector(callback=lambda *args: args):
-    """helper method to ensure all arguments are setup"""
-    return _CollectorCpp(callback)
+from ..cpp import _CPP, _make_cpp_collector
 
 
 class _Collector(object):
@@ -94,22 +83,22 @@ class _Collector(object):
 
     def pushTrade(self, taker_order, filled_in_txn):
         """push taker order trade"""
-        if not self.orders():
+        if not self.orders:
             raise Exception("No maker orders provided")
 
         if taker_order.filled <= 0:
             raise Exception("No trade occurred")
 
-        if filled_in_txn != self.volume():
+        if filled_in_txn != self.volume:
             raise Exception("Accumulation error occurred")
 
         self.push(
             Event(
                 type=EventType.TRADE,
                 target=Trade(
-                    volume=self.volume(),
-                    price=self.price(),
-                    maker_orders=self.orders().copy(),
+                    volume=self.volume,
+                    price=self.price,
+                    maker_orders=self.orders.copy(),
                     taker_order=taker_order,
                 ),
             )
@@ -163,23 +152,29 @@ class _Collector(object):
     ###############
     # Order Stats #
     ###############
+    @property
     def price(self):
         """VWAP"""
         return self._price
 
+    @property
     def volume(self):
         """volume"""
         return self._volume
 
+    @property
     def orders(self):
         return self._orders
 
+    @property
     def taker_order(self):
         return self._taker_order
 
+    @property
     def events(self):
         return self._event_queue
 
+    @property
     def price_levels(self):
         return self._price_levels
 

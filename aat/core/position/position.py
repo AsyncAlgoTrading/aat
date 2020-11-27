@@ -1,17 +1,12 @@
 from datetime import datetime
 from typing import Tuple, Union, Mapping, Type
 
-from ..data import Trade
-from ..exchange import ExchangeType
-from ..instrument import Instrument
-from ...common import _in_cpp, _merge
+from aat.core.data import Trade
+from aat.core.exchange import ExchangeType
+from aat.core.instrument import Instrument
+from aat.common import _merge
 
-try:
-    from aat.binding import PositionCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
+from .cpp import _CPP, _make_cpp_position
 
 
 class Position(object):
@@ -37,7 +32,7 @@ class Position(object):
 
     def __new__(cls, *args, **kwargs):
         if _CPP:
-            return PositionCpp(*args, **kwargs)
+            return _make_cpp_position(*args, **kwargs)
         return super(Position, cls).__new__(cls)
 
     def __init__(self, size, price, timestamp, instrument, exchange, trades):
@@ -251,11 +246,11 @@ class Position(object):
     def trades(self):
         return self.__trades
 
-    def toJson(self):
+    def json(self):
         return {
             "timestamp": self.timestamp.timestamp(),
-            "instrument": self.instrument.toJson(),
-            "exchange": self.exchange.toJson(),
+            "instrument": self.instrument.json(),
+            "exchange": self.exchange.json(),
             "size": self.size,
             "size_history": self.sizeHistory,
             "notional": self.notional,
@@ -270,7 +265,7 @@ class Position(object):
             "pnl_history": self.pnlHistory,
             "unrealizedPnl": self.unrealizedPnl,
             "unrealizedPnl_history": self.unrealizedPnlHistory,
-            "trades": [t.toJson() for t in self.trades],
+            "trades": [t.json() for t in self.trades],
         }
 
     @staticmethod
@@ -314,7 +309,7 @@ class Position(object):
         return ret
 
     @staticmethod
-    def perspectiveSchema() -> Mapping[str, Type]:
+    def schema() -> Mapping[str, Type]:
         return {
             "timestamp": int,
             "instrument": str,

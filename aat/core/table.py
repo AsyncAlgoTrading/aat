@@ -26,8 +26,8 @@ class TableHandler(EventHandler):
     onExit = None  # type: ignore
 
     def __init__(self):
-        self._trades = Table(Trade.perspectiveSchema(), index="timestamp")
-        self._orders = Table(Order.perspectiveSchema(), index="id")
+        self._trades = Table(Trade.schema(), index="timestamp")
+        self._orders = Table(Order.schema(), index="id")
 
     def installTables(self, manager) -> None:
         manager.host_table("trades", self._trades)
@@ -38,11 +38,11 @@ class TableHandler(EventHandler):
 
     def onTrade(self, event: Event):
         """onTrade"""
-        self._trades.update([event.target.toJson()])
+        self._trades.update([event.target.json()])
 
     def onOpen(self, event: Event):
         """onOpen"""
-        self._orders.update([event.target.toJson()])
+        self._orders.update([event.target.json()])
 
     def onCancel(self, event: Event):
         """onCancel"""
@@ -50,7 +50,7 @@ class TableHandler(EventHandler):
 
     def onChange(self, event: Event):
         """onChange"""
-        self._orders.update([event.target.toJson()])
+        self._orders.update([event.target.json()])
 
     def onFill(self, event: Event):
         """onFill"""

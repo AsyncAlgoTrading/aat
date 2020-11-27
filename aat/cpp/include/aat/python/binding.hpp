@@ -105,6 +105,10 @@ PYBIND11_MODULE(binding, m) {
       "__iter__", [](const OrderBook& o) { return py::make_iterator(o.begin(), o.end()); },
       py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
     .def("setCallback", &OrderBook::setCallback)
+    .def_property("instrument", &OrderBook::getInstrument, nullptr)
+    .def_property("exchange", &OrderBook::getExchange, nullptr)
+    .def_property("callback", &OrderBook::getCallback, nullptr)
+    .def("reset", &OrderBook::reset)
     .def("add", &OrderBook::add)
     .def("cancel", &OrderBook::cancel)
     .def("topOfBook", &OrderBook::topOfBookMap)
@@ -123,8 +127,8 @@ PYBIND11_MODULE(binding, m) {
       py::keep_alive<0, 1>()) /* Essential: keep object alive while iterator exists */
     .def("__getitem__", &PriceLevel::operator[])
     .def("__bool__", &PriceLevel::operator bool)
-    .def("getPrice", &PriceLevel::getPrice)
-    .def("getVolume", &PriceLevel::getVolume)
+    .def_property("price", &PriceLevel::getPrice, nullptr)
+    .def_property("volume", &PriceLevel::getVolume, nullptr)
     .def("add", &PriceLevel::add);
 
   /*******************************
@@ -136,7 +140,7 @@ PYBIND11_MODULE(binding, m) {
     .def("pushOpen", &Collector::pushOpen)
     .def("pushChange", &Collector::pushChange, py::arg("order").none(false), py::arg("accumulate") = false,
       py::arg("filled_in_txn") = 0.0)
-    .def("getVolume", &Collector::getVolume);
+    .def_property("volume", &Collector::getVolume, nullptr);
 
   /*******************************
    * Exchange
@@ -168,8 +172,8 @@ PYBIND11_MODULE(binding, m) {
     .def(py::init<uint_t, timestamp_t, Instrument&, ExchangeType&>())
     .def("__repr__", &Data::toString)
     .def("__eq__", &Data::operator==)
-    .def("toJson", &Data::toJson)
-    .def("perspectiveSchema", &Data::perspectiveSchema)
+    .def("json", &Data::toJson)
+    .def("schema", &Data::perspectiveSchema)
     .def_readwrite("id", &Data::id)
     .def_readwrite("timestamp", &Data::timestamp)
     .def_readonly("type", &Data::type)
@@ -182,7 +186,7 @@ PYBIND11_MODULE(binding, m) {
     .def(py::init<EventType, std::shared_ptr<Trade>>())
     .def(py::init<EventType, std::shared_ptr<Order>>())
     .def("__repr__", &Event::toString)
-    .def("toJson", &Event::toJson)
+    .def("json", &Event::toJson)
     .def_readonly("type", &Event::type)
     .def_readonly("target", &Event::target);
 
@@ -196,8 +200,8 @@ PYBIND11_MODULE(binding, m) {
     .def("__repr__", &Order::toString)
     .def("finished", &Order::finished)
     .def("finish", &Order::finish)
-    .def("toJson", &Order::toJson)
-    .def("perspectiveSchema", &Order::perspectiveSchema)
+    .def("json", &Order::toJson)
+    .def("schema", &Order::perspectiveSchema)
     .def_readwrite("id", &Order::id)
     .def_readwrite("timestamp", &Order::timestamp)
     .def_readwrite("volume", &Order::volume)
@@ -218,8 +222,8 @@ PYBIND11_MODULE(binding, m) {
     .def("slippage", &Trade::slippage)
     .def("transactionCost", &Trade::transactionCost)
     .def("finished", &Trade::finished)
-    .def("toJson", &Trade::toJson)
-    .def("perspectiveSchema", &Trade::perspectiveSchema)
+    .def("json", &Trade::toJson)
+    .def("schema", &Trade::perspectiveSchema)
     .def_readwrite("id", &Trade::id)
     .def_readonly("timestamp", &Trade::timestamp)
     .def_readwrite("volume", &Trade::volume)
@@ -235,20 +239,20 @@ PYBIND11_MODULE(binding, m) {
   py::class_<Account>(m, "AccountCpp")
     .def(py::init<str_t, ExchangeType&, std::vector<std::shared_ptr<Position>>&>())
     .def("__repr__", &Account::toString)
-    .def("toJson", &Account::toJson)
-    .def("perspectiveSchema", &Account::perspectiveSchema);
+    .def("json", &Account::toJson)
+    .def("schema", &Account::perspectiveSchema);
 
   py::class_<Position>(m, "PositionCpp")
     .def(py::init<double, double, timestamp_t, Instrument&, ExchangeType&, std::vector<std::shared_ptr<Trade>>&>())
     .def("__repr__", &Position::toString)
-    .def("toJson", &Position::toJson)
-    .def("perspectiveSchema", &Position::perspectiveSchema);
+    .def("json", &Position::toJson)
+    .def("schema", &Position::perspectiveSchema);
 
   py::class_<CashPosition>(m, "CashPositionCpp")
     .def(py::init<double, timestamp_t, Instrument&, ExchangeType&>())
     .def("__repr__", &CashPosition::toString)
-    .def("toJson", &CashPosition::toJson)
-    .def("perspectiveSchema", &CashPosition::perspectiveSchema);
+    .def("json", &CashPosition::toJson)
+    .def("schema", &CashPosition::perspectiveSchema);
 
   /*******************************
    * Helpers

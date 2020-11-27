@@ -1,17 +1,11 @@
 from datetime import datetime
 from typing import List, Optional
+
+from .cpp import _CPP, _make_cpp_instrument
 from .db import InstrumentDB
 from ..exchange import ExchangeType
 from ...config import InstrumentType, Side
-from ...common import _in_cpp
 from ...config.enums import OptionType
-
-try:
-    from ...binding import InstrumentCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
 
 
 class Instrument(object):
@@ -57,7 +51,7 @@ class Instrument(object):
 
         if _CPP:
             # construct with C++
-            instrument = InstrumentCpp(*args, **kwargs)
+            instrument = _make_cpp_instrument(*args, **kwargs)
 
         else:
             # pure python
@@ -325,17 +319,17 @@ class Instrument(object):
     def __hash__(self):
         return hash(str(self))
 
-    def toJson(self):
+    def json(self):
         return {
             "name": self.name,
             "type": self.type.value,
-            "exchanges": [v.toJson() for v in self.exchanges] if self.exchanges else [],
+            "exchanges": [v.json() for v in self.exchanges] if self.exchanges else [],
             "brokerExchange": self.brokerExchange,
             "brokerId": self.brokerId,
-            "currency": self.currency.toJson() if self.currency else "",
-            "underlying": self.underlying.toJson() if self.underlying else "",
-            "leg1": self.leg1.toJson() if self.leg1 else "",
-            "leg2": self.leg2.toJson() if self.leg2 else "",
+            "currency": self.currency.json() if self.currency else "",
+            "underlying": self.underlying.json() if self.underlying else "",
+            "leg1": self.leg1.json() if self.leg1 else "",
+            "leg2": self.leg2.json() if self.leg2 else "",
             "leg1_side": self.leg1_side.value if self.leg1_side else "",
             "leg2_side": self.leg2_side.value if self.leg2_side else "",
             "expiration": self.expiration.timestamp() if self.expiration else "",

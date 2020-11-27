@@ -1,11 +1,4 @@
-from ...common import _in_cpp
-
-try:
-    from ...binding import ExchangeTypeCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
+from .cpp import _CPP, _make_cpp_exchangetype
 
 
 class ExchangeType(object):
@@ -13,7 +6,7 @@ class ExchangeType(object):
 
     def __new__(cls, *args, **kwargs):
         if _CPP:
-            return ExchangeTypeCpp(*args, **kwargs)
+            return _make_cpp_exchangetype(*args, **kwargs)
         return super(ExchangeType, cls).__new__(cls)
 
     def __init__(self, name):
@@ -36,7 +29,7 @@ class ExchangeType(object):
     def __hash__(self):
         return hash(str(self))
 
-    def toJson(self):
+    def json(self):
         return {"name": self.name}
 
     @staticmethod

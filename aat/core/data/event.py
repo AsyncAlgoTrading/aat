@@ -1,16 +1,9 @@
 from typing import Mapping, Union
+from .cpp import _CPP, _make_cpp_event
 from .data import Data
 from .order import Order
 from .trade import Trade
 from ...config import EventType
-from ...common import _in_cpp
-
-try:
-    from aat.binding import EventCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
 
 
 class Event(object):
@@ -21,7 +14,7 @@ class Event(object):
 
     def __new__(cls, *args, **kwargs):
         if _CPP:
-            return EventCpp(*args, **kwargs)
+            return _make_cpp_event(*args, **kwargs)
         return super(Event, cls).__new__(cls)
 
     def __init__(self, type: EventType, target: Union[Data, Order, Trade, None]):
@@ -43,9 +36,9 @@ class Event(object):
     def __repr__(self):
         return f"Event(type={self.type}, target={self.target})"
 
-    def toJson(self) -> Mapping[str, Union[str, int, float]]:
+    def json(self) -> Mapping[str, Union[str, int, float]]:
         target = (
-            {"target." + k: v for k, v in self.target.toJson().items()}
+            {"target." + k: v for k, v in self.target.json().items()}
             if self.target
             else {"target": ""}
         )

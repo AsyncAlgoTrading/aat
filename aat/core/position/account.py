@@ -1,15 +1,9 @@
 from typing import Mapping, Type
 
+from aat.core.exchange import ExchangeType
+
+from .cpp import _CPP, _make_cpp_account
 from .position import Position
-from ..exchange import ExchangeType
-from ...common import _in_cpp
-
-try:
-    from aat.binding import AccountCpp  # type: ignore
-
-    _CPP = _in_cpp()
-except ImportError:
-    _CPP = False
 
 
 class Account(object):
@@ -17,7 +11,7 @@ class Account(object):
 
     def __new__(cls, *args, **kwargs):
         if _CPP:
-            return AccountCpp(*args, **kwargs)
+            return _make_cpp_account(*args, **kwargs)
         return super(Account, cls).__new__(cls)
 
     def __init__(self, id, exchange, positions=None):
@@ -48,11 +42,11 @@ class Account(object):
     def addPosition(self, position):
         self.__positions.append(position)
 
-    def toJson(self):
+    def json(self):
         return {
             "id": self.id,
-            "exchange": self.exchange.toJson(),
-            "positions": [p.toJson() for p in self.positions],
+            "exchange": self.exchange.json(),
+            "positions": [p.json() for p in self.positions],
         }
 
     @staticmethod
@@ -66,7 +60,7 @@ class Account(object):
         return ret
 
     @staticmethod
-    def perspectiveSchema() -> Mapping[str, Type]:
+    def schema() -> Mapping[str, Type]:
         return {"id": str, "exchange": str}
 
     def __repr__(self):
