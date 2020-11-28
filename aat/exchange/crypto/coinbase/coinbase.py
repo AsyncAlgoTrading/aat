@@ -26,8 +26,8 @@ class CoinbaseProExchange(Exchange):
 
         # coinbase keys
         self._api_key = api_key or os.environ.get("API_KEY", "")
-        self._api_secret = api_key or os.environ.get("API_SECRET", "")
-        self._api_passphrase = api_key or os.environ.get("API_PASSPHRASE", "")
+        self._api_secret = api_secret or os.environ.get("API_SECRET", "")
+        self._api_passphrase = api_passphrase or os.environ.get("API_PASSPHRASE", "")
 
         # enforce authentication, otherwise we don't get enough
         # data to be interesting
