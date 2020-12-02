@@ -3,6 +3,7 @@ import threading
 from datetime import datetime
 from queue import Queue
 from random import randint
+from typing import Dict
 
 from ibapi.contract import Contract  # type: ignore
 from ibapi.client import EClient  # type: ignore
@@ -67,6 +68,9 @@ class _API(EWrapper, EClient):
         super().placeOrder(self.nextOrderId, contract, order)
         self.nextOrderId += 1
         return self.nextOrderId - 1
+
+    def cancelOrder(self, order):
+        super().cancelOrder(order.id)
 
     def contractDetails(self, reqId, contractDetails):
         self._contract_info_queue.put(contractDetails)
@@ -200,6 +204,14 @@ class InteractiveBrokersExchange(Exchange):
         # map order.id to order
         self._orders = {}
 
+        # map order id to received event
+        self._order_received_map: Dict[str, asyncio.Event] = {}
+        self._order_received_res: Dict[str, bool] = {}
+
+        # map order id to cancelled event
+        self._order_cancelled_map: Dict[str, asyncio.Event] = {}
+        self._order_cancelled_res: Dict[str, bool] = {}
+
         # IB TWS gateway
         self._order_event_queue = Queue()
         self._market_data_queue = Queue()
@@ -289,12 +301,14 @@ class InteractiveBrokersExchange(Exchange):
                     continue
 
                 elif status in ("Submitted",):
-                    e = Event(type=EventType.RECEIVED, target=order)
-                    yield e
+                    self._order_received_res[order.id] = True
+                    self._order_received_map[order.id].set()
+                    await asyncio.sleep(0)
 
                 elif status in ("Cancelled",):
-                    e = Event(type=EventType.CANCELED, target=order)
-                    yield e
+                    self._order_cancelled_res[order.id] = True
+                    self._order_cancelled_map[order.id].set()
+                    await asyncio.sleep(0)
 
                 elif status in ("Filled",):
                     # this is the filled from orderStatus, but we
@@ -376,12 +390,26 @@ class InteractiveBrokersExchange(Exchange):
         order.id = id
         self._orders[order.id] = order
 
+        # set event for later trigerring
+        self._order_received_map[id] = Event()
+        await self._order_received_map[id]
+
+        res = self._order_received_res[id]
+        del self._order_received_map[id]
+        del self._order_received_res[id]
+        return res
+
     async def cancelOrder(self, order: Order):
         """cancel a previously submitted order to the exchange.
 
         For MarketData-only, can just return None
         """
         self._api.cancelOrder(order.id)
+        res = self._order_cancelled_res[order.id]
+
+        del self._order_cancelled_map[order.id]
+        del self._order_cancelled_res[order.id]
+        return res
 
 
 Exchange.registerExchange("ib", InteractiveBrokersExchange)

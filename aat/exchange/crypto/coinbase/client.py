@@ -297,8 +297,7 @@ class CoinbaseExchangeClient(AuthBase):
         # our internal api
         jsn["id"] = order.id
         jsn["product_id"] = order.instrument.brokerId
-        ret = self._cancelOrder(jsn)
-        return ret
+        return self._cancelOrder(jsn)
 
     def orderBook(self, subscriptions: List[Instrument]):
         """fetch level 3 order book for each Instrument in our subscriptions"""

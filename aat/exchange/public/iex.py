@@ -320,9 +320,12 @@ class IEX(Exchange):
         order.id = self._order_id
         self._order_id += 1
         self._queued_orders.append(order)
-        return order
+        return True
 
-    # Not implemented, data-only
+    async def cancelOrder(self, order: Order):
+        # Can't cancel, orders execute immediately
+        # TODO limit orders
+        return False
 
 
 Exchange.registerExchange("iex", IEX)

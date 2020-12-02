@@ -1,9 +1,8 @@
 import os
-from collections import deque
 from typing import List
 
-from aat.core import ExchangeType, Order, Event, Instrument
-from aat.config import TradingType, InstrumentType, EventType
+from aat.core import ExchangeType, Order, Instrument
+from aat.config import TradingType, InstrumentType
 from aat.exchange import Exchange
 
 from .client import CoinbaseExchangeClient
@@ -63,9 +62,6 @@ class CoinbaseProExchange(Exchange):
             self._api_passphrase,
         )
 
-        # store client order events in a deque
-        self._order_events = deque()
-
         # list of market data subscriptions
         self._subscriptions: List[Instrument] = []
 
@@ -96,11 +92,6 @@ class CoinbaseProExchange(Exchange):
         async for tick in self._client.websocket(self._subscriptions):
             yield tick
 
-            # drain order events ASAP
-            while len(self._order_events) > 0:
-                _ = self._order_events.popleft()
-                yield _
-
     async def subscribe(self, instrument):
         # can only subscribe to pair data
         if instrument.type == InstrumentType.PAIR:
@@ -115,23 +106,11 @@ class CoinbaseProExchange(Exchange):
 
     async def newOrder(self, order):
         """submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id"""
-        ret = self._client.newOrder(order)
-        if ret:
-            # order succesful
-            self._order_events.append(Event(type=EventType.RECEIVED, target=order))
-        else:
-            # order failure
-            self._order_events.append(Event(type=EventType.REJECTED, target=order))
+        await self._client.newOrder(order)
 
     async def cancelOrder(self, order: Order):
         """cancel a previously submitted order to the exchange."""
-        ret = self._client.cancelOrder(order)
-        if ret:
-            # cancel succesful
-            self._order_events.append(Event(type=EventType.CANCELED, target=order))
-        else:
-            # cancel rejected
-            self._order_events.append(Event(type=EventType.REJECTED, target=order))
+        await self._client.cancelOrder(order)
 
 
 Exchange.registerExchange("coinbase", CoinbaseProExchange)
