@@ -29,11 +29,6 @@ class StrategyManagerOrderEntryMixin(object):
     # TODO ugly private method
 
     async def _onBought(self, strategy, trade: Trade):
-        """callback method for when/if your order executes.
-
-        Args:
-            order_or_trade (Union[Order, Trade]): the trade/s as your order completes, and/or a cancellation order
-        """
         # append to list of trades
         self._strategy_trades[strategy].append(trade)
 
@@ -46,11 +41,6 @@ class StrategyManagerOrderEntryMixin(object):
 
     # TODO ugly private method
     async def _onSold(self, strategy, trade: Trade):
-        """callback method for when/if your order executes.
-
-        Args:
-            order_or_trade (Union[Order, Trade]): the trade/s as your order completes, and/or a cancellation order
-        """
         # append to list of trades
         self._strategy_trades[strategy].append(trade)
 
@@ -63,12 +53,15 @@ class StrategyManagerOrderEntryMixin(object):
 
     # TODO ugly private method
 
-    async def _onCanceled(self, strategy, order: Order):
-        """callback method for if your order fails to execute
+    async def _onReceived(self, strategy, order: Order):
+        # push event to loop
+        ev = Event(type=Event.Types.RECEIVED, target=order)
+        self._engine.pushTargetedEvent(strategy, ev)
 
-        Args:
-            order (Order): the order you attempted to make
-        """
+        # synchronize state when engine processes this
+        self._alerted_events[ev] = (strategy, order)
+
+    async def _onCanceled(self, strategy, order: Order):
         # push event to loop
         ev = Event(type=Event.Types.CANCELED, target=order)
         self._engine.pushTargetedEvent(strategy, ev)
@@ -99,21 +92,37 @@ class StrategyManagerOrderEntryMixin(object):
         self._strategy_past_orders[strategy].append(order)
 
         # TODO check risk
-        ret, approved = await self._risk_mgr.newOrder(strategy, order)
+        order, approved = await self._risk_mgr.newOrder(strategy, order)
 
         # was this trade allowed?
         if approved:
             # send to be executed
-            await self._order_mgr.newOrder(strategy, order)
-            return ret
+            received = await self._order_mgr.newOrder(strategy, order)
+
+            if received:
+                self._engine.pushTargetedEvent(
+                    strategy, Event(type=Event.Types.RECEIVED, target=order)
+                )
+                return order
 
         # raise onRejected
-        self._engine.pushEvent(Event(type=Event.Types.REJECTED, target=order))
-        return None
+        self._engine.pushTargetedEvent(
+            strategy, Event(type=Event.Types.REJECTED, target=order)
+        )
+        return order
 
     async def cancelOrder(self, strategy, order: Order):
         """cancel an open order"""
-        await self._order_mgr.cancelOrder(strategy, order)
+        ret = await self._order_mgr.cancelOrder(strategy, order)
+        if ret:
+            await self._onCanceled(strategy, order)
+            return order
+
+        # TODO something else?
+        self._engine.pushTargetedEvent(
+            strategy, Event(type=Event.Types.REJECTED, target=order)
+        )
+        return order
 
     def orders(
         self,
@@ -222,8 +231,7 @@ class StrategyManagerOrderEntryMixin(object):
         # synchronize state
         if event in self._alerted_events:
             strategy, order = self._alerted_events[event]
-            # remove from list of open orders
-            self._strategy_open_orders[strategy].remove(order)
+            # don't remove or do anything else
         else:
             strategy = None
 
