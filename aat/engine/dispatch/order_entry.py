@@ -69,6 +69,11 @@ class StrategyManagerOrderEntryMixin(object):
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, order)
 
+    async def _onRejected(self, strategy, order):
+        # push event to loop
+        ev = Event(type=Event.Types.REJECTED, target=order)
+        self._engine.pushTargetedEvent(strategy, ev)
+
     # *********************
     # Order Entry Methods *
     # *********************
@@ -100,15 +105,11 @@ class StrategyManagerOrderEntryMixin(object):
             received = await self._order_mgr.newOrder(strategy, order)
 
             if received:
-                self._engine.pushTargetedEvent(
-                    strategy, Event(type=Event.Types.RECEIVED, target=order)
-                )
+                await self._onReceived(strategy, order)
                 return order
 
         # raise onRejected
-        self._engine.pushTargetedEvent(
-            strategy, Event(type=Event.Types.REJECTED, target=order)
-        )
+        await self._onRejected(strategy, order)
         return order
 
     async def cancelOrder(self, strategy, order: Order):
@@ -119,9 +120,7 @@ class StrategyManagerOrderEntryMixin(object):
             return order
 
         # TODO something else?
-        self._engine.pushTargetedEvent(
-            strategy, Event(type=Event.Types.REJECTED, target=order)
-        )
+        await self._onRejected(strategy, order)
         return order
 
     def orders(
