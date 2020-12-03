@@ -77,6 +77,7 @@ testjs:  ## Make js tests
 testruns:  ## Run a few examples as a live end-to-end test
 	$(PYTHON) -m aat.strategy.sample.readonly
 	$(PYTHON) -m aat.strategy.sample.readonly_periodic
+	$(PYTHON) -m aat.strategy.sample.csv_received
 
 lint: lintpy lintjs lintcpp  ## run all linters
 
