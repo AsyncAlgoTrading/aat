@@ -1,6 +1,6 @@
 import os
 import os.path
-from aat import Strategy, Event, Order, Side
+from aat import Strategy, Event, Order, Side, Trade
 from pprint import pprint
 
 
@@ -19,14 +19,17 @@ class ReceivedStrategy(Strategy):
 
     async def onTrade(self, event: Event) -> None:
         pprint(event)
-        if self._trade and event.target.my_order is None:
-            await self.newOrder(Order(
-                1,
-                event.target.price,
-                Side.BUY,
-                event.target.instrument,
-                event.target.exchange,
-            ))
+        trade: Trade = event.target  # type: ignore
+        if self._trade and trade.my_order is None:
+            await self.newOrder(
+                Order(
+                    1,
+                    trade.price,
+                    Side.BUY,
+                    trade.instrument,
+                    trade.exchange,
+                )
+            )
             self._trade = False
 
     async def onReceived(self, event):
@@ -58,4 +61,3 @@ if __name__ == "__main__":
     t = TradingEngine(**cfg)
     t.start()
     assert t.strategies[0]._received_count == 64
-    
