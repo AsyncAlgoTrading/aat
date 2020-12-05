@@ -1,7 +1,8 @@
+import asyncio
 import csv
 from collections import deque
 from datetime import datetime
-from typing import List
+from typing import List, Deque
 from aat.config import EventType, InstrumentType, Side, TradingType
 from aat.core import ExchangeType, Event, Instrument, Trade, Order
 from aat.exchange import Exchange
@@ -16,7 +17,9 @@ class CSV(Exchange):
         self._verbose = verbose
         self._filename = filename
         self._data: List[Trade] = []
-        self._queued_orders = deque()  # type: ignore
+
+        # "Order" management
+        self._queued_orders: Deque[Order] = deque()
         self._order_id = 1
 
     async def instruments(self):
@@ -58,6 +61,31 @@ class CSV(Exchange):
     async def tick(self):
         for item in self._data:
             yield Event(EventType.TRADE, item)
+            await asyncio.sleep(0)
+
+            # save timestamp
+            timestamp = item.timestamp
+
+            while self._queued_orders:
+                order = self._queued_orders.popleft()
+                order.timestamp = timestamp
+                order.filled = order.volume
+
+                t = Trade(
+                    volume=order.volume,
+                    price=order.price,
+                    taker_order=order,
+                    maker_orders=[],
+                    my_order=order,
+                )
+
+                yield Event(type=EventType.TRADE, target=t)
+                await asyncio.sleep(0)
+
+    async def cancelOrder(self, order):
+        # Can't cancel, orders execute immediately
+        # TODO limit orders
+        return False
 
     async def newOrder(self, order: Order):
         if self._trading_type == TradingType.LIVE:
@@ -66,7 +94,7 @@ class CSV(Exchange):
         order.id = str(self._order_id)
         self._order_id += 1
         self._queued_orders.append(order)
-        return order
+        return True
 
 
 Exchange.registerExchange("csv", CSV)

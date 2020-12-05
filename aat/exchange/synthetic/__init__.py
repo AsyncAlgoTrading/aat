@@ -199,12 +199,6 @@ class SyntheticExchange(Exchange):
                 if self._backtest_count >= self._backtest_cycles_total:
                     return
 
-            while self._pending_orders:
-                order = self._pending_orders.popleft()
-                self._jumptime(order)
-                self._orderbooks[order.instrument].add(order)
-                await asyncio.sleep(self._sleep)
-
             while self._pending_cancel_orders:
                 order = self._pending_cancel_orders.popleft()
                 self._jumptime(order)
@@ -217,6 +211,12 @@ class SyntheticExchange(Exchange):
                     continue
 
                 yield Event(EventType.CANCEL, order)
+                await asyncio.sleep(self._sleep)
+
+            while self._pending_orders:
+                order = self._pending_orders.popleft()
+                self._jumptime(order)
+                self._orderbooks[order.instrument].add(order)
                 await asyncio.sleep(self._sleep)
 
             while self._events:
@@ -405,8 +405,7 @@ class SyntheticExchange(Exchange):
     async def newOrder(self, order: Order):
         if order.instrument not in self._instruments.values():
             # invalid instrument
-            self._events.append(Event(type=EventType.REJECTED, target=order))
-            return
+            return False
 
         # assign id
         order.id = self._id
@@ -421,11 +420,11 @@ class SyntheticExchange(Exchange):
         self._id += 1
         self._pending_orders.append(order)
         self._omit_cancel.add(order.id)  # don't cancel user orders
-        return order
+        return True
 
     async def cancelOrder(self, order: Order):
         self._pending_cancel_orders.append(order)
-        return order
+        return True
 
     async def accounts(self) -> List[Position]:
         if self._generate_positions:

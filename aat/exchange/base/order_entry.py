@@ -20,13 +20,21 @@ class _OrderEntry(metaclass=ABCMeta):
     async def newOrder(self, order: Order):
         """submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id
 
-        For MarketData-only, can just return None
+        Returns:
+            True if order received
+            False if order rejected
+
+        For MarketData-only, can just return False/None
         """
         raise NotImplementedError()
 
     async def cancelOrder(self, order: Order):
         """cancel a previously submitted order to the exchange.
 
-        For MarketData-only, can just return None
+        Returns:
+            True if order received
+            False if order rejected
+
+        For MarketData-only, can just return False/None
         """
         raise NotImplementedError()

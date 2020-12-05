@@ -297,8 +297,7 @@ class CoinbaseExchangeClient(AuthBase):
         # our internal api
         jsn["id"] = order.id
         jsn["product_id"] = order.instrument.brokerId
-        ret = self._cancelOrder(jsn)
-        return ret
+        return self._cancelOrder(jsn)
 
     def orderBook(self, subscriptions: List[Instrument]):
         """fetch level 3 order book for each Instrument in our subscriptions"""
@@ -441,12 +440,13 @@ class CoinbaseExchangeClient(AuthBase):
                         # }
                         id = x["order_id"]
 
-                        if id in self._order_map:
-                            # yield a received event and get order from dict
-                            o = self._order_map[id]
-                            yield Event(type=EventType.RECEIVED, target=o)
+                        # FIXME make sure we dont need this
+                        # if id in self._order_map:
+                        #     # yield a received event and get order from dict
+                        #     o = self._order_map[id]
+                        #     yield Event(type=EventType.RECEIVED, target=o)
 
-                        elif x["order_type"] == "market":
+                        if x["order_type"] == "market":
                             if "size" in x and float(x["size"]) <= 0:
                                 # ignore zero size orders
                                 # TODO why do we even get these?
@@ -466,6 +466,7 @@ class CoinbaseExchangeClient(AuthBase):
                                     x["product_id"], InstrumentType.PAIR, self.exchange
                                 ),
                                 self.exchange,
+                                id=id,
                             )
 
                         else:
@@ -510,31 +511,26 @@ class CoinbaseExchangeClient(AuthBase):
                         # }
                         if x["reason"] == "canceled":
                             id = x["order_id"]
-                            if id in self._order_map:
-                                yield Event(
-                                    type=EventType.CANCELED, target=self._order_map[id]
-                                )
-                                self._order_map.pop(id)
-                            else:
-                                # if cancelled
-                                if "price" not in x:
-                                    # cancel this event if we have a full local order book
-                                    # where we can determine the original order
-                                    print("TODO: noprice")
-                                    continue
+                            # if cancelled
+                            if "price" not in x:
+                                # cancel this event if we have a full local order book
+                                # where we can determine the original order
+                                print("TODO: noprice")
+                                continue
 
-                                # FIXME don't use remaining_size, lookup original size in order book
-                                o = Order(
-                                    float(x["remaining_size"]),
-                                    float(x["price"]),
-                                    Side(x["side"].upper()),
-                                    Instrument(
-                                        x["product_id"],
-                                        InstrumentType.PAIR,
-                                        self.exchange,
-                                    ),
+                            # FIXME don't use remaining_size, lookup original size in order book
+                            o = Order(
+                                float(x["remaining_size"]),
+                                float(x["price"]),
+                                Side(x["side"].upper()),
+                                Instrument(
+                                    x["product_id"],
+                                    InstrumentType.PAIR,
                                     self.exchange,
-                                )
+                                ),
+                                self.exchange,
+                                id=id,
+                            )
 
                             e = Event(type=EventType.CANCEL, target=o)
                             yield e
