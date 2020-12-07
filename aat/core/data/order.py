@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Mapping, Union, Type
+from typing import Mapping, Union, Type, Optional, Any, cast
 
 from .cpp import _CPP, _make_cpp_order
 from ..exchange import ExchangeType
@@ -30,24 +30,24 @@ class Order(object):
     Sides = Side
     Flags = OrderFlag
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls: Type, *args: Any, **kwargs: Any) -> "Order":
         if _CPP:
             return _make_cpp_order(*args, **kwargs)
         return super(Order, cls).__new__(cls)
 
     def __init__(
         self,
-        volume,
-        price,
-        side,
-        instrument,
-        exchange=ExchangeType(""),
-        notional=0.0,
-        order_type=OrderType.MARKET,
-        flag=OrderFlag.NONE,
-        stop_target=None,
-        **kwargs,
-    ):
+        volume: float,
+        price: float,
+        side: Side,
+        instrument: Instrument,
+        exchange: ExchangeType = ExchangeType(""),
+        notional: float = 0.0,
+        order_type: OrderType = OrderType.MARKET,
+        flag: OrderFlag = OrderFlag.NONE,
+        stop_target: Optional["Order"] = None,
+        **kwargs: Any,
+    ) -> None:
         self.__id = kwargs.get(
             "id", 0
         )  # on construction, provide no ID until exchange assigns one
@@ -79,7 +79,7 @@ class Order(object):
             and stop_target.order_type != OrderType.STOP
         )
         assert order_type != OrderType.STOP or (
-            isinstance(stop_target.instrument, Instrument)
+            isinstance(cast(Order, stop_target).instrument, Instrument)
         )
 
         self.__volume = round(volume, 8)
@@ -198,7 +198,7 @@ class Order(object):
     def __repr__(self) -> str:
         return f"Order( instrument={self.instrument}, timestamp={self.timestamp}, {self.volume}@{self.price}, side={self.side}, exchange={self.exchange})"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         assert isinstance(other, Order)
         return (
             self.id == other.id
@@ -210,7 +210,11 @@ class Order(object):
             and self.filled == other.filled
         )
 
-    def json(self) -> Mapping[str, Union[str, int, float]]:
+    def json(self, flat: bool = False) -> Mapping[str, Union[str, int, float, dict]]:
+        if flat:
+            # TODO
+            raise NotImplementedError()
+
         return {
             "id": self.id,
             "timestamp": self.timestamp.timestamp(),
@@ -229,7 +233,7 @@ class Order(object):
         }
 
     @staticmethod
-    def fromJson(jsn):
+    def fromJson(jsn: dict) -> "Order":
         kwargs = {}
         kwargs["volume"] = jsn["volume"]
         kwargs["price"] = jsn["price"]
@@ -249,10 +253,10 @@ class Order(object):
         if "order_type" in jsn and jsn["order_type"]:
             kwargs["order_type"] = OrderType(jsn["order_type"])
 
-        ret = Order(**kwargs)
-
         if "notional" in jsn and jsn["notional"]:
-            ret.notional = jsn["notional"]
+            kwargs["notional"] = jsn["notional"]
+
+        ret = Order(**kwargs)
 
         if "filled" in jsn and jsn["filled"]:
             ret.filled = jsn["filled"]

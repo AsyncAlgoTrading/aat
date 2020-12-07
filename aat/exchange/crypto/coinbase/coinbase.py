@@ -1,7 +1,7 @@
 import os
-from typing import List
+from typing import List, AsyncGenerator, Any
 
-from aat.core import ExchangeType, Order, Instrument
+from aat.core import ExchangeType, Order, Instrument, Position, Event
 from aat.config import TradingType, InstrumentType
 from aat.exchange import Exchange
 
@@ -13,13 +13,13 @@ class CoinbaseProExchange(Exchange):
 
     def __init__(
         self,
-        trading_type,
-        verbose,
-        api_key="",
-        api_secret="",
-        api_passphrase="",
-        **kwargs
-    ):
+        trading_type: TradingType,
+        verbose: bool,
+        api_key: str = "",
+        api_secret: str = "",
+        api_passphrase: str = "",
+        **kwargs: dict
+    ) -> None:
         self._trading_type = trading_type
         self._verbose = verbose
 
@@ -68,12 +68,12 @@ class CoinbaseProExchange(Exchange):
     # *************** #
     # General methods #
     # *************** #
-    async def connect(self):
+    async def connect(self) -> None:
         """connect to exchange. should be asynchronous."""
         # instantiate instruments
         self._client.instruments()
 
-    async def lookup(self, instrument):
+    async def lookup(self, instrument: Instrument) -> List[Instrument]:
         """lookup an instrument on the exchange"""
         # TODO
         raise NotImplementedError()
@@ -81,18 +81,18 @@ class CoinbaseProExchange(Exchange):
     # ******************* #
     # Market Data Methods #
     # ******************* #
-    async def tick(self):
+    async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         """return data from exchange"""
 
         # First, roll through order book snapshot
-        for item in self._client.orderBook(self._subscriptions):
+        async for item in self._client.orderBook(self._subscriptions):
             yield item
 
         # then stream in live updates
         async for tick in self._client.websocket(self._subscriptions):
             yield tick
 
-    async def subscribe(self, instrument):
+    async def subscribe(self, instrument: Instrument) -> None:
         # can only subscribe to pair data
         if instrument.type == InstrumentType.PAIR:
             self._subscriptions.append(instrument)
@@ -100,17 +100,17 @@ class CoinbaseProExchange(Exchange):
     # ******************* #
     # Order Entry Methods #
     # ******************* #
-    async def accounts(self):
+    async def accounts(self) -> List[Position]:
         """get accounts from source"""
-        return self._client.accounts()
+        return await self._client.accounts()
 
-    async def newOrder(self, order):
+    async def newOrder(self, order: Order) -> bool:
         """submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id"""
-        await self._client.newOrder(order)
+        return await self._client.newOrder(order)
 
-    async def cancelOrder(self, order: Order):
+    async def cancelOrder(self, order: Order) -> bool:
         """cancel a previously submitted order to the exchange."""
-        await self._client.cancelOrder(order)
+        return await self._client.cancelOrder(order)
 
 
 Exchange.registerExchange("coinbase", CoinbaseProExchange)

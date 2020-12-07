@@ -2,7 +2,7 @@ import asyncio
 import csv
 from collections import deque
 from datetime import datetime
-from typing import List, Deque
+from typing import List, Deque, AsyncGenerator, Any
 from aat.config import EventType, InstrumentType, Side, TradingType
 from aat.core import ExchangeType, Event, Instrument, Trade, Order
 from aat.exchange import Exchange
@@ -11,7 +11,7 @@ from aat.exchange import Exchange
 class CSV(Exchange):
     """CSV File Exchange"""
 
-    def __init__(self, trading_type, verbose, filename: str):
+    def __init__(self, trading_type: TradingType, verbose: bool, filename: str) -> None:
         super().__init__(ExchangeType("csv-{}".format(filename)))
         self._trading_type = trading_type
         self._verbose = verbose
@@ -22,11 +22,11 @@ class CSV(Exchange):
         self._queued_orders: Deque[Order] = deque()
         self._order_id = 1
 
-    async def instruments(self):
+    async def instruments(self) -> List[Instrument]:
         """get list of available instruments"""
         return list(set(_.instrument for _ in self._data))
 
-    async def connect(self):
+    async def connect(self) -> None:
         with open(self._filename) as csvfile:
             self._reader = csv.DictReader(csvfile, delimiter=",")
 
@@ -58,7 +58,7 @@ class CSV(Exchange):
                     )
                 )
 
-    async def tick(self):
+    async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         for item in self._data:
             yield Event(EventType.TRADE, item)
             await asyncio.sleep(0)
@@ -82,12 +82,12 @@ class CSV(Exchange):
                 yield Event(type=EventType.TRADE, target=t)
                 await asyncio.sleep(0)
 
-    async def cancelOrder(self, order):
+    async def cancelOrder(self, order: Order) -> bool:
         # Can't cancel, orders execute immediately
         # TODO limit orders
         return False
 
-    async def newOrder(self, order: Order):
+    async def newOrder(self, order: Order) -> bool:
         if self._trading_type == TradingType.LIVE:
             raise NotImplementedError("Live OE not available for CSV")
 

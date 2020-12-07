@@ -11,31 +11,27 @@ if TYPE_CHECKING:
 class PositionDB(object):
     """Position registration"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._inst_map: Mapping[Instrument, Union[Position, CashPosition]] = {}
         self._exch_map: Mapping[
             Tuple[ExchangeType, Instrument], Union[Position, CashPosition]
         ] = {}
 
-    def add(self, position):
+    def add(self, position: "Position") -> None:
         pass
 
     def positions(
         self,
-        name="",
+        name: str = "",
         type: InstrumentType = InstrumentType.CURRENCY,
         exchange: ExchangeType = ExchangeType(""),
-        *args,
-        **kwargs
-    ):
+    ) -> None:
         pass
 
     def get(
         self,
-        name="",
+        name: str = "",
         type: InstrumentType = InstrumentType.CURRENCY,
         exchange: ExchangeType = ExchangeType(""),
-        *args,
-        **kwargs
-    ):
+    ) -> None:
         pass

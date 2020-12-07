@@ -1,5 +1,16 @@
 from queue import Queue
-from typing import Callable, List, Mapping, Optional
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Iterator,
+    List,
+    Dict,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 from aat.core import ExchangeType, Order, Instrument, Event
 from aat.config import Side, OrderFlag, OrderType
@@ -51,7 +62,7 @@ class OrderBook(OrderBookBase):
         callback (Function): callback on events
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls: Type, *args: Any, **kwargs: Any) -> "OrderBook":
         if _CPP:
             return _make_cpp_orderbook(*args, **kwargs)
         return super(OrderBook, cls).__new__(cls)
@@ -59,9 +70,9 @@ class OrderBook(OrderBookBase):
     def __init__(
         self,
         instrument: Instrument,
-        exchange_name: str = "",
+        exchange_name: Union[ExchangeType, str] = "",
         callback: Optional[Callable] = None,
-    ):
+    ) -> None:
 
         self._instrument = instrument
         self._exchange_name: ExchangeType = (
@@ -93,7 +104,7 @@ class OrderBook(OrderBookBase):
     def queue(self) -> Queue:
         return self._queue
 
-    def _push(self, event) -> None:
+    def _push(self, event: Event) -> None:
         self._queue.put(event)
 
     def reset(self) -> None:
@@ -103,8 +114,8 @@ class OrderBook(OrderBookBase):
         self._sell_levels: List[float] = []
 
         # look like {price level: PriceLevel}
-        self._buys: Mapping[float, _PriceLevel] = {}
-        self._sells: Mapping[float, _PriceLevel] = {}
+        self._buys: Dict[float, _PriceLevel] = {}
+        self._sells: Dict[float, _PriceLevel] = {}
 
         # setup collector for conditional orders
         self._collector = _Collector(self._callback)
@@ -129,7 +140,7 @@ class OrderBook(OrderBookBase):
         # find order from price level
         return prices[price].find(order)
 
-    def topOfBook(self) -> Mapping[Side, List[float]]:
+    def topOfBook(self) -> Dict[Side, PriceLevelRO]:
         """return top of both sides
 
         Args:
@@ -137,7 +148,10 @@ class OrderBook(OrderBookBase):
         Returns:
             value (dict): returns {BUY: tuple, SELL: tuple}
         """
-        return {Side.BUY: self.bids(levels=0), Side.SELL: self.asks(levels=0)}
+        return {
+            Side.BUY: cast(PriceLevelRO, self.bids(levels=0)),
+            Side.SELL: cast(PriceLevelRO, self.asks(levels=0)),
+        }
 
     def spread(self) -> float:
         """return the spread
@@ -147,10 +161,10 @@ class OrderBook(OrderBookBase):
         Returns:
             value (float): spread between bid and ask
         """
-        tob = self.topOfBook()
-        return tob[Side.SELL][0] - tob[Side.BUY][0]
+        tob: Dict[Side, PriceLevelRO] = self.topOfBook()
+        return tob[Side.SELL].price - tob[Side.BUY].price
 
-    def level(self, level: int = 0, price: float = None):
+    def level(self, level: int = 0, price: float = None) -> Tuple:
         """return book level
 
         Args:
@@ -195,7 +209,9 @@ class OrderBook(OrderBookBase):
             else PriceLevelRO(0.0, 0.0, 0),
         )
 
-    def bids(self, levels=0):
+    def bids(
+        self, levels: int = 0
+    ) -> Union[PriceLevelRO, List[Optional[PriceLevelRO]]]:
         """return bid levels starting at top
 
         Args:
@@ -224,7 +240,9 @@ class OrderBook(OrderBookBase):
             for i in range(levels)
         ]
 
-    def asks(self, levels=0):
+    def asks(
+        self, levels: int = 0
+    ) -> Union[PriceLevelRO, List[Optional[PriceLevelRO]]]:
         """return ask levels starting at top
 
         Args:
@@ -253,7 +271,7 @@ class OrderBook(OrderBookBase):
             for i in range(levels)
         ]
 
-    def levels(self, levels=0):
+    def levels(self, levels: int = 0) -> Dict[Side, List[PriceLevelRO]]:
         """return book levels starting at top
 
         Args:
@@ -262,9 +280,9 @@ class OrderBook(OrderBookBase):
             value (dict of list): returns {"ask": [levels in order], "bid": [levels in order]} for `levels` number of levels
         """
         if levels <= 0:
-            return self.topOfBook()
+            return self.topOfBook()  # type: ignore # TODO
 
-        ret: Mapping[Side, List[List[float]]] = {}
+        ret: Dict[Side, List[PriceLevelRO]] = {}
         ret[Side.BUY] = []
         ret[Side.SELL] = []
         for _ in range(levels):
@@ -328,7 +346,7 @@ class OrderBook(OrderBookBase):
                 self._buy_levels[:-amount] if amount else self._buy_levels
             )
 
-    def _getTop(self, side: Side, cleared: int):
+    def _getTop(self, side: Side, cleared: int) -> Optional[float]:
         """internal"""
         return (
             (self._sell_levels[cleared] if len(self._sell_levels) > cleared else None)
@@ -567,7 +585,7 @@ class OrderBook(OrderBookBase):
         # clear the collector
         self._collector.clear()
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Order]:
         """iterate through asks then bids by level"""
         for level in self._sell_levels:
             for order in self._sells[level]:
@@ -576,10 +594,10 @@ class OrderBook(OrderBookBase):
             for order in self._buys[level]:
                 yield order
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         # show top 5 levels, then group next 5, 10, 20, etc
         # sells first
-        sells = []
+        sells: List[Union[_PriceLevel, List[_PriceLevel]]] = []
         count = 5
         orig = 5
         for i, level in enumerate(self._sell_levels):
@@ -595,7 +613,7 @@ class OrderBook(OrderBookBase):
                     count = orig
                 # append to last list
                 if self._sells[level]:
-                    sells[-1].append(self._sells[level])
+                    cast(List[_PriceLevel], sells[-1]).append(self._sells[level])
                     count -= 1
 
         # reverse so visually upside down
@@ -603,7 +621,7 @@ class OrderBook(OrderBookBase):
 
         # show top 5 levels, then group next 5, 10, 20, etc
         # buys second
-        buys = []
+        buys: List[Union[_PriceLevel, List[_PriceLevel]]] = []
         count = 5
         orig = 5
         for i, level in enumerate(reversed(self._buy_levels)):
@@ -619,7 +637,7 @@ class OrderBook(OrderBookBase):
                     count = orig
                 # append to last list
                 if self._buys[level]:
-                    buys[-1].append(self._buys[level])
+                    cast(List[_PriceLevel], buys[-1]).append(self._buys[level])
                     count -= 1
 
         # sell list, then line, then buy list

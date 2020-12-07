@@ -1,11 +1,13 @@
+from typing import Tuple
+
 from ibapi.contract import Contract, ComboLeg  # type: ignore
 from ibapi.order import Order  # type: ignore
 
 from aat.config import InstrumentType, OrderType
-from aat.core import Instrument
+from aat.core import Instrument, Order as AATOrder
 
 
-def _constructContract(instrument):
+def _constructContract(instrument: Instrument) -> Contract:
     """Construct an IB contract and order from an Order object"""
     contract = Contract()
 
@@ -22,7 +24,9 @@ def _constructContract(instrument):
         contract.symbol = instrument.name  # cusip e.g. 912828C57
         contract.secType = "BOND"
         contract.exchange = instrument.brokerExchange or "SMART"
-        contract.currency = instrument.currency.name or "USD"
+        contract.currency = (
+            instrument.currency.name if instrument.currency else ""
+        ) or "USD"
 
     elif instrument.type == InstrumentType.OPTION:
         # contract.symbol = "GOOG"
@@ -135,12 +139,16 @@ def _constructContract(instrument):
         contract.exchange = instrument.brokerExchange or "SMART"
 
         leg1 = ComboLeg()
+        if not instrument.leg1:
+            raise NotImplementedError()  # malformed
         leg1.conId = instrument.leg1.brokerId
         leg1.ratio = 1  # TODO
         leg1.action = instrument.leg1_side
         leg1.exchange = instrument.leg1.brokerExchange or "SMART"
 
         leg2 = ComboLeg()
+        if not instrument.leg2:
+            raise NotImplementedError()  # malformed
         leg2.conId = instrument.leg2.brokerId  # MCD STK
         leg2.ratio = 1  # TODO
         leg2.action = instrument.leg2_side
@@ -159,7 +167,7 @@ def _constructContract(instrument):
     return contract
 
 
-def _constructContractAndOrder(aat_order):
+def _constructContractAndOrder(aat_order: AATOrder) -> Tuple[Contract, Order]:
     contract = _constructContract(aat_order.instrument)
     order = Order()
     order.action = aat_order.side.value
@@ -174,6 +182,9 @@ def _constructContractAndOrder(aat_order):
         order.lmtPrice = aat_order.price
 
     elif aat_order.order_type == OrderType.STOP:
+        if not aat_order.stop_target:
+            raise NotImplementedError()  # malformed
+
         if aat_order.stop_target.order_type == OrderType.MARKET:
             order.orderType = "STP"
             order.auxPrice = aat_order.price
@@ -194,7 +205,7 @@ def _constructContractAndOrder(aat_order):
     return contract, order
 
 
-def _constructInstrument(contract):
+def _constructInstrument(contract: Contract) -> Instrument:
     name = contract.localSymbol if contract.localSymbol else contract.symbol
     brokerId = str(contract.conId)
     brokerExchange = contract.exchange

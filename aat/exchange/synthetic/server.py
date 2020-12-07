@@ -7,8 +7,8 @@ from aat.exchange.synthetic import SyntheticExchange
 from aat.core import Order
 
 
-def _main(port=5000):
-    async def handle(websocket, *args, **kwargs):
+def _main(port: int = 5000):  # type: ignore
+    async def handle(websocket, *args, **kwargs):  # type: ignore
         exchange = SyntheticExchange()
         await exchange.connect()
         await exchange.instruments()
@@ -35,7 +35,7 @@ def _main(port=5000):
     return start_server
 
 
-def main():
+def main() -> None:
     try:
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
         asyncio.get_event_loop().run_until_complete(

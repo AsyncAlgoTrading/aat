@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple, Dict, Type, Union, cast
 
 from .cpp import _CPP, _make_cpp_instrument
 from .db import InstrumentDB
@@ -13,7 +13,7 @@ class Instrument(object):
 
     __exchanges: List[ExchangeType]
     __type: InstrumentType
-    __brokerExchange: Optional[str]
+    __brokerExchange: Optional[ExchangeType]
     __brokerId: Optional[str]
     __currency: Optional["Instrument"]
     __underlying: Optional["Instrument"]
@@ -45,7 +45,7 @@ class Instrument(object):
         "__option_type",
     ]
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls: Type, *args: Tuple, **kwargs: Dict) -> "Instrument":
         if cls._instrumentdb.instruments(*args, **kwargs):
             return cls._instrumentdb.get(*args, **kwargs)
 
@@ -64,8 +64,8 @@ class Instrument(object):
         name: str,
         type: InstrumentType = InstrumentType.EQUITY,
         exchange: ExchangeType = ExchangeType(""),
-        **kwargs,
-    ):
+        **kwargs: Union[str, "Instrument", Side, ExchangeType],
+    ) -> None:
         """construct a new instrument instance
 
         Args:
@@ -147,59 +147,63 @@ class Instrument(object):
                 "brokerExchange"
             ) is None or self.__brokerExchange == kwargs.get("brokerExchange")
         else:
-            self.__brokerExchange = kwargs.get("brokerExchange")
+            self.__brokerExchange: Optional[ExchangeType] = cast(
+                ExchangeType, kwargs.get("brokerExchange")
+            )
 
         if hasattr(self, "_Instrument__brokerId") and self.__brokerId is not None:
             assert kwargs.get("brokerId") is None or self.__brokerId == kwargs.get(
                 "brokerId"
             )
         else:
-            self.__brokerId = kwargs.get("brokerId")
+            self.__brokerId: str = cast(str, kwargs.get("brokerId"))
 
         if hasattr(self, "_Instrument__currency") and self.__currency is not None:
             assert kwargs.get("currency") is None or self.__currency == kwargs.get(
                 "currency"
             )
         else:
-            self.__currency = kwargs.get("currency")
+            self.__currency: "Instrument" = cast("Instrument", kwargs.get("currency"))
 
         if hasattr(self, "_Instrument__underlying") and self.__underlying is not None:
             assert kwargs.get("underlying") is None or self.__underlying == kwargs.get(
                 "underlying"
             )
         else:
-            self.__underlying = kwargs.get("underlying")
+            self.__underlying: Optional["Instrument"] = cast(
+                "Instrument", kwargs.get("underlying")
+            )
 
         if hasattr(self, "_Instrument__leg1") and self.__leg1 is not None:
             assert kwargs.get("leg1") is None or self.__leg1 == kwargs.get("leg1")
         else:
-            self.__leg1 = kwargs.get("leg1")
+            self.__leg1: Optional["Instrument"] = cast("Instrument", kwargs.get("leg1"))
 
         if hasattr(self, "_Instrument__leg2") and self.__leg2 is not None:
             assert kwargs.get("leg2") is None or self.__leg2 == kwargs.get("leg2")
         else:
-            self.__leg2 = kwargs.get("leg2")
+            self.__leg2: Optional["Instrument"] = cast("Instrument", kwargs.get("leg2"))
 
         if hasattr(self, "_Instrument__leg1_side") and self.__leg1_side is not None:
             assert kwargs.get("leg1_side") is None or self.__leg1_side == kwargs.get(
                 "leg1_side"
             )
         else:
-            self.__leg1_side = kwargs.get("leg1_side")
+            self.__leg1_side: Optional[Side] = kwargs.get("leg1_side")
 
         if hasattr(self, "_Instrument__leg2_side") and self.__leg2_side is not None:
             assert kwargs.get("leg2_side") is None or self.__leg2_side == kwargs.get(
                 "leg2_side"
             )
         else:
-            self.__leg2_side = kwargs.get("leg2_side")
+            self.__leg2_side: Optional[Side] = kwargs.get("leg2_side")
 
         if hasattr(self, "_Instrument__expiration"):
             assert kwargs.get("expiration") is None or self.__expiration == kwargs.get(
                 "expiration"
             )
         else:
-            self.__expiration = kwargs.get("expiration")
+            self.__expiration: datetime = cast(datetime, kwargs.get("expiration"))
 
         if hasattr(self, "_Instrument__price_increment"):
             assert kwargs.get(
@@ -226,7 +230,7 @@ class Instrument(object):
                 "option_type"
             ) is None or self.__option_type == kwargs.get("option_type")
         else:
-            self.__option_type = kwargs.get("option_type")
+            self.__option_type: OptionType = cast(OptionType, kwargs.get("option_type"))
 
         # Optional Fields Validation
         assert isinstance(self.__brokerExchange, (None.__class__, str))
@@ -257,69 +261,71 @@ class Instrument(object):
         return self.__type
 
     @property
-    def exchanges(self):
+    def exchanges(self) -> List[ExchangeType]:
         return self.__exchanges
 
     # ******** #
     # Optional #
     # ******** #
     @property
-    def brokerExchange(self):
+    def brokerExchange(self) -> Optional[ExchangeType]:
         return self.__brokerExchange
 
     @property
-    def brokerId(self):
+    def brokerId(self) -> Optional[str]:
         return self.__brokerId
 
     @property
-    def currency(self):
+    def currency(self) -> Optional["Instrument"]:
         return self.__currency
 
     @property
-    def underlying(self):
+    def underlying(self) -> Optional["Instrument"]:
         return self.__underlying
 
     @property
-    def leg1(self):
+    def leg1(self) -> Optional["Instrument"]:
         return self.__leg1
 
     @property
-    def leg2(self):
+    def leg2(self) -> Optional["Instrument"]:
         return self.__leg2
 
     @property
-    def leg1_side(self):
+    def leg1_side(self) -> Optional[Side]:
         return self.__leg1_side
 
     @property
-    def leg2_side(self):
+    def leg2_side(self) -> Optional[Side]:
         return self.__leg2_side
 
     @property
-    def expiration(self):
+    def expiration(self) -> Optional[datetime]:
         return self.__expiration
 
     @property
-    def unit_value(self):
+    def unit_value(self) -> Optional[float]:
         return self.__unit_value
 
     @property
-    def price_increment(self):
+    def price_increment(self) -> Optional[float]:
         return self.__price_increment
 
     @property
-    def option_type(self):
+    def option_type(self) -> Optional[OptionType]:
         return self.__option_type
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if other is None:
             return False
+        if not isinstance(other, Instrument):
+            raise TypeError()
         return self.name == other.name and self.type == other.type
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(str(self))
 
-    def json(self):
+    def json(self) -> dict:
         return {
             "name": self.name,
             "type": self.type.value,
@@ -339,7 +345,7 @@ class Instrument(object):
         }
 
     @staticmethod
-    def fromJson(jsn):
+    def fromJson(jsn: dict) -> "Instrument":
         kwargs = {}
         kwargs["name"] = jsn["name"]
         kwargs["type"] = InstrumentType(jsn["type"])
@@ -383,5 +389,5 @@ class Instrument(object):
 
         return Instrument(**kwargs)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Instrument({self.name}-{self.type})"

@@ -2,14 +2,15 @@ import pandas as pd  # type: ignore
 import json
 from datetime import datetime
 from json import JSONEncoder
-from typing import List
+from typing import Any, Dict, List, Union
 
 from aat.config import Side
 from aat.core import Order, Trade, Instrument, ExchangeType, Position
+from aat.strategy import Strategy
 
 
 class _Serializer(JSONEncoder):
-    def default(self, obj):
+    def default(self, obj: Any) -> Union[dict, float]:
         if isinstance(obj, (Trade, Instrument, Position, ExchangeType)):
             return obj.json()
         elif isinstance(obj, datetime):
@@ -22,24 +23,24 @@ class Portfolio(object):
     """The portfolio object keeps track of a collection of positions attributed
     to a collection of strategies"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Track prices over time
-        self._prices = {}
+        self._prices: Dict = {}
 
         # Track trades
-        self._trades = {}
+        self._trades: Dict[Instrument, List[Trade]] = {}
 
         # List of all running strategies
-        self._strategies = []
+        self._strategies: List[str] = []
 
         # Cash on hand
-        self._cash = []
+        self._cash: List[Position] = []
 
         # Track active positions by instrument
-        self._active_positions_by_instrument = {}
+        self._active_positions_by_instrument: Dict[Instrument, List[Position]] = {}
 
         # Track active positions by strategy and instrument
-        self._active_positions_by_strategy = {}
+        self._active_positions_by_strategy: Dict[str, Dict[Instrument, Position]] = {}
 
     # *****************
     # Manager Methods #
@@ -91,7 +92,7 @@ class Portfolio(object):
         """update cash positions from exchange"""
         self._cash.extend(positions)
 
-    def newPosition(self, trade, strategy):
+    def newPosition(self, trade: Trade, strategy: Strategy) -> None:
         my_order: Order = trade.my_order
         if (
             trade.instrument in self._active_positions_by_instrument
@@ -111,7 +112,7 @@ class Portfolio(object):
             prev_notional: float = prev_size * prev_price
 
             cur_pos.size = (
-                cur_pos.size
+                cur_pos.size  # type: ignore # TODO why is this flagging
                 + (
                     my_order.volume
                     if my_order.side == Side.BUY
@@ -126,7 +127,7 @@ class Portfolio(object):
                 # increasing position size
                 # update average price
                 cur_pos.price = (
-                    (prev_notional + (my_order.volume * trade.price)) / cur_pos.size,
+                    (prev_notional + (my_order.volume * trade.price)) / cur_pos.size,  # type: ignore # TODO why is this flagging
                     trade.timestamp,
                 )
 
@@ -137,27 +138,27 @@ class Portfolio(object):
                 # update realized pnl
                 pnl = prev_size * (trade.price - prev_price)
                 cur_pos.pnl = (
-                    cur_pos.pnl + pnl,
+                    cur_pos.pnl + pnl,  # type: ignore # TODO why is this flagging
                     trade.timestamp,
                 )  # update realized pnl with closing position
 
                 # deduct from unrealized pnl
-                cur_pos.unrealizedPnl = (cur_pos.unrealizedPnl - pnl, trade.timestamp)
+                cur_pos.unrealizedPnl = (cur_pos.unrealizedPnl - pnl, trade.timestamp)  # type: ignore # TODO why is this flagging
 
                 # update average price
-                cur_pos.price = (trade.price, trade.timestamp)
+                cur_pos.price = (trade.price, trade.timestamp)  # type: ignore # TODO why is this flagging
 
             else:
                 # decreasing position size
                 # update realized pnl
                 pnl = prev_size * (trade.price - prev_price)
                 cur_pos.pnl = (
-                    cur_pos.pnl + pnl,
+                    cur_pos.pnl + pnl,  # type: ignore # TODO why is this flagging
                     trade.timestamp,
                 )  # update realized pnl with closing position
 
                 # deduct from unrealized pnl
-                cur_pos.unrealizedPnl = (cur_pos.unrealizedPnl - pnl, trade.timestamp)
+                cur_pos.unrealizedPnl = (cur_pos.unrealizedPnl - pnl, trade.timestamp)  # type: ignore # TODO why is this flagging
 
             # TODO close if side is 0?
 
@@ -187,15 +188,15 @@ class Portfolio(object):
                 self._active_positions_by_strategy[strategy.name()][trade.instrument]
             )
 
-    def onTrade(self, trade):
+    def onTrade(self, trade: Trade) -> None:
         if trade.instrument in self._active_positions_by_instrument:
             for pos in self._active_positions_by_instrument[trade.instrument]:
                 pos.unrealizedPnl = (
-                    pos.size * (trade.price - pos.price),
+                    pos.size * (trade.price - pos.price),  # type: ignore # TODO why is this flagging
                     trade.timestamp,
                 )
-                pos.pnl = (pos.pnl, trade.timestamp)
-                pos.instrumentPrice = (trade.price, trade.timestamp)
+                pos.pnl = (pos.pnl, trade.timestamp)  # type: ignore # TODO why is this flagging
+                pos.instrumentPrice = (trade.price, trade.timestamp)  # type: ignore # TODO why is this flagging
 
         if trade.instrument not in self._prices:
             self._prices[trade.instrument] = [(trade.price, trade.timestamp)]
@@ -204,15 +205,18 @@ class Portfolio(object):
             self._prices[trade.instrument].append((trade.price, trade.timestamp))
             self._trades[trade.instrument].append(trade)
 
-    def onTraded(self, trade, strategy):
+    def onTraded(self, trade: Trade, strategy: Strategy) -> None:
         self.newPosition(trade, strategy)
 
     # ******************
     # Strategy Methods #
     # ******************
     def positions(
-        self, strategy, instrument: Instrument = None, exchange: ExchangeType = None
-    ):
+        self,
+        strategy: Strategy,
+        instrument: Instrument = None,
+        exchange: ExchangeType = None,
+    ) -> List[Position]:
         ret = {}
 
         for position in self._active_positions_by_strategy.get(
@@ -231,7 +235,7 @@ class Portfolio(object):
 
     def allPositions(
         self, instrument: Instrument = None, exchange: ExchangeType = None
-    ):
+    ) -> List[Position]:
         ret = {}
 
         for position_list in self._active_positions_by_instrument.values():
@@ -251,7 +255,7 @@ class Portfolio(object):
                     ret[position.instrument] += position
         return list(ret.values())
 
-    def priceHistory(self, instrument: Instrument = None):
+    def priceHistory(self, instrument: Instrument = None) -> Union[pd.DataFrame, dict]:
         if instrument:
             return pd.DataFrame(
                 self._prices[instrument], columns=[instrument.name, "when"]
@@ -261,7 +265,9 @@ class Portfolio(object):
             for i in self._prices
         }
 
-    def _constructDf(self, dfs, drop_duplicates=True):
+    def _constructDf(
+        self, dfs: List[pd.DataFrame], drop_duplicates: bool = True
+    ) -> pd.DataFrame:
         # join along time axis
         if dfs:
             df = pd.concat(dfs, sort=True)
@@ -276,7 +282,7 @@ class Portfolio(object):
             df = pd.DataFrame()
         return df
 
-    def getPnl(self, strategy):
+    def getPnl(self, strategy: Strategy) -> pd.DataFrame:
         portfolio = []
         pnl_cols = []
         total_pnl_cols = []
@@ -321,7 +327,7 @@ class Portfolio(object):
         ].sum(axis=1)
         return df_pnl
 
-    def getPnlAll(self):
+    def getPnlAll(self) -> pd.DataFrame:
         portfolio = []
         pnl_cols = []
         total_pnl_cols = []
@@ -366,10 +372,10 @@ class Portfolio(object):
         ].sum(axis=1)
         return df_pnl
 
-    def getInstruments(self, strategy):
+    def getInstruments(self, strategy: Strategy) -> None:
         raise NotImplementedError()
 
-    def getPrice(self):
+    def getPrice(self) -> pd.DataFrame:
         portfolio = []
         price_cols = []
         for instrument, price_history in self.priceHistory().items():
@@ -382,7 +388,7 @@ class Portfolio(object):
             portfolio.append(price_history)
         return self._constructDf(portfolio)
 
-    def getAssetPrice(self, strategy):
+    def getAssetPrice(self, strategy: Strategy) -> pd.DataFrame:
         portfolio = []
         price_cols = []
         for position in self.allPositions():
@@ -400,7 +406,7 @@ class Portfolio(object):
             portfolio.append(price_history)
         return self._constructDf(portfolio)
 
-    def getSize(self, strategy):
+    def getSize(self, strategy: Strategy) -> pd.DataFrame:
         portfolio = []
         size_cols = []
         for position in self.positions(strategy):
@@ -426,7 +432,7 @@ class Portfolio(object):
 
         return self._constructDf(portfolio)[size_cols]
 
-    def getSizeAll(self):
+    def getSizeAll(self) -> pd.DataFrame:
         portfolio = []
         size_cols = []
         for position in self.allPositions():
@@ -452,7 +458,7 @@ class Portfolio(object):
 
         return self._constructDf(portfolio)[size_cols]
 
-    def getNotional(self, strategy):
+    def getNotional(self, strategy: Strategy) -> pd.DataFrame:
         portfolio = []
         notional_cols = []
         for position in self.positions(strategy):
@@ -480,7 +486,7 @@ class Portfolio(object):
 
     def getNotionalAll(
         self,
-    ):
+    ) -> pd.DataFrame:
         portfolio = []
         notional_cols = []
         for position in self.allPositions():
@@ -505,7 +511,7 @@ class Portfolio(object):
             portfolio.append(price_history)
         return self._constructDf(portfolio)[notional_cols]
 
-    def getInvestment(self, strategy):
+    def getInvestment(self, strategy: Strategy) -> pd.DataFrame:
         portfolio = []
         investment_cols = []
         for position in self.positions(strategy):
@@ -531,7 +537,7 @@ class Portfolio(object):
 
         return self._constructDf(portfolio)[investment_cols]
 
-    def save(self, filename_prefix):
+    def save(self, filename_prefix: str) -> None:
         with open("{}.prices.json".format(filename_prefix), "w") as fp:
             json.dump(
                 {json.dumps(k.json()): v for k, v in self._prices.items()},
@@ -566,7 +572,7 @@ class Portfolio(object):
                 cls=_Serializer,
             )
 
-    def restore(self, filename_prefix):
+    def restore(self, filename_prefix: str) -> None:
         with open("{}.prices.json".format(filename_prefix), "r") as fp:
             jsn = json.load(fp)
             self._prices = {

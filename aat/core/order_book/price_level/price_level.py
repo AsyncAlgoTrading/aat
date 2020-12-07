@@ -1,10 +1,11 @@
 from collections import deque
-from typing import Dict, Optional, List, Tuple, Union
+from typing import Any, cast, Deque, Dict, Iterator, Optional, List, Tuple, Type, Union
 
 from aat.core.data import Order
 from aat.config import OrderType, OrderFlag
 
 from .ro import PriceLevelRO
+from ..collector import _Collector
 from ..cpp import _CPP, _make_cpp_price_level
 
 
@@ -19,18 +20,18 @@ class _PriceLevel(object):
         "_collector",
     ]
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls: Type, *args: Any, **kwargs: Any) -> "_PriceLevel":
         if _CPP:
             return _make_cpp_price_level(*args, **kwargs)
         return super(_PriceLevel, cls).__new__(cls)
 
-    def __init__(self, price, collector):
+    def __init__(self, price: float, collector: _Collector):
         self._price = price
-        self._orders = deque()
-        self._orders_staged = deque()
-        self._orders_filled_staged = deque()
-        self._stop_orders = []
-        self._stop_orders_staged = []
+        self._orders: Deque[Order] = deque()
+        self._orders_staged: Deque[Order] = deque()
+        self._orders_filled_staged: Deque[float] = deque()
+        self._stop_orders: List[Order] = []
+        self._stop_orders_staged: List[Order] = []
         self._collector = collector
 
     @property
@@ -41,12 +42,12 @@ class _PriceLevel(object):
     def volume(self) -> float:
         return sum((x.volume - x.filled) for x in self._orders)
 
-    def add(self, order) -> None:
+    def add(self, order: Order) -> None:
         # append order to deque
         if order.order_type == OrderType.STOP:
             if order.stop_target in self._stop_orders:
                 return
-            self._stop_orders.append(order.stop_target)
+            self._stop_orders.append(cast(Order, order.stop_target))
         else:
             if order in self._orders:
                 # change event
@@ -56,7 +57,7 @@ class _PriceLevel(object):
                     self._orders.append(order)
                     self._collector.pushOpen(order)
 
-    def find(self, order) -> Optional[Order]:
+    def find(self, order: Order) -> Optional[Order]:
         # check if order is in level
         if order.price != self._price:
             # order not here/not here anymore
@@ -67,7 +68,7 @@ class _PriceLevel(object):
                 return o
         return None
 
-    def modify(self, order) -> Order:
+    def modify(self, order: Order) -> Order:
         # check if order is in level
         if order.price != self._price or order.id not in (o.id for o in self._orders):
             # something is wrong
@@ -85,7 +86,7 @@ class _PriceLevel(object):
         # return the order
         return order
 
-    def remove(self, order) -> Order:
+    def remove(self, order: Order) -> Order:
         # check if order is in level
         if order.price != self._price or order not in self._orders:
             # something is wrong
@@ -100,7 +101,7 @@ class _PriceLevel(object):
         # return the order
         return order
 
-    def cross(self, taker_order) -> Tuple[Optional[Order], List[Order]]:
+    def cross(self, taker_order: Order) -> Tuple[Optional[Order], List[Order]]:
         """Cross the spread
 
         Args:
@@ -256,7 +257,7 @@ class _PriceLevel(object):
         """use deque size as truth value"""
         return len(self._orders) > 0
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Order]:
         """iterate through orders"""
         for order in self._orders:
             yield order
@@ -265,7 +266,7 @@ class _PriceLevel(object):
         """get number of orders"""
         return len(self._orders)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Order:
         """get item"""
         return self._orders[index]
 

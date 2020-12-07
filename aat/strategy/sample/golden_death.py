@@ -1,19 +1,20 @@
 import math
 import pandas as pd  # type: ignore
+from typing import Any, Optional, List
 from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
 
 
 class GoldenDeathStrategy(Strategy):
     def __init__(
         self,
-        symbol,
-        long_ma=30,
-        short_ma=10,
-        bail_hour=15,
-        bail_minute=45,
-        *args,
-        **kwargs
-    ):
+        symbol: str,
+        long_ma: int = 30,
+        short_ma: int = 10,
+        bail_hour: int = 15,
+        bail_minute: int = 45,
+        *args: Any,
+        **kwargs: Any
+    ) -> None:
         super(GoldenDeathStrategy, self).__init__(*args, **kwargs)
 
         # Long moving average size
@@ -26,27 +27,27 @@ class GoldenDeathStrategy(Strategy):
         self._symbol = symbol
 
         # Moving average lists
-        self._long_ma_list = []
-        self._short_ma_list = []
+        self._long_ma_list: List[float] = []
+        self._short_ma_list: List[float] = []
 
         # State vars
         self._triggered = False
         self._entered = False
 
         # Orders
-        self._buy_order = None
+        self._buy_order: Optional[Order] = None
         self._volume = 0
-        self._sell_order = None
+        self._sell_order: Optional[Order] = None
 
         # bail time
         self._bail_hour = bail_hour
         self._bail_minute = bail_minute
 
-    async def onStart(self, event: Event):
+    async def onStart(self, event: Event) -> None:
         # Get available instruments from exchange
-        self.subscribe(Instrument(name=self._symbol, type=InstrumentType.EQUITY))
+        await self.subscribe(Instrument(name=self._symbol, type=InstrumentType.EQUITY))
 
-    async def onTrade(self, event: Event):
+    async def onTrade(self, event: Event) -> None:
         """Called whenever a `Trade` event is received"""
         trade: Trade = event.target  # type: ignore
 
@@ -149,7 +150,7 @@ class GoldenDeathStrategy(Strategy):
                         print("submitting sell order: {}".format(self._sell_order))
                         await self.newOrder(self._sell_order)
 
-    async def onTraded(self, event: Event):
+    async def onTraded(self, event: Event) -> None:
         trade: Trade = event.target  # type: ignore
         if self._buy_order and self._buy_order == trade.my_order:
             self._entered = True
@@ -158,13 +159,13 @@ class GoldenDeathStrategy(Strategy):
             self._entered = False
             self._sell_order = None
 
-    async def onRejected(self, event: Event):
+    async def onRejected(self, event: Event) -> None:
         print("order rejected")
         import sys
 
         sys.exit(0)
 
-    async def onExit(self, event: Event):
+    async def onExit(self, event: Event) -> None:
         print("Finishing...")
 
         self.performanceCharts()

@@ -1,11 +1,13 @@
 import os
 import os.path
-from aat import Strategy, Event, Order, Side, Trade
 from pprint import pprint
+from typing import Any
+
+from aat import Strategy, Event, Order, Side, Trade
 
 
 class ReceivedStrategy(Strategy):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(ReceivedStrategy, self).__init__(*args, **kwargs)
         self._trade = True
         self._received_count = 0
@@ -32,7 +34,7 @@ class ReceivedStrategy(Strategy):
             )
             self._trade = False
 
-    async def onReceived(self, event):
+    async def onReceived(self, event: Event) -> None:
         pprint(event)
         self._trade = True
         self._received_count += 1

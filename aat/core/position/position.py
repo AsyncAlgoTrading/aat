@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Tuple, Union, Mapping, Type
+from typing import Tuple, Union, Mapping, Type, Dict, List
 
 from aat.core.data import Trade
 from aat.core.exchange import ExchangeType
@@ -30,12 +30,20 @@ class Position(object):
         "__trades",
     ]
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls: Type, *args: Tuple, **kwargs: Dict) -> "Position":
         if _CPP:
             return _make_cpp_position(*args, **kwargs)
         return super(Position, cls).__new__(cls)
 
-    def __init__(self, size, price, timestamp, instrument, exchange, trades):
+    def __init__(
+        self,
+        size: float,
+        price: float,
+        timestamp: datetime,
+        instrument: Instrument,
+        exchange: ExchangeType,
+        trades: List[Trade],
+    ) -> None:
         assert instrument is None or isinstance(instrument, Instrument)
         assert isinstance(exchange, ExchangeType)
 
@@ -71,58 +79,58 @@ class Position(object):
     # Readonly #
     # ******** #
     @property
-    def instrument(self):
+    def instrument(self) -> Instrument:
         return self.__instrument
 
     @property
-    def exchange(self):
+    def exchange(self) -> ExchangeType:
         return self.__exchange
 
     @property
-    def timestamp(self):
+    def timestamp(self) -> datetime:
         """time of creation of initial position"""
         return self.__size_history[0][1]
 
     @property
-    def sizeHistory(self):
+    def sizeHistory(self) -> List[Tuple[float, datetime]]:
         return self.__size_history
 
     @property
-    def priceHistory(self):
+    def priceHistory(self) -> List[Tuple[float, datetime]]:
         return self.__price_history
 
     @property
-    def investmentHistory(self):
+    def investmentHistory(self) -> List[Tuple[float, datetime]]:
         return self.__investment_history
 
     @property
-    def notionalHistory(self):
+    def notionalHistory(self) -> List[Tuple[float, datetime]]:
         return self.__notional_history
 
     @property
-    def instrumentPriceHistory(self):
+    def instrumentPriceHistory(self) -> List[Tuple[float, datetime]]:
         return self.__instrumentPrice_history
 
     @property
-    def pnlHistory(self):
+    def pnlHistory(self) -> List[Tuple[float, datetime]]:
         return self.__pnl_history
 
     @property
-    def unrealizedPnlHistory(self):
+    def unrealizedPnlHistory(self) -> List[Tuple[float, datetime]]:
         return self.__unrealizedPnl_history
 
     # ***********#
     # Read/write #
     # ***********#
     @property
-    def instrumentPrice(self):
+    def instrumentPrice(self) -> float:
         return round(self.__instrumentPrice, 4)
 
     @instrumentPrice.setter
     def instrumentPrice(
         self,
         instrument_price: Union[Tuple[Union[int, float], datetime], Union[int, float]],
-    ):
+    ) -> None:
         """Tuple as we need temporal information for history"""
         assert isinstance(instrument_price, tuple)
         instrument_price, when = instrument_price
@@ -137,11 +145,13 @@ class Position(object):
             self.__notional_history.append((self.size * self.instrumentPrice, when))
 
     @property
-    def size(self):
+    def size(self) -> float:
         return self.__size
 
     @size.setter
-    def size(self, size: Union[Tuple[Union[int, float], datetime], Union[int, float]]):
+    def size(
+        self, size: Union[Tuple[Union[int, float], datetime], Union[int, float]]
+    ) -> None:
         """Tuple as we need temporal information for history"""
         assert isinstance(size, tuple)
         size, when = size
@@ -153,13 +163,13 @@ class Position(object):
         self.__size_history.append((self.size, when))
 
     @property
-    def price(self):
+    def price(self) -> float:
         return round(self.__price, 4)
 
     @price.setter
     def price(
         self, price: Union[Tuple[Union[int, float], datetime], Union[int, float]]
-    ):
+    ) -> None:
         """Tuple as we need temporal information for history"""
         assert isinstance(price, tuple)
         price, when = price
@@ -169,16 +179,16 @@ class Position(object):
 
         self.__price = price
         self.__price_history.append((self.price, when))
-        self.investment = (self.size * self.price, when)
+        self.investment = (self.size * self.price, when)  # type: ignore # TODO why is this one being flagged
 
     @property
-    def investment(self):
+    def investment(self) -> float:
         return round(self.__investment, 4)
 
     @investment.setter
     def investment(
         self, investment: Union[Tuple[Union[int, float], datetime], Union[int, float]]
-    ):
+    ) -> None:
         """Tuple as we need temporal information for history"""
         assert isinstance(investment, tuple)
         investment, when = investment
@@ -190,13 +200,13 @@ class Position(object):
         self.__investment_history.append((self.investment, when))
 
     @property
-    def notional(self):
+    def notional(self) -> float:
         return round(self.__notional, 4)
 
     @notional.setter
     def notional(
         self, notional: Union[Tuple[Union[int, float], datetime], Union[int, float]]
-    ):
+    ) -> None:
         """Tuple as we need temporal information for history"""
         assert isinstance(notional, tuple)
         notional, when = notional
@@ -208,11 +218,13 @@ class Position(object):
         self.__notional_history.append((self.notional, when))
 
     @property
-    def pnl(self):
+    def pnl(self) -> float:
         return round(self.__pnl, 4)
 
     @pnl.setter
-    def pnl(self, pnl: Union[Tuple[Union[int, float], datetime], Union[int, float]]):
+    def pnl(
+        self, pnl: Union[Tuple[Union[int, float], datetime], Union[int, float]]
+    ) -> None:
         """Tuple as we need temporal information for history"""
         assert isinstance(pnl, tuple)
         pnl, when = pnl
@@ -224,14 +236,14 @@ class Position(object):
         self.__pnl_history.append((self.pnl, when))
 
     @property
-    def unrealizedPnl(self):
+    def unrealizedPnl(self) -> float:
         return round(self.__unrealizedPnl, 4)
 
     @unrealizedPnl.setter
     def unrealizedPnl(
         self,
         unrealized_pnl: Union[Tuple[Union[int, float], datetime], Union[int, float]],
-    ):
+    ) -> None:
         """Tuple as we need temporal information for history"""
         assert isinstance(unrealized_pnl, tuple)
         unrealized_pnl, when = unrealized_pnl
@@ -243,10 +255,10 @@ class Position(object):
         self.__unrealizedPnl_history.append((self.unrealizedPnl, when))
 
     @property
-    def trades(self):
+    def trades(self) -> List[Trade]:
         return self.__trades
 
-    def json(self):
+    def json(self) -> dict:
         return {
             "timestamp": self.timestamp.timestamp(),
             "instrument": self.instrument.json(),
@@ -269,7 +281,7 @@ class Position(object):
         }
 
     @staticmethod
-    def fromJson(jsn):
+    def fromJson(jsn: dict) -> "Position":
         kwargs = {}
         kwargs["size"] = jsn["size"]
         kwargs["price"] = jsn["price"]
@@ -323,10 +335,10 @@ class Position(object):
             "unrealizedPnl": float,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Position(price={self.price}, size={self.size}, notional={self.notional}, pnl={self.pnl}, unrealizedPnl={self.unrealizedPnl}, instrument={self.instrument}, exchange={self.exchange})"
 
-    def __add__(self, other):
+    def __add__(self, other: object) -> "Position":
         """Adding positions should give you the net position"""
         assert isinstance(other, Position)
         assert self.instrument == other.instrument

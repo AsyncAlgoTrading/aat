@@ -1,9 +1,11 @@
-from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
+from typing import Any
 from pprint import pprint
+
+from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
 
 
 class BuyAndHoldCBStrategy(Strategy):
-    def __init__(self, notional, *args, **kwargs) -> None:
+    def __init__(self, notional: str, *args: Any, **kwargs: Any) -> None:
         super(BuyAndHoldCBStrategy, self).__init__(*args, **kwargs)
         self._notional = float(notional)
 

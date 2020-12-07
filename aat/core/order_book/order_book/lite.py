@@ -32,7 +32,6 @@ class OrderBookLite(OrderBook):
 
     @staticmethod
     def fromPriceLevels(
-        self,
         instrument: Instrument,
         exchange_name: str = "",
         callback: Optional[Callable] = None,
@@ -45,7 +44,7 @@ class OrderBookLite(OrderBook):
         # create one order per price level
         for level in price_levels[Side.SELL]:
             level = level if isinstance(level, PriceLevelRO) else PriceLevelRO(level[0], level[1], 1)  # type: ignore
-            self.add(
+            obl.add(
                 Order(
                     level.volume,
                     level.price,
@@ -59,7 +58,7 @@ class OrderBookLite(OrderBook):
         # create one order per price level
         for level in price_levels[Side.BUY]:
             level = level if isinstance(level, PriceLevelRO) else PriceLevelRO(level[0], level[1], 1)  # type: ignore
-            self.add(
+            obl.add(
                 Order(
                     level.volume,
                     level.price,
@@ -74,13 +73,13 @@ class OrderBookLite(OrderBook):
         return obl
 
     @staticmethod
-    def fromOrderBook(self, ob: OrderBook) -> "OrderBookLite":
+    def fromOrderBook(ob: OrderBook) -> "OrderBookLite":
         # TODO
         raise NotImplementedError()
 
-    def clone(self):
+    def clone(self) -> "OrderBookLite":
         """clone an order book. useful when you want to do experiments on an orderbook without destroying it"""
-        obl = OrderBookLite(self.instrument, self.exchange_name, self.callback)
+        obl = OrderBookLite(self.instrument, self.exchange.name, self.callback)
 
         # create one order per price level
         for level in self._sell_levels:
@@ -98,7 +97,7 @@ class OrderBookLite(OrderBook):
 
         # create one order per price level
         for level in self._buy_levels:
-            pl: _PriceLevel = self._buys[level]
+            pl = self._buys[level]
             self.add(
                 Order(
                     pl.volume,

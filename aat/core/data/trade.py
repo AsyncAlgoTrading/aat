@@ -1,8 +1,10 @@
 from datetime import datetime
-from typing import Mapping, Type, Union, List, Dict
+from typing import Any, Dict, List, Optional, Type, Union
 
 from .cpp import _CPP, _make_cpp_trade
 from .order import Order
+from ..instrument import Instrument
+from ..exchange import ExchangeType
 from ...config import DataType, Side
 
 
@@ -23,12 +25,19 @@ class Trade(object):
     # for convenience
     Types = DataType
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):  # type: ignore
         if _CPP:
             return _make_cpp_trade(*args, **kwargs)
         return super(Trade, cls).__new__(cls)
 
-    def __init__(self, volume, price, taker_order, maker_orders=None, **kwargs):
+    def __init__(
+        self,
+        volume: float,
+        price: float,
+        taker_order: Order,
+        maker_orders: Optional[List[Order]] = None,
+        **kwargs: Any,
+    ) -> None:
         self.__id = kwargs.get(
             "id", "0"
         )  # on construction, provide no ID until exchange assigns one
@@ -57,23 +66,23 @@ class Trade(object):
         return self.taker_order.timestamp
 
     @property
-    def type(self):
+    def type(self) -> DataType:
         return self.__type
 
     @property
-    def volume(self):
+    def volume(self) -> float:
         return self.__volume
 
     @property
-    def price(self):
+    def price(self) -> float:
         return self.__price
 
     @property
-    def instrument(self):
+    def instrument(self) -> Instrument:
         return self.taker_order.instrument
 
     @property
-    def exchange(self):
+    def exchange(self) -> ExchangeType:
         return self.taker_order.exchange
 
     @property
@@ -81,11 +90,11 @@ class Trade(object):
         return self.taker_order.side
 
     @property
-    def notional(self):
+    def notional(self) -> float:
         return self.price * self.volume
 
-    def finished(self):
-        return self.taker_order.finished
+    def finished(self) -> bool:
+        return self.taker_order.finished()
 
     # ***********#
     # Read/write #
@@ -120,13 +129,13 @@ class Trade(object):
     def __repr__(self) -> str:
         return f"Trade( id={self.id}, timestamp={self.timestamp}, {self.volume}@{self.price}, \n\ttaker_order={self.taker_order},\n\tmaker_orders={self.maker_orders}, )"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         assert isinstance(other, Trade)
         return self.id == other.id and self.timestamp == other.timestamp
 
-    def json(self, flat=False) -> Mapping[str, Union[str, int, float]]:
+    def json(self, flat: bool = False) -> Dict[str, Union[str, int, float, dict]]:
         """convert trade to flat json"""
-        ret: Dict[str, Union[str, int, float]] = {
+        ret: Dict[str, Union[str, int, float, dict]] = {
             "id": self.id,
             "timestamp": self.timestamp.timestamp(),
             "price": self.price,
@@ -135,12 +144,13 @@ class Trade(object):
 
         if flat:
             # Typings here to enforce flatness of json
-            taker_order: Dict[str, Union[str, int, float]] = {
-                "taker_order." + k: v for k, v in self.taker_order.json().items()
+            taker_order: Dict[str, Union[str, int, float, dict]] = {
+                "taker_order." + k: v
+                for k, v in self.taker_order.json(flat=flat).items()
             }
 
-            maker_orders: List[Dict[str, Union[str, int, float]]] = [
-                {"maker_order{}." + k: v for k, v in order.json().items()}
+            maker_orders: List[Dict[str, Union[str, int, float, dict]]] = [
+                {"maker_order{}." + k: v for k, v in order.json(flat=flat).items()}
                 for i, order in enumerate(self.maker_orders)
             ]
 
@@ -158,7 +168,7 @@ class Trade(object):
         return ret
 
     @staticmethod
-    def fromJson(jsn):
+    def fromJson(jsn: dict) -> "Trade":
         ret = Trade(
             jsn["volume"],
             jsn["price"],
@@ -167,11 +177,11 @@ class Trade(object):
         )
 
         if "id" in jsn:
-            ret.id = jsn.get("id")
+            ret.id = str(jsn.get("id"))
         return ret
 
     @staticmethod
-    def schema() -> Mapping[str, Type]:
+    def schema() -> Dict[str, Type]:
         # FIXME
         # this varies from the json schema
         return {"id": int, "timestamp": int, "volume": float, "price": float}

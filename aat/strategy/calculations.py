@@ -2,18 +2,23 @@ import os
 import os.path
 import types
 from datetime import datetime
-from typing import Set
+from typing import Any, Callable, Set
 
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
 
 
+from .portfolio import Portfolio
+
+
 class CalculationsMixin(object):
+    __total_count: int
     __perf_charts: Set[object] = set()  # TODO move
     __save_dir: str = ""  # TODO move
+    portfolio: Callable[..., Portfolio]
 
-    def plotPrice(self, ax=None, **plot_kwargs):
+    def plotPrice(self, ax: Any = None, **plot_kwargs: Any) -> None:
         self._df_price = self.portfolio().getPrice()
 
         if not self._df_price.empty:
@@ -22,8 +27,8 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Price")
 
-    def plotAssetPrice(self, ax=None, **plot_kwargs):
-        self._df_asset_price = self.portfolio().getAssetPrice(self)
+    def plotAssetPrice(self, ax: Any = None, **plot_kwargs: Any) -> None:
+        self._df_asset_price = self.portfolio().getAssetPrice(self)  # type: ignore # mixin
 
         if not self._df_asset_price.empty:
             self._df_asset_price.plot(ax=ax, **plot_kwargs)
@@ -31,11 +36,11 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Price")
 
-    def plotPositions(self, ax=None, **plot_kwargs):
-        self._df_size = self.portfolio().getSize(self)
+    def plotPositions(self, ax: Any = None, **plot_kwargs: Any) -> None:
+        self._df_size = self.portfolio().getSize(self)  # type: ignore # mixin
         self._df_size.columns = [c.replace("s:", "") for c in self._df_size.columns]
 
-        self._df_investment = self.portfolio().getInvestment(self)
+        self._df_investment = self.portfolio().getInvestment(self)  # type: ignore # mixin
         self._df_investment.columns = [
             c.replace("i:", "") for c in self._df_investment.columns
         ]
@@ -48,13 +53,13 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Positions")
 
-    def plotPositionsAll(self, ax=None, **plot_kwargs):
+    def plotPositionsAll(self, ax: Any = None, **plot_kwargs: Any) -> None:
         self._df_size_all = self.portfolio().getSizeAll()
         self._df_size_all.columns = [
             c.replace("s:", "") for c in self._df_size_all.columns
         ]
 
-        self._df_investment = self.portfolio().getInvestment(self)
+        self._df_investment = self.portfolio().getInvestment(self)  # type: ignore # mixin
         self._df_investment.columns = [
             c.replace("i:", "") for c in self._df_investment.columns
         ]
@@ -67,9 +72,9 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Positions")
 
-    def plotNotional(self, ax=None, **plot_kwargs):
-        self._df_asset_price = self.portfolio().getAssetPrice(self)
-        self._df_position_notional = self.portfolio().getSize(self)
+    def plotNotional(self, ax: Any = None, **plot_kwargs: Any) -> None:
+        self._df_asset_price = self.portfolio().getAssetPrice(self)  # type: ignore # mixin
+        self._df_position_notional = self.portfolio().getSize(self)  # type: ignore # mixin
         self._df_position_notional.columns = [
             c.replace("s:", "") for c in self._df_size.columns
         ]
@@ -88,8 +93,8 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Notional")
 
-    def plotNotionalAll(self, ax=None, **plot_kwargs):
-        self._df_asset_price = self.portfolio().getAssetPrice(self)
+    def plotNotionalAll(self, ax: Any = None, **plot_kwargs: Any) -> None:
+        self._df_asset_price = self.portfolio().getAssetPrice(self)  # type: ignore # mixin
         self._df_position_notional_all = self.portfolio().getSizeAll()
         self._df_position_notional_all.columns = [
             c.replace("s:", "") for c in self._df_size_all.columns
@@ -109,13 +114,13 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Notional")
 
-    def plotPnl(self, ax=None, **plot_kwargs):
+    def plotPnl(self, ax: Any = None, **plot_kwargs: Any) -> None:
         # cm = matplotlib.cm.get_cmap("Paired")
         # ls = np.linspace(0, 1, len(pnl_cols) // 2)
         # colors = []
         # for i in ls:
         #     colors.extend([matplotlib.colors.to_hex(cm(i)), matplotlib.colors.to_hex(cm(i + .05))])
-        self._df_pnl = self.portfolio().getPnl(self)
+        self._df_pnl = self.portfolio().getPnl(self)  # type: ignore
         self._df_pnl.fillna(0.0, inplace=True)
 
         self._df_total_pnl = self._df_pnl[[c for c in self._df_pnl if "pnl:" in c]]
@@ -129,7 +134,7 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("PNL")
 
-    def plotPnlAll(self, ax=None, **plot_kwargs):
+    def plotPnlAll(self, ax: Any = None, **plot_kwargs: Any) -> None:
         self._df_pnl_all = self.portfolio().getPnlAll()
         self._df_pnl_all.fillna(0.0, inplace=True)
 
@@ -146,8 +151,8 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("PNL")
 
-    def plotUpDown(self, ax=None, **plot_kwargs):
-        self._df_pnl = self.portfolio().getPnl(self)
+    def plotUpDown(self, ax: Any = None, **plot_kwargs: Any) -> None:
+        self._df_pnl = self.portfolio().getPnl(self)  # type: ignore # mixin
         self._df_pnl.fillna(0.0, inplace=True)
 
         self._df_up_down = self._df_pnl[["alpha"]]
@@ -173,7 +178,7 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Alpha")
 
-    def plotUpDownAll(self, ax=None, **plot_kwargs):
+    def plotUpDownAll(self, ax: Any = None, **plot_kwargs: Any) -> None:
         self._df_pnl_all = self.portfolio().getPnlAll()
         self._df_pnl_all.fillna(0.0, inplace=True)
 
@@ -200,8 +205,8 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Alpha")
 
-    def plotReturnHistograms(self, ax, **plot_kwargs):
-        self._df_notional = self.portfolio().getNotional(self)
+    def plotReturnHistograms(self, ax: Any, **plot_kwargs: Any) -> None:
+        self._df_notional = self.portfolio().getNotional(self)  # type: ignore # mixin
         self._df_notional.columns = [
             c.replace("n:", "") for c in self._df_notional.columns
         ]
@@ -227,7 +232,7 @@ class CalculationsMixin(object):
                 kind="hist", ax=ax, sharex=True, stacked=True, bins=10, histtype="bar"
             )
 
-    def plotReturnHistogramsAll(self, ax, **plot_kwargs):
+    def plotReturnHistogramsAll(self, ax: Any, **plot_kwargs: Any) -> None:
         self._df_notional_all = self.portfolio().getNotionalAll()
         self._df_notional_all.columns = [
             c.replace("n:", "") for c in self._df_notional_all.columns
@@ -257,8 +262,8 @@ class CalculationsMixin(object):
                 kind="hist", ax=ax, sharex=True, stacked=True, bins=10, histtype="bar"
             )
 
-    def plotStdDev(self, ax, **plot_kwargs):
-        self._df_notional = self.portfolio().getNotional(self)
+    def plotStdDev(self, ax: Any, **plot_kwargs: Any) -> None:
+        self._df_notional = self.portfolio().getNotional(self)  # type: ignore # mixin
         self._df_notional.columns = [
             c.replace("n:", "") for c in self._df_notional.columns
         ]
@@ -272,7 +277,7 @@ class CalculationsMixin(object):
             ax.axhline(self._total_returns.std())
             ax.set_ylabel("Std.")
 
-    def plotStdDevAll(self, ax, **plot_kwargs):
+    def plotStdDevAll(self, ax: Any, **plot_kwargs: Any) -> None:
         self._df_notional_all = self.portfolio().getNotionalAll()
         self._df_notional_all.columns = [
             c.replace("n:", "") for c in self._df_notional_all.columns
@@ -287,8 +292,8 @@ class CalculationsMixin(object):
             ax.axhline(self._total_returns_all.std())
             ax.set_ylabel("Std.")
 
-    def plotSharpe(self, ax, **plot_kwargs):
-        self._df_notional = self.portfolio().getNotional(self)
+    def plotSharpe(self, ax: Any, **plot_kwargs: Any) -> None:
+        self._df_notional = self.portfolio().getNotional(self)  # type: ignore # mixin
         self._df_notional.columns = [
             c.replace("n:", "") for c in self._df_notional.columns
         ]
@@ -312,7 +317,7 @@ class CalculationsMixin(object):
             ax.axhline(sharpe)
             ax.set_ylabel("Sharpe")
 
-    def plotSharpeAll(self, ax, **plot_kwargs):
+    def plotSharpeAll(self, ax: Any, **plot_kwargs: Any) -> None:
         self._df_notional_all = self.portfolio().getNotionalAll()
         self._df_notional_all.columns = [
             c.replace("n:", "") for c in self._df_notional_all.columns
@@ -337,7 +342,9 @@ class CalculationsMixin(object):
             ax.axhline(sharpe)
             ax.set_ylabel("Sharpe")
 
-    def performanceByStrategy(self, save=False, save_data=False):
+    def performanceByStrategy(
+        self, save: bool = False, save_data: bool = False
+    ) -> None:
         fig, axes = plt.subplots(
             8,
             1,
@@ -349,7 +356,7 @@ class CalculationsMixin(object):
             axes[0].get_shared_x_axes().join(axes[0], ax)
 
         plt.rc("legend", fontsize=4)  # using a size in points
-        fig.suptitle("Summary ({})".format(self.name()))
+        fig.suptitle("Summary ({})".format(self.name()))  # type: ignore # mixin
 
         # Plot prices
         self.plotPrice(ax=axes[0])
@@ -374,12 +381,12 @@ class CalculationsMixin(object):
         self.plotReturnHistograms(ax=axes[7])
 
         if save:
-            plt.savefig("{}/{}.pdf".format(self._save_dir, self.name()))
+            plt.savefig("{}/{}.pdf".format(self._save_dir, self.name()))  # type: ignore # mixin
 
         if save_data:
-            self._writeoutPerf(self.name())
+            self._writeoutPerf(self.name())  # type: ignore # mixin
 
-    def performanceByAsset(self, save=False, save_data=False):
+    def performanceByAsset(self, save: bool = False, save_data: bool = False) -> None:
         fig, axes = plt.subplots(
             8,
             1,
@@ -422,8 +429,12 @@ class CalculationsMixin(object):
             self._writeoutPerf("all")
 
     def performanceCharts(
-        self, strategy=None, render=True, save=False, save_data=False
-    ):
+        self,
+        strategy: Any = None,
+        render: bool = True,
+        save: bool = False,
+        save_data: bool = False,
+    ) -> None:
         """Render performance charts to analyze strategy results
 
         Args:
@@ -436,14 +447,14 @@ class CalculationsMixin(object):
         if save or save_data:
             if not CalculationsMixin.__save_dir:
                 CalculationsMixin.__save_dir = "_aat_{}_{}".format(
-                    self.tradingType(), datetime.now().isoformat()
+                    self.tradingType(), datetime.now().isoformat()  # type: ignore # mixin
                 )
 
             self._save_dir = CalculationsMixin.__save_dir
             os.makedirs(self._save_dir, exist_ok=True)
 
         if not CalculationsMixin.__perf_charts:
-            CalculationsMixin.__total_count = self.__class__._ID_GENERATOR()
+            CalculationsMixin.__total_count = self.__class__._ID_GENERATOR()  # type: ignore # mixin
 
             if CalculationsMixin.__total_count > 1:
                 # Only run once
@@ -451,7 +462,7 @@ class CalculationsMixin(object):
 
         CalculationsMixin.__perf_charts.add(self)
 
-        if strategy and self.name() != strategy:
+        if strategy and self.name() != strategy:  # type: ignore # mixin
             pass
         else:
             self.performanceByStrategy(save=save, save_data=save_data)
@@ -463,7 +474,7 @@ class CalculationsMixin(object):
             elif render:
                 print("Too many strategies to render, try saving to pdf instead")
 
-    def _writeoutPerf(self, filename):
+    def _writeoutPerf(self, filename: str) -> None:
         if filename == "all":
             self._df_price.to_csv("{}/{}_df_price.csv".format(self._save_dir, filename))
             self._df_pnl_all.to_csv("{}/{}_df_pnl.csv".format(self._save_dir, filename))
@@ -560,16 +571,16 @@ class CalculationsMixin(object):
 
         self.portfolio().save("{}/{}.portfolio".format(self._save_dir, filename))
 
-    def _portfolioRestore(self):
-        self.portfolio().restore()
+    def _portfolioRestore(self) -> None:
+        self.portfolio().restore()  # type: ignore
 
-    def ipython(self):
+    def ipython(self) -> None:
         import IPython  # type: ignore
 
         IPython.embed()
 
 
-def main():
+def main() -> None:
     import argparse
     from aat.common import id_generator
     from aat.engine.dispatch import Portfolio
@@ -595,10 +606,10 @@ def main():
 
     # Fill in mixin
     # TODO ugly
-    CalculationsMixin._ID_GENERATOR = id_generator()
-    CalculationsMixin._ID_GENERATOR()  # count 1
-    calculator.portfolio = types.MethodType(lambda self, p=portfolio: p, calculator)
-    calculator.name = types.MethodType(
+    CalculationsMixin._ID_GENERATOR = id_generator()  # type: ignore # mixin
+    CalculationsMixin._ID_GENERATOR()  # type: ignore # mixin
+    calculator.portfolio = types.MethodType(lambda self, p=portfolio: p, calculator)  # type: ignore # mixin
+    calculator.name = types.MethodType(  # type: ignore # mixin
         lambda self, name=args.strategy: name, calculator
     )
 

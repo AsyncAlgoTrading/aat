@@ -4,7 +4,9 @@ import itertools
 import os
 import os.path
 from configparser import ConfigParser
-from typing import List, Dict, Union
+from typing import Any, Dict, List, Union
+
+from aat.config import TradingType
 
 
 def _config_to_dict(
@@ -33,8 +35,8 @@ def _config_to_dict(
     return ret
 
 
-def _args_to_dict(args):
-    ret = {}
+def _args_to_dict(args: Any) -> dict:
+    ret: Dict[str, Dict[str, Union[str, list, bool]]] = {}
     ret["general"] = {}
     ret["general"]["verbose"] = args.verbose
     ret["general"]["trading_type"] = args.trading_type
@@ -70,7 +72,9 @@ def getStrategies(strategies: List) -> List:
     return strategy_instances
 
 
-def getExchanges(exchanges: List, trading_type, verbose: bool = False) -> List:
+def getExchanges(
+    exchanges: List, trading_type: TradingType, verbose: bool = False
+) -> List:
     exchange_instances = []
 
     if not exchanges:

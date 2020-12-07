@@ -33,13 +33,16 @@ class PriceLevelRO(object):
     def list(self) -> List[float]:
         return [self.price, self.volume]
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, list):
             return self.list() == other
         elif isinstance(other, dict):
             return self.dict() == other
-        return (
-            self.price == other.price
-            and self.volume == other.volume
-            and self.orders == other.orders
-        )
+        elif isinstance(other, PriceLevelRO):
+            return (
+                self.price == other.price
+                and self.volume == other.volume
+                and self.orders == other.orders
+            )
+        else:
+            raise TypeError()

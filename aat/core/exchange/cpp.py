@@ -1,3 +1,4 @@
+from typing import Any
 from aat.common import _in_cpp
 
 
@@ -9,5 +10,5 @@ except ImportError:
     _CPP = False
 
 
-def _make_cpp_exchangetype(*args, **kwargs):
+def _make_cpp_exchangetype(*args: Any, **kwargs: Any) -> ExchangeTypeCpp:
     return ExchangeTypeCpp(*args, **kwargs)

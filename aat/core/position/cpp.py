@@ -1,3 +1,4 @@
+from typing import Any
 from ...common import _in_cpp
 
 try:
@@ -9,13 +10,13 @@ except ImportError:
     _CPP = False
 
 
-def _make_cpp_position(*args, **kwargs):
+def _make_cpp_position(*args: Any, **kwargs: Any) -> PositionCpp:
     return PositionCpp(*args, **kwargs)
 
 
-def _make_cpp_cash(*args, **kwargs):
+def _make_cpp_cash(*args: Any, **kwargs: Any) -> CashPositionCpp:
     return CashPositionCpp(*args, **kwargs)
 
 
-def _make_cpp_account(*args, **kwargs):
+def _make_cpp_account(*args: Any, **kwargs: Any) -> AccountCpp:
     return AccountCpp(*args, **kwargs)

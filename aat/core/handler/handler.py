@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from inspect import isabstract
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Optional, Tuple
 from ..data import Event
 from ...config import EventType
 
@@ -12,10 +12,10 @@ if TYPE_CHECKING:
 class EventHandler(metaclass=ABCMeta):
     _manager: "StrategyManager"
 
-    def _setManager(self, mgr: "StrategyManager"):
+    def _setManager(self, mgr: "StrategyManager") -> None:
         self._manager = mgr
 
-    def _valid_callback(self, callback):
+    def _valid_callback(self, callback: str) -> Optional[Callable]:
         if (
             hasattr(self, callback)
             and not isabstract(callback)
@@ -24,10 +24,10 @@ class EventHandler(metaclass=ABCMeta):
             return getattr(self, callback)
         return None
 
-    def callback(self, event_type):
+    def callback(self, event_type: EventType) -> Tuple[Optional[Callable], ...]:
         return {
             # Market data
-            EventType.TRADE: self._valid_callback("onTrade"),
+            EventType.TRADE: (self._valid_callback("onTrade"),),
             EventType.OPEN: (
                 self._valid_callback("onOpen"),
                 self._valid_callback("onOrder"),
@@ -44,12 +44,12 @@ class EventHandler(metaclass=ABCMeta):
                 self._valid_callback("onFill"),
                 self._valid_callback("onOrderEvent"),
             ),
-            EventType.DATA: self._valid_callback("onData"),
-            EventType.HALT: self._valid_callback("onHalt"),
-            EventType.CONTINUE: self._valid_callback("onContinue"),
-            EventType.ERROR: self._valid_callback("onError"),
-            EventType.START: self._valid_callback("onStart"),
-            EventType.EXIT: self._valid_callback("onExit"),
+            EventType.DATA: (self._valid_callback("onData"),),
+            EventType.HALT: (self._valid_callback("onHalt"),),
+            EventType.CONTINUE: (self._valid_callback("onContinue"),),
+            EventType.ERROR: (self._valid_callback("onError"),),
+            EventType.START: (self._valid_callback("onStart"),),
+            EventType.EXIT: (self._valid_callback("onExit"),),
             # Order Entry
             EventType.BOUGHT: (
                 self._valid_callback("onBought"),
@@ -59,10 +59,10 @@ class EventHandler(metaclass=ABCMeta):
                 self._valid_callback("onSold"),
                 self._valid_callback("onTraded"),
             ),
-            EventType.RECEIVED: self._valid_callback("onReceived"),
-            EventType.REJECTED: self._valid_callback("onRejected"),
-            EventType.CANCELED: self._valid_callback("onCanceled"),
-        }.get(event_type, None)
+            EventType.RECEIVED: (self._valid_callback("onReceived"),),
+            EventType.REJECTED: (self._valid_callback("onRejected"),),
+            EventType.CANCELED: (self._valid_callback("onCanceled"),),
+        }.get(event_type, tuple())
 
     ################################################
     # Event Handler Methods                        #
@@ -122,27 +122,27 @@ class EventHandler(metaclass=ABCMeta):
     #                                              #
     # NOTE: these should all be of the form onVerb #
     ################################################
-    async def onBought(self, event: Event):
+    async def onBought(self, event: Event) -> None:
         """Called on my order bought"""
         pass
 
-    async def onSold(self, event: Event):
+    async def onSold(self, event: Event) -> None:
         """Called on my order sold"""
         pass
 
-    async def onTraded(self, event: Event):
+    async def onTraded(self, event: Event) -> None:
         """Called on my order bought or sold"""
         pass
 
-    async def onReceived(self, event: Event):
+    async def onReceived(self, event: Event) -> None:
         """Called on my order received by exchange"""
         pass
 
-    async def onRejected(self, event: Event):
+    async def onRejected(self, event: Event) -> None:
         """Called on my order rejected"""
         pass
 
-    async def onCanceled(self, event: Event):
+    async def onCanceled(self, event: Event) -> None:
         """Called on my order canceled"""
         pass
 
