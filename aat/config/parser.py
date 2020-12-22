@@ -4,9 +4,10 @@ import itertools
 import os
 import os.path
 from configparser import ConfigParser
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, TYPE_CHECKING
 
-from aat.config import TradingType
+if TYPE_CHECKING:
+    from aat.config import TradingType
 
 
 def _config_to_dict(
@@ -73,7 +74,7 @@ def getStrategies(strategies: List) -> List:
 
 
 def getExchanges(
-    exchanges: List, trading_type: TradingType, verbose: bool = False
+    exchanges: List, trading_type: "TradingType", verbose: bool = False
 ) -> List:
     exchange_instances = []
 

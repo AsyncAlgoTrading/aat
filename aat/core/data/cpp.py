@@ -1,11 +1,17 @@
 import logging
 from collections import deque
 from datetime import datetime
-from typing import Any, Optional, List
+from typing import Any, Optional, List, TYPE_CHECKING
 
 from aat.common import _in_cpp
-from aat.core import ExchangeType, Instrument, Order
+from ..exchange import ExchangeType
+from ..instrument import Instrument
 from aat.config import OrderType, OrderFlag, EventType, Side
+
+
+if TYPE_CHECKING:
+    from .order import Order
+
 
 try:
     from aat.binding import DataCpp, EventCpp, OrderCpp, TradeCpp  # type: ignore
@@ -42,7 +48,7 @@ def _make_cpp_order(
     notional: float = 0.0,
     order_type: OrderType = OrderType.MARKET,
     flag: OrderFlag = OrderFlag.NONE,
-    stop_target: Optional[Order] = None,
+    stop_target: Optional["Order"] = None,
     id: str = None,
     timestamp: datetime = None,
 ) -> OrderCpp:
@@ -65,8 +71,8 @@ def _make_cpp_order(
 def _make_cpp_trade(
     id: str,
     timestamp: datetime,
-    maker_orders: List[Order] = None,
-    taker_order: Optional[Order] = None,
+    maker_orders: List["Order"] = None,
+    taker_order: Optional["Order"] = None,
 ) -> TradeCpp:
     """helper method to ensure all arguments are setup"""
     return TradeCpp(id, timestamp, maker_orders or deque(), taker_order)

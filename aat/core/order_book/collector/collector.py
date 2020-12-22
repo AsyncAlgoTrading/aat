@@ -1,11 +1,14 @@
 from collections import deque
-from typing import Any, Callable, Deque, Optional, Type
+from typing import Any, Callable, Deque, Optional, Type, TYPE_CHECKING
 
 from aat.core.data import Event, Trade, Order
 from aat.config import EventType
 
-from ..price_level import _PriceLevel
 from ..cpp import _CPP, _make_cpp_collector
+
+
+if TYPE_CHECKING:
+    from ..price_level import _PriceLevel
 
 
 class _Collector(object):
@@ -38,7 +41,7 @@ class _Collector(object):
         self._taker_order: Optional[Order] = None
 
         # price levels to clear, if we commit
-        self._price_levels: Deque[_PriceLevel] = deque()
+        self._price_levels: Deque["_PriceLevel"] = deque()
 
         # reset status
         self.reset()
@@ -129,7 +132,7 @@ class _Collector(object):
         self._volume += filled_in_txn
         self._orders.append(order)
 
-    def clearLevel(self, price_level: _PriceLevel) -> int:
+    def clearLevel(self, price_level: "_PriceLevel") -> int:
         self._price_levels.append(price_level)
         return len(self._price_levels)
 
@@ -183,7 +186,7 @@ class _Collector(object):
         return self._event_queue
 
     @property
-    def price_levels(self) -> Deque[_PriceLevel]:
+    def price_levels(self) -> Deque["_PriceLevel"]:
         return self._price_levels
 
     def clearedLevels(self) -> int:

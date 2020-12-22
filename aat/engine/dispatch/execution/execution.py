@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING, cast, Dict, List, Optional, Tuple
 from aat.core import Order, Event, Trade, ExchangeType
 from aat.core.handler import EventHandler
 from aat.exchange import Exchange
-from aat.strategy import Strategy
 from ..base import ManagerBase
 
 
 if TYPE_CHECKING:
+    from aat.strategy import Strategy
     from ..manager import StrategyManager
 
 
@@ -17,7 +17,7 @@ class OrderManager(ManagerBase):
         self._exchanges: Dict[ExchangeType, Exchange] = {}
 
         # track which strategies generated which orders
-        self._pending_orders: Dict[str, Tuple[Order, Optional[Strategy]]] = {}
+        self._pending_orders: Dict[str, Tuple[Order, Optional["Strategy"]]] = {}
 
         # past orders
         self._past_orders: List[Order] = []
@@ -33,7 +33,7 @@ class OrderManager(ManagerBase):
     # *********************
     # Order Entry Methods *
     # *********************
-    async def newOrder(self, strategy: Optional[Strategy], order: Order) -> bool:
+    async def newOrder(self, strategy: Optional["Strategy"], order: Order) -> bool:
         exchange = self._exchanges.get(order.exchange)
         if not exchange:
             raise Exception("Exchange not installed: {}".format(order.exchange))
@@ -42,7 +42,7 @@ class OrderManager(ManagerBase):
         self._pending_orders[order.id] = (order, strategy)
         return ret
 
-    async def cancelOrder(self, strategy: Optional[Strategy], order: Order) -> bool:
+    async def cancelOrder(self, strategy: Optional["Strategy"], order: Order) -> bool:
         exchange = self._exchanges.get(order.exchange)
         if not exchange:
             raise Exception("Exchange not installed: {}".format(order.exchange))
@@ -85,12 +85,12 @@ class OrderManager(ManagerBase):
             if order.side == Order.Sides.SELL:
                 # TODO ugly private method
                 await self._manager._onSold(
-                    cast(Strategy, strat), cast(Trade, event.target)
+                    cast("Strategy", strat), cast(Trade, event.target)
                 )
             else:
                 # TODO ugly private method
                 await self._manager._onBought(
-                    cast(Strategy, strat), cast(Trade, event.target)
+                    cast("Strategy", strat), cast(Trade, event.target)
                 )
 
             if order.finished():
@@ -102,7 +102,7 @@ class OrderManager(ManagerBase):
             _, strat = self._pending_orders[order.id]
 
             # TODO ugly private method
-            await self._manager._onCanceled(cast(Strategy, strat), order)
+            await self._manager._onCanceled(cast("Strategy", strat), order)
             del self._pending_orders[order.id]
 
     async def onOpen(self, event: Event) -> None:

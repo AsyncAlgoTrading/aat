@@ -197,6 +197,7 @@ class OrderBook(OrderBookBase):
                 self._sell_levels[level],
                 self._sells[self._sell_levels[level]].volume,
                 len(self._sells[self._sell_levels[level]]),
+                self._sells[self._sell_levels[level]]._orders,
             )
             if len(self._sell_levels) > level
             else PriceLevelRO(0.0, 0.0, 0),
@@ -204,6 +205,7 @@ class OrderBook(OrderBookBase):
                 self._buy_levels[-level - 1],
                 self._buys[self._buy_levels[-level - 1]].volume,
                 len(self._buys[self._buy_levels[-level - 1]]),
+                self._buys[self._buy_levels[-level - 1]]._orders,
             )
             if len(self._buy_levels) > level
             else PriceLevelRO(0.0, 0.0, 0),
@@ -225,6 +227,7 @@ class OrderBook(OrderBookBase):
                     self._buy_levels[-1],
                     self._buys[self._buy_levels[-1]].volume,
                     len(self._buys[self._buy_levels[-1]]),
+                    self._buys[self._buy_levels[-1]]._orders,
                 )
                 if len(self._buy_levels) > 0
                 else PriceLevelRO(0, 0, 0)
@@ -234,6 +237,7 @@ class OrderBook(OrderBookBase):
                 self._buy_levels[-i - 1],
                 self._buys[self._buy_levels[-i - 1]].volume,
                 len(self._buys[self._buy_levels[-i - 1]]),
+                self._buys[self._buy_levels[-i - 1]]._orders,
             )
             if len(self._buy_levels) > i
             else None
@@ -256,6 +260,7 @@ class OrderBook(OrderBookBase):
                     self._sell_levels[0],
                     self._sells[self._sell_levels[0]].volume,
                     len(self._sells[self._sell_levels[0]]),
+                    self._sells[self._sell_levels[0]]._orders,
                 )
                 if len(self._sell_levels) > 0
                 else PriceLevelRO(float("inf"), 0, 0)
@@ -265,6 +270,7 @@ class OrderBook(OrderBookBase):
                 self._sell_levels[i],
                 self._sells[self._sell_levels[i]].volume,
                 len(self._sells[self._sell_levels[i]]),
+                self._sells[self._sell_levels[i]]._orders,
             )
             if len(self._sell_levels) > i
             else None

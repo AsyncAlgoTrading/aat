@@ -2,21 +2,22 @@ import os
 import os.path
 import types
 from datetime import datetime
-from typing import Any, Callable, Set
+from typing import Any, Callable, Set, TYPE_CHECKING
 
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
 
 
-from .portfolio import Portfolio
+if TYPE_CHECKING:
+    from .portfolio import Portfolio
 
 
 class CalculationsMixin(object):
     __total_count: int
     __perf_charts: Set[object] = set()  # TODO move
     __save_dir: str = ""  # TODO move
-    portfolio: Callable[..., Portfolio]
+    portfolio: Callable[..., "Portfolio"]
 
     def plotPrice(self, ax: Any = None, **plot_kwargs: Any) -> None:
         self._df_price = self.portfolio().getPrice()

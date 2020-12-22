@@ -3,13 +3,13 @@ from datetime import datetime
 from typing import cast, Dict, List, Optional, Tuple, Union, TYPE_CHECKING
 
 from aat.core import Event, Trade, Instrument, ExchangeType, Position
-from aat.strategy import Strategy
 
 from ..base import ManagerBase
 from .portfolio import Portfolio
 
 
 if TYPE_CHECKING:
+    from aat.strategy import Strategy
     from ..manager import StrategyManager
 
 
@@ -31,12 +31,12 @@ class PortfolioManager(ManagerBase):
         """install manager"""
         self._manager = manager
 
-    def newPosition(self, trade: Trade, strategy: Strategy) -> None:
+    def newPosition(self, trade: Trade, strategy: "Strategy") -> None:
         """create and track a new position, or update the pnl/price of
         an existing position"""
         self._portfolio.newPosition(trade, strategy)
 
-    def updateStrategies(self, strategies: List[Strategy]) -> None:
+    def updateStrategies(self, strategies: List["Strategy"]) -> None:
         """update with list of strategies"""
         self._portfolio.updateStrategies(strategies)
 
@@ -56,7 +56,7 @@ class PortfolioManager(ManagerBase):
 
     def positions(
         self,
-        strategy: Strategy,
+        strategy: "Strategy",
         instrument: Instrument = None,
         exchange: ExchangeType = None,
     ) -> List[Position]:
@@ -125,6 +125,6 @@ class PortfolioManager(ManagerBase):
     # Order Entry Callbacks #
     #########################
     async def onTraded(  # type: ignore[override]
-        self, event: Event, strategy: Optional[Strategy]
+        self, event: Event, strategy: Optional["Strategy"]
     ) -> None:
-        self._portfolio.onTraded(cast(Trade, event.target), cast(Strategy, strategy))
+        self._portfolio.onTraded(cast(Trade, event.target), cast("Strategy", strategy))

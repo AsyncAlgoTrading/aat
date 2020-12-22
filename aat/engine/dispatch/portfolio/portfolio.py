@@ -2,11 +2,13 @@ import pandas as pd  # type: ignore
 import json
 from datetime import datetime
 from json import JSONEncoder
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, TYPE_CHECKING
 
 from aat.config import Side
 from aat.core import Order, Trade, Instrument, ExchangeType, Position
-from aat.strategy import Strategy
+
+if TYPE_CHECKING:
+    from aat.strategy import Strategy
 
 
 class _Serializer(JSONEncoder):
@@ -92,7 +94,7 @@ class Portfolio(object):
         """update cash positions from exchange"""
         self._cash.extend(positions)
 
-    def newPosition(self, trade: Trade, strategy: Strategy) -> None:
+    def newPosition(self, trade: Trade, strategy: "Strategy") -> None:
         my_order: Order = trade.my_order
         if (
             trade.instrument in self._active_positions_by_instrument
@@ -205,7 +207,7 @@ class Portfolio(object):
             self._prices[trade.instrument].append((trade.price, trade.timestamp))
             self._trades[trade.instrument].append(trade)
 
-    def onTraded(self, trade: Trade, strategy: Strategy) -> None:
+    def onTraded(self, trade: Trade, strategy: "Strategy") -> None:
         self.newPosition(trade, strategy)
 
     # ******************
@@ -213,7 +215,7 @@ class Portfolio(object):
     # ******************
     def positions(
         self,
-        strategy: Strategy,
+        strategy: "Strategy",
         instrument: Instrument = None,
         exchange: ExchangeType = None,
     ) -> List[Position]:
@@ -282,7 +284,7 @@ class Portfolio(object):
             df = pd.DataFrame()
         return df
 
-    def getPnl(self, strategy: Strategy) -> pd.DataFrame:
+    def getPnl(self, strategy: "Strategy") -> pd.DataFrame:
         portfolio = []
         pnl_cols = []
         total_pnl_cols = []
@@ -372,7 +374,7 @@ class Portfolio(object):
         ].sum(axis=1)
         return df_pnl
 
-    def getInstruments(self, strategy: Strategy) -> None:
+    def getInstruments(self, strategy: "Strategy") -> None:
         raise NotImplementedError()
 
     def getPrice(self) -> pd.DataFrame:
@@ -388,7 +390,7 @@ class Portfolio(object):
             portfolio.append(price_history)
         return self._constructDf(portfolio)
 
-    def getAssetPrice(self, strategy: Strategy) -> pd.DataFrame:
+    def getAssetPrice(self, strategy: "Strategy") -> pd.DataFrame:
         portfolio = []
         price_cols = []
         for position in self.allPositions():
@@ -406,7 +408,7 @@ class Portfolio(object):
             portfolio.append(price_history)
         return self._constructDf(portfolio)
 
-    def getSize(self, strategy: Strategy) -> pd.DataFrame:
+    def getSize(self, strategy: "Strategy") -> pd.DataFrame:
         portfolio = []
         size_cols = []
         for position in self.positions(strategy):
@@ -458,7 +460,7 @@ class Portfolio(object):
 
         return self._constructDf(portfolio)[size_cols]
 
-    def getNotional(self, strategy: Strategy) -> pd.DataFrame:
+    def getNotional(self, strategy: "Strategy") -> pd.DataFrame:
         portfolio = []
         notional_cols = []
         for position in self.positions(strategy):
@@ -511,7 +513,7 @@ class Portfolio(object):
             portfolio.append(price_history)
         return self._constructDf(portfolio)[notional_cols]
 
-    def getInvestment(self, strategy: Strategy) -> pd.DataFrame:
+    def getInvestment(self, strategy: "Strategy") -> pd.DataFrame:
         portfolio = []
         investment_cols = []
         for position in self.positions(strategy):

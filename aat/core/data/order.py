@@ -51,7 +51,8 @@ class Order(object):
         self.__id = kwargs.get(
             "id", 0
         )  # on construction, provide no ID until exchange assigns one
-        self.__timestamp = kwargs.get("timestamp", datetime.now())
+        self.__timestamp = kwargs.get("timestamp") or datetime.now()
+        print(self.__timestamp)
         self.__type = DataType.ORDER
 
         assert isinstance(instrument, Instrument)

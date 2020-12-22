@@ -1,11 +1,14 @@
 import pandas as pd
-from typing import List, Union
+from typing import List, Union, TYPE_CHECKING
 
 from aat.core import Instrument, ExchangeType, Position
-from aat.strategy import Strategy
 
 from .manager import PortfolioManager
 from .portfolio import Portfolio
+
+
+if TYPE_CHECKING:
+    from aat.strategy import Strategy
 
 
 class StrategyManagerPortfolioMixin(object):
@@ -19,7 +22,7 @@ class StrategyManagerPortfolioMixin(object):
 
     def positions(
         self,
-        strategy: Strategy,
+        strategy: "Strategy",
         instrument: Instrument = None,
         exchange: ExchangeType = None,
     ) -> List[Position]:

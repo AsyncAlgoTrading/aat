@@ -1,14 +1,16 @@
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from aat.core import Event
 from aat.core.handler import EventHandler
 
-from .manager import StrategyManager
+
+if TYPE_CHECKING:
+    from .manager import StrategyManager
 
 
 class ManagerBase(EventHandler):
     @abstractmethod
-    def _setManager(self, mgr: StrategyManager) -> None:
+    def _setManager(self, mgr: "StrategyManager") -> None:
         """set the root manager"""
 
     async def onBought(  # type: ignore[override]

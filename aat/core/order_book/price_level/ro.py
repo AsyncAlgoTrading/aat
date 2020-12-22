@@ -1,4 +1,6 @@
-from typing import Dict, List, Union
+from collections import deque
+from typing import Deque, Dict, List, Union
+from aat.core import Order
 
 
 class PriceLevelRO(object):
@@ -8,12 +10,20 @@ class PriceLevelRO(object):
         "_price",
         "_volume",
         "_number_of_orders",
+        "_orders",
     ]
 
-    def __init__(self, price: float, volume: float, number_of_orders: int):
+    def __init__(
+        self,
+        price: float,
+        volume: float,
+        number_of_orders: int = 0,
+        _orders: Deque[Order] = None,
+    ):
         self._price = price
         self._volume = volume
         self._number_of_orders = number_of_orders
+        self._orders = _orders or deque()
 
     @property
     def price(self) -> float:

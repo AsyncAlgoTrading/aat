@@ -3,11 +3,11 @@ from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 from aat.config import ExitRoutine
 from aat.core import Event, Order, Trade, Position
 from aat.core.handler import EventHandler
-from aat.strategy import Strategy
 from ..base import ManagerBase
 
 
 if TYPE_CHECKING:
+    from aat.strategy import Strategy
     from ..manager import StrategyManager
 
 
@@ -17,7 +17,7 @@ class RiskManager(ManagerBase):
         self._active_orders: List[Order] = []
 
         # Restricted hours
-        self._restricted_trading_hours: Dict[Strategy, Tuple[int, ...]] = {}
+        self._restricted_trading_hours: Dict["Strategy", Tuple[int, ...]] = {}
 
     def _setManager(self, manager: "StrategyManager") -> None:
         """install manager"""
@@ -33,7 +33,7 @@ class RiskManager(ManagerBase):
 
     def restrictTradingHours(
         self,
-        strategy: Strategy,
+        strategy: "Strategy",
         start_second: Optional[int] = None,
         start_minute: Optional[int] = None,
         start_hour: Optional[int] = None,
@@ -54,7 +54,7 @@ class RiskManager(ManagerBase):
     # *********************
     # Order Entry Methods *
     # *********************
-    async def newOrder(self, strategy: Strategy, order: Order) -> Tuple[Order, bool]:
+    async def newOrder(self, strategy: "Strategy", order: Order) -> Tuple[Order, bool]:
         # TODO
         self._active_orders.append(order)  # TODO use strategy
         return order, True

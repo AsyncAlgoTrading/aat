@@ -3,7 +3,6 @@ from typing import List, TYPE_CHECKING
 from aat.core import Instrument, ExchangeType, Event, Order, Trade
 from aat.config import Side
 from aat.exchange import Exchange
-from aat.strategy import Strategy
 
 from .execution import OrderManager
 from .portfolio import PortfolioManager
@@ -11,6 +10,7 @@ from .risk import RiskManager
 
 if TYPE_CHECKING:
     from aat.engine import TradingEngine
+    from aat.strategy import Strategy
 
 
 class StrategyManagerOrderEntryMixin(object):
@@ -29,7 +29,7 @@ class StrategyManagerOrderEntryMixin(object):
     #####################
     # TODO ugly private method
 
-    async def _onBought(self, strategy: Strategy, trade: Trade) -> None:
+    async def _onBought(self, strategy: "Strategy", trade: Trade) -> None:
         # append to list of trades
         self._strategy_trades[strategy].append(trade)
 
@@ -41,7 +41,7 @@ class StrategyManagerOrderEntryMixin(object):
         self._alerted_events[ev] = (strategy, trade.my_order)
 
     # TODO ugly private method
-    async def _onSold(self, strategy: Strategy, trade: Trade) -> None:
+    async def _onSold(self, strategy: "Strategy", trade: Trade) -> None:
         # append to list of trades
         self._strategy_trades[strategy].append(trade)
 
@@ -54,7 +54,7 @@ class StrategyManagerOrderEntryMixin(object):
 
     # TODO ugly private method
 
-    async def _onReceived(self, strategy: Strategy, order: Order) -> None:
+    async def _onReceived(self, strategy: "Strategy", order: Order) -> None:
         # push event to loop
         ev = Event(type=Event.Types.RECEIVED, target=order)
         self._engine.pushTargetedEvent(strategy, ev)
@@ -62,7 +62,7 @@ class StrategyManagerOrderEntryMixin(object):
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, order)
 
-    async def _onCanceled(self, strategy: Strategy, order: Order) -> None:
+    async def _onCanceled(self, strategy: "Strategy", order: Order) -> None:
         # push event to loop
         ev = Event(type=Event.Types.CANCELED, target=order)
         self._engine.pushTargetedEvent(strategy, ev)
@@ -70,7 +70,7 @@ class StrategyManagerOrderEntryMixin(object):
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, order)
 
-    async def _onRejected(self, strategy: Strategy, order: Order) -> None:
+    async def _onRejected(self, strategy: "Strategy", order: Order) -> None:
         # push event to loop
         ev = Event(type=Event.Types.REJECTED, target=order)
         self._engine.pushTargetedEvent(strategy, ev)
@@ -79,7 +79,7 @@ class StrategyManagerOrderEntryMixin(object):
     # Order Entry Methods *
     # *********************
 
-    async def newOrder(self, strategy: Strategy, order: Order) -> bool:
+    async def newOrder(self, strategy: "Strategy", order: Order) -> bool:
         """helper method, defers to buy/sell"""
         # ensure has list
         if strategy not in self._strategy_open_orders:
@@ -113,7 +113,7 @@ class StrategyManagerOrderEntryMixin(object):
         await self._onRejected(strategy, order)
         return False
 
-    async def cancelOrder(self, strategy: Strategy, order: Order) -> bool:
+    async def cancelOrder(self, strategy: "Strategy", order: Order) -> bool:
         """cancel an open order"""
         ret = await self._order_mgr.cancelOrder(strategy, order)
         if ret:
@@ -126,7 +126,7 @@ class StrategyManagerOrderEntryMixin(object):
 
     def orders(
         self,
-        strategy: Strategy,
+        strategy: "Strategy",
         instrument: Instrument = None,
         exchange: ExchangeType = None,
         side: Side = None,
@@ -155,7 +155,7 @@ class StrategyManagerOrderEntryMixin(object):
 
     def pastOrders(
         self,
-        strategy: Strategy,
+        strategy: "Strategy",
         instrument: Instrument = None,
         exchange: ExchangeType = None,
         side: Side = None,
@@ -184,7 +184,7 @@ class StrategyManagerOrderEntryMixin(object):
 
     def trades(
         self,
-        strategy: Strategy,
+        strategy: "Strategy",
         instrument: Instrument = None,
         exchange: ExchangeType = None,
         side: Side = None,

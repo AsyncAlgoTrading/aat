@@ -5,11 +5,12 @@ import ujson  # type: ignore
 import uvloop  # type: ignore
 from aat.exchange.synthetic import SyntheticExchange
 from aat.core import Order
+from aat.config import TradingType
 
 
 def _main(port: int = 5000):  # type: ignore
     async def handle(websocket, *args, **kwargs):  # type: ignore
-        exchange = SyntheticExchange()
+        exchange = SyntheticExchange(trading_type=TradingType.SIMULATION)
         await exchange.connect()
         await exchange.instruments()
 

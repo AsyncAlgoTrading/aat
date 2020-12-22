@@ -13,9 +13,9 @@ from aat.config import TradingType
 from aat.core import Event, Error
 from aat.exchange import Exchange
 from aat.core.handler import EventHandler
-from aat.strategy import Strategy
 
 if TYPE_CHECKING:
+    from aat.strategy import Strategy
     from aat.engine import TradingEngine
 
 
@@ -92,7 +92,7 @@ class StrategyManager(
     def portfolioManager(self) -> PortfolioManager:
         return self._portfolio_mgr
 
-    def strategies(self) -> List[Strategy]:
+    def strategies(self) -> List["Strategy"]:
         return self._engine.strategies
 
     def exchanges(self) -> List[Exchange]:

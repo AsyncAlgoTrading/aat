@@ -28,6 +28,7 @@ from typing import (
     Callable,
     Deque,
     Dict,
+    List as ListType,
     Optional,
     Tuple,
 )
@@ -102,7 +103,7 @@ class TradingEngine(Application):
         return proposal["value"]
 
     @validate("exchanges")
-    def _validate_exchanges(self, proposal: dict) -> List[Exchange]:
+    def _validate_exchanges(self, proposal: dict) -> ListType[Exchange]:
         for exch in proposal["value"]:
             if not isinstance(exch, Exchange):
                 raise TraitError(f"Invalid exchange type: {exch}")

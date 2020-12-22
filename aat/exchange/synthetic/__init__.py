@@ -45,7 +45,8 @@ class SyntheticExchange(Exchange):
         super().__init__(ExchangeType("synthetic{}".format(SyntheticExchange._inst)))
         print("using synthetic exchange: {}".format(self.exchange()))
 
-        assert trading_type in (TradingType.SIMULATION, TradingType.BACKTEST)
+        if trading_type not in (TradingType.SIMULATION, TradingType.BACKTEST):
+            raise Exception("Invalid trading type: {}".format(trading_type))
         self._trading_type = trading_type
         self._verbose = verbose
         self._sleep = (
@@ -371,7 +372,7 @@ class SyntheticExchange(Exchange):
 
                 elif levels2:
                     level = choice(levels2[Side.SELL])
-                    price_level = orderbook.level(price=price)[0]
+                    price_level = orderbook.level(price=level.price)[0]
                     if price_level is None:
                         continue
 
