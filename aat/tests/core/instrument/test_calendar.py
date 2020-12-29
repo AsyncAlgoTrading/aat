@@ -5,7 +5,7 @@ class TestInstrumentCalendar(object):
     def test_instrument_calendar(self):
         TradingDay()
 
-    def test_instrument_calendar(self):
+    def test_instrument_calendar_getter(self):
         t = TradingDay()
         e = ExchangeType("test-exchange")
 
