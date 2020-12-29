@@ -8,7 +8,7 @@ class TestInstrumentCalendar(object):
     def test_instrument_calendar(self):
         TradingDay()
 
-    @pytest.mark.skipif(os.environ["AAT_USE_CPP"], "Not implemented yet")
+    @pytest.mark.skipif(os.environ.get("AAT_USE_CPP", ""), "Not implemented yet")
     def test_instrument_calendar_getter(self):
         t = TradingDay()
         e = ExchangeType("test-exchange")
