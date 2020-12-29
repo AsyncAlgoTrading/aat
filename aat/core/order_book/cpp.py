@@ -1,14 +1,16 @@
 from typing import Callable
-from aat.core import ExchangeType, Instrument
+
 from aat.common import _in_cpp
+from aat.core import ExchangeType, Instrument
 
 try:
-    from aat.binding import _CollectorCpp  # type: ignore
     from aat.binding import OrderBookCpp  # type: ignore
+    from aat.binding import _CollectorCpp  # type: ignore
     from aat.binding import _PriceLevelCpp  # type: ignore
 
     _CPP = _in_cpp()
 except ImportError:
+    OrderBookCpp, _CollectorCpp, _PriceLevelCpp = object, object, object
     _CPP = False
 
 

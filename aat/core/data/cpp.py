@@ -1,13 +1,13 @@
 import logging
 from collections import deque
 from datetime import datetime
-from typing import Any, Optional, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from aat.common import _in_cpp
+from aat.config import EventType, OrderFlag, OrderType, Side
+
 from ..exchange import ExchangeType
 from ..instrument import Instrument
-from aat.config import OrderType, OrderFlag, EventType, Side
-
 
 if TYPE_CHECKING:
     from .order import Order
@@ -20,6 +20,7 @@ try:
 
 except ImportError:
     logging.critical("Could not load C++ extension")
+    DataCpp, EventCpp, OrderCpp, TradeCpp = object, object, object, object
     _CPP = False
 
 

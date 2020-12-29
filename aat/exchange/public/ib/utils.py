@@ -1,10 +1,10 @@
 from typing import Tuple
 
-from ibapi.contract import Contract, ComboLeg  # type: ignore
-from ibapi.order import Order  # type: ignore
-
 from aat.config import InstrumentType, OrderType
-from aat.core import Instrument, Order as AATOrder
+from aat.core import Instrument
+from aat.core import Order as AATOrder
+from ibapi.contract import ComboLeg, Contract  # type: ignore
+from ibapi.order import Order  # type: ignore
 
 
 def _constructContract(instrument: Instrument) -> Contract:
@@ -143,7 +143,7 @@ def _constructContract(instrument: Instrument) -> Contract:
             raise NotImplementedError()  # malformed
         leg1.conId = instrument.leg1.brokerId
         leg1.ratio = 1  # TODO
-        leg1.action = instrument.leg1_side
+        leg1.action = instrument.leg1Side
         leg1.exchange = instrument.leg1.brokerExchange or "SMART"
 
         leg2 = ComboLeg()
@@ -151,7 +151,7 @@ def _constructContract(instrument: Instrument) -> Contract:
             raise NotImplementedError()  # malformed
         leg2.conId = instrument.leg2.brokerId  # MCD STK
         leg2.ratio = 1  # TODO
-        leg2.action = instrument.leg2_side
+        leg2.action = instrument.leg2Side
         leg2.exchange = instrument.leg2.brokerExchange or "SMART"
 
         contract.comboLegs = [leg1, leg2]

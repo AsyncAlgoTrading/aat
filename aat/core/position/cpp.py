@@ -1,12 +1,14 @@
 from typing import Any
+
 from ...common import _in_cpp
 
 try:
-    from aat.binding import PositionCpp, CashPositionCpp, AccountCpp  # type: ignore
+    from aat.binding import AccountCpp, CashPositionCpp, PositionCpp  # type: ignore
 
     _CPP = _in_cpp()
 
 except ImportError:
+    PositionCpp, CashPositionCpp, AccountCpp = object, object, object
     _CPP = False
 
 

@@ -6,6 +6,10 @@ import functools
 import pandas as pd  # type: ignore
 
 
+class AATException(Exception):
+    pass
+
+
 @functools.lru_cache()
 def _in_cpp() -> bool:
     _cpp = os.environ.get("AAT_USE_CPP", "").lower() in ("1", "on")

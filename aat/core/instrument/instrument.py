@@ -1,11 +1,12 @@
 from datetime import datetime
-from typing import List, Optional, Tuple, Dict, Type, Union, cast
+from typing import Dict, List, Optional, Tuple, Type, Union, cast
 
-from .cpp import _CPP, _make_cpp_instrument
-from .db import InstrumentDB
-from ..exchange import ExchangeType
 from ...config import InstrumentType, Side
 from ...config.enums import OptionType
+from ..exchange import ExchangeType
+from .calendar import TradingDay
+from .cpp import _CPP, _make_cpp_instrument
+from .db import InstrumentDB
 
 
 class Instrument(object):
@@ -13,8 +14,9 @@ class Instrument(object):
 
     __exchanges: List[ExchangeType]
     __type: InstrumentType
-    __brokerExchange: Optional[ExchangeType]
-    __brokerId: Optional[str]
+    __trading_days: Dict[ExchangeType, TradingDay]
+    __broker_exchange: Optional[ExchangeType]
+    __broker_id: Optional[str]
     __currency: Optional["Instrument"]
     __underlying: Optional["Instrument"]
     __leg1: Optional["Instrument"]
@@ -31,8 +33,9 @@ class Instrument(object):
         "__name",
         "__type",
         "__exchanges",
-        "__brokerExchange",
-        "__brokerId",
+        "__trading_days",
+        "__broker_exchange",
+        "__broker_id",
         "__currency",
         "__underlying",
         "__leg1",
@@ -64,7 +67,13 @@ class Instrument(object):
         name: str,
         type: InstrumentType = InstrumentType.EQUITY,
         exchange: ExchangeType = ExchangeType(""),
-        **kwargs: Union[str, "Instrument", Side, ExchangeType],
+        **kwargs: Union[
+            str,  # key
+            "Instrument",  # instrument
+            Side,  # side
+            ExchangeType,  # exchange
+            TradingDay,  # trading calendar
+        ],
     ) -> None:
         """construct a new instrument instance
 
@@ -78,12 +87,15 @@ class Instrument(object):
             exchange (ExchangeType): the exchange the instrument can be traded
                                      through
         Kwargs:
-            brokerExchange (str): Underlying exchange to use (e.g. not aat.exchange,
+            trading_day (TradingDay): per-exchange trading hours
+                Applies to: All
+
+            broker_exchange (str): Underlying exchange to use (e.g. not aat.exchange,
                                   but real exchange in cases where aat is wrapping a
                                   broker like IB, TDA, etc)
                 Applies to: All
 
-            brokerId (str): Broker's id  if available
+            broker_id (str): Broker's id  if available
                 Applies to: All
 
             currency (Instrument): Underlying currency
@@ -140,23 +152,50 @@ class Instrument(object):
 
         # Optional Fields
         if (
-            hasattr(self, "_Instrument__brokerExchange")
-            and self.__brokerExchange is not None
+            exchange
+            and kwargs.get("trading_day", None)
+            and hasattr(self, "_Instrument__trading_days")
+            and exchange not in self.__trading_days
+        ):
+            # append this exchange to list of available
+            self.__trading_days[exchange] = cast(TradingDay, kwargs.get("trading_day"))
+        elif (
+            exchange
+            and kwargs.get("trading_day", None)
+            and not hasattr(self, "_Instrument__trading_days")
+        ):
+            # create new dict with this one
+            self.__trading_days = {
+                exchange: cast(TradingDay, kwargs.get("trading_day"))
+            }
+        elif kwargs.get("trading_day", None):
+            # no exchange, raise error
+            raise Exception("If setting trading hours, must provide exchange")
+        elif hasattr(self, "_Instrument__trading_days"):
+            # do nothing
+            pass
+        else:
+            # no exchange known and no trasding days provided
+            self.__trading_days = {}
+
+        if (
+            hasattr(self, "_Instrument__broker_exchange")
+            and self.__broker_exchange is not None
         ):
             assert kwargs.get(
-                "brokerExchange"
-            ) is None or self.__brokerExchange == kwargs.get("brokerExchange")
+                "broker_exchange"
+            ) is None or self.__broker_exchange == kwargs.get("broker_exchange")
         else:
-            self.__brokerExchange: Optional[ExchangeType] = cast(
-                ExchangeType, kwargs.get("brokerExchange")
+            self.__broker_exchange: Optional[ExchangeType] = cast(
+                ExchangeType, kwargs.get("broker_exchange")
             )
 
-        if hasattr(self, "_Instrument__brokerId") and self.__brokerId is not None:
-            assert kwargs.get("brokerId") is None or self.__brokerId == kwargs.get(
-                "brokerId"
+        if hasattr(self, "_Instrument__broker_id") and self.__broker_id is not None:
+            assert kwargs.get("broker_id") is None or self.__broker_id == kwargs.get(
+                "broker_id"
             )
         else:
-            self.__brokerId: str = cast(str, kwargs.get("brokerId"))
+            self.__broker_id: str = cast(str, kwargs.get("broker_id"))
 
         if hasattr(self, "_Instrument__currency") and self.__currency is not None:
             assert kwargs.get("currency") is None or self.__currency == kwargs.get(
@@ -233,8 +272,8 @@ class Instrument(object):
             self.__option_type: OptionType = cast(OptionType, kwargs.get("option_type"))
 
         # Optional Fields Validation
-        assert isinstance(self.__brokerExchange, (None.__class__, str))
-        assert isinstance(self.__brokerId, (None.__class__, str))
+        assert isinstance(self.__broker_exchange, (None.__class__, str))
+        assert isinstance(self.__broker_id, (None.__class__, str))
         assert isinstance(self.__currency, (None.__class__, Instrument))
         assert isinstance(self.__underlying, (None.__class__, Instrument))
         assert isinstance(self.__leg1, (None.__class__, Instrument))
@@ -268,12 +307,19 @@ class Instrument(object):
     # Optional #
     # ******** #
     @property
+    def tradingDays(self) -> Dict[ExchangeType, TradingDay]:
+        return self.__trading_days
+
+    def tradingDay(self, exchange: ExchangeType) -> TradingDay:
+        return self.__trading_days[exchange]
+
+    @property
     def brokerExchange(self) -> Optional[ExchangeType]:
-        return self.__brokerExchange
+        return self.__broker_exchange
 
     @property
     def brokerId(self) -> Optional[str]:
-        return self.__brokerId
+        return self.__broker_id
 
     @property
     def currency(self) -> Optional["Instrument"]:
@@ -292,11 +338,11 @@ class Instrument(object):
         return self.__leg2
 
     @property
-    def leg1_side(self) -> Optional[Side]:
+    def leg1Side(self) -> Optional[Side]:
         return self.__leg1_side
 
     @property
-    def leg2_side(self) -> Optional[Side]:
+    def leg2Side(self) -> Optional[Side]:
         return self.__leg2_side
 
     @property
@@ -304,15 +350,15 @@ class Instrument(object):
         return self.__expiration
 
     @property
-    def unit_value(self) -> Optional[float]:
+    def unitValue(self) -> Optional[float]:
         return self.__unit_value
 
     @property
-    def price_increment(self) -> Optional[float]:
+    def priceIncrement(self) -> Optional[float]:
         return self.__price_increment
 
     @property
-    def option_type(self) -> Optional[OptionType]:
+    def optionType(self) -> Optional[OptionType]:
         return self.__option_type
 
     def __eq__(self, other: object) -> bool:
@@ -330,18 +376,18 @@ class Instrument(object):
             "name": self.name,
             "type": self.type.value,
             "exchanges": [v.json() for v in self.exchanges] if self.exchanges else [],
-            "brokerExchange": self.brokerExchange,
-            "brokerId": self.brokerId,
+            "broker_exchange": self.brokerExchange,
+            "broker_id": self.brokerId,
             "currency": self.currency.json() if self.currency else "",
             "underlying": self.underlying.json() if self.underlying else "",
             "leg1": self.leg1.json() if self.leg1 else "",
             "leg2": self.leg2.json() if self.leg2 else "",
-            "leg1_side": self.leg1_side.value if self.leg1_side else "",
-            "leg2_side": self.leg2_side.value if self.leg2_side else "",
+            "leg1_side": self.leg1Side.value if self.leg1Side else "",
+            "leg2_side": self.leg2Side.value if self.leg2Side else "",
             "expiration": self.expiration.timestamp() if self.expiration else "",
-            "price_increment": self.price_increment or "",
-            "unit_value": self.unit_value or "",
-            "option_type": self.option_type.value if self.option_type else "",
+            "price_increment": self.priceIncrement or "",
+            "unit_value": self.unitValue or "",
+            "option_type": self.optionType.value if self.optionType else "",
         }
 
     @staticmethod
@@ -351,11 +397,11 @@ class Instrument(object):
         kwargs["type"] = InstrumentType(jsn["type"])
         kwargs["exchanges"] = [ExchangeType.fromJson(e) for e in jsn["exchanges"]]
 
-        if "brokerExchange" in jsn and jsn["brokerExchange"]:
-            kwargs["brokerExchange"] = jsn["brokerExchange"]
+        if "broker_exchange" in jsn and jsn["broker_exchange"]:
+            kwargs["broker_exchange"] = jsn["broker_exchange"]
 
-        if "brokerId" in jsn and jsn["brokerId"]:
-            kwargs["brokerId"] = jsn["brokerId"]
+        if "broker_id" in jsn and jsn["broker_id"]:
+            kwargs["broker_id"] = jsn["broker_id"]
 
         if "currency" in jsn and jsn["currency"]:
             kwargs["currency"] = Instrument.fromJson(jsn["currency"])
