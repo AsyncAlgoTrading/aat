@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import Mapping, Union, Type, Optional, Any, cast
+from typing import Any, Mapping, Optional, Type, Union, cast
 
-from .cpp import _CPP, _make_cpp_order
+from ...config import DataType, OrderFlag, OrderType, Side
 from ..exchange import ExchangeType
 from ..instrument import Instrument
-from ...config import DataType, OrderFlag, OrderType, Side
+from .cpp import _CPP, _make_cpp_order
 
 
 class Order(object):
@@ -52,7 +52,6 @@ class Order(object):
             "id", 0
         )  # on construction, provide no ID until exchange assigns one
         self.__timestamp = kwargs.get("timestamp") or datetime.now()
-        print(self.__timestamp)
         self.__type = DataType.ORDER
 
         assert isinstance(instrument, Instrument)
