@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict, Type, List
 
 from aat.core.exchange import ExchangeType
 from aat.core.instrument import Instrument
@@ -11,12 +11,18 @@ from .cpp import _CPP, _make_cpp_cash
 class CashPosition(object):
     __slots__ = ["__notional", "__notional_history", "__instrument", "__exchange"]
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls: Type, *args: Tuple, **kwargs: Dict) -> "CashPosition":
         if _CPP:
             return _make_cpp_cash(*args, **kwargs)
         return super(CashPosition, cls).__new__(cls)
 
-    def __init__(self, notional, timestamp, instrument, exchange):
+    def __init__(
+        self,
+        notional: float,
+        timestamp: datetime,
+        instrument: Instrument,
+        exchange: ExchangeType,
+    ) -> None:
         assert instrument is None or isinstance(instrument, Instrument)
         assert isinstance(exchange, ExchangeType)
 
@@ -32,33 +38,33 @@ class CashPosition(object):
     # Readonly #
     # ******** #
     @property
-    def instrument(self):
+    def instrument(self) -> Instrument:
         return self.__instrument
 
     @property
-    def exchange(self):
+    def exchange(self) -> ExchangeType:
         return self.__exchange
 
     @property
-    def timestamp(self):
+    def timestamp(self) -> datetime:
         """time of creation of initial position"""
         return self.__notional_history[0][1]
 
     @property
-    def notionalHistory(self):
+    def notionalHistory(self) -> List[Tuple[float, datetime]]:
         return self.__notional_history
 
     # ***********#
     # Read/write #
     # ***********#
     @property
-    def notional(self):
+    def notional(self) -> float:
         return self.__notional
 
     @notional.setter
     def notional(
         self, notional: Union[Tuple[Union[int, float], datetime], Union[int, float]]
-    ):
+    ) -> None:
         """Tuple as we need temporal information for history"""
         assert isinstance(notional, tuple)
         notional, when = notional
@@ -69,7 +75,7 @@ class CashPosition(object):
         self.__notional = notional
         self.__notional_history.append((self.notional, when))
 
-    def json(self):
+    def json(self) -> dict:
         return {
             "timestamp": self.timestamp.timestamp(),
             "instrument": self.instrument.json(),
@@ -79,7 +85,7 @@ class CashPosition(object):
         }
 
     @staticmethod
-    def fromJson(jsn):
+    def fromJson(jsn: dict) -> "CashPosition":
         kwargs = {}
         kwargs["notional"] = jsn["notional"]
         kwargs["timestamp"] = datetime.fromtimestamp(jsn["timestamp"])
@@ -92,10 +98,10 @@ class CashPosition(object):
         ]
         return ret
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Cash(notional={self.notional}, instrument={self.instrument}, exchange={self.exchange})"
 
-    def __add__(self, other):
+    def __add__(self, other: object) -> "CashPosition":
         """Adding positions should give you the net position"""
         assert isinstance(other, CashPosition)
         assert self.instrument == other.instrument
@@ -104,7 +110,10 @@ class CashPosition(object):
         notional_history = _merge(self.__notional_history, other.__notional_history)
 
         ret = CashPosition(
-            notional_history[-1][0], self.instrument, self.exchange  # FIXME
+            notional_history[-1][0],
+            self.timestamp,
+            self.instrument,
+            self.exchange,  # FIXME
         )
 
         ret.__notional_history = notional_history

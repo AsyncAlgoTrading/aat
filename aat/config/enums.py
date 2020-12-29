@@ -1,12 +1,13 @@
+from typing import List
 from enum import Enum
 
 
 class BaseEnum(Enum):
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.value}"
 
     @classmethod
-    def members(cls):
+    def members(cls) -> List[str]:
         return list(cls.__members__.keys())
 
 

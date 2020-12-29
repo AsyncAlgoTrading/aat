@@ -1,34 +1,39 @@
-from typing import Optional
+from typing import TYPE_CHECKING, cast, Dict, List, Optional, Tuple
 
-from aat.core import Order, Event
+from aat.core import Order, Event, Trade, ExchangeType
 from aat.core.handler import EventHandler
 from aat.exchange import Exchange
 from ..base import ManagerBase
 
 
+if TYPE_CHECKING:
+    from aat.strategy import Strategy
+    from ..manager import StrategyManager
+
+
 class OrderManager(ManagerBase):
-    def __init__(self):
+    def __init__(self) -> None:
         # map exchangetype to exchange instance
-        self._exchanges = {}
+        self._exchanges: Dict[ExchangeType, Exchange] = {}
 
         # track which strategies generated which orders
-        self._pending_orders = {}
+        self._pending_orders: Dict[str, Tuple[Order, Optional["Strategy"]]] = {}
 
         # past orders
-        self._past_orders = []
+        self._past_orders: List[Order] = []
 
-    def addExchange(self, exchange: Exchange):
+    def addExchange(self, exchange: Exchange) -> None:
         """add an exchange"""
         self._exchanges[exchange.exchange()] = exchange
 
-    def _setManager(self, manager):
+    def _setManager(self, manager: "StrategyManager") -> None:  # type: ignore
         """install manager"""
         self._manager = manager
 
     # *********************
     # Order Entry Methods *
     # *********************
-    async def newOrder(self, strategy, order: Order):
+    async def newOrder(self, strategy: Optional["Strategy"], order: Order) -> bool:
         exchange = self._exchanges.get(order.exchange)
         if not exchange:
             raise Exception("Exchange not installed: {}".format(order.exchange))
@@ -37,7 +42,7 @@ class OrderManager(ManagerBase):
         self._pending_orders[order.id] = (order, strategy)
         return ret
 
-    async def cancelOrder(self, strategy, order: Order):
+    async def cancelOrder(self, strategy: Optional["Strategy"], order: Order) -> bool:
         exchange = self._exchanges.get(order.exchange)
         if not exchange:
             raise Exception("Exchange not installed: {}".format(order.exchange))
@@ -49,81 +54,90 @@ class OrderManager(ManagerBase):
     # **********************
     # EventHandler methods *
     # **********************
-    async def onTrade(self, event):
+    async def onTrade(self, event: Event) -> None:
         """Match trade with order"""
-        action, strat, order = False, None, None
-        for order in event.target.maker_orders:
+        action: bool = False
+        strat: Optional[EventHandler] = None
+        order: Optional[Order] = None
+
+        trade: Trade = event.target  # type: ignore
+
+        for order in trade.maker_orders:
             if order.id in self._pending_orders:
                 action = True
                 _, strat = self._pending_orders[order.id]
 
                 # TODO cleaner?
-                event.target.my_order = order
-                event.target.id = order.id
+                trade.my_order = order
+                trade.id = order.id
                 break
 
-        if event.target.taker_order.id in self._pending_orders:
+        if trade.taker_order.id in self._pending_orders:
             action = True
-            order = event.target.taker_order
+            order = trade.taker_order
 
             # TODO cleaner?
-            event.target.my_order = order
-            event.target.id = order.id
+            trade.my_order = order
+            trade.id = order.id
             _, strat = self._pending_orders[order.id]
 
         if action:
             if order.side == Order.Sides.SELL:
                 # TODO ugly private method
-                await self._manager._onSold(strat, event.target)
+                await self._manager._onSold(
+                    cast("Strategy", strat), cast(Trade, event.target)
+                )
             else:
                 # TODO ugly private method
-                await self._manager._onBought(strat, event.target)
+                await self._manager._onBought(
+                    cast("Strategy", strat), cast(Trade, event.target)
+                )
 
             if order.finished():
                 del self._pending_orders[order.id]
 
-    async def onCancel(self, event):
-        order = event.target
+    async def onCancel(self, event: Event) -> None:
+        order: Order = event.target  # type: ignore
         if order.id in self._pending_orders:
             _, strat = self._pending_orders[order.id]
 
             # TODO ugly private method
-            await self._manager._onCanceled(strat, order)
+            await self._manager._onCanceled(cast("Strategy", strat), order)
             del self._pending_orders[order.id]
 
-    async def onOpen(self, event: Event):
+    async def onOpen(self, event: Event) -> None:
         # TODO
         pass
 
-    async def onFill(self, event: Event):
+    async def onFill(self, event: Event) -> None:
         # TODO
         pass
 
-    async def onChange(self, event: Event):
+    async def onChange(self, event: Event) -> None:
         # TODO
         pass
 
-    async def onData(self, event):
+    async def onData(self, event: Event) -> None:
         # TODO
         pass
 
-    async def onHalt(self, data):
+    async def onHalt(self, event: Event) -> None:
         # TODO
         pass
 
-    async def onContinue(self, data):
+    async def onContinue(self, event: Event) -> None:
         # TODO
         pass
 
-    async def onError(self, event):
+    async def onError(self, event: Event) -> None:
         # TODO
         pass
 
-    async def onStart(self, event):
+    async def onStart(self, event: Event) -> None:
         # TODO
         pass
 
-    async def onExit(self, event):
+    async def onExit(self, event: Event) -> None:
         # TODO
         pass
 
@@ -132,24 +146,24 @@ class OrderManager(ManagerBase):
     #########################
     async def onTraded(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):
+    ) -> None:
         # TODO
         pass
 
     async def onReceived(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):
+    ) -> None:
         # TODO
         pass
 
     async def onRejected(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):
+    ) -> None:
         # TODO
         pass
 
     async def onCanceled(  # type: ignore[override]
         self, event: Event, strategy: Optional[EventHandler]
-    ):
+    ) -> None:
         # TODO
         pass

@@ -3,17 +3,25 @@ import threading
 from datetime import datetime
 from queue import Queue
 from random import randint
-from typing import Dict
+from typing import Dict, List, Tuple, AsyncGenerator, Any, Union
 
-from ibapi.contract import Contract  # type: ignore
 from ibapi.client import EClient  # type: ignore
-from ibapi.execution import Execution, ExecutionFilter  # type: ignore
 from ibapi.commission_report import CommissionReport  # type: ignore
+from ibapi.contract import Contract  # type: ignore
+from ibapi.execution import Execution, ExecutionFilter  # type: ignore
+from ibapi.order import Order  # type: ignore
 from ibapi.wrapper import EWrapper  # type: ignore
 
 from aat.exchange import Exchange
 from aat.config import EventType, TradingType, Side
-from aat.core import ExchangeType, Event, Trade, Order, Position
+from aat.core import (
+    ExchangeType,
+    Event,
+    Trade,
+    Order as AATOrder,
+    Position,
+    Instrument,
+)
 
 from .utils import _constructContract, _constructContractAndOrder, _constructInstrument
 
@@ -21,16 +29,16 @@ from .utils import _constructContract, _constructContractAndOrder, _constructIns
 class _API(EWrapper, EClient):
     def __init__(
         self,
-        account,
-        exchange,
-        delayed,
-        order_event_queue,
-        market_data_queue,
-        contract_info_queue,
-        account_position_queue,
-    ):
+        account: str,
+        exchange: ExchangeType,
+        delayed: bool,
+        order_event_queue: Queue,
+        market_data_queue: Queue,
+        contract_info_queue: Queue,
+        account_position_queue: Queue,
+    ) -> None:
         EClient.__init__(self, self)
-        self.nextOrderId = None
+        self.nextOrderId: int = 0
         self.nextReqId = 1
 
         # account # if more than one
@@ -42,53 +50,53 @@ class _API(EWrapper, EClient):
         # delayed data?
         self._delayed = delayed
 
-        self._mkt_data_map = {}
-        self._mkt_data_map_rev = {}
+        self._mkt_data_map: Dict[int, Tuple[Contract, Instrument]] = {}
+        self._mkt_data_map_rev: Dict[Contract, int] = {}
 
         self._order_event_queue = order_event_queue
         self._market_data_queue = market_data_queue
         self._contract_info_queue = contract_info_queue
         self._account_position_queue = account_position_queue
 
-        self._positions = []
+        self._positions: List[Position] = []
 
-    def reqPositions(self):
+    def reqPositions(self) -> None:
         super().reqPositions()
 
-    def nextValidId(self, orderId: int):
+    def nextValidId(self, orderId: int) -> None:
         super().nextValidId(orderId)
         self.nextOrderId = orderId
 
-    def reqContractDetails(self, contract):
+    def reqContractDetails(self, contract: Contract) -> None:
         super().reqContractDetails(self.nextReqId, contract)
         self.nextReqId += 1
 
-    def placeOrder(self, contract, order):
+    def placeOrder(self, contract: Contract, order: Order) -> str:
         order.account = self._account
         super().placeOrder(self.nextOrderId, contract, order)
         self.nextOrderId += 1
-        return self.nextOrderId - 1
+        return str(self.nextOrderId - 1)
 
-    def cancelOrder(self, order):
+    def cancelOrder(self, order: AATOrder) -> None:
         super().cancelOrder(order.id)
 
-    def contractDetails(self, reqId, contractDetails):
+    def contractDetails(self, reqId: int, contractDetails: dict) -> None:
         self._contract_info_queue.put(contractDetails)
 
     def orderStatus(
         self,
-        orderId,
-        status,
-        filled,
-        remaining,
-        avgFillPrice,
-        permId,
-        parentId,
-        lastFillPrice,
-        clientId,
-        whyHeld,
-        mktCapPrice,
-    ):
+        orderId: int,
+        status: str,
+        filled: float,
+        remaining: float,
+        avgFillPrice: float,
+        permId: str,
+        parentId: str,
+        lastFillPrice: float,
+        clientId: str,
+        whyHeld: str,
+        mktCapPrice: float,
+    ) -> None:
         self._order_event_queue.put(
             dict(
                 orderId=orderId,
@@ -105,7 +113,7 @@ class _API(EWrapper, EClient):
             )
         )
 
-    def subscribeMarketData(self, instrument):
+    def subscribeMarketData(self, instrument: Instrument) -> None:
         contract = _constructContract(instrument)
         self._mkt_data_map[self.nextReqId] = (contract, instrument)
         self._mkt_data_map_rev[contract] = self.nextReqId
@@ -116,17 +124,17 @@ class _API(EWrapper, EClient):
         self.reqMktData(self.nextReqId, contract, "", False, False, [])
         self.nextReqId += 1
 
-    def cancelMarketData(self, contract):
+    def cancelMarketData(self, contract: Contract) -> None:
         id = self._mkt_data_map_rev[contract]
         self.cancelMktData(id)
         del self._mkt_data_map_rev[contract]
         del self._mkt_data_map[id]
 
-    def reqExecutions(self):
+    def reqExecutions(self) -> None:
         super().reqExecutions(self.nextReqId, ExecutionFilter())
         self.nextReqId += 1
 
-    def execDetails(self, reqId: int, contract: Contract, execution: Execution):
+    def execDetails(self, reqId: int, contract: Contract, execution: Execution) -> None:
         super().execDetails(reqId, contract, execution)
         self._order_event_queue.put(
             dict(
@@ -144,15 +152,15 @@ class _API(EWrapper, EClient):
             )
         )
 
-    def commissionReport(self, commissionReport: CommissionReport):
+    def commissionReport(self, commissionReport: CommissionReport) -> None:
         super().commissionReport(commissionReport)
         # TODO?
 
-    def execDetailsEnd(self, reqId: int):
+    def execDetailsEnd(self, reqId: int) -> None:
         super().execDetailsEnd(reqId)
         # TODO?
 
-    def tickPrice(self, reqId, tickType, price, attrib):
+    def tickPrice(self, reqId: int, tickType: int, price: float, attrib: str) -> None:
         # TODO implement more of order book
 
         if self._delayed:
@@ -171,7 +179,7 @@ class _API(EWrapper, EClient):
 
     def position(
         self, account: str, contract: Contract, position: float, avgCost: float
-    ):
+    ) -> None:
         super().position(account, contract, position, avgCost)
         self._positions.append(
             Position(
@@ -184,7 +192,7 @@ class _API(EWrapper, EClient):
             )
         )
 
-    def accountSummaryEnd(self, reqId):
+    def accountSummaryEnd(self, reqId: int) -> None:
         self._account_position_queue.put(self._positions)
         self._positions = []
 
@@ -192,7 +200,14 @@ class _API(EWrapper, EClient):
 class InteractiveBrokersExchange(Exchange):
     """Interactive Brokers Exchange"""
 
-    def __init__(self, trading_type, verbose, account="", delayed=True, **kwargs):
+    def __init__(
+        self,
+        trading_type: TradingType,
+        verbose: bool,
+        account: str = "",
+        delayed: bool = True,
+        **kwargs: dict
+    ) -> None:
         self._trading_type = trading_type
         self._verbose = verbose
 
@@ -202,7 +217,7 @@ class InteractiveBrokersExchange(Exchange):
             super().__init__(ExchangeType("interactivebrokerspaper"))
 
         # map order.id to order
-        self._orders = {}
+        self._orders: Dict[str, Order] = {}
 
         # map order id to received event
         self._order_received_map: Dict[str, asyncio.Event] = {}
@@ -213,10 +228,12 @@ class InteractiveBrokersExchange(Exchange):
         self._order_cancelled_res: Dict[str, bool] = {}
 
         # IB TWS gateway
-        self._order_event_queue = Queue()
-        self._market_data_queue = Queue()
-        self._contract_lookup_queue = Queue()
-        self._account_position_queue = Queue()
+        self._order_event_queue: Queue[Dict[str, Union[str, int, float]]] = Queue()
+        self._market_data_queue: Queue[
+            Dict[str, Union[str, int, float, Instrument]]
+        ] = Queue()
+        self._contract_lookup_queue: Queue[Contract] = Queue()
+        self._account_position_queue: Queue[Position] = Queue()
         self._api = _API(
             account,
             self.exchange(),
@@ -230,11 +247,11 @@ class InteractiveBrokersExchange(Exchange):
     # *************** #
     # General methods #
     # *************** #
-    async def instruments(self):
+    async def instruments(self) -> List[Instrument]:
         """get list of available instruments"""
         return []
 
-    async def connect(self):
+    async def connect(self) -> None:
         """connect to exchange. should be asynchronous.
 
         For OrderEntry-only, can just return None
@@ -260,7 +277,7 @@ class InteractiveBrokersExchange(Exchange):
 
         print("IB connected!")
 
-    async def lookup(self, instrument):
+    async def lookup(self, instrument: Instrument) -> List[Instrument]:
         self._api.reqContractDetails(_constructContract(instrument))
         i = 0
         while i < 5:
@@ -273,21 +290,22 @@ class InteractiveBrokersExchange(Exchange):
             else:
                 await asyncio.sleep(1)
                 i += 1
+        return []
 
     # ******************* #
     # Market Data Methods #
     # ******************* #
-    async def subscribe(self, instrument):
+    async def subscribe(self, instrument: Instrument) -> None:
         self._api.subscribeMarketData(instrument)
 
-    async def tick(self):
+    async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         """return data from exchange"""
         while True:
             # clear order events
             while self._order_event_queue.qsize() > 0:
                 order_data = self._order_event_queue.get()
                 status = order_data["status"]
-                order = self._orders[order_data["orderId"]]
+                order = self._orders[str(order_data["orderId"])]
 
                 if status in (
                     "ApiPending",
@@ -328,8 +346,8 @@ class InteractiveBrokersExchange(Exchange):
 
                     # create trade object
                     t = Trade(
-                        volume=order_data["filled"],
-                        price=order_data["avgFillPrice"],
+                        volume=order_data["filled"],  # type: ignore
+                        price=order_data["avgFillPrice"],  # type: ignore
                         maker_orders=[],
                         taker_order=order,
                     )
@@ -343,16 +361,16 @@ class InteractiveBrokersExchange(Exchange):
             # clear market data events
             while self._market_data_queue.qsize() > 0:
                 market_data = self._market_data_queue.get()
-                instrument = market_data["instrument"]
-                price = market_data["price"]
-                o = Order(
+                instrument: Instrument = market_data["instrument"]  # type: ignore
+                price: float = market_data["price"]  # type: ignore
+                o = AATOrder(
                     volume=1,
                     price=price,
                     side=Side.BUY,
                     instrument=instrument,
                     exchange=self.exchange(),
                 )
-                t = Trade(volume=1, price=price, taker_order=o, maker_orders=[])
+                t = Trade(volume=1, price=float(price), taker_order=o, maker_orders=[])
                 yield Event(type=EventType.TRADE, target=t)
 
             await asyncio.sleep(0)
@@ -363,18 +381,19 @@ class InteractiveBrokersExchange(Exchange):
     # ******************* #
     # Order Entry Methods #
     # ******************* #
-    async def accounts(self):
+    async def accounts(self) -> List[Position]:  # TODO account
         """get accounts from source"""
         self._api.reqPositions()
         i = 0
         while i < 5:
             if self._account_position_queue.qsize() > 0:
-                return self._account_position_queue.get()
+                return [self._account_position_queue.get()]
             else:
                 await asyncio.sleep(1)
                 i += 1
+        return []
 
-    async def newOrder(self, order):
+    async def newOrder(self, order: AATOrder) -> bool:
         """submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id
 
         For MarketData-only, can just return None
@@ -391,20 +410,20 @@ class InteractiveBrokersExchange(Exchange):
         self._orders[order.id] = order
 
         # set event for later trigerring
-        self._order_received_map[id] = Event()
-        await self._order_received_map[id]
+        self._order_received_map[id] = asyncio.Event()
+        await self._order_received_map[id]  # type: ignore
 
         res = self._order_received_res[id]
         del self._order_received_map[id]
         del self._order_received_res[id]
         return res
 
-    async def cancelOrder(self, order: Order):
+    async def cancelOrder(self, order: AATOrder) -> bool:
         """cancel a previously submitted order to the exchange.
 
         For MarketData-only, can just return None
         """
-        self._api.cancelOrder(order.id)
+        self._api.cancelOrder(order)
         res = self._order_cancelled_res[order.id]
 
         del self._order_cancelled_map[order.id]

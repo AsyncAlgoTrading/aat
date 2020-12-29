@@ -1,9 +1,9 @@
 import asyncio
 from datetime import datetime
-from typing import List, Callable, Union, Optional, TYPE_CHECKING
+from typing import Any, List, Callable, Union, Optional, TYPE_CHECKING
 
 from aat.config import ExitRoutine
-from aat.core import Instrument
+from aat.core import Instrument, ExchangeType, Event, Order, Trade
 from aat.exchange import Exchange
 from aat.config import InstrumentType, TradingType
 
@@ -11,12 +11,14 @@ from .periodic import Periodic
 
 if TYPE_CHECKING:
     from aat.engine import TradingEngine
+    from aat.strategy import Strategy
 
 
 class StrategyManagerUtilsMixin(object):
     _engine: "TradingEngine"
     _exchanges: List[Exchange]
     _periodics: List[Periodic]
+    _data_subscriptions = {}  # type: ignore
 
     #################
     # Other Methods #
@@ -25,7 +27,7 @@ class StrategyManagerUtilsMixin(object):
     def tradingType(self) -> TradingType:
         return self._engine.trading_type
 
-    def loop(self):
+    def loop(self) -> asyncio.AbstractEventLoop:
         return self._engine.event_loop
 
     def now(self) -> datetime:
@@ -33,11 +35,15 @@ class StrategyManagerUtilsMixin(object):
         live trading and backtesting. Defaults to `datetime.now`"""
         return self._engine.now()
 
-    def instruments(self, type: InstrumentType = None, exchange=None):
+    def instruments(
+        self, type: InstrumentType = None, exchange: Optional[ExchangeType] = None
+    ) -> List[Instrument]:
         """Return list of all available instruments"""
         return Instrument._instrumentdb.instruments(type=type, exchange=exchange)
 
-    async def subscribe(self, instrument=None, strategy=None):
+    async def subscribe(
+        self, instrument: Instrument = None, strategy: "Strategy" = None
+    ) -> None:
         """Subscribe to market data for the given instrument"""
         if strategy not in self._data_subscriptions:
             self._data_subscriptions[strategy] = []
@@ -45,31 +51,40 @@ class StrategyManagerUtilsMixin(object):
         self._data_subscriptions[strategy].append(instrument)
 
         for exc in self._exchanges:
-            await exc.subscribe(instrument)
+            if instrument:
+                await exc.subscribe(instrument)
 
-    def dataSubscriptions(self, handler, event):
+    def dataSubscriptions(self, handler: Callable, event: Event) -> bool:
         """does handler subscribe to the data for event"""
         if handler not in self._data_subscriptions:
             # subscribe all by default
             return True
-        return event.target.instrument in self._data_subscriptions[handler]
+        target: Union[Order, Trade] = event.target  # type: ignore
+        return target.instrument in self._data_subscriptions[handler]
 
-    async def lookup(self, instrument: Optional[Instrument], exchange=None):
+    async def lookup(
+        self, instrument: Optional[Instrument], exchange: ExchangeType = None
+    ) -> List[Instrument]:
         """Return list of all available instruments that match the instrument given"""
-        if exchange in self._exchanges:
-            return await exchange.lookup(instrument)
+        if exchange:
+            for exchange_inst in self._exchanges:
+                if exchange == exchange_inst.exchange():
+                    if instrument:
+                        return await exchange_inst.lookup(instrument)
+                    return []
 
         elif exchange is None:
             ret = []
-            for exchange in self._exchanges:
-                ret.extend(await exchange.lookup(instrument))
+            for exchange_inst in self._exchanges:
+                if instrument:
+                    ret.extend(await exchange_inst.lookup(instrument))
             return ret
 
         # None implement
         raise NotImplementedError()
 
-    def _make_async(self, function):
-        async def _wrapper():
+    def _make_async(self, function: Callable) -> Callable:
+        async def _wrapper() -> Any:
             return await self.loop().run_in_executor(
                 self._engine, self._engine.executor, function
             )
@@ -131,7 +146,7 @@ class StrategyManagerUtilsMixin(object):
 
     def restrictTradingHours(
         self,
-        strategy,
+        strategy: "Strategy",
         start_second: Optional[int] = None,
         start_minute: Optional[int] = None,
         start_hour: Optional[int] = None,
@@ -139,5 +154,5 @@ class StrategyManagerUtilsMixin(object):
         end_minute: Optional[int] = None,
         end_hour: Optional[int] = None,
         on_end_of_day: ExitRoutine = ExitRoutine.NONE,
-    ):
+    ) -> None:
         pass

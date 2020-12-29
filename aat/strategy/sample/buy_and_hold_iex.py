@@ -1,8 +1,9 @@
+from typing import Any
 from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
 
 
 class BuyAndHoldIEXStrategy(Strategy):
-    def __init__(self, symbol, *args, **kwargs) -> None:
+    def __init__(self, symbol: str, *args: Any, **kwargs: Any) -> None:
         super(BuyAndHoldIEXStrategy, self).__init__(*args, **kwargs)
         self._symbol = symbol
 

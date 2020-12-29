@@ -6,6 +6,8 @@ import pyEX  # type: ignore
 from collections import deque
 from datetime import datetime, timedelta
 from tqdm import tqdm  # type: ignore
+from typing import AsyncGenerator, Any, Deque, List
+
 from aat.exchange import Exchange
 from aat.config import InstrumentType, EventType, Side, TradingType
 from aat.core import ExchangeType, Instrument, Event, Trade, Order
@@ -34,15 +36,15 @@ class IEX(Exchange):
 
     def __init__(
         self,
-        trading_type,
-        verbose,
-        api_key,
-        is_sandbox,
-        timeframe="1y",
-        start_date=None,
-        end_date=None,
-        cache_data=True,
-    ):
+        trading_type: TradingType,
+        verbose: bool,
+        api_key: str,
+        is_sandbox: bool,
+        timeframe: str = "1y",
+        start_date: str = "",
+        end_date: str = "",
+        cache_data: bool = True,
+    ) -> None:
         super().__init__(ExchangeType("iex"))
         self._trading_type = trading_type
         self._verbose = verbose
@@ -70,16 +72,16 @@ class IEX(Exchange):
                 datetime.strptime(end_date, "%Y%m%d") if end_date else datetime.today()
             )
 
-        self._subscriptions = []
+        self._subscriptions: List[Instrument] = []
 
         # "Order" management
-        self._queued_orders = deque()
+        self._queued_orders: Deque[Order] = deque()
         self._order_id = 1
 
     # *************** #
     # General methods #
     # *************** #
-    async def connect(self):
+    async def connect(self) -> None:
         """connect to exchange. should be asynchronous.
 
         For OrderEntry-only, can just return None
@@ -91,7 +93,7 @@ class IEX(Exchange):
     # ******************* #
     # Market Data Methods #
     # ******************* #
-    async def instruments(self):
+    async def instruments(self) -> List[Instrument]:
         """get list of available instruments"""
         instruments = []
         symbols = self._client.symbols()
@@ -121,16 +123,16 @@ class IEX(Exchange):
             instruments.append(inst)
         return instruments
 
-    async def subscribe(self, instrument):
+    async def subscribe(self, instrument: Instrument) -> None:
         self._subscriptions.append(instrument)
 
-    async def tick(self):
+    async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         """return data from exchange"""
 
         if self._timeframe == "live":
-            data = deque()
+            data: Deque[dict] = deque()
 
-            def _callback(record):
+            def _callback(record: dict) -> None:
                 data.append(record)
 
             self._client.tradesSSE(
@@ -197,11 +199,11 @@ class IEX(Exchange):
                     dfs.append(df)
                     insts.add(i.name)
 
-                data = pd.concat(dfs, axis=1)
-                data.sort_index(inplace=True)
-                data = data.groupby(data.index).last()
-                data.drop_duplicates(inplace=True)
-                data.fillna(method="ffill", inplace=True)
+                data_frame = pd.concat(dfs, axis=1)
+                data_frame.sort_index(inplace=True)
+                data_frame = data_frame.groupby(data_frame.index).last()
+                data_frame.drop_duplicates(inplace=True)
+                data_frame.fillna(method="ffill", inplace=True)
 
             else:
                 for i in tqdm(self._subscriptions, desc="Fetching data..."):
@@ -255,22 +257,22 @@ class IEX(Exchange):
                     dfs.append(pd.concat(subdfs))
                     insts.add(i.name)
 
-                data = pd.concat(dfs, axis=1)
-                data.index = [
+                data_frame = pd.concat(dfs, axis=1)
+                data_frame.index = [
                     x
                     + timedelta(
                         hours=int(y.split(":")[0]), minutes=int(y.split(":")[1])
                     )
-                    for x, y in data.index
+                    for x, y in data_frame.index
                 ]
-                data = data.groupby(data.index).last()
-                data.drop_duplicates(inplace=True)
-                data.fillna(method="ffill", inplace=True)
+                data_frame = data_frame.groupby(data_frame.index).last()
+                data_frame.drop_duplicates(inplace=True)
+                data_frame.fillna(method="ffill", inplace=True)
 
-            for index in data.index:
+            for index in data_frame.index:
                 for i in self._subscriptions:
-                    volume = data.loc[index]["volume:{}".format(i.name)]
-                    price = data.loc[index]["close:{}".format(i.name)]
+                    volume = data_frame.loc[index]["volume:{}".format(i.name)]
+                    price = data_frame.loc[index]["close:{}".format(i.name)]
                     if volume == 0:
                         continue
 
@@ -309,7 +311,7 @@ class IEX(Exchange):
     # ******************* #
     # Order Entry Methods #
     # ******************* #
-    async def newOrder(self, order: Order):
+    async def newOrder(self, order: Order) -> bool:
         """submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id
 
         For MarketData-only, can just return None
@@ -317,12 +319,12 @@ class IEX(Exchange):
         if self._trading_type == TradingType.LIVE:
             raise NotImplementedError("Live OE not available for IEX")
 
-        order.id = self._order_id
+        order.id = str(self._order_id)
         self._order_id += 1
         self._queued_orders.append(order)
         return True
 
-    async def cancelOrder(self, order: Order):
+    async def cancelOrder(self, order: Order) -> bool:
         # Can't cancel, orders execute immediately
         # TODO limit orders
         return False

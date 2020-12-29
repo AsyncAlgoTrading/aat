@@ -1,6 +1,8 @@
-import typing
+from typing import TYPE_CHECKING
 
-if typing.TYPE_CHECKING:
+from aat.core import Position
+
+if TYPE_CHECKING:
     from aat.engine import StrategyManager
 
 
@@ -10,7 +12,7 @@ class StrategyRiskMixin(object):
     ################
     # Risk Methods #
     ################
-    def risk(self, position=None):
+    def risk(self, position: Position = None) -> str:  # TODO
         """Get risk metrics
 
         Args:

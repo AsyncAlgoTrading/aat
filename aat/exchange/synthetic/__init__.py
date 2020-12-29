@@ -4,13 +4,13 @@ import string
 from datetime import datetime, timedelta
 from collections import deque
 from random import choice, random, randint
-from typing import List
+from typing import AsyncIterator, Deque, Iterator, List, Set
 from ..exchange import Exchange
 from ...core import Instrument, OrderBook, Order, Event, ExchangeType, Position
 from ...config import TradingType, Side, EventType, OrderType
 
 
-def _getName(n=1):
+def _getName(n: int = 1) -> List[str]:
     columns = [
         "".join(np.random.choice(list(string.ascii_uppercase), choice((1, 2, 3, 4))))
         + "."
@@ -25,13 +25,12 @@ class SyntheticExchange(Exchange):
 
     def __init__(
         self,
-        trading_type=None,
-        verbose=False,
-        inst_count=3,
-        cycles=10000,
-        positions=False,
-        **kwargs
-    ):
+        trading_type: TradingType = None,
+        verbose: bool = False,
+        inst_count: int = 3,
+        cycles: int = 10000,
+        positions: bool = False,
+    ) -> None:
         """A synthetic exchange. Runs a limit order book for a number of randomly generated assets,
         takes random walks.
 
@@ -46,7 +45,8 @@ class SyntheticExchange(Exchange):
         super().__init__(ExchangeType("synthetic{}".format(SyntheticExchange._inst)))
         print("using synthetic exchange: {}".format(self.exchange()))
 
-        assert trading_type in (TradingType.SIMULATION, TradingType.BACKTEST)
+        if trading_type not in (TradingType.SIMULATION, TradingType.BACKTEST):
+            raise Exception("Invalid trading type: {}".format(trading_type))
         self._trading_type = trading_type
         self._verbose = verbose
         self._sleep = (
@@ -56,9 +56,9 @@ class SyntheticExchange(Exchange):
             else 0.0
         )
         self._id = 0
-        self._events = deque()
-        self._pending_orders = deque()
-        self._pending_cancel_orders = deque()
+        self._events: Deque[Event] = deque()
+        self._pending_orders: Deque[Order] = deque()
+        self._pending_cancel_orders: Deque[Order] = deque()
         SyntheticExchange._inst += 1
 
         self._inst_count = int(inst_count)
@@ -67,12 +67,12 @@ class SyntheticExchange(Exchange):
 
         self._time = datetime.now() - timedelta(days=10)
 
-        self._omit_cancel = set()
+        self._omit_cancel: Set[str] = set()
         self._trend = ["buy"] * 5 + ["sell"] * 4
 
         self._generate_positions = positions
 
-    def _seed(self, symbols=None):
+    def _seed(self, symbols: List[str] = None) -> None:
         self._instruments = {
             symbol: Instrument(symbol)
             for symbol in symbols or _getName(self._inst_count)
@@ -85,7 +85,7 @@ class SyntheticExchange(Exchange):
         }
         self._seedOrders()
 
-    def _seedOrders(self):
+    def _seedOrders(self) -> None:
         # seed all orderbooks
         for instrument, orderbook in self._orderbooks.items():
 
@@ -116,13 +116,13 @@ class SyntheticExchange(Exchange):
                 start = round(start + increment, 2)
                 self._id += 1
 
-    def _reseed(self, instrument, side):
+    def _reseed(self, instrument: Instrument, side: Side) -> None:
         print("reseeding synthetic exchange...")
         # reseed
         orderbook = self._orderbooks[instrument]
 
         levels = orderbook.topOfBook()
-        start = 0.1 if side == Side.BUY else levels[Side.BUY][0]
+        start = 0.1 if side == Side.BUY else levels[Side.BUY].price
         end = start + round(random() * 50 + 10, 2) + 50
 
         while start < end:
@@ -142,12 +142,12 @@ class SyntheticExchange(Exchange):
             orderbook.add(order)
             start = round(start + increment, 2)
 
-    def _jumptime(self, order):
+    def _jumptime(self, order: Order) -> None:
         if self._trading_type == TradingType.BACKTEST:
             order.timestamp = self._time
             self._time += timedelta(seconds=randint(25, 30))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         ret = ""
         for ticker, orderbook in self._orderbooks.items():
             ret += (
@@ -161,7 +161,7 @@ class SyntheticExchange(Exchange):
     # *************** #
     # General methods #
     # *************** #
-    async def connect(self):
+    async def connect(self) -> None:
         """nothing to connect to"""
         self._seed()
 
@@ -169,14 +169,14 @@ class SyntheticExchange(Exchange):
         for orderbook in self._orderbooks.values():
             orderbook.setCallback(lambda event: self._events.append(event))
 
-    async def instruments(self):
+    async def instruments(self) -> List[Instrument]:
         """nothing to connect to"""
-        return self._instruments
+        return list(self._instruments.values())
 
     # ************ #
     # Get snapshot #
     # ************ #
-    def snapshot(self):
+    def snapshot(self) -> Iterator[Event]:
         # first return all seeded orders
         for _, orderbook in self._orderbooks.items():
             for order in orderbook:
@@ -185,7 +185,7 @@ class SyntheticExchange(Exchange):
     # ******************* #
     # Market Data Methods #
     # ******************* #
-    async def tick(self, snapshot=False):
+    async def tick(self, snapshot: bool = False) -> AsyncIterator[Event]:  # type: ignore[override]
         # first return all seeded orders if snapshot is false
         if snapshot is False:
             for _, orderbook in self._orderbooks.items():
@@ -239,7 +239,7 @@ class SyntheticExchange(Exchange):
             if do == "buy":
                 # new buy order
                 # choose a price level
-                price = round(levels[Side.BUY][0] - choice((0, 0.5, 1, 1.5, 2)), 2)
+                price = round(levels[Side.BUY].price - choice((0, 0.5, 1, 1.5, 2)), 2)
                 order = Order(
                     volume=volume,
                     price=price,
@@ -257,7 +257,7 @@ class SyntheticExchange(Exchange):
 
             elif do == "sell":
                 # new sell order
-                price = round(levels[Side.SELL][0] + choice((0, 0.5, 1, 1.5, 2)), 2)
+                price = round(levels[Side.SELL].price + choice((0, 0.5, 1, 1.5, 2)), 2)
 
                 if price == float("inf"):
                     # liquidity exausted
@@ -294,7 +294,7 @@ class SyntheticExchange(Exchange):
                 side = choice(self._trend)
                 if side == "buy":
                     # cross to buy
-                    price = round(levels[Side.BUY][0] + choice((1, 2, 5)), 2)
+                    price = round(levels[Side.BUY].price + choice((1, 2, 5)), 2)
 
                     if price <= 0.0:
                         # liquidity exausted
@@ -318,7 +318,7 @@ class SyntheticExchange(Exchange):
 
                 else:
                     # cross to sell
-                    price = round(levels[Side.SELL][0] - choice((1, 2, 5)), 2)
+                    price = round(levels[Side.SELL].price - choice((1, 2, 5)), 2)
 
                     if price == float("inf"):
                         # liquidity exausted
@@ -343,10 +343,10 @@ class SyntheticExchange(Exchange):
             elif do == "cancel" or do == "change":
                 # cancel an existing order
                 side = choice(("buy", "sell"))
-                levels = orderbook.levels(5)
-                if side == "buy" and levels:
-                    level = choice(levels[Side.BUY])
-                    price_level = orderbook.level(price=level[0])[1]
+                levels2 = orderbook.levels(5)
+                if side == "buy" and levels2:
+                    level = choice(levels2[Side.BUY])
+                    price_level = orderbook.level(price=level.price)[1]
                     if price_level is None:
                         continue
 
@@ -370,9 +370,9 @@ class SyntheticExchange(Exchange):
                             else:
                                 orderbook.cancel(order)
 
-                elif levels:
-                    level = choice(levels[Side.SELL])
-                    price_level = orderbook.level(price=level[0])[0]
+                elif levels2:
+                    level = choice(levels2[Side.SELL])
+                    price_level = orderbook.level(price=level.price)[0]
                     if price_level is None:
                         continue
 
@@ -402,13 +402,13 @@ class SyntheticExchange(Exchange):
     # ******************* #
     # Order Entry Methods #
     # ******************* #
-    async def newOrder(self, order: Order):
+    async def newOrder(self, order: Order) -> bool:
         if order.instrument not in self._instruments.values():
             # invalid instrument
             return False
 
         # assign id
-        order.id = self._id
+        order.id = str(self._id)
 
         # adjust time if backtesting
 
@@ -422,7 +422,7 @@ class SyntheticExchange(Exchange):
         self._omit_cancel.add(order.id)  # don't cancel user orders
         return True
 
-    async def cancelOrder(self, order: Order):
+    async def cancelOrder(self, order: Order) -> bool:
         self._pending_cancel_orders.append(order)
         return True
 
@@ -433,7 +433,7 @@ class SyntheticExchange(Exchange):
             for instrument in self._instruments.values():
                 pos = Position(
                     randint(0, 10),
-                    self._orderbooks[instrument].topOfBook()[Side.BUY][0],
+                    self._orderbooks[instrument].topOfBook()[Side.BUY].price,
                     self._time,
                     instrument,
                     self.exchange(),

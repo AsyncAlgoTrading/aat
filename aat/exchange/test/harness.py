@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Any, AsyncGenerator, Optional
 from aat import Strategy
-from aat.config import EventType, InstrumentType, Side
+from aat.config import EventType, InstrumentType, Side, TradingType
 from aat.core import ExchangeType, Event, Instrument, Trade, Order
 from aat.exchange import Exchange
 
@@ -12,7 +12,7 @@ class Harness(Exchange):
     This is a synthetic exchange that runs through a sequence of data objects and
     asserts some specific behavior in the strategies under test"""
 
-    def __init__(self, trading_type, verbose):
+    def __init__(self, trading_type: TradingType, verbose: bool) -> None:
         super().__init__(ExchangeType("testharness"))
         self._trading_type = trading_type
         self._verbose = verbose
@@ -20,22 +20,27 @@ class Harness(Exchange):
 
         self._id = 0
         self._start = datetime.now() - timedelta(days=30)
-        self._client_order = None
+        self._client_order: Optional[Order] = None
 
-    async def instruments(self):
+    async def instruments(self) -> List[Instrument]:
         """get list of available instruments"""
         return [self._instrument]
 
-    async def connect(self):
+    async def connect(self) -> None:
         # No-op
         pass
 
-    async def tick(self):
+    async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         now = self._start
         for i in range(1000):
             if self._client_order:
                 self._client_order.filled = self._client_order.volume
-                t = Trade(self._client_order.volume, i, [], self._client_order)
+                t = Trade(
+                    self._client_order.volume,
+                    i,
+                    taker_order=self._client_order,
+                    maker_orders=[],
+                )
                 t.taker_order.timestamp = now
                 self._client_order = None
                 yield Event(type=EventType.TRADE, target=t)
@@ -54,15 +59,15 @@ class Harness(Exchange):
             yield Event(type=EventType.TRADE, target=t)
             now += timedelta(minutes=30)
 
-    async def newOrder(self, order: Order):
-        order.id = self._id
+    async def newOrder(self, order: Order) -> bool:
+        order.id = str(self._id)
         self._id += 1
         self._client_order = order
-        return order
+        return True
 
 
 class TestStrategy(Strategy):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(TestStrategy, self).__init__(*args, **kwargs)
         self._orders: List[Order] = []
         self._trades: List[Trade] = []
@@ -76,10 +81,9 @@ class TestStrategy(Strategy):
     async def onTraded(self, event: Event) -> None:
         self._trades.append(event.target)  # type: ignore
 
-    async def onPeriodic(self):
-        o = await self.newOrder(
-            Order(1, 1, Side.BUY, self.instruments()[0], ExchangeType("testharness"))
-        )
+    async def onPeriodic(self) -> None:
+        o = Order(1, 1, Side.BUY, self.instruments()[0], ExchangeType("testharness"))
+        _ = await self.newOrder(o)
         self._orders.append(o)
 
     async def onExit(self, event: Event) -> None:

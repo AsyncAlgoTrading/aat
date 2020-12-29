@@ -5,11 +5,12 @@ import ujson  # type: ignore
 import uvloop  # type: ignore
 from aat.exchange.synthetic import SyntheticExchange
 from aat.core import Order
+from aat.config import TradingType
 
 
-def _main(port=5000):
-    async def handle(websocket, *args, **kwargs):
-        exchange = SyntheticExchange()
+def _main(port: int = 5000):  # type: ignore
+    async def handle(websocket, *args, **kwargs):  # type: ignore
+        exchange = SyntheticExchange(trading_type=TradingType.SIMULATION)
         await exchange.connect()
         await exchange.instruments()
 
@@ -35,7 +36,7 @@ def _main(port=5000):
     return start_server
 
 
-def main():
+def main() -> None:
     try:
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
         asyncio.get_event_loop().run_until_complete(

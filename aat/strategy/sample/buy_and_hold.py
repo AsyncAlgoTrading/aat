@@ -1,8 +1,9 @@
+from typing import Any
 from aat import Strategy, Event, Order, Trade, Side
 
 
 class BuyAndHoldStrategy(Strategy):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(BuyAndHoldStrategy, self).__init__(*args, **kwargs)
 
     async def onStart(self, event: Event) -> None:

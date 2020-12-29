@@ -9,7 +9,7 @@ class _OrderEntry(metaclass=ABCMeta):
     """internal only class to represent the rest-sink
     side of a data source"""
 
-    async def accounts(self) -> List[Position]:
+    async def accounts(self) -> List[Position]:  # TODO List[Account] ?
         """get accounts from source"""
         return []
 
@@ -17,7 +17,7 @@ class _OrderEntry(metaclass=ABCMeta):
         """get cash balance"""
         return []
 
-    async def newOrder(self, order: Order):
+    async def newOrder(self, order: Order) -> bool:
         """submit a new order to the exchange. should set the given order's `id` field to exchange-assigned id
 
         Returns:
@@ -28,7 +28,7 @@ class _OrderEntry(metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
-    async def cancelOrder(self, order: Order):
+    async def cancelOrder(self, order: Order) -> bool:
         """cancel a previously submitted order to the exchange.
 
         Returns:

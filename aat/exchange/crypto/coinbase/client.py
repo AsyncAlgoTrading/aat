@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 from functools import lru_cache
 from requests.auth import AuthBase
-from typing import Dict, List, Union
+from typing import Any, AsyncGenerator, cast, Dict, List, Union
 
 # from aat import Instrument, InstrumentType, Account, Position
 from aat import (
@@ -47,7 +47,7 @@ class CoinbaseExchangeClient(AuthBase):
         api_key: str,
         secret_key: str,
         passphrase: str,
-    ):
+    ) -> None:
 
         self.trading_type = trading_type
 
@@ -70,12 +70,12 @@ class CoinbaseExchangeClient(AuthBase):
         self.passphrase = passphrase
 
         # order_map
-        self._order_map: Dict[int, Order] = {}
+        self._order_map: Dict[str, Order] = {}
 
         # sequence number for order book
         self.seqnum: Dict[Instrument, int] = {}
 
-    def __call__(self, request):
+    def __call__(self, request):  # type: ignore
         # This is used by `requests` to sign the requests
         # in the coinbase-specified auth scheme
         timestamp = str(time.time())
@@ -100,21 +100,21 @@ class CoinbaseExchangeClient(AuthBase):
         )
         return request
 
-    def _products(self):
+    def _products(self) -> dict:
         """Fetch list of products from coinbase rest api"""
         return requests.get("{}/{}".format(self.api_url, "products"), auth=self).json()
 
-    def _accounts(self):
+    def _accounts(self) -> dict:
         """Fetch list of accounts from coinbase rest api"""
         return requests.get("{}/{}".format(self.api_url, "accounts"), auth=self).json()
 
-    def _account(self, account_id):
+    def _account(self, account_id: str) -> dict:
         """Fetch single account info from coinbase rest api"""
         return requests.get(
             "{}/{}/{}".format(self.api_url, "accounts", account_id), auth=self
         ).json()
 
-    def _newOrder(self, order_jsn):
+    def _newOrder(self, order_jsn: dict) -> str:
         """create a new order"""
 
         # post my order to the rest endpoint
@@ -131,7 +131,7 @@ class CoinbaseExchangeClient(AuthBase):
         print(resp.text)
         return ""
 
-    def _cancelOrder(self, order_jsn):
+    def _cancelOrder(self, order_jsn: dict) -> bool:
         """delete an existing order"""
         # delete order with given order id
         resp = requests.delete(
@@ -147,14 +147,14 @@ class CoinbaseExchangeClient(AuthBase):
         # otherwise return false
         return False
 
-    def _orderBook(self, id):
+    def _orderBook(self, id: str) -> dict:
         # fetch an instrument's level 3 order book from the rest api
         return requests.get(
             "{}/{}/{}/book?level=3".format(self.api_url, "products", id), auth=self
         ).json()
 
     @lru_cache(None)
-    def instruments(self):
+    def instruments(self) -> List[Instrument]:
         """construct a list of instruments from the coinbase-returned json list of instruments"""
         ret = []
 
@@ -183,12 +183,12 @@ class CoinbaseExchangeClient(AuthBase):
         return ret
 
     @lru_cache(None)
-    def currency(self, symbol):
+    def currency(self, symbol: str) -> Instrument:
         # construct a base currency from the symbol
         return Instrument(name=symbol, type=InstrumentType.CURRENCY)
 
     @lru_cache(None)
-    def accounts(self):
+    async def accounts(self) -> List[Position]:
         """fetch a list of coinbase accounts. These store quantities of InstrumentType.CURRENCY"""
         ret = []
 
@@ -229,7 +229,7 @@ class CoinbaseExchangeClient(AuthBase):
                 # ret.append(acc)
         return ret
 
-    def newOrder(self, order: Order):
+    async def newOrder(self, order: Order) -> bool:
         """given an aat Order, construct a coinbase order json"""
         jsn: Dict[str, Union[str, int, float]] = {}
         jsn["product_id"] = order.instrument.name
@@ -282,24 +282,26 @@ class CoinbaseExchangeClient(AuthBase):
         id = self._newOrder(jsn)
         if id != "":
             # successful, set id on the order and return true
-            order.id = id
-            self._order_map[id] = order
+            order.id = str(id)
+            self._order_map[order.id] = order
             return True
 
         # otherwise return false indicating rejected
         return False
 
-    def cancelOrder(self, order: Order):
+    async def cancelOrder(self, order: Order) -> bool:
         # given an aat Order, convert to json and cancel
         jsn = {}
 
         # coinbase expects client_oid and product_id, so map from
         # our internal api
         jsn["id"] = order.id
-        jsn["product_id"] = order.instrument.brokerId
+        jsn["product_id"] = cast(str, order.instrument.brokerId)
         return self._cancelOrder(jsn)
 
-    def orderBook(self, subscriptions: List[Instrument]):
+    async def orderBook(
+        self, subscriptions: List[Instrument]
+    ) -> AsyncGenerator[Any, Event]:
         """fetch level 3 order book for each Instrument in our subscriptions"""
         for sub in subscriptions:
             # fetch the order book
@@ -307,7 +309,7 @@ class CoinbaseExchangeClient(AuthBase):
             #       {'bids': [[price, volume, id]],
             #        'asks': [[price, volume, id]],
             #        'sequence': <some positive integer>}
-            ob = self._orderBook(sub.brokerId)
+            ob = self._orderBook(cast(str, sub.brokerId))
 
             # set the last sequence number for when we
             # connect to websocket later
@@ -337,7 +339,7 @@ class CoinbaseExchangeClient(AuthBase):
                 )
                 yield Event(type=EventType.OPEN, target=o)
 
-    async def websocket(self, subscriptions: List[Instrument]):
+    async def websocket(self, subscriptions: List[Instrument]):  # type: ignore
         # copy the base subscription template
         subscription = _SUBSCRIPTION.copy()
 
@@ -583,16 +585,16 @@ class CoinbaseExchangeClient(AuthBase):
 
                         # Generate a trade event
                         # First, create an order from the event
-                        if x.get("taker_order_id", "") in self._order_map:
-                            o = self._order_map[x.get("taker_order_id")]
+                        if str(x.get("taker_order_id", "")) in self._order_map:
+                            o = self._order_map[str(x.get("taker_order_id"))]
 
                             o.filled = float(x["size"])
 
                             # my order
                             mine = True
 
-                        elif x.get("maker_order_id", "") in self._order_map:
-                            o = self._order_map[x.get("maker_order_id")]
+                        elif str(x.get("maker_order_id", "")) in self._order_map:
+                            o = self._order_map[str(x.get("maker_order_id"))]
                             # TODO filled?
 
                             # my order
@@ -618,7 +620,12 @@ class CoinbaseExchangeClient(AuthBase):
                         # create a trader with this order as the taker
                         # makers would be accumulated via the
                         # `elif x['reason'] == 'filled'` block above
-                        t = Trade(float(x["size"]), float(x["price"]), [], o)
+                        t = Trade(
+                            float(x["size"]),
+                            float(x["price"]),
+                            taker_order=o,
+                            maker_orders=[],
+                        )
 
                         if mine:
                             t.my_order = o

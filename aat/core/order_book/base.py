@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import List, Mapping, Optional
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
-from ...config import Side
+from .price_level import PriceLevelRO
 from ..data import Order
+from ...config import Side
 
 
 class OrderBookBase(ABC):
     @abstractmethod
-    def reset(self):
+    def reset(self) -> None:
         pass
 
     @abstractmethod
@@ -27,7 +28,7 @@ class OrderBookBase(ABC):
         pass
 
     @abstractmethod
-    def topOfBook(self) -> Mapping[Side, List[float]]:
+    def topOfBook(self) -> Dict[Side, PriceLevelRO]:
         pass
 
     @abstractmethod
@@ -35,21 +36,25 @@ class OrderBookBase(ABC):
         pass
 
     @abstractmethod
-    def level(self, level: int = 0, price: float = None):
+    def level(self, level: int = 0, price: float = None) -> Tuple:
         pass
 
     @abstractmethod
-    def levels(self, levels=0):
+    def levels(self, levels: int = 0) -> Dict[Side, List[PriceLevelRO]]:
         pass
 
     @abstractmethod
-    def bids(self, levels=0):
+    def bids(
+        self, levels: int = 0
+    ) -> Union[PriceLevelRO, List[Optional[PriceLevelRO]]]:
         pass
 
     @abstractmethod
-    def asks(self, levels=0):
+    def asks(
+        self, levels: int = 0
+    ) -> Union[PriceLevelRO, List[Optional[PriceLevelRO]]]:
         pass
 
     @abstractmethod
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Order]:
         pass

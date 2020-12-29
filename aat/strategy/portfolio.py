@@ -1,7 +1,8 @@
-import typing
-from aat.core import Instrument, ExchangeType
+import pandas as pd
+from typing import List, Union, TYPE_CHECKING
+from aat.core import Instrument, ExchangeType, Position
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from aat.engine import StrategyManager
     from aat.engine.dispatch import Portfolio
 
@@ -9,7 +10,9 @@ if typing.TYPE_CHECKING:
 class StrategyPortfolioMixin(object):
     _manager: "StrategyManager"
 
-    def positions(self, instrument: Instrument = None, exchange: ExchangeType = None):
+    def positions(
+        self, instrument: Instrument = None, exchange: ExchangeType = None
+    ) -> List[Position]:
         """select all positions
 
         Args:
@@ -19,14 +22,14 @@ class StrategyPortfolioMixin(object):
             list (Position): list of positions
         """
         return self._manager.positions(
-            strategy=self, instrument=instrument, exchange=exchange
+            strategy=self, instrument=instrument, exchange=exchange  # type: ignore # mixin
         )
 
     def portfolio(self) -> "Portfolio":
         """Get portfolio object"""
         return self._manager.portfolio()
 
-    def priceHistory(self, instrument: Instrument = None):
+    def priceHistory(self, instrument: Instrument = None) -> Union[dict, pd.DataFrame]:
         """Get price history for asset
 
         Args:

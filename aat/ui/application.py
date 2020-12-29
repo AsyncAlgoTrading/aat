@@ -1,5 +1,6 @@
 import logging
 import tornado.web
+from typing import Any, List, Optional
 
 # from tornado_sqlalchemy_login.handlers import LoginHandler, LogoutHandler, RegisterHandler, APIKeyHandler
 # from tornado_sqlalchemy_login import SQLAlchemyLoginManagerOptions, SQLAlchemyLoginManager
@@ -8,14 +9,14 @@ import tornado.web
 class ServerApplication(tornado.web.Application):
     def __init__(
         self,
-        basepath="/",
-        wspath="/api/v1/ws",
-        handlers=None,
-        debug=True,
-        cookie_secret=None,
-        *args,
-        **kwargs
-    ):
+        basepath: str = "/",
+        wspath: str = "/api/v1/ws",
+        handlers: List[Any] = None,
+        debug: bool = True,
+        cookie_secret: Optional[str] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
 
         handlers = handlers or []
 
@@ -36,4 +37,4 @@ class ServerApplication(tornado.web.Application):
 
         settings.update(**kwargs)
 
-        super(ServerApplication, self).__init__(handlers, **settings)
+        super(ServerApplication, self).__init__(handlers, *args, **kwargs)

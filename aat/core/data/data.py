@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Mapping, Union, Type
+from typing import Mapping, Union, Type, Optional, Any, cast
 
 from .cpp import _CPP, _make_cpp_data
 from ..exchange import ExchangeType
@@ -20,14 +20,22 @@ class Data(object):
         "__data",
     ]
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):  # type: ignore
         if _CPP:
             return _make_cpp_data(*args, **kwargs)
         return super(Data, cls).__new__(cls)
 
-    def __init__(self, instrument=None, exchange=ExchangeType(""), data={}, **kwargs):
-        self.__id = kwargs.get("id", _ID_GENERATOR())
-        self.__timestamp = kwargs.get("timestamp", datetime.now())
+    def __init__(
+        self,
+        instrument: Optional[Instrument] = None,
+        exchange: ExchangeType = ExchangeType(""),
+        data: dict = {},
+        **kwargs: Union[int, datetime],
+    ) -> None:
+        self.__id: int = cast(int, kwargs.get("id", _ID_GENERATOR()))
+        self.__timestamp: datetime = cast(
+            datetime, kwargs.get("timestamp", datetime.now())
+        )
 
         assert instrument is None or isinstance(instrument, Instrument)
         assert isinstance(exchange, ExchangeType)
@@ -44,36 +52,41 @@ class Data(object):
         return self.__id
 
     @property
-    def timestamp(self) -> int:
+    def timestamp(self) -> datetime:
         return self.__timestamp
 
     @property
-    def type(self):
+    def type(self) -> DataType:
         return self.__type
 
     @property
-    def instrument(self):
+    def instrument(self) -> Optional[Instrument]:
         return self.__instrument
 
     @property
-    def exchange(self):
+    def exchange(self) -> ExchangeType:
         return self.__exchange
 
     @property
-    def data(self):
+    def data(self) -> Any:
         return self.__data
 
     def __repr__(self) -> str:
         return f"Data( id={self.id}, timestamp={self.timestamp}, instrument={self.instrument}, exchange={self.exchange})"
 
-    def __eq__(self, other) -> bool:
-        assert isinstance(other, Data)
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Data):
+            raise TypeError()
         return self.id == other.id
 
-    def json(self) -> Mapping[str, Union[str, int, float]]:
+    def json(self, flat: bool = False) -> Mapping[str, Union[str, int, float]]:
+        if flat:
+            # TODO
+            raise NotImplementedError()
+
         return {
             "id": self.id,
-            "timestamp": self.timestamp,
+            "timestamp": self.timestamp.timestamp(),
             "type": self.type.value,
             "instrument": str(self.instrument),
             "exchange": str(self.exchange),

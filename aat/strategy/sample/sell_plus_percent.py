@@ -1,11 +1,11 @@
 import math
-from typing import Dict, Tuple
+from typing import Any, Dict, Tuple
 
 from aat import Strategy, Event, Order, Trade, Side, Instrument
 
 
 class SellPlusPercentStrategy(Strategy):
-    def __init__(self, percent=10, *args, **kwargs) -> None:
+    def __init__(self, percent: int = 10, *args: Any, **kwargs: Any) -> None:
         super(SellPlusPercentStrategy, self).__init__(*args, **kwargs)
 
         self._up_percent = 1.0 + float(percent) / 100

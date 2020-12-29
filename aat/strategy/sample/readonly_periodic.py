@@ -1,11 +1,13 @@
 import os
 import os.path
-from aat import Strategy, Event
 from pprint import pprint
+from typing import Tuple, Dict
+
+from aat import Strategy, Event
 
 
 class ReadOnlyStrategy(Strategy):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Tuple, **kwargs: Dict) -> None:
         super(ReadOnlyStrategy, self).__init__(*args, **kwargs)
         self.count = 0
 
@@ -20,13 +22,13 @@ class ReadOnlyStrategy(Strategy):
     async def onTrade(self, event: Event) -> None:
         pprint(event)
 
-    async def onOrder(self, event):
+    async def onOrder(self, event: Event) -> None:
         pprint(event)
 
     async def onExit(self, event: Event) -> None:
         print("Finishing...")
 
-    async def onPeriodic(self):
+    async def onPeriodic(self) -> None:
         print("here: {}".format(self.count))
         self.count += 1
 

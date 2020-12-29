@@ -1,3 +1,4 @@
+from typing import Any
 from aat.common import _in_cpp
 
 
@@ -9,5 +10,5 @@ except ImportError:
     _CPP = False
 
 
-def _make_cpp_instrument(*args, **kwargs):
+def _make_cpp_instrument(*args: Any, **kwargs: Any) -> InstrumentCpp:
     return InstrumentCpp(*args, **kwargs)
