@@ -1,12 +1,13 @@
 from typing import Any
-from aat.common import _in_cpp
 
+from aat.common import _in_cpp
 
 try:
     from aat.binding import ExchangeTypeCpp  # type: ignore
 
     _CPP = _in_cpp()
 except ImportError:
+    ExchangeTypeCpp = object
     _CPP = False
 
 

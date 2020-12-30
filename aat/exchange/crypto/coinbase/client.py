@@ -1,31 +1,31 @@
-import aiohttp  # type: ignore
 import base64
 import hashlib
 import hmac
 import json
-import requests
 import time
 from datetime import datetime
 from functools import lru_cache
-from requests.auth import AuthBase
-from typing import Any, AsyncGenerator, cast, Dict, List, Union
+from typing import Any, AsyncGenerator, Dict, List, Union, cast
+
+import aiohttp  # type: ignore
+import requests
 
 # from aat import Instrument, InstrumentType, Account, Position
 from aat import (
-    TradingType,
+    Event,
+    EventType,
     ExchangeType,
     Instrument,
     InstrumentType,
-    Position,
     Order,
-    Trade,
-    Side,
-    OrderType,
     OrderFlag,
-    Event,
-    EventType,
+    OrderType,
+    Position,
+    Side,
+    Trade,
+    TradingType,
 )
-
+from requests.auth import AuthBase
 
 _REST = "https://api.pro.coinbase.com"
 _WS = "wss://ws-feed.pro.coinbase.com"
@@ -128,7 +128,7 @@ class CoinbaseExchangeClient(AuthBase):
             return resp.json()["id"]
 
         # TODO
-        print(resp.text)
+        # print(resp.text)
         return ""
 
     def _cancelOrder(self, order_jsn: dict) -> bool:

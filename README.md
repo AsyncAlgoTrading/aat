@@ -583,12 +583,12 @@ We can run any number of strategies against any number of exchanges, including c
 | Synthetic | Yes | Yes | Simulation,Backtest  | Equity |
 | IEX | Yes | Fake | Live, Simulation, Sandbox, Backtest | Equity |
 | InteractiveBrokers | In Progress | Yes |  Live, Simulation, Sandbox | Equity, Option, Future, Commodities, Spreads, Pairs |
-| TD Ameritrade | In Progress | In Progress | Equity, Option |
-| Alpaca | In Progress | In Progress |   |
-| Coinbase | In Progress | In Progress |  |
-| Gemini | In Progress | In Progress |  |
-| Coinbase | In Progress | In Progress |  |
-| ccxt | In Progress | In Progress |  |
+| TD Ameritrade | In Progress | In Progress | In Progress | Equity, Option |
+| Alpaca | In Progress | In Progress | |  |
+| Coinbase | In Progress | In Progress | | |
+| Gemini | In Progress | In Progress | | |
+| Coinbase | In Progress | In Progress | | |
+| ccxt | In Progress | In Progress | | |
 
 # TODO below here are sections that still need to be documented
 
