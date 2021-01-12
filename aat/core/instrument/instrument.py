@@ -12,9 +12,10 @@ from .db import InstrumentDB
 class Instrument(object):
     _instrumentdb = InstrumentDB()
 
+    __exchange: ExchangeType
     __exchanges: List[ExchangeType]
     __type: InstrumentType
-    __trading_days: Dict[ExchangeType, TradingDay]
+    __trading_day: TradingDay
     __broker_exchange: Optional[ExchangeType]
     __broker_id: Optional[str]
     __currency: Optional["Instrument"]
@@ -32,8 +33,9 @@ class Instrument(object):
     __slots__ = [
         "__name",
         "__type",
+        "__exchange",
         "__exchanges",
-        "__trading_days",
+        "__trading_day",
         "__broker_exchange",
         "__broker_id",
         "__currency",
@@ -49,7 +51,7 @@ class Instrument(object):
     ]
 
     def __new__(cls: Type, *args: Tuple, **kwargs: Dict) -> "Instrument":
-        if cls._instrumentdb.instruments(*args, **kwargs):
+        if cls._instrumentdb.get(*args, **kwargs):
             return cls._instrumentdb.get(*args, **kwargs)
 
         if _CPP:
@@ -140,43 +142,37 @@ class Instrument(object):
         ):
             # append this exchange to list of available
             self.__exchanges.append(exchange)
+
+            # set attribute
+            self.__exchange = exchange
+
         elif exchange:
             # create new list with this one
             self.__exchanges = [exchange]
+
+            # set attribute
+            self.__exchange = exchange
+
         elif hasattr(self, "_Instrument__exchanges"):
             # do nothing
             pass
+
         else:
             # no exchange known and no exchange provided
             self.__exchanges = []
 
+            # set attribute
+            self.__exchange = exchange
+
         # Optional Fields
-        if (
-            exchange
-            and kwargs.get("trading_day", None)
-            and hasattr(self, "_Instrument__trading_days")
-            and exchange not in self.__trading_days
-        ):
-            # append this exchange to list of available
-            self.__trading_days[exchange] = cast(TradingDay, kwargs.get("trading_day"))
-        elif (
-            exchange
-            and kwargs.get("trading_day", None)
-            and not hasattr(self, "_Instrument__trading_days")
-        ):
-            # create new dict with this one
-            self.__trading_days = {
-                exchange: cast(TradingDay, kwargs.get("trading_day"))
-            }
-        elif kwargs.get("trading_day", None):
-            # no exchange, raise error
-            raise Exception("If setting trading hours, must provide exchange")
-        elif hasattr(self, "_Instrument__trading_days"):
-            # do nothing
-            pass
+        if hasattr(self, "_Instrument__trading_day") and self.__trading_day is not None:
+            assert kwargs.get(
+                "trading_day"
+            ) is None or self.__trading_day == kwargs.get("trading_day")
         else:
-            # no exchange known and no trasding days provided
-            self.__trading_days = {}
+            self.__trading_day: Optional[TradingDay] = cast(
+                TradingDay, kwargs.get("trading_day")
+            )
 
         if (
             hasattr(self, "_Instrument__broker_exchange")
@@ -303,15 +299,35 @@ class Instrument(object):
     def exchanges(self) -> List[ExchangeType]:
         return self.__exchanges
 
+    @property
+    def exchange(self) -> ExchangeType:
+        return self.__exchange
+
+    def tradingLines(self, exchange: ExchangeType = None) -> List["Instrument"]:
+        """Returns other exchanges that the same instrument trades on
+
+        Returns:
+            exchange (ExchangeType): Exchange to filter by
+        """
+        return self._instrumentdb.instruments(self.name, self.type, exchange)
+
+    def synthetics(
+        self, type: InstrumentType = None, exchange: ExchangeType = None
+    ) -> List["Instrument"]:
+        """Returns other instruments with the same name
+
+        Returns:
+            type (InstrumentType): instrument type to filter by, e.g. for an equity, filter to only get ADRs
+            exchange (ExchangeType): Exchange to filter by
+        """
+        return self._instrumentdb.instruments(self.name, type, exchange)
+
     # ******** #
     # Optional #
     # ******** #
     @property
-    def tradingDays(self) -> Dict[ExchangeType, TradingDay]:
-        return self.__trading_days
-
-    def tradingDay(self, exchange: ExchangeType) -> TradingDay:
-        return self.__trading_days[exchange]
+    def tradingDay(self) -> TradingDay:
+        return self.__trading_day
 
     @property
     def brokerExchange(self) -> Optional[ExchangeType]:
