@@ -5,7 +5,7 @@ import json
 import time
 from datetime import datetime
 from functools import lru_cache
-from typing import Any, AsyncGenerator, Dict, List, Union, cast
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union, cast
 
 import aiohttp  # type: ignore
 import requests
@@ -32,7 +32,7 @@ _WS = "wss://ws-feed.pro.coinbase.com"
 _REST_SANDBOX = "https://api-public.sandbox.pro.coinbase.com"
 _WS_SANDBOX = "wss://ws-feed-public.sandbox.pro.coinbase.com"
 
-_SUBSCRIPTION = {
+_SUBSCRIPTION: Dict[str, Union[str, List[str]]] = {
     "type": "subscribe",
     "product_ids": [],
     "channels": ["user", "hearbeat"],
@@ -344,11 +344,11 @@ class CoinbaseExchangeClient(AuthBase):
         subscription = _SUBSCRIPTION.copy()
 
         # fill in l3 details
-        subscription["channels"].append("full")
+        cast(List, subscription["channels"]).append("full")
 
         # for each subcription, add symbol to product_ids
         for sub in subscriptions:
-            subscription["product_ids"].append(sub.brokerId)  # type: ignore
+            cast(List, subscription["product_ids"]).append(sub.brokerId)
 
         # sign the message in a similar way to the rest api, but
         # using the message of GET/users/self/verify
@@ -408,7 +408,7 @@ class CoinbaseExchangeClient(AuthBase):
                             yield e
 
                     elif x["type"] == "done":
-                        o = self._process_done(x)
+                        o = cast(Order, self._process_done(x))
                         if o:
                             e = Event(type=EventType.CANCEL, target=o)
                             yield e
@@ -438,14 +438,14 @@ class CoinbaseExchangeClient(AuthBase):
         subscription = _SUBSCRIPTION.copy()
 
         # fill in l2 details
-        subscription["channels"].append("level2")
+        cast(List, subscription["channels"]).append("level2")
 
         # get trades
-        subscription["channels"].append("ticker")
+        cast(List, subscription["channels"]).append("ticker")
 
         # for each subcription, add symbol to product_ids
         for sub in subscriptions:
-            subscription["product_ids"].append(sub.brokerId)  # type: ignore
+            cast(List, subscription["product_ids"]).append(sub.brokerId)
 
         # sign the message in a similar way to the rest api, but
         # using the message of GET/users/self/verify
@@ -508,11 +508,11 @@ class CoinbaseExchangeClient(AuthBase):
         subscription = _SUBSCRIPTION.copy()
 
         # get trades
-        subscription["channels"].append("ticker")
+        cast(List, subscription["channels"]).append("ticker")
 
         # for each subcription, add symbol to product_ids
         for sub in subscriptions:
-            subscription["product_ids"].append(sub.brokerId)  # type: ignore
+            cast(List, subscription["product_ids"]).append(sub.brokerId)
 
         # sign the message in a similar way to the rest api, but
         # using the message of GET/users/self/verify
@@ -562,8 +562,8 @@ class CoinbaseExchangeClient(AuthBase):
         o = Order(
             float(x["last_size"]),
             float(x["price"]),
-            Side(x["side"].upper()),
-            Instrument(x["product_id"], InstrumentType.PAIR, self.exchange),
+            Side(str(x["side"]).upper()),
+            Instrument(str(x["product_id"]), InstrumentType.PAIR, self.exchange),
             self.exchange,
             filled=float(x["last_size"]),
         )
@@ -601,8 +601,8 @@ class CoinbaseExchangeClient(AuthBase):
         o = Order(
             float(x["remaining_size"]),
             float(x["price"]),
-            Side(x["side"].upper()),
-            Instrument(x["product_id"], InstrumentType.PAIR, self.exchange),
+            Side(str(x["side"]).upper()),
+            Instrument(str(x["product_id"]), InstrumentType.PAIR, self.exchange),
             self.exchange,
         )
         return o
@@ -664,8 +664,8 @@ class CoinbaseExchangeClient(AuthBase):
             o = Order(
                 float(x["size"]),
                 float(x["price"]),
-                Side(x["side"].upper()),
-                Instrument(x["product_id"], InstrumentType.PAIR, self.exchange),
+                Side(str(x["side"]).upper()),
+                Instrument(str(x["product_id"]), InstrumentType.PAIR, self.exchange),
                 self.exchange,
             )
 
@@ -690,7 +690,7 @@ class CoinbaseExchangeClient(AuthBase):
 
         return t
 
-    def _process_done(self, x: Dict[str, Union[str, int, float]]) -> Trade:
+    def _process_done(self, x: Dict[str, Union[str, int, float]]) -> Optional[Order]:
         # The order is no longer on the order book. Sent for
         # all orders for which there was a received message.
         # This message can result from an order being canceled
@@ -716,6 +716,7 @@ class CoinbaseExchangeClient(AuthBase):
         # }
         if x["reason"] == "canceled":
             id = x["order_id"]
+
             # if cancelled
             if "price" not in x:
                 # cancel this event if we have a full local order book
@@ -727,9 +728,9 @@ class CoinbaseExchangeClient(AuthBase):
             o = Order(
                 float(x["remaining_size"]),
                 float(x["price"]),
-                Side(x["side"].upper()),
+                Side(str(x["side"]).upper()),
                 Instrument(
-                    x["product_id"],
+                    str(x["product_id"]),
                     InstrumentType.PAIR,
                     self.exchange,
                 ),
@@ -747,8 +748,11 @@ class CoinbaseExchangeClient(AuthBase):
             # TODO unhandled
             # this should never print
             print("TODO: unhandled", x)
+        return None
 
-    def _process_received(self, x: Dict[str, Union[str, int, float]]) -> Order:
+    def _process_received(
+        self, x: Dict[str, Union[str, int, float]]
+    ) -> Optional[Order]:
         # generate new Open events
         # A valid order has been received and is now active.
         # This message is emitted for every single valid order as
@@ -816,8 +820,8 @@ class CoinbaseExchangeClient(AuthBase):
             o = Order(
                 float(x["size"]),
                 0.0,
-                Side(x["side"].upper()),
-                Instrument(x["product_id"], InstrumentType.PAIR, self.exchange),
+                Side(str(x["side"]).upper()),
+                Instrument(str(x["product_id"]), InstrumentType.PAIR, self.exchange),
                 self.exchange,
                 id=id,
             )
@@ -827,8 +831,8 @@ class CoinbaseExchangeClient(AuthBase):
             o = Order(
                 float(x["size"]),
                 float(x["price"]),
-                Side(x["side"].upper()),
-                Instrument(x["product_id"], InstrumentType.PAIR, self.exchange),
+                Side(str(x["side"]).upper()),
+                Instrument(str(x["product_id"]), InstrumentType.PAIR, self.exchange),
                 self.exchange,
             )
         return o
