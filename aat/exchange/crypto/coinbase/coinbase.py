@@ -9,7 +9,16 @@ from .client import CoinbaseExchangeClient
 
 
 class CoinbaseProExchange(Exchange):
-    """Coinbase Pro Exchange"""
+    """Coinbase Pro Exchange
+
+    Args:
+        trading_type (TradingType): type of trading to do. Must be Sandbox or Live
+        verbose (bool): run in verbose mode
+        api_key (str): Coinbase API key
+        api_secret (str): Coinbase API secret
+        api_passphrase (str): Coinbase API passphrase
+        order_book_level (str): Level of orderbook to trace, must be 'l3', 'l2', or 'trades'
+    """
 
     def __init__(
         self,
@@ -18,6 +27,7 @@ class CoinbaseProExchange(Exchange):
         api_key: str = "",
         api_secret: str = "",
         api_passphrase: str = "",
+        order_book_level: str = "l3",
         **kwargs: dict
     ) -> None:
         self._trading_type = trading_type
@@ -28,12 +38,21 @@ class CoinbaseProExchange(Exchange):
         self._api_secret = api_secret or os.environ.get("API_SECRET", "")
         self._api_passphrase = api_passphrase or os.environ.get("API_PASSPHRASE", "")
 
+        # order book level to track
+        if order_book_level not in ("l3", "l2", "trades"):
+            raise NotImplementedError("`order_book_level` must be in (l3, l2, trades)")
+        self._order_book_level = order_book_level
+
         # enforce authentication, otherwise we don't get enough
         # data to be interesting
         if not (self._api_key and self._api_secret and self._api_passphrase):
             raise Exception("No coinbase auth!")
 
         # don't implement backtest for now
+        if trading_type == TradingType.BACKTEST:
+            raise NotImplementedError()
+
+        # don't implement simulation for now
         if trading_type == TradingType.BACKTEST:
             raise NotImplementedError()
 
@@ -84,13 +103,23 @@ class CoinbaseProExchange(Exchange):
     async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         """return data from exchange"""
 
-        # First, roll through order book snapshot
-        async for item in self._client.orderBook(self._subscriptions):
-            yield item
+        if self._order_book_level == "l3":
+            # First, roll through order book snapshot
+            async for item in self._client.orderBook(self._subscriptions):
+                yield item
 
-        # then stream in live updates
-        async for tick in self._client.websocket(self._subscriptions):
-            yield tick
+            # then stream in live updates
+            async for tick in self._client.websocket_l3(self._subscriptions):
+                yield tick
+
+        elif self._order_book_level == "l2":
+            async for tick in self._client.websocket_l2(self._subscriptions):
+                print("here")
+                yield tick
+
+        elif self._order_book_level == "trades":
+            async for tick in self._client.websocket_trades(self._subscriptions):
+                yield tick
 
     async def subscribe(self, instrument: Instrument) -> None:
         # can only subscribe to pair data
