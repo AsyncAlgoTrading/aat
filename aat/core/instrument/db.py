@@ -14,7 +14,9 @@ class InstrumentDB(object):
         self._by_name: Dict[str, List["Instrument"]] = {}
         self._by_type: Dict[Tuple[str, InstrumentType], List["Instrument"]] = {}
         self._by_exchange: Dict[Tuple[str, ExchangeType], "Instrument"] = {}
-        self._by_type_and_exchange: Dict[Tuple[str, ExchangeType], "Instrument"] = {}
+        self._by_type_and_exchange: Dict[
+            Tuple[str, InstrumentType, ExchangeType], "Instrument"
+        ] = {}
 
     def add(self, instrument: "Instrument") -> None:
         if instrument.name not in self._by_name:
@@ -55,11 +57,9 @@ class InstrumentDB(object):
         exchange: Optional[ExchangeType] = ExchangeType(""),
         *args: Tuple,
         **kwargs: Dict
-    ) -> "Instrument":
+    ) -> Optional["Instrument"]:
         """Like `instruments` but only returns 1"""
         ret = [inst for values in self._by_name.values() for inst in values]
-        if not name and not type and not exchange:
-            return ret
         if name:
             ret = [r for r in ret if r.name == name]
         if type:

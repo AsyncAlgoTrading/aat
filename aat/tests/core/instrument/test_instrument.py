@@ -26,6 +26,6 @@ class TestInstrument(object):
             broker_id="3",
         )
 
-        assert i1.tradingLines == [i1, i2, i3]
-        assert i2.tradingLines == [i1, i2, i3]
-        assert i3.tradingLines == [i1, i2, i3]
+        assert i1.tradingLines() == [i1, i2, i3]
+        assert i2.tradingLines() == [i1, i2, i3]
+        assert i3.tradingLines() == [i1, i2, i3]

@@ -71,5 +71,7 @@ class TradingDay(object):
     def close(self) -> Optional[Tuple[time, ...]]:
         return self._close_times
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TradingDay):
+            return False
         return self.open == other.open and self.close == other.close

@@ -15,7 +15,7 @@ class Instrument(object):
     __exchange: ExchangeType
     __exchanges: List[ExchangeType]
     __type: InstrumentType
-    __trading_day: Dict[ExchangeType, TradingDay]
+    __trading_day: TradingDay
     __broker_exchange: Optional[ExchangeType]
     __broker_id: Optional[str]
     __currency: Optional["Instrument"]
@@ -303,14 +303,23 @@ class Instrument(object):
     def exchange(self) -> ExchangeType:
         return self.__exchange
 
-    @property
     def tradingLines(self, exchange: ExchangeType = None) -> List["Instrument"]:
+        """Returns other exchanges that the same instrument trades on
+
+        Returns:
+            exchange (ExchangeType): Exchange to filter by
+        """
         return self._instrumentdb.instruments(self.name, self.type, exchange)
 
-    @property
     def synthetics(
         self, type: InstrumentType = None, exchange: ExchangeType = None
     ) -> List["Instrument"]:
+        """Returns other instruments with the same name
+
+        Returns:
+            type (InstrumentType): instrument type to filter by, e.g. for an equity, filter to only get ADRs
+            exchange (ExchangeType): Exchange to filter by
+        """
         return self._instrumentdb.instruments(self.name, type, exchange)
 
     # ******** #
