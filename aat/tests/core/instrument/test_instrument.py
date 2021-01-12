@@ -1,7 +1,9 @@
+import pytest
 from aat.core import ExchangeType, Instrument
 
 
 class TestInstrument(object):
+    @pytest.mark.skipif("os.environ.get('AAT_USE_CPP', '')")
     def test_instrument(self):
         E1 = ExchangeType("E1")
         E2 = ExchangeType("E2")
