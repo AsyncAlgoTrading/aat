@@ -51,7 +51,7 @@ class StrategyManagerUtilsMixin(object):
         self._data_subscriptions[strategy].append(instrument)
 
         for exc in self._exchanges:
-            if instrument:
+            if instrument and instrument.exchange == exc.exchange():
                 await exc.subscribe(instrument)
 
     def dataSubscriptions(self, handler: Callable, event: Event) -> bool:
