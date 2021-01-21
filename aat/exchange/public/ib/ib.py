@@ -411,7 +411,7 @@ class InteractiveBrokersExchange(Exchange):
 
         # set event for later trigerring
         self._order_received_map[id] = asyncio.Event()
-        await self._order_received_map[id]  # type: ignore
+        await self._order_received_map[id].wait()
 
         res = self._order_received_res[id]
         del self._order_received_map[id]
