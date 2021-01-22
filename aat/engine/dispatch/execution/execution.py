@@ -79,7 +79,7 @@ class OrderManager(ManagerBase):
             # TODO cleaner?
             trade.my_order = order
             trade.id = order.id
-            order.filled = maker_order.filled
+            order.filled = trade.taker_order.filled
 
         if action:
             if order.side == Order.Sides.SELL:
