@@ -139,7 +139,7 @@ class StrategyManagerUtilsMixin(object):
         # End Validation
 
         periodic = Periodic(
-            self.loop(), self._engine._latest, function, second, minute, hour
+            self.loop(), self._engine._latest, function, second, minute, hour  # type: ignore
         )
         self._periodics.append(periodic)
         return periodic

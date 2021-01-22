@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from typing import Callable, Awaitable, List, Union
+from typing import Callable, Awaitable, List, Optional
 from temporalcache.utils import should_expire  # type: ignore
 
 
@@ -10,26 +10,39 @@ class Periodic(object):
         loop: asyncio.AbstractEventLoop,
         last_ts: datetime,
         function: Callable[..., Awaitable[None]],
-        second: Union[int, str],
-        minute: Union[int, str],
-        hour: Union[int, str],
+        second: Optional[int],
+        minute: Optional[int],
+        hour: Optional[int],
     ) -> None:
         self._loop = loop
         self._function: Callable[..., Awaitable[None]] = function
-        self._second = second
-        self._minute = minute
-        self._hour = hour
+        assert (
+            second != "*" and minute != "*" and hour != "*"
+        ), "Please use None instead of '*'"
+        self.__second = second
+        self.__minute = minute
+        self.__hour = hour
 
         self._last = last_ts
         self._continue = True
+
+    @property
+    def second(self) -> Optional[int]:
+        return self.__second
+
+    @property
+    def minute(self) -> Optional[int]:
+        return self.__minute
+
+    @property
+    def hour(self) -> Optional[int]:
+        return self.__hour
 
     def stop(self) -> None:
         self._continue = False
 
     def expires(self, timestamp: datetime) -> bool:
-        return should_expire(
-            self._last, timestamp, self._second, self._minute, self._hour
-        )
+        return should_expire(self._last, timestamp, self.second, self.minute, self.hour)
 
     async def execute(self, timestamp: datetime) -> None:
         if self.expires(timestamp):
@@ -51,10 +64,10 @@ class PeriodicManagerMixin(object):
         """
         ret = 3600
         for p in self._periodics:
-            if p._second == "*":
+            if p.second is None:
                 # if any secondly, return 0 right away
                 return 1
-            elif p._minute == "*":
+            elif p.minute is None:
                 # if any require minutely, drop to 1
                 ret = 60
         return ret
