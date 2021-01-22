@@ -58,28 +58,28 @@ class OrderManager(ManagerBase):
         """Match trade with order"""
         action: bool = False
         strat: Optional[EventHandler] = None
-        order: Optional[Order] = None
 
         trade: Trade = event.target  # type: ignore
 
-        for order in trade.maker_orders:
-            if order.id in self._pending_orders:
+        for maker_order in trade.maker_orders:
+            if maker_order.id in self._pending_orders:
                 action = True
-                _, strat = self._pending_orders[order.id]
+                order, strat = self._pending_orders[maker_order.id]
 
                 # TODO cleaner?
                 trade.my_order = order
                 trade.id = order.id
+                order.filled = maker_order.filled
                 break
 
         if trade.taker_order.id in self._pending_orders:
             action = True
-            order = trade.taker_order
+            order, strat = self._pending_orders[trade.taker_order.id]
 
             # TODO cleaner?
             trade.my_order = order
             trade.id = order.id
-            _, strat = self._pending_orders[order.id]
+            order.filled = trade.taker_order.filled
 
         if action:
             if order.side == Order.Sides.SELL:
@@ -97,13 +97,16 @@ class OrderManager(ManagerBase):
                 del self._pending_orders[order.id]
 
     async def onCancel(self, event: Event) -> None:
-        order: Order = event.target  # type: ignore
-        if order.id in self._pending_orders:
-            _, strat = self._pending_orders[order.id]
+        canceled_order: Order = event.target  # type: ignore
+        if canceled_order.id in self._pending_orders:
+            order, strat = self._pending_orders[canceled_order.id]
+
+            # TODO second look, just in case
+            order.filled = canceled_order.filled
 
             # TODO ugly private method
             await self._manager._onCanceled(cast("Strategy", strat), order)
-            del self._pending_orders[order.id]
+            del self._pending_orders[canceled_order.id]
 
     async def onOpen(self, event: Event) -> None:
         # TODO
