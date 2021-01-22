@@ -46,7 +46,7 @@ class Periodic(object):
 
     async def execute(self, timestamp: datetime) -> None:
         if self.expires(timestamp):
-            await self._function()
+            await self._function(timestamp=timestamp)
             self._last = timestamp
 
 

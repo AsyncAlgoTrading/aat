@@ -1,7 +1,7 @@
 import os
 import os.path
 from pprint import pprint
-from typing import Tuple, Dict
+from typing import Any, Dict, Tuple
 
 from aat import Strategy, Event
 
@@ -28,7 +28,7 @@ class ReadOnlyStrategy(Strategy):
     async def onExit(self, event: Event) -> None:
         print("Finishing...")
 
-    async def onPeriodic(self) -> None:
+    async def onPeriodic(self, **kwargs: Any) -> None:
         print("here: {}".format(self.count))
         self.count += 1
 
