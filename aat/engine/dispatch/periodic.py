@@ -33,10 +33,7 @@ class Periodic(object):
 
     async def execute(self, timestamp: datetime) -> None:
         if self.expires(timestamp):
-            if "timestamp" in self._function.__code__.co_varnames:
-                await self._function(timestamp)
-            else:
-                await self._function()
+            await self._function(timestamp=timestamp)
             self._last = timestamp
 
 

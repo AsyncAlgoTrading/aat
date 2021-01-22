@@ -81,7 +81,7 @@ class TestStrategy(Strategy):
     async def onTraded(self, event: Event) -> None:
         self._trades.append(event.target)  # type: ignore
 
-    async def onPeriodic(self) -> None:
+    async def onPeriodic(self, **kwargs: Any) -> None:
         o = Order(1, 1, Side.BUY, self.instruments()[0], ExchangeType("testharness"))
         _ = await self.newOrder(o)
         self._orders.append(o)
