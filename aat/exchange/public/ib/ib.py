@@ -423,7 +423,16 @@ class InteractiveBrokersExchange(Exchange):
 
         For MarketData-only, can just return None
         """
+        if not order.id:
+            # order not sujbmitted yet
+            return order
+
         self._api.cancelOrder(order)
+
+        # set event for later trigerring
+        self._order_cancelled_map[order.id] = asyncio.Event()
+        await self._order_cancelled_map[order.id].wait()
+
         res = self._order_cancelled_res[order.id]
 
         del self._order_cancelled_map[order.id]
