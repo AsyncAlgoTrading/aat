@@ -425,7 +425,7 @@ class InteractiveBrokersExchange(Exchange):
         """
         if not order.id:
             # order not sujbmitted yet
-            return order
+            return False
 
         self._api.cancelOrder(order)
 
