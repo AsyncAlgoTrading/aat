@@ -419,7 +419,8 @@ class InteractiveBrokersExchange(Exchange):
         ibcontract, iborder = _constructContractAndOrder(order)
 
         # set event for later trigerring
-        self._order_received_map[str(self._api.nextOrderId)] = asyncio.Event()
+        _temp_id = str(self._api.nextOrderId)
+        self._order_received_map[_temp_id] = asyncio.Event()
 
         # send to IB
         id = self._api.placeOrder(ibcontract, iborder)
@@ -429,7 +430,7 @@ class InteractiveBrokersExchange(Exchange):
         self._orders[order.id] = order
 
         # wait for IB to respond
-        await self._order_received_map[str(self._api.nextOrderId)].wait()
+        await self._order_received_map[_temp_id].wait()
 
         # get result from IB
         res = self._order_received_res[id]
