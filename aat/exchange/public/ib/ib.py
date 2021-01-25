@@ -402,6 +402,9 @@ class InteractiveBrokersExchange(Exchange):
         # construct IB contract and order
         ibcontract, iborder = _constructContractAndOrder(order)
 
+        # set event for later trigerring
+        self._order_received_map[str(self._api.nextOrderId)] = asyncio.Event()
+
         # send to IB
         id = self._api.placeOrder(ibcontract, iborder)
 
@@ -409,10 +412,10 @@ class InteractiveBrokersExchange(Exchange):
         order.id = id
         self._orders[order.id] = order
 
-        # set event for later trigerring
-        self._order_received_map[id] = asyncio.Event()
-        await self._order_received_map[id].wait()
+        # wait for IB to respond
+        await self._order_received_map[str(self._api.nextOrderId)].wait()
 
+        # get result from IB
         res = self._order_received_res[id]
         del self._order_received_map[id]
         del self._order_received_res[id]
@@ -427,12 +430,16 @@ class InteractiveBrokersExchange(Exchange):
             # order not sujbmitted yet
             return False
 
-        self._api.cancelOrder(order)
-
         # set event for later trigerring
         self._order_cancelled_map[order.id] = asyncio.Event()
+
+        # send to IB
+        self._api.cancelOrder(order)
+
+        # wait for IB to respond
         await self._order_cancelled_map[order.id].wait()
 
+        # get result from IB
         res = self._order_cancelled_res[order.id]
 
         del self._order_cancelled_map[order.id]
