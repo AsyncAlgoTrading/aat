@@ -51,64 +51,67 @@ class Strategy(metaclass=ABCMeta):
     # Event Handler Methods #
     #########################
     @abstractmethod
-    async def onTrade(self, event: Event):
+    async def onTrade(self, event: Event) -> None:
         '''Called whenever a `Trade` event is received'''
 
     async def onOrder(self, event: Event) -> None:
         '''Called whenever an Order `Open`, `Cancel`, `Change`, or `Fill` event is received'''
-        pass
 
-    async def onOpen(self, event: Event):
+    async def onOpen(self, event: Event) -> None:
         '''Called whenever an Order `Open` event is received'''
 
-    async def onFill(self, event: Event):
+    async def onFill(self, event: Event) -> None:
         '''Called whenever an Order `Fill` event is received'''
 
-    async def onCancel(self, event: Event):
+    async def onCancel(self, event: Event) -> None:
         '''Called whenever an Order `Cancel` event is received'''
 
-    async def onChange(self, event: Event):
+    async def onChange(self, event: Event) -> None:
         '''Called whenever an Order `Change` event is received'''
 
-    async def onError(self, event: Event):
+    async def onError(self, event: Event) -> None:
         '''Called whenever an internal error occurs'''
 
-    async def onStart(self):
+    async def onStart(self, event: Event) -> None:
         '''Called once at engine initialization time'''
 
-    async def onExit(self):
+    async def onExit(self, event: Event) -> None:
         '''Called once at engine exit time'''
 
-    async def onHalt(self, data):
+    async def onHalt(self, event: Event) -> None:
         '''Called whenever an exchange `Halt` event is received, i.e. an event to stop trading'''
 
-    async def onContinue(self, data):
+    async def onContinue(self, event: Event) -> None:
         '''Called whenever an exchange `Continue` event is received, i.e. an event to continue trading'''
+
+    async def onPeriodic(self, timestamp: datetime, **kwargs) -> None:
+        '''Can schedule methods vis self.periodic(<a function>), and that function will be clled periodically. See call signature for more info'''
+
 
     #########################
     # Order Entry Callbacks #
     #########################
-    async def onBought(self, event: Event):
+    async def onBought(self, event: Event) -> None:
         '''Called on my order bought'''
         pass
 
-    async def onSold(self, event: Event):
+    async def onSold(self, event: Event) -> None:
         '''Called on my order sold'''
         pass
 
-    async def onTraded(self, event: Event):
+    async def onTraded(self, event: Event) -> None:
         '''Called on my order bought or sold'''
         pass
 
-    async def onReceived(self, event: Event):
+    async def onReceived(self, event: Event) -> None:
         '''Called on my order received'''
         pass
 
-    async def onRejected(self, event: Event):
+    async def onRejected(self, event: Event) -> None:
         '''Called on my order rejected'''
         pass
 
-    async def onCanceled(self, event: Event):
+    async def onCanceled(self, event: Event) -> None:
         '''Called on my order canceled'''
         pass
 
@@ -187,12 +190,12 @@ Here is a simple trading strategy that buys once and holds.
 from aat import Strategy, Event, Order, Trade, Side
 
 class BuyAndHoldStrategy(Strategy):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs):
         super(BuyAndHoldStrategy, self).__init__(*args, **kwargs)
 
-    async def onTrade(self, event: Event) -> None:
+    async def onTrade(self, event):
         '''Called whenever a `Trade` event is received'''
-        trade: Trade = event.target
+        trade = event.target
 
         # no past trades, no current orders
         if not self.orders(trade.instrument) and not self.trades(trade.instrument):
@@ -206,18 +209,17 @@ class BuyAndHoldStrategy(Strategy):
             print("requesting buy : {}".format(req))
             await self.newOrder(req)
 
-    async def onBought(self, event: Event) -> None:
-        trade: Trade = event.target
+    async def onBought(self, event):
+        trade = event.target
         print('bought {:.2f} @ {:.2f}'.format(trade.volume, trade.price))
 
-    async def onRejected(self, event: Event) -> None:
+    async def onRejected(self, event):
         print('order rejected')
         import sys
         sys.exit(0)
 
-    async def onExit(self, event: Event) -> None:
+    async def onExit(self, event):
         print('Finishing...')
-
 ```
 
 Trading strategies have only one required method handling messages:
@@ -269,6 +271,7 @@ There are several methods for order entry and data subscriptions...
 - tradingType: get the trading type of the runtime
 - now: get current time as of engine (`datetime.now` when running in realtime)
 - loop: get the event loop for the engine
+- periodic: schedule a function to be called periodically
 
 ... and some optional simulators for backtesting.
 
@@ -341,7 +344,6 @@ Writing a custom exchange is very easy, you just need to implement the market da
 
 ```python3
 import csv
-from typing import List
 from aat.config import EventType, InstrumentType, Side
 from aat.core import ExchangeType, Event, Instrument, Trade, Order
 from aat.exchange import Exchange
@@ -350,12 +352,12 @@ from aat.exchange import Exchange
 class CSV(Exchange):
     '''CSV File Exchange'''
 
-    def __init__(self, trading_type, verbose, filename: str):
+    def __init__(self, trading_type, verbose, filename):
         super().__init__(ExchangeType('csv-{}'.format(filename)))
         self._trading_type = trading_type
         self._verbose = verbose
         self._filename = filename
-        self._data: List[Trade] = []
+        self._data = []
         self._order_id = 0
 
     async def instruments(self):
@@ -385,7 +387,7 @@ class CSV(Exchange):
         for item in self._data:
             yield Event(EventType.TRADE, item)
 
-    async def newOrder(self, order: Order):
+    async def newOrder(self, order):
         if self._trading_type == TradingType.LIVE:
             raise NotImplementedError("Live OE not available for CSV")
 
@@ -581,14 +583,12 @@ We can run any number of strategies against any number of exchanges, including c
 | Exchange  | Market Data | Order Entry  |  TradingTypes | Asset Classes |
 |---|---|---|---|---|
 | Synthetic | Yes | Yes | Simulation,Backtest  | Equity |
-| IEX | Yes | Fake | Live, Simulation, Sandbox, Backtest | Equity |
 | InteractiveBrokers | In Progress | Yes |  Live, Simulation, Sandbox | Equity, Option, Future, Commodities, Spreads, Pairs |
+| Coinbase | Yes (trades only, L2, or L3) | Yes | Live | |
+| IEX | Yes | Fake | Live, Simulation, Sandbox, Backtest | Equity |
 | TD Ameritrade | In Progress | In Progress | In Progress | Equity, Option |
 | Alpaca | In Progress | In Progress | |  |
-| Coinbase | In Progress | In Progress | | |
 | Gemini | In Progress | In Progress | | |
-| Coinbase | In Progress | In Progress | | |
-| ccxt | In Progress | In Progress | | |
 
 # TODO below here are sections that still need to be documented
 

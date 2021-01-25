@@ -102,7 +102,7 @@ fixjs:  ## run clang-format
 	cd js; yarn fix
 
 annotate: ## MyPy type annotation check
-	$(PYTHON) -m mypy --disallow-untyped-calls --disallow-untyped-defs --show-column-numbers --follow-imports=silent --ignore-missing-imports aat
+	$(PYTHON) -m mypy aat
 
 type_ignore:  ## Count type ignores
     grep -rin "type: ignore" ./aat | wc -l

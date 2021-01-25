@@ -51,7 +51,7 @@ class StrategyManagerUtilsMixin(object):
         self._data_subscriptions[strategy].append(instrument)
 
         for exc in self._exchanges:
-            if instrument:
+            if instrument and instrument.exchange == exc.exchange():
                 await exc.subscribe(instrument)
 
     def dataSubscriptions(self, handler: Callable, event: Event) -> bool:
@@ -139,7 +139,7 @@ class StrategyManagerUtilsMixin(object):
         # End Validation
 
         periodic = Periodic(
-            self.loop(), self._engine._latest, function, second, minute, hour
+            self.loop(), self._engine._latest, function, second, minute, hour  # type: ignore
         )
         self._periodics.append(periodic)
         return periodic

@@ -12,9 +12,9 @@ class TestInstrumentCalendar(object):
         e = ExchangeType("test-exchange")
 
         i = Instrument(
-            "test",
+            "TestTradingDayInst",
             exchange=e,
             trading_day=t,
         )
 
-        assert i.tradingDay(e) == t
+        assert i.tradingDay == t
