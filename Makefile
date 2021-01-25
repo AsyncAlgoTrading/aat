@@ -114,10 +114,14 @@ docs:  ## Build the sphinx docs
 	make -C docs html
 	open ./docs/_build/html/index.html
 
-dist:  ## dist to pypi
+dist: js  ## create dists
 	rm -rf dist build
-	$(PYTHON) setup.py sdist bdist_wheel
-	$(PYTHON) -m twine check dist/* && twine upload dist/*
+	python setup.py sdist bdist_wheel
+	python -m twine check dist/*
+
+publish: dist  ## dist to pypi and npm
+	python -m twine upload dist/* --skip-existing
+	cd js; npm publish || echo "can't publish - might already exist"
 
 clean: ## clean the repository
 	find . -name "__pycache__" | xargs rm -rf
