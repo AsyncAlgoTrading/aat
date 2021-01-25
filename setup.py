@@ -38,7 +38,7 @@ def get_version(file, name="__version__"):
 version = get_version(pjoin(here, name, "_version.py"))
 
 with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
-    long_description = f.read()
+    long_description = f.read().replace("\r\n", "\n")
 
 if sys.version_info.major < 3 or sys.version_info.minor < 7:
     raise Exception("Must be python3.7 or above")
