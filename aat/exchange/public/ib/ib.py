@@ -316,17 +316,33 @@ class InteractiveBrokersExchange(Exchange):
                     "Inactive",
                 ):
                     # ignore
+                    if order.id in self._order_received_map:
+                        # cannot place order, return false
+                        self._order_received_res[order.id] = False
+                        self._order_received_map[order.id].set()
+                        await asyncio.sleep(0)
+
+                    if order.id in self._order_cancelled_map:
+                        # cannot cancel order, return false
+                        self._order_cancelled_res[order.id] = False
+                        self._order_cancelled_map[order.id].set()
+                        await asyncio.sleep(0)
+
                     continue
 
                 elif status in ("Submitted",):
-                    self._order_received_res[order.id] = True
-                    self._order_received_map[order.id].set()
-                    await asyncio.sleep(0)
+                    if order.id in self._order_received_map:
+                        # order submitted, return true
+                        self._order_received_res[order.id] = True
+                        self._order_received_map[order.id].set()
+                        await asyncio.sleep(0)
 
                 elif status in ("Cancelled",):
-                    self._order_cancelled_res[order.id] = True
-                    self._order_cancelled_map[order.id].set()
-                    await asyncio.sleep(0)
+                    if order.id in self._order_cancelled_map:
+                        # order cancelled, return true
+                        self._order_cancelled_res[order.id] = True
+                        self._order_cancelled_map[order.id].set()
+                        await asyncio.sleep(0)
 
                 elif status in ("Filled",):
                     # this is the filled from orderStatus, but we
