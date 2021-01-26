@@ -313,9 +313,11 @@ class InteractiveBrokersExchange(Exchange):
                     "PendingCancel",
                     "PreSubmitted",
                     "ApiCancelled",
-                    "Inactive",
                 ):
                     # ignore
+                    continue
+
+                elif status in ("Inactive",):
                     if order.id in self._order_received_map:
                         # cannot place order, return false
                         self._order_received_res[order.id] = False
@@ -327,8 +329,6 @@ class InteractiveBrokersExchange(Exchange):
                         self._order_cancelled_res[order.id] = False
                         self._order_cancelled_map[order.id].set()
                         await asyncio.sleep(0)
-
-                    continue
 
                 elif status in ("Submitted",):
                     if order.id in self._order_received_map:
