@@ -357,6 +357,20 @@ class InteractiveBrokersExchange(Exchange):
                     pass
 
                 elif status in ("Execution",):
+                    # if submitted was skipped, clear out the wait
+                    if order.id in self._order_received_map:
+                        # cannot place order, return false
+                        self._order_received_res[order.id] = False
+                        self._order_received_map[order.id].set()
+                        await asyncio.sleep(0)
+
+                    # if it was cancelled but already executed, clear out the wait
+                    if order.id in self._order_cancelled_map:
+                        # cannot cancel order, return false
+                        self._order_cancelled_res[order.id] = False
+                        self._order_cancelled_map[order.id].set()
+                        await asyncio.sleep(0)
+
                     # set filled
                     order.filled = order_data["filled"]
 
