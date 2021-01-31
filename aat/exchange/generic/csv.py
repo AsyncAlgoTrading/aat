@@ -95,6 +95,3 @@ class CSV(Exchange):
         self._order_id += 1
         self._queued_orders.append(order)
         return True
-
-
-Exchange.registerExchange("csv", CSV)

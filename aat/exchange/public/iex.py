@@ -328,6 +328,3 @@ class IEX(Exchange):
         # Can't cancel, orders execute immediately
         # TODO limit orders
         return False
-
-
-Exchange.registerExchange("iex", IEX)

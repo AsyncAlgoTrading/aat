@@ -2,10 +2,10 @@ import asyncio
 from datetime import datetime
 from typing import Any, List, Callable, Union, Optional, TYPE_CHECKING
 
-from aat.config import ExitRoutine
+from aat import AATException
+from aat.config import ExitRoutine,  InstrumentType, TradingType
 from aat.core import Instrument, ExchangeType, Event, Order, Trade
 from aat.exchange import Exchange
-from aat.config import InstrumentType, TradingType
 
 from .periodic import Periodic
 
@@ -41,14 +41,25 @@ class StrategyManagerUtilsMixin(object):
         """Return list of all available instruments"""
         return Instrument._instrumentdb.instruments(type=type, exchange=exchange)
 
+    def exchanges(
+        self, type: InstrumentType = None
+    ) -> List[Instrument]:
+        """Return list of all available exchanges"""
+        if type:
+            raise NotImplementedError()
+        return [exc.exchange() for exc in self._exchanges]
+
     async def subscribe(
-        self, instrument: Instrument = None, strategy: "Strategy" = None
+        self, instrument: Instrument, strategy: "Strategy"
     ) -> None:
         """Subscribe to market data for the given instrument"""
         if strategy not in self._data_subscriptions:
             self._data_subscriptions[strategy] = []
 
         self._data_subscriptions[strategy].append(instrument)
+
+        if instrument.exchange not in self.exchanges():
+            raise AATException("Exchange not installed: {} (Installed are [{}]".format(instrument.exchange, self.exchanges()))
 
         for exc in self._exchanges:
             if instrument and instrument.exchange == exc.exchange():

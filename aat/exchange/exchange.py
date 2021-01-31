@@ -7,9 +7,6 @@ from .base.market_data import _MarketData
 from .base.order_entry import _OrderEntry
 
 
-_EXCHANGES: Dict[str, Type] = {}
-
-
 class Exchange(_MarketData, _OrderEntry):
     """Generic representation of an exchange. There are two primary functionalities of an exchange.
 
@@ -25,18 +22,6 @@ class Exchange(_MarketData, _OrderEntry):
 
     def exchange(self) -> ExchangeType:
         return self._exchange
-
-    @staticmethod
-    def registerExchange(exchange_name: str, clazz: Type) -> None:
-        _EXCHANGES[exchange_name] = clazz
-
-    @staticmethod
-    def exchanges(exchange: str = None) -> Union[Type, List[str]]:
-        if exchange:
-            if exchange not in _EXCHANGES:
-                raise Exception(f"Unknown exchange type: {exchange}")
-            return _EXCHANGES[exchange]
-        return list(_EXCHANGES.keys())
 
     @abstractmethod
     async def connect(self) -> None:
