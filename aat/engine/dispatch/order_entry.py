@@ -219,7 +219,10 @@ class StrategyManagerOrderEntryMixin(object):
             strategy, order = self._alerted_events[event]
             # remove from list of open orders if done
             if order.filled >= order.volume:
-                self._strategy_open_orders[strategy].remove(order)
+                try:
+                    self._strategy_open_orders[strategy].remove(order)
+                except ValueError:
+                    ...
         else:
             strategy = None
 
@@ -244,7 +247,10 @@ class StrategyManagerOrderEntryMixin(object):
         if event in self._alerted_events:
             strategy, order = self._alerted_events[event]
             # remove from list of open orders
-            self._strategy_open_orders[strategy].remove(order)
+            try:
+                self._strategy_open_orders[strategy].remove(order)
+            except ValueError:
+                ...
         else:
             strategy = None
 
@@ -257,7 +263,10 @@ class StrategyManagerOrderEntryMixin(object):
         if event in self._alerted_events:
             strategy, order = self._alerted_events[event]
             # remove from list of open orders
-            self._strategy_open_orders[strategy].remove(order)
+            try:
+                self._strategy_open_orders[strategy].remove(order)
+            except ValueError:
+                ...
         else:
             strategy = None
 
