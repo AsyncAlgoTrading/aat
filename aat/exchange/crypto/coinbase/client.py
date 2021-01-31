@@ -182,7 +182,7 @@ class CoinbaseExchangeClient(AuthBase):
                     leg2=self.currency(second),
                     leg1_side=Side.BUY,
                     leg2_side=Side.SELL,
-                    price_increment=float(product["base_increment"])
+                    price_increment=float(product["base_increment"]),
                 )
             )
         return ret

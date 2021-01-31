@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, List, Type, Union
+from typing import List
 
 from aat.core import ExchangeType, Instrument
 
