@@ -56,7 +56,7 @@ if __name__ == "__main__":
                 os.path.join(os.path.dirname(__file__), "data", "aapl.csv")
             ),
             "--strategies",
-            "aat.strategy.sample.csv_received:ReceivedStrategy",
+            "aat.strategy.sample.csv.received:ReceivedStrategy",
         ]
     )
     print(cfg)

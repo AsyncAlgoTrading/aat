@@ -64,8 +64,16 @@ class Portfolio(object):
             print("Position:\n{}".format(position))
 
             try:
-                choice = int(
-                    input("Select a strategy to attribute to:\n{}\n...".format(options))
+                choice = (
+                    int(
+                        input(
+                            "Select a strategy to attribute to:\n{}\n...".format(
+                                options
+                            )
+                        )
+                    )
+                    if len(options) > 1
+                    else 0
                 )
             except KeyboardInterrupt:
                 raise

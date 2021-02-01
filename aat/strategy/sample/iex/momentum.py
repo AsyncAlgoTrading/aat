@@ -1,6 +1,16 @@
+import os
 from datetime import datetime
 from typing import Optional, Any
-from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
+from aat import (
+    Strategy,
+    Event,
+    Order,
+    Trade,
+    Side,
+    Instrument,
+    InstrumentType,
+    ExchangeType,
+)
 
 
 class MomentumStrategy(Strategy):
@@ -56,7 +66,11 @@ class MomentumStrategy(Strategy):
 
     async def onStart(self, event: Event) -> None:
         # Create an instrument
-        inst = Instrument(name=self._symbol, type=InstrumentType(self._symbol_type))
+        inst = Instrument(
+            name=self._symbol,
+            type=InstrumentType(self._symbol_type),
+            exchange=ExchangeType("iex"),
+        )
 
         # Check that its available
         if inst not in self.instruments():
@@ -217,4 +231,38 @@ class MomentumStrategy(Strategy):
 
     async def onExit(self, event: Event) -> None:
         print("Finishing...")
-        self.performanceCharts(render=True, save=True, save_data=True)
+        if not os.environ.get("TESTING"):
+            self.performanceCharts(render=True, save=True, save_data=True)
+
+
+if __name__ == "__main__":
+    from aat import TradingEngine, parseConfig
+
+    cfg = parseConfig(
+        [
+            "--trading_type",
+            "backtest",
+            "--exchanges",
+            "aat.exchange.public.iex:IEX,Tpk_ecc89ddf30a611e9958142010a80043c,True,1m,,,,",
+            # "aat.exchange.public.iex:IEX,Tpk_ecc89ddf30a611e9958142010a80043c,True,1d,20210821",
+            "--strategies",
+            "aat.strategy.sample.iex.momentum:MomentumStrategy,SPY-EQUITY,25,45,-10,10000",
+        ]
+    )
+    """
+    [general]
+    verbose=0
+    trading_type=backtest
+
+    [exchange]
+    exchanges=
+        aat.exchange.public.iex:IEX,Tpk_ecc89ddf30a611e9958142010a80043c,True,1m,,,,
+
+    [strategy]
+    strategies =
+        aat.strategy.sample.iex.momentum:MomentumStrategy,SPY-EQUITY,25,45,-10,10000
+
+    """
+    print(cfg)
+    t = TradingEngine(**cfg)
+    t.start()

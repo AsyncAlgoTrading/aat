@@ -161,6 +161,7 @@ class TradingEngine(Application):
         self.strategies = getStrategies(
             config.get("strategy", {}).get("strategies", [])
         )
+
         for strategy in self.strategies:
             self.log.critical("Installing strategy: {}".format(strategy))
             self.registerHandler(strategy)

@@ -38,7 +38,8 @@ class CSV(Exchange):
                     exchange=self.exchange(),
                     instrument=Instrument(
                         row["symbol"].split("-")[0],
-                        InstrumentType(row["symbol"].split("-")[1].upper()),
+                        instrument=InstrumentType(row["symbol"].split("-")[1].upper()),
+                        exchange=self.exchange(),
                     ),
                     filled=float(row["volume"]),
                 )
