@@ -45,7 +45,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip setuptools wheel twine numpy pyarrow>=1. cpplint
+        python -m pip install --upgrade pip setuptools wheel twine numpy pyarrow>=1. cpplint pyEX tqdm
         python -m pip install -e .[dev]
         cd js; yarn
 
