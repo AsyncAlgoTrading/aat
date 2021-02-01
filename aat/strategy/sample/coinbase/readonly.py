@@ -15,10 +15,7 @@ class ReadOnlyStrategy(Strategy):
 
     async def onTrade(self, event: Event) -> None:
         pprint(event)
-
-    async def onOrder(self, event: Event) -> None:
-        # pprint(event)
-        pass
+        pprint(await self.book(event.target.instrument))
 
     async def onExit(self, event: Event) -> None:
         print("Finishing...")
