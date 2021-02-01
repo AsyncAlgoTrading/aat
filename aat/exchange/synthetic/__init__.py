@@ -442,6 +442,3 @@ class SyntheticExchange(Exchange):
                 ret.append(pos)
             return ret
         return []
-
-
-Exchange.registerExchange("synthetic", SyntheticExchange)

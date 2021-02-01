@@ -1,5 +1,3 @@
-import os
-import os.path
 from pprint import pprint
 from typing import Any
 from aat import Strategy, Event
@@ -14,6 +12,7 @@ class ReadOnlyStrategy(Strategy):
         pprint(self.positions())
 
         for i in self.instruments():
+            print(i)
             await self.subscribe(i)
 
     async def onTrade(self, event: Event) -> None:
@@ -24,24 +23,3 @@ class ReadOnlyStrategy(Strategy):
 
     async def onExit(self, event: Event) -> None:
         print("Finishing...")
-
-
-if __name__ == "__main__":
-    from aat import TradingEngine, parseConfig
-
-    cfg = parseConfig(
-        [
-            "--trading_type",
-            "backtest",
-            "--load_accounts",
-            "--exchanges",
-            "aat.exchange.generic:CSV,{}".format(
-                os.path.join(os.path.dirname(__file__), "data", "aapl.csv")
-            ),
-            "--strategies",
-            "aat.strategy.sample.readonly:ReadOnlyStrategy",
-        ]
-    )
-    print(cfg)
-    t = TradingEngine(**cfg)
-    t.start()

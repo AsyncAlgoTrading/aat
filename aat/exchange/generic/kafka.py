@@ -10,6 +10,3 @@ class Kafka(Exchange):
         super().__init__(ExchangeType("kafka"))
         self._trading_type = trading_type
         self._verbose = verbose
-
-
-Exchange.registerExchange("kafka", Kafka)

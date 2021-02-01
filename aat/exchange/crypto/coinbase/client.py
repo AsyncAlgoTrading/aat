@@ -35,7 +35,7 @@ _WS_SANDBOX = "wss://ws-feed-public.sandbox.pro.coinbase.com"
 _SUBSCRIPTION: Dict[str, Union[str, List[str]]] = {
     "type": "subscribe",
     "product_ids": [],
-    "channels": ["user", "hearbeat"],
+    "channels": ["user", "heartbeat"],
 }
 
 
@@ -47,6 +47,7 @@ class CoinbaseExchangeClient(AuthBase):
         api_key: str,
         secret_key: str,
         passphrase: str,
+        satoshis: bool = False,
     ) -> None:
 
         self.trading_type = trading_type
@@ -68,6 +69,9 @@ class CoinbaseExchangeClient(AuthBase):
         self.secret_key = secret_key
         # coinbase api passphrase
         self.passphrase = passphrase
+
+        # multiply by 100,000,000 and do everything in integer volumes
+        self._multiple = 100_000_000 if satoshis else 1.0
 
         # order_map
         self._order_map: Dict[str, Order] = {}
@@ -178,6 +182,7 @@ class CoinbaseExchangeClient(AuthBase):
                     leg2=self.currency(second),
                     leg1_side=Side.BUY,
                     leg2_side=Side.SELL,
+                    price_increment=float(product["base_increment"]),
                 )
             )
         return ret
@@ -212,7 +217,7 @@ class CoinbaseExchangeClient(AuthBase):
 
                 # acc = Account(account['id'], exchange, [
                 pos = Position(
-                    float(acc_data["balance"]),
+                    float(acc_data["balance"]) * self._multiple,
                     0.0,
                     datetime.now(),
                     Instrument(
@@ -238,7 +243,7 @@ class CoinbaseExchangeClient(AuthBase):
             jsn["type"] = "limit"
             jsn["side"] = order.side.value.lower()
             jsn["price"] = order.price
-            jsn["size"] = round(order.volume, 8)
+            jsn["size"] = round(order.volume / self._multiple, 8)
 
             # From the coinbase docs
             if order.flag == OrderFlag.FILL_OR_KILL:
@@ -251,13 +256,13 @@ class CoinbaseExchangeClient(AuthBase):
         elif order.order_type == OrderType.MARKET:
             jsn["type"] = "market"
             jsn["side"] = order.side.value.lower()
-            jsn["size"] = round(order.volume, 8)
+            jsn["size"] = round(order.volume / self._multiple, 8)
 
         else:
             stop_order: Order = order.stop_target  # type: ignore
             jsn["type"] = stop_order.side.value.lower()
             jsn["price"] = stop_order.price
-            jsn["size"] = round(stop_order.volume, 8)
+            jsn["size"] = round(stop_order.volume / self._multiple, 8)
 
             if stop_order.side == Side.BUY:
                 jsn["stop"] = "entry"
@@ -318,7 +323,7 @@ class CoinbaseExchangeClient(AuthBase):
             # generate an open limit order for each bid
             for (bid, qty, id) in ob["bids"]:
                 o = Order(
-                    float(qty),
+                    float(qty) * self._multiple,
                     float(bid),
                     Side.BUY,
                     sub,
@@ -330,7 +335,7 @@ class CoinbaseExchangeClient(AuthBase):
             # generate an open limit order for each ask
             for (bid, qty, id) in ob["asks"]:
                 o = Order(
-                    float(qty),
+                    float(qty) * self._multiple,
                     float(bid),
                     Side.SELL,
                     sub,
@@ -428,6 +433,8 @@ class CoinbaseExchangeClient(AuthBase):
                         # TODO
                         print("TODO: change", x)
 
+                    elif x["type"] == "error":
+                        raise Exception(x)
                     else:
                         # TODO unhandled
                         # this should never print
@@ -560,15 +567,15 @@ class CoinbaseExchangeClient(AuthBase):
 
     def _process_ticker(self, x: Dict[str, Union[str, int, float]]) -> Trade:
         o = Order(
-            float(x["last_size"]),
+            float(x["last_size"]) * self._multiple,
             float(x["price"]),
             Side(str(x["side"]).upper()),
             Instrument(str(x["product_id"]), InstrumentType.PAIR, self.exchange),
             self.exchange,
-            filled=float(x["last_size"]),
+            filled=float(x["last_size"]) * self._multiple,
         )
         t = Trade(
-            float(x["last_size"]),
+            float(x["last_size"]) * self._multiple,
             float(x["price"]),
             o,
         )
@@ -599,7 +606,7 @@ class CoinbaseExchangeClient(AuthBase):
         #     "side": "sell"
         # }
         o = Order(
-            float(x["remaining_size"]),
+            float(x["remaining_size"]) * self._multiple,
             float(x["price"]),
             Side(str(x["side"]).upper()),
             Instrument(str(x["product_id"]), InstrumentType.PAIR, self.exchange),
@@ -648,7 +655,7 @@ class CoinbaseExchangeClient(AuthBase):
         if str(x.get("taker_order_id", "")) in self._order_map:
             o = self._order_map[str(x.get("taker_order_id"))]
 
-            o.filled = float(x["size"])
+            o.filled = float(x["size"]) * self._multiple
 
             # my order
             mine = True
@@ -662,15 +669,13 @@ class CoinbaseExchangeClient(AuthBase):
 
         else:
             o = Order(
-                float(x["size"]),
+                float(x["size"]) * self._multiple,
                 float(x["price"]),
                 Side(str(x["side"]).upper()),
                 Instrument(str(x["product_id"]), InstrumentType.PAIR, self.exchange),
                 self.exchange,
+                filled=float(x["size"]) * self._multiple,
             )
-
-            # set filled to volume so we see it as "done"
-            o.filled = o.volume
 
             # not my order
             mine = False
@@ -679,7 +684,7 @@ class CoinbaseExchangeClient(AuthBase):
         # makers would be accumulated via the
         # `elif x['reason'] == 'filled'` block above
         t = Trade(
-            float(x["size"]),
+            float(x["size"]) * self._multiple,
             float(x["price"]),
             taker_order=o,
             maker_orders=[],
@@ -726,7 +731,7 @@ class CoinbaseExchangeClient(AuthBase):
 
             # FIXME don't use remaining_size, lookup original size in order book
             o = Order(
-                float(x["remaining_size"]),
+                float(x["remaining_size"]) * self._multiple,
                 float(x["price"]),
                 Side(str(x["side"]).upper()),
                 Instrument(
@@ -818,7 +823,7 @@ class CoinbaseExchangeClient(AuthBase):
             # create a market data order from the event data
             # TODO set something for price? float('inf') ?
             o = Order(
-                float(x["size"]),
+                float(x["size"]) * self._multiple,
                 0.0,
                 Side(str(x["side"]).upper()),
                 Instrument(str(x["product_id"]), InstrumentType.PAIR, self.exchange),
@@ -829,7 +834,7 @@ class CoinbaseExchangeClient(AuthBase):
         else:
             # create limit order from the event data
             o = Order(
-                float(x["size"]),
+                float(x["size"]) * self._multiple,
                 float(x["price"]),
                 Side(str(x["side"]).upper()),
                 Instrument(str(x["product_id"]), InstrumentType.PAIR, self.exchange),

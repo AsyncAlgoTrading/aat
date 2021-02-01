@@ -1,7 +1,17 @@
+import os
 import math
 import pandas as pd  # type: ignore
 from typing import Any, Optional, List
-from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
+from aat import (
+    Strategy,
+    Event,
+    Order,
+    Trade,
+    Side,
+    Instrument,
+    InstrumentType,
+    ExchangeType,
+)
 
 
 class GoldenDeathStrategy(Strategy):
@@ -45,7 +55,13 @@ class GoldenDeathStrategy(Strategy):
 
     async def onStart(self, event: Event) -> None:
         # Get available instruments from exchange
-        await self.subscribe(Instrument(name=self._symbol, type=InstrumentType.EQUITY))
+        await self.subscribe(
+            Instrument(
+                name=self._symbol,
+                type=InstrumentType.EQUITY,
+                exchange=ExchangeType("iex"),
+            )
+        )
 
     async def onTrade(self, event: Event) -> None:
         """Called whenever a `Trade` event is received"""
@@ -168,4 +184,37 @@ class GoldenDeathStrategy(Strategy):
     async def onExit(self, event: Event) -> None:
         print("Finishing...")
 
-        self.performanceCharts()
+        if not os.environ.get("TESTING"):
+            self.performanceCharts()
+
+
+if __name__ == "__main__":
+    from aat import TradingEngine, parseConfig
+
+    cfg = parseConfig(
+        [
+            "--trading_type",
+            "backtest",
+            "--exchanges",
+            "aat.exchange.public.iex:IEX,Tpk_ecc89ddf30a611e9958142010a80043c,True,1m,,,,",
+            "--strategies",
+            "aat.strategy.sample.iex.golden_death:GoldenDeathStrategy,SPY",
+        ]
+    )
+    """
+    [general]
+    verbose=0
+    trading_type=backtest
+
+    [exchange]
+    exchanges=
+        aat.exchange.public.iex:IEX,Tpk_ecc89ddf30a611e9958142010a80043c,True,1m,,,,
+
+    [strategy]
+    strategies =
+        aat.strategy.sample.iex.momentum:MomentumStrategy,SPY-EQUITY,25,45,-10,10000
+
+    """
+    print(cfg)
+    t = TradingEngine(**cfg)
+    t.start()

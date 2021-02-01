@@ -5,36 +5,6 @@ CONFIG=./config/synthetic.cfg
 run:    ## Clean and make target, run target
 	$(PYTHON) -m aat --config $(CONFIG)
 
-iex:    ## Clean and make target, run target
-	$(PYTHON) -m aat  --config ./config/iex.cfg
-
-iexintraday:    ## Clean and make target, run target
-	$(PYTHON) -m aat  --config ./config/iex_intraday.cfg
-
-iexpintraday:    ## Clean and make target, run target
-	$(PYTHON) -m aat  --config ./private_config/iex_intraday.cfg
-
-iexmomentum:    ## Clean and make target, run target
-	$(PYTHON) -m aat  --config ./config/iex_intraday_momentum.cfg
-
-iexpmomentum:    ## Clean and make target, run target
-	$(PYTHON) -m aat  --config ./private_config/iex_intraday_momentum.cfg
-
-iexlive:    ## Clean and make target, run target
-	$(PYTHON) -m aat  --config ./config/iex_live.cfg
-
-ib:    ## Clean and make target, run target
-	$(PYTHON) -m aat  --config ./config/ib.cfg
-
-ibpositions:    ## Clean and make target, run target
-	$(PYTHON) -m aat  --config ./config/ib_positions.cfg
-
-coinbase:    ## Clean and make target, run target
-	$(PYTHON) -m aat --config  ./config/coinbase.cfg
-
-coinbasesandbox:    ## Clean and make target, run target
-	$(PYTHON) -m aat --config  ./config/coinbase_sandbox.cfg
-
 runcpp:  build  ## Clean and make target, run target
 	AAT_USE_CPP=1 $(PYTHON) -m aat  --config $(CONFIG)
 
@@ -74,10 +44,18 @@ testpycpp: ## Make unit tests
 testjs:  ## Make js tests
 	cd js; yarn test
 
-testruns:  ## Run a few examples as a live end-to-end test
-	$(PYTHON) -m aat.strategy.sample.readonly
-	$(PYTHON) -m aat.strategy.sample.readonly_periodic
-	$(PYTHON) -m aat.strategy.sample.csv_received
+testruns:  testrunscsv testrunsiex ## Run a few examples as a live end-to-end test
+
+testrunscsv:
+	$(PYTHON) -m aat.strategy.sample.csv.readonly
+	$(PYTHON) -m aat.strategy.sample.csv.readonly_periodic
+	$(PYTHON) -m aat.strategy.sample.csv.received
+
+testrunsiex:
+	$(PYTHON) -m aat.strategy.sample.iex.readonly
+	TESTING=1 $(PYTHON) -m aat.strategy.sample.iex.buy_and_hold
+	TESTING=1 $(PYTHON) -m aat.strategy.sample.iex.momentum
+	TESTING=1 $(PYTHON) -m aat.strategy.sample.iex.golden_death
 
 lint: lintpy lintjs lintcpp  ## run all linters
 

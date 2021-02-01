@@ -95,7 +95,7 @@ class StrategyManager(
     def strategies(self) -> List["Strategy"]:
         return self._engine.strategies
 
-    def exchanges(self) -> List[Exchange]:
+    def exchangeinstances(self) -> List[Exchange]:
         return self._engine.exchanges
 
     # ********************* #
@@ -161,7 +161,7 @@ class StrategyManager(
         self._portfolio_mgr.updateStrategies(self.strategies())
 
         # Initialize positions
-        for exchange in self.exchanges():
+        for exchange in self.exchangeinstances():
             if self._load_accounts:
                 acc = await exchange.accounts()
                 self._portfolio_mgr.updateAccount(acc)

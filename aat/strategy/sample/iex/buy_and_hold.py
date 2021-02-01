@@ -1,5 +1,15 @@
+import os
 from typing import Any
-from aat import Strategy, Event, Order, Trade, Side, Instrument, InstrumentType
+from aat import (
+    Strategy,
+    Event,
+    Order,
+    Trade,
+    Side,
+    Instrument,
+    InstrumentType,
+    ExchangeType,
+)
 
 
 class BuyAndHoldIEXStrategy(Strategy):
@@ -9,11 +19,9 @@ class BuyAndHoldIEXStrategy(Strategy):
 
     async def onStart(self, event: Event) -> None:
         # Create an instrument
-        inst = Instrument(name=self._symbol, type=InstrumentType.EQUITY)
-
-        # Check that its available
-        if inst not in self.instruments():
-            raise Exception("Not available on exchange: {}".format(self._symbol))
+        inst = Instrument(
+            name=self._symbol, type=InstrumentType.EQUITY, exchange=ExchangeType("iex")
+        )
 
         # Subscribe
         await self.subscribe(inst)
@@ -55,4 +63,23 @@ class BuyAndHoldIEXStrategy(Strategy):
 
     async def onExit(self, event: Event) -> None:
         print("Finishing...")
-        self.performanceCharts()
+        if not os.environ.get("TESTING"):
+            self.performanceCharts()
+
+
+if __name__ == "__main__":
+    from aat import TradingEngine, parseConfig
+
+    cfg = parseConfig(
+        [
+            "--trading_type",
+            "backtest",
+            "--exchanges",
+            "aat.exchange.public.iex:IEX,Tpk_ecc89ddf30a611e9958142010a80043c,True,1m,,,,",
+            "--strategies",
+            "aat.strategy.sample.iex.buy_and_hold:BuyAndHoldIEXStrategy,FB",
+        ]
+    )
+    print(cfg)
+    t = TradingEngine(**cfg)
+    t.start()

@@ -44,6 +44,7 @@ class IEX(Exchange):
         start_date: str = "",
         end_date: str = "",
         cache_data: bool = True,
+        preload_instruments: bool = True,
     ) -> None:
         super().__init__(ExchangeType("iex"))
         self._trading_type = trading_type
@@ -51,6 +52,7 @@ class IEX(Exchange):
         self._api_key = api_key
         self._is_sandbox = is_sandbox
         self._cache_data = cache_data
+        self._preload_instruments = preload_instruments
 
         if trading_type == TradingType.LIVE:
             assert not is_sandbox
@@ -95,40 +97,44 @@ class IEX(Exchange):
     # ******************* #
     async def instruments(self) -> List[Instrument]:
         """get list of available instruments"""
-        instruments = []
-        symbols = self._client.symbols()
-        for record in symbols:
-            if (
-                not record["isEnabled"]
-                or not record["type"]
-                or record["type"] == "temp"
-            ):
-                continue
-            symbol = record["symbol"]
-            brokerExchange = record["exchange"]
-            type = _iex_instrument_types[record["type"]]
-            currency = Instrument(type=InstrumentType.CURRENCY, name=record["currency"])
+        if self._preload_instruments:
+            instruments = []
+            symbols = self._client.symbols()
 
-            try:
-                inst = Instrument(
-                    name=symbol,
-                    type=type,
-                    exchange=self.exchange(),
-                    brokerExchange=brokerExchange,
-                    currency=currency,
+            for record in tqdm(symbols, desc="Fetching instruments..."):
+                if (
+                    not record["isEnabled"]
+                    or not record["type"]
+                    or record["type"] == "temp"
+                ):
+                    continue
+                symbol = record["symbol"]
+                brokerExchange = record["exchange"]
+                type = _iex_instrument_types[record["type"]]
+                currency = Instrument(
+                    type=InstrumentType.CURRENCY, name=record["currency"]
                 )
-            except AssertionError:
-                # Happens sometimes on sandbox
-                continue
-            instruments.append(inst)
-        return instruments
+
+                try:
+                    inst = Instrument(
+                        name=symbol,
+                        type=type,
+                        exchange=self.exchange(),
+                        brokerExchange=brokerExchange,
+                        currency=currency,
+                    )
+                except (AssertionError, KeyError):
+                    # Happens sometimes on sandbox
+                    continue
+                instruments.append(inst)
+            return instruments
+        return []
 
     async def subscribe(self, instrument: Instrument) -> None:
         self._subscriptions.append(instrument)
 
     async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         """return data from exchange"""
-
         if self._timeframe == "live":
             data: Deque[dict] = deque()
 
@@ -328,6 +334,3 @@ class IEX(Exchange):
         # Can't cancel, orders execute immediately
         # TODO limit orders
         return False
-
-
-Exchange.registerExchange("iex", IEX)

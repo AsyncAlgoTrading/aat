@@ -66,7 +66,11 @@ def getStrategies(strategies: List) -> List:
             args = strategy[1:]
         else:
             mod, clazz = strategy.split(":")
-            args = []
+            if "," in clazz:
+                clazz, temp_args = clazz.split(",", maxsplit=1)
+                args = temp_args.split(",")
+            else:
+                args = []
         mod = importlib.import_module(mod)
         clazz = getattr(mod, clazz)
         strategy_instances.append(clazz(*args))

@@ -1,11 +1,11 @@
 import asyncio
 from datetime import datetime
-from typing import Any, List, Callable, Union, Optional, TYPE_CHECKING
+from typing import Any, Callable, List, Optional, Union, TYPE_CHECKING
 
-from aat.config import ExitRoutine
-from aat.core import Instrument, ExchangeType, Event, Order, Trade
+from aat import AATException
+from aat.config import ExitRoutine, InstrumentType, TradingType
+from aat.core import Instrument, ExchangeType, Event, Order, Trade, OrderBook
 from aat.exchange import Exchange
-from aat.config import InstrumentType, TradingType
 
 from .periodic import Periodic
 
@@ -41,14 +41,25 @@ class StrategyManagerUtilsMixin(object):
         """Return list of all available instruments"""
         return Instrument._instrumentdb.instruments(type=type, exchange=exchange)
 
-    async def subscribe(
-        self, instrument: Instrument = None, strategy: "Strategy" = None
-    ) -> None:
+    def exchanges(self, type: InstrumentType = None) -> List[ExchangeType]:
+        """Return list of all available exchanges"""
+        if type:
+            raise NotImplementedError()
+        return [exc.exchange() for exc in self._exchanges]
+
+    async def subscribe(self, instrument: Instrument, strategy: "Strategy") -> None:
         """Subscribe to market data for the given instrument"""
         if strategy not in self._data_subscriptions:
             self._data_subscriptions[strategy] = []
 
         self._data_subscriptions[strategy].append(instrument)
+
+        if instrument.exchange not in self.exchanges():
+            raise AATException(
+                "Exchange not installed: {} (Installed are [{}]".format(
+                    instrument.exchange, self.exchanges()
+                )
+            )
 
         for exc in self._exchanges:
             if instrument and instrument.exchange == exc.exchange():
@@ -82,6 +93,17 @@ class StrategyManagerUtilsMixin(object):
 
         # None implement
         raise NotImplementedError()
+
+    async def book(self, instrument: Instrument) -> Optional[OrderBook]:
+        """Return list of all available instruments that match the instrument given"""
+        if instrument.exchange not in self.exchanges():
+            raise AATException("")
+
+        for exchange_inst in self._exchanges:
+            if instrument.exchange == exchange_inst.exchange():
+                return await exchange_inst.book(instrument)
+
+        return None
 
     def _make_async(self, function: Callable) -> Callable:
         async def _wrapper() -> Any:

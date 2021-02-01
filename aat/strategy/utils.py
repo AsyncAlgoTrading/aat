@@ -3,7 +3,7 @@ import asyncio
 from datetime import datetime
 from typing import Union, Callable, Optional, List, TYPE_CHECKING
 from ..config import Side, TradingType, ExitRoutine, InstrumentType
-from ..core import Trade, Instrument, ExchangeType, Order
+from ..core import Trade, Instrument, ExchangeType, Order, OrderBook
 from ..exchange import Exchange
 from ..engine.dispatch import Periodic
 
@@ -113,6 +113,10 @@ class StrategyUtilsMixin(object):
     ) -> List[Instrument]:
         """Return list of all available instruments that match the instrument given"""
         return await self._manager.lookup(instrument, exchange=exchange)
+
+    async def book(self, instrument: Instrument) -> Optional[OrderBook]:
+        """Return list of all available instruments that match the instrument given"""
+        return await self._manager.book(instrument)
 
     def periodic(
         self,

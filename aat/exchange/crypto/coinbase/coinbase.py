@@ -27,7 +27,8 @@ class CoinbaseProExchange(Exchange):
         api_key: str = "",
         api_secret: str = "",
         api_passphrase: str = "",
-        order_book_level: str = "l3",
+        order_book_level: str = "trades",
+        satoshis: bool = False,
         **kwargs: dict
     ) -> None:
         self._trading_type = trading_type
@@ -68,6 +69,9 @@ class CoinbaseProExchange(Exchange):
             print("*" * 100)
             super().__init__(ExchangeType("coinbasepro"))
 
+        # multiply by 100,000,000 and do everything in integer volumes
+        self._satoshis = satoshis
+
         # Create an exchange client based on the coinbase docs
         # Note: cbpro doesnt seem to work as well as I remember,
         # and ccxt has moved to a "freemium" model where coinbase
@@ -79,6 +83,7 @@ class CoinbaseProExchange(Exchange):
             self._api_key,
             self._api_secret,
             self._api_passphrase,
+            self._satoshis,
         )
 
         # list of market data subscriptions
@@ -102,7 +107,6 @@ class CoinbaseProExchange(Exchange):
     # ******************* #
     async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         """return data from exchange"""
-
         if self._order_book_level == "l3":
             # First, roll through order book snapshot
             async for item in self._client.orderBook(self._subscriptions):
@@ -114,7 +118,6 @@ class CoinbaseProExchange(Exchange):
 
         elif self._order_book_level == "l2":
             async for tick in self._client.websocket_l2(self._subscriptions):
-                print("here")
                 yield tick
 
         elif self._order_book_level == "trades":
@@ -140,6 +143,3 @@ class CoinbaseProExchange(Exchange):
     async def cancelOrder(self, order: Order) -> bool:
         """cancel a previously submitted order to the exchange."""
         return await self._client.cancelOrder(order)
-
-
-Exchange.registerExchange("coinbase", CoinbaseProExchange)

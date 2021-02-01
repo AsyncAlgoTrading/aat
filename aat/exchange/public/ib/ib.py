@@ -485,6 +485,3 @@ class InteractiveBrokersExchange(Exchange):
         del self._order_cancelled_map[order.id]
         del self._order_cancelled_res[order.id]
         return res
-
-
-Exchange.registerExchange("ib", InteractiveBrokersExchange)

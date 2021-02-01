@@ -47,3 +47,39 @@ class BuyAndHoldCBStrategy(Strategy):
 
     async def onExit(self, event: Event) -> None:
         print("Finishing...")
+
+
+if __name__ == "__main__":
+    from aat import TradingEngine, parseConfig
+
+    cfg = parseConfig(
+        [
+            "--trading_type",
+            "sandbox",
+            "--load_accounts",
+            "--exchanges",
+            "aat.exchange.crypto.coinbase:CoinbaseProExchange,,,,l2",
+            "--strategies",
+            "aat.strategy.sample.coinbase.buy_and_hold:BuyAndHoldCBStrategy",
+        ]
+    )
+
+    # OR via config file
+    """
+        [general]
+        verbose=0
+        trading_type=sandbox
+        load_accounts=1
+
+        [exchange]
+        exchanges=
+            aat.exchange.crypto.coinbase:CoinbaseProExchange
+
+        [strategy]
+        strategies =
+            aat.strategy.sample.coinbase.buy_and_hold:BuyAndHoldCBStrategy,1000
+    """
+
+    print(cfg)
+    t = TradingEngine(**cfg)
+    t.start()
