@@ -304,7 +304,7 @@ class InteractiveBrokersExchange(Exchange):
     def _send_order_received(self, order: Order, ret: bool) -> None:
         if order.id in self._order_received_map:
             # cannot place order, return false
-            self._order_received_res[order.id] = False
+            self._order_received_res[order.id] = ret
             self._order_received_map[order.id].set()
 
     def _send_cancel_received(self, order: Order, ret: bool) -> None:
@@ -340,12 +340,12 @@ class InteractiveBrokersExchange(Exchange):
                     await asyncio.sleep(0)
 
                 elif status in ("Submitted",):
-                    self._send_order_received(order, False)
+                    self._send_order_received(order, True)
                     await asyncio.sleep(0)
 
                 elif status in ("Cancelled",):
                     self._finished_orders.add(order.id)
-                    self._send_cancel_received(order, False)
+                    self._send_cancel_received(order, True)
                     await asyncio.sleep(0)
 
                 elif status in ("Filled",):
