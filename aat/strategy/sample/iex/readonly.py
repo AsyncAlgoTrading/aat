@@ -4,7 +4,7 @@ from aat import Strategy, Event, Instrument, InstrumentType, ExchangeType
 
 
 class ReadOnlyStrategy(Strategy):
-    def __init__(self, symbol, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, symbol: str, *args: Any, **kwargs: Any) -> None:
         super(ReadOnlyStrategy, self).__init__(*args, **kwargs)
         self._inst = Instrument(
             name=symbol, type=InstrumentType.EQUITY, exchange=ExchangeType("iex")
