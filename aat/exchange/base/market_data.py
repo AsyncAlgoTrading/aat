@@ -1,7 +1,7 @@
 from abc import ABCMeta
-from typing import List, AsyncIterator
+from typing import AsyncIterator, List, Optional
 
-from aat import Instrument, Event
+from aat import Instrument, Event, OrderBook
 
 
 class _MarketData(metaclass=ABCMeta):
@@ -17,3 +17,6 @@ class _MarketData(metaclass=ABCMeta):
 
     async def tick(self) -> AsyncIterator[Event]:
         """return data from exchange"""
+
+    async def book(self, instrument: Instrument) -> Optional[OrderBook]:
+        """return order book"""

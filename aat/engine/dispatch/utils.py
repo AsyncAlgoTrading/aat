@@ -1,10 +1,10 @@
 import asyncio
 from datetime import datetime
-from typing import Any, List, Callable, Union, Optional, TYPE_CHECKING
+from typing import Any, Callable, List, Optional, Union, TYPE_CHECKING
 
 from aat import AATException
 from aat.config import ExitRoutine, InstrumentType, TradingType
-from aat.core import Instrument, ExchangeType, Event, Order, Trade
+from aat.core import Instrument, ExchangeType, Event, Order, Trade, OrderBook
 from aat.exchange import Exchange
 
 from .periodic import Periodic
@@ -93,6 +93,17 @@ class StrategyManagerUtilsMixin(object):
 
         # None implement
         raise NotImplementedError()
+
+    async def book(self, instrument: Instrument) -> Optional[OrderBook]:
+        """Return list of all available instruments that match the instrument given"""
+        if instrument.exchange not in self.exchanges():
+            raise AATException("")
+
+        for exchange_inst in self._exchanges:
+            if instrument.exchange == exchange_inst.exchange():
+                return await exchange_inst.book(instrument)
+
+        return None
 
     def _make_async(self, function: Callable) -> Callable:
         async def _wrapper() -> Any:
