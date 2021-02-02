@@ -339,6 +339,8 @@ class InteractiveBrokersExchange(Exchange):
                     self._send_cancel_received(order, False)
                     await asyncio.sleep(0)
 
+                    self._finished_orders.add(order.id)
+
                 elif status in ("Submitted",):
                     self._send_order_received(order, True)
                     await asyncio.sleep(0)
@@ -361,14 +363,6 @@ class InteractiveBrokersExchange(Exchange):
                     pass
 
                 elif status in ("Execution",):
-                    # if submitted was skipped, clear out the wait
-                    self._send_order_received(order, False)
-                    await asyncio.sleep(0)
-
-                    # if it was cancelled but already executed, clear out the wait
-                    self._send_cancel_received(order, False)
-                    await asyncio.sleep(0)
-
                     # set filled
                     order.filled = order_data["filled"]
 
@@ -388,6 +382,15 @@ class InteractiveBrokersExchange(Exchange):
                     t.my_order = order
 
                     e = Event(type=EventType.TRADE, target=t)
+
+                    # if it was cancelled but already executed, clear out the wait
+                    self._send_cancel_received(order, False)
+                    await asyncio.sleep(0)
+
+                    # if submitted was skipped, clear out the wait
+                    self._send_order_received(order, False)
+                    await asyncio.sleep(0)
+
                     yield e
 
             # clear market data events
@@ -401,6 +404,7 @@ class InteractiveBrokersExchange(Exchange):
                     side=Side.BUY,
                     instrument=instrument,
                     exchange=self.exchange(),
+                    filled=1
                 )
                 t = Trade(volume=1, price=float(price), taker_order=o, maker_orders=[])
                 yield Event(type=EventType.TRADE, target=t)
