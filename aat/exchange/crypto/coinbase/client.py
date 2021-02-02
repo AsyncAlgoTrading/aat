@@ -513,7 +513,6 @@ class CoinbaseExchangeClient(AuthBase):
                     else:
                         print("TODO: unhandled", x)
 
-
     async def websocket_trades(self, subscriptions: List[Instrument]):  # type: ignore
         # copy the base subscription template
         subscription = _SUBSCRIPTION.copy()
