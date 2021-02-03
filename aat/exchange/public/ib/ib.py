@@ -379,6 +379,7 @@ class InteractiveBrokersExchange(Exchange):
                     await asyncio.sleep(0)
 
                 elif status in ("Cancelled",):
+                    print('canceled here')
                     self._finished_orders.add(order.id)
                     self._send_cancel_received(order, True)
                     await asyncio.sleep(0)
@@ -403,6 +404,10 @@ class InteractiveBrokersExchange(Exchange):
                     if order.finished():
                         self._finished_orders.add(order.id)
 
+                        # if it was cancelled but already executed, clear out the wait
+                        self._send_cancel_received(order, False)
+                        await asyncio.sleep(0)
+
                     # create trade object
                     t = Trade(
                         volume=order_data["filled"],  # type: ignore
@@ -418,10 +423,6 @@ class InteractiveBrokersExchange(Exchange):
 
                     # if submitted was skipped, clear out the wait
                     self._send_order_received(order, True)
-                    await asyncio.sleep(0)
-
-                    # if it was cancelled but already executed, clear out the wait
-                    self._send_cancel_received(order, False)
                     await asyncio.sleep(0)
 
                     yield e
@@ -518,6 +519,7 @@ class InteractiveBrokersExchange(Exchange):
 
         # get result from IB
         res = self._order_cancelled_res[order.id]
+        print('back in cancel here with val {}'.format(res))
 
         del self._order_cancelled_map[order.id]
         del self._order_cancelled_res[order.id]
