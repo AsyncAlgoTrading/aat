@@ -1,7 +1,7 @@
 import asyncio
 import threading
 from datetime import datetime
-from queue import Queue
+from queue import Empty, Queue
 from random import randint
 from typing import Any, AsyncGenerator, Dict, List, Set, Tuple, Union
 
@@ -312,44 +312,34 @@ class InteractiveBrokersExchange(Exchange):
     async def subscribe(self, instrument: Instrument) -> None:
         self._api.subscribeMarketData(instrument)
 
-    def _create_order_received(self, orderId: str) -> None:
-        # create new event
-        self._order_received_map[orderId] = asyncio.Event()
-
-        if orderId in self._order_received_res:
-            # already received a result, set immediately
-            self._order_received_map[orderId].set()
-
-    def _create_cancel_received(self, orderId: str) -> None:
-        # create new event
-        self._order_cancelled_map[orderId] = asyncio.Event()
-
-        if orderId in self._order_cancelled_res:
-            # already received a result, set immediately
-            self._order_cancelled_map[orderId].set()
-
-    def _send_order_received(self, order: Order, ret: bool) -> None:
+    def _send_order_received(self, orderId: str, ret: bool) -> None:
         # set result
-        self._order_received_res[order.id] = ret
+        self._order_received_res[orderId] = ret
 
-        if order.id in self._order_received_map:
-            # if event waiting, set it
-            self._order_received_map[order.id].set()
-
-    def _send_cancel_received(self, order: Order, ret: bool) -> None:
+    def _send_cancel_received(self, orderId: str, ret: bool) -> None:
         # set result
-        self._order_cancelled_res[order.id] = ret
+        self._order_cancelled_res[orderId] = ret
 
-        if order.id in self._order_cancelled_map:
-            # if event waiting, set it
-            self._order_cancelled_map[order.id].set()
+    async def _consume_order_received(self, orderId: str) -> bool:
+        while orderId not in self._order_received_res:
+            await asyncio.sleep(.1)
+        return self._order_received_res.pop(orderId)
+
+    async def _consume_cancel_received(self, orderId: str) -> bool:
+        while orderId not in self._order_cancelled_res:
+            await asyncio.sleep(.1)
+        return self._order_cancelled_res.pop(orderId)
 
     async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         """return data from exchange"""
         while True:
             # clear order events
             while self._order_event_queue.qsize() > 0:
-                order_data = self._order_event_queue.get()
+                try:
+                    order_data = self._order_event_queue.get_nowait()
+                except Empty:
+                    await asyncio.sleep(.1)
+                    continue
                 status = order_data["status"]
                 order = self._orders[str(order_data["orderId"])]
                 if status in (
@@ -364,24 +354,21 @@ class InteractiveBrokersExchange(Exchange):
 
                 elif status in ("Inactive",):
                     self._finished_orders.add(order.id)
-                    self._send_order_received(order, False)
-                    await asyncio.sleep(0)
-                    self._send_cancel_received(order, False)
-                    await asyncio.sleep(0)
+                    self._send_order_received(order.id, False)
+                    self._send_cancel_received(order.id, False)
 
                 elif status in ("Rejected",):
                     self._finished_orders.add(order.id)
-                    self._send_order_received(order, False)
+                    self._send_order_received(order.id, False)
                     await asyncio.sleep(0)
 
                 elif status in ("Submitted",):
-                    self._send_order_received(order, True)
+                    self._send_order_received(order.id, True)
                     await asyncio.sleep(0)
 
                 elif status in ("Cancelled",):
-                    print('canceled here')
                     self._finished_orders.add(order.id)
-                    self._send_cancel_received(order, True)
+                    self._send_cancel_received(order.id, True)
                     await asyncio.sleep(0)
 
                 elif status in ("Filled",):
@@ -405,8 +392,7 @@ class InteractiveBrokersExchange(Exchange):
                         self._finished_orders.add(order.id)
 
                         # if it was cancelled but already executed, clear out the wait
-                        self._send_cancel_received(order, False)
-                        await asyncio.sleep(0)
+                        self._send_cancel_received(order.id, False)
 
                     # create trade object
                     t = Trade(
@@ -422,14 +408,16 @@ class InteractiveBrokersExchange(Exchange):
                     e = Event(type=EventType.TRADE, target=t)
 
                     # if submitted was skipped, clear out the wait
-                    self._send_order_received(order, True)
-                    await asyncio.sleep(0)
-
+                    self._send_order_received(order.id, True)
                     yield e
 
             # clear market data events
             while self._market_data_queue.qsize() > 0:
-                market_data = self._market_data_queue.get()
+                try:
+                    market_data = self._market_data_queue.get_nowait()
+                except Empty:
+                    await asyncio.sleep(.1)
+                    continue
                 instrument: Instrument = market_data["instrument"]  # type: ignore
                 price: float = market_data["price"]  # type: ignore
                 o = AATOrder(
@@ -475,9 +463,7 @@ class InteractiveBrokersExchange(Exchange):
         # construct IB contract and order
         ibcontract, iborder = _constructContractAndOrder(order)
 
-        # set event for later trigerring
         _temp_id = str(self._api.nextOrderId)
-        self._create_order_received(_temp_id)
 
         # send to IB
         id = self._api.placeOrder(ibcontract, iborder)
@@ -486,14 +472,8 @@ class InteractiveBrokersExchange(Exchange):
         order.id = id
         self._orders[order.id] = order
 
-        # wait for IB to respond
-        await self._order_received_map[_temp_id].wait()
-
         # get result from IB
-        res = self._order_received_res[id]
-        del self._order_received_map[id]
-        del self._order_received_res[id]
-        return res
+        return await self._consume_order_received(_temp_id)
 
     async def cancelOrder(self, order: AATOrder) -> bool:
         """cancel a previously submitted order to the exchange.
@@ -508,19 +488,8 @@ class InteractiveBrokersExchange(Exchange):
         if order.id and order.id in self._finished_orders:
             return False
 
-        # set event for later trigerring
-        self._create_cancel_received(order.id)
-
         # send to IB
         self._api.cancelOrder(order)
 
         # wait for IB to respond
-        await self._order_cancelled_map[order.id].wait()
-
-        # get result from IB
-        res = self._order_cancelled_res[order.id]
-        print('back in cancel here with val {}'.format(res))
-
-        del self._order_cancelled_map[order.id]
-        del self._order_cancelled_res[order.id]
-        return res
+        return await self._consume_cancel_received(order.id)
