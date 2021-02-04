@@ -155,12 +155,19 @@ class _API(EWrapper, EClient):
         # TODO?
 
     def error(self, reqId: int, errorCode: int, errorString: str) -> None:
-        super().error(reqId, errorCode, errorString)
         if errorCode in (201,):
             self._order_event_queue.put(
                 dict(
                     orderId=reqId,
                     status="Rejected",
+                )
+            )
+        elif errorCode in (10148, ):
+            print('putting rejectedcancel')
+            self._order_event_queue.put(
+                dict(
+                    orderId=reqId,
+                    status="RejectedCancel",
                 )
             )
         elif errorCode in (202,):
@@ -170,6 +177,7 @@ class _API(EWrapper, EClient):
                     status="Cancelled",
                 )
             )
+        super().error(reqId, errorCode, errorString)
 
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: str) -> None:
         # TODO implement more of order book
@@ -312,21 +320,35 @@ class InteractiveBrokersExchange(Exchange):
     async def subscribe(self, instrument: Instrument) -> None:
         self._api.subscribeMarketData(instrument)
 
-    def _send_order_received(self, orderId: str, ret: bool) -> None:
+    async def _send_order_received(self, orderId: str, ret: bool) -> None:
         # set result
         self._order_received_res[orderId] = ret
 
-    def _send_cancel_received(self, orderId: str, ret: bool) -> None:
+        # wait until consumed
+        while orderId in self._order_received_res:
+            await asyncio.sleep(0.1)
+
+    async def _send_cancel_received(self, orderId: str, ret: bool) -> None:
         # set result
         self._order_cancelled_res[orderId] = ret
 
+        # wait until consumed
+        while orderId in self._order_cancelled_res:
+            await asyncio.sleep(0.1)
+
     async def _consume_order_received(self, orderId: str) -> bool:
         while orderId not in self._order_received_res:
+            print('here2')
+            if orderId in self._finished_orders:
+                return True
             await asyncio.sleep(0.1)
         return self._order_received_res.pop(orderId)
 
     async def _consume_cancel_received(self, orderId: str) -> bool:
         while orderId not in self._order_cancelled_res:
+            print('here')
+            if orderId in self._finished_orders:
+                return True
             await asyncio.sleep(0.1)
         return self._order_cancelled_res.pop(orderId)
 
@@ -342,34 +364,35 @@ class InteractiveBrokersExchange(Exchange):
                     continue
                 status = order_data["status"]
                 order = self._orders[str(order_data["orderId"])]
+                print('got {}'.format(status))
                 if status in (
                     "ApiPending",
                     "PendingSubmit",
                     "PendingCancel",
                     "PreSubmitted",
                     "ApiCancelled",
+                    "Inactive",
                 ):
                     # ignore
                     continue
 
                 elif status in ("Inactive",):
                     self._finished_orders.add(order.id)
-                    self._send_order_received(order.id, False)
-                    self._send_cancel_received(order.id, False)
 
                 elif status in ("Rejected",):
                     self._finished_orders.add(order.id)
-                    self._send_order_received(order.id, False)
-                    await asyncio.sleep(0)
+                    await self._send_order_received(order.id, False)
+
+                elif status in ("RejectedCancel",):
+                    print('rejected cancel')
+                    await self._send_cancel_received(order.id, False)
 
                 elif status in ("Submitted",):
-                    self._send_order_received(order.id, True)
-                    await asyncio.sleep(0)
+                    await self._send_order_received(order.id, True)
 
                 elif status in ("Cancelled",):
                     self._finished_orders.add(order.id)
-                    self._send_cancel_received(order.id, True)
-                    await asyncio.sleep(0)
+                    await self._send_cancel_received(order.id, True)
 
                 elif status in ("Filled",):
                     # this is the filled from orderStatus, but we
@@ -391,9 +414,6 @@ class InteractiveBrokersExchange(Exchange):
                     if order.finished():
                         self._finished_orders.add(order.id)
 
-                        # if it was cancelled but already executed, clear out the wait
-                        self._send_cancel_received(order.id, False)
-
                     # create trade object
                     t = Trade(
                         volume=order_data["filled"],  # type: ignore
@@ -408,7 +428,9 @@ class InteractiveBrokersExchange(Exchange):
                     e = Event(type=EventType.TRADE, target=t)
 
                     # if submitted was skipped, clear out the wait
-                    self._send_order_received(order.id, True)
+                    print('sending received')
+                    await self._send_order_received(order.id, True)
+                    print('yielding execution {}'.format(t.my_order))
                     yield e
 
             # clear market data events
@@ -465,14 +487,15 @@ class InteractiveBrokersExchange(Exchange):
 
         _temp_id = str(self._api.nextOrderId)
 
+        # pre update order id since ib runs on thread
+        order.id = _temp_id
+        self._orders[order.id] = order
+
         # send to IB
         id = self._api.placeOrder(ibcontract, iborder)
 
+        print('wait for received')
         # update order id
-        order.id = id
-        self._orders[order.id] = order
-
-        # get result from IB
         return await self._consume_order_received(_temp_id)
 
     async def cancelOrder(self, order: AATOrder) -> bool:
@@ -491,5 +514,6 @@ class InteractiveBrokersExchange(Exchange):
         # send to IB
         self._api.cancelOrder(order)
 
+        print('wait for cancel')
         # wait for IB to respond
         return await self._consume_cancel_received(order.id)

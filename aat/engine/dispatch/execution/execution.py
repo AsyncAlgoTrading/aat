@@ -39,7 +39,9 @@ class OrderManager(ManagerBase):
             raise Exception("Exchange not installed: {}".format(order.exchange))
 
         ret = await exchange.newOrder(order)
-        self._pending_orders[order.id] = (order, strategy)
+        if ret:
+            print('putting into pending')
+            self._pending_orders[order.id] = (order, strategy)
         return ret
 
     async def cancelOrder(self, strategy: Optional["Strategy"], order: Order) -> bool:
@@ -48,7 +50,8 @@ class OrderManager(ManagerBase):
             raise Exception("Exchange not installed: {}".format(order.exchange))
 
         ret = await exchange.cancelOrder(order)
-        self._pending_orders.pop(order.id, None)
+        if ret:
+            self._pending_orders.pop(order.id, None)
         return ret
 
     # **********************
@@ -59,27 +62,37 @@ class OrderManager(ManagerBase):
         action: bool = False
         strat: Optional[EventHandler] = None
 
-        trade: Trade = event.target  # type: ignore
+        trade: Trade = event.target
 
-        for maker_order in trade.maker_orders:
-            if maker_order.id in self._pending_orders:
+        # if it comes with the order, use that
+        if trade.my_order:
+            action = True
+            order, strat = self._pending_orders[trade.my_order.id]
+
+            # TODO cleaner?
+            trade.id = trade.my_order.id
+
+        # otherwise derive from mapping
+        else:
+            for maker_order in trade.maker_orders:
+                if maker_order.id in self._pending_orders:
+                    action = True
+                    order, strat = self._pending_orders[maker_order.id]
+
+                    # TODO cleaner?
+                    trade.my_order = order
+                    trade.id = order.id
+                    order.filled = maker_order.filled
+                    break
+
+            if trade.taker_order.id in self._pending_orders:
                 action = True
-                order, strat = self._pending_orders[maker_order.id]
+                order, strat = self._pending_orders[trade.taker_order.id]
 
                 # TODO cleaner?
                 trade.my_order = order
                 trade.id = order.id
-                order.filled = maker_order.filled
-                break
-
-        if trade.taker_order.id in self._pending_orders:
-            action = True
-            order, strat = self._pending_orders[trade.taker_order.id]
-
-            # TODO cleaner?
-            trade.my_order = order
-            trade.id = order.id
-            order.filled = trade.taker_order.filled
+                order.filled = trade.taker_order.filled
 
         if action:
             if order.side == Order.Sides.SELL:
@@ -97,7 +110,7 @@ class OrderManager(ManagerBase):
                 del self._pending_orders[order.id]
 
     async def onCancel(self, event: Event) -> None:
-        canceled_order: Order = event.target  # type: ignore
+        canceled_order: Order = event.target
         if canceled_order.id in self._pending_orders:
             order, strat = self._pending_orders[canceled_order.id]
 
