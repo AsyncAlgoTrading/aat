@@ -32,7 +32,7 @@ class _API(EWrapper, EClient):
         account_position_queue: Queue,
     ) -> None:
         EClient.__init__(self, self)
-        self.nextOrderId: int = 0
+        self.nextOrderId: int = 1
         self.nextReqId = 1
 
         # account # if more than one
