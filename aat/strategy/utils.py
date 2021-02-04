@@ -121,6 +121,24 @@ class StrategyUtilsMixin(object):
     def periodic(
         self,
         function: Callable,
+        seconds: Union[int, str] = 0,
+        minutes: Union[int, str] = "*",
+        hours: Union[int, str] = "*",
+    ) -> Periodic:
+        """periodically run a given async function. NOTE: precise timing
+        is NOT guaranteed due to event loop scheduling.
+
+        Args:
+            function (callable); function to call periodically
+            second (Union[int, str]); second to align periodic to, or '*' for every second
+            minute (Union[int, str]); minute to align periodic to, or '*' for every minute
+            hour (Union[int, str]); hour to align periodic to, or '*' for every hour
+        """
+        return self._manager.periodic(function, seconds, minutes, hours)
+
+    def at(
+        self,
+        function: Callable,
         second: Union[int, str] = 0,
         minute: Union[int, str] = "*",
         hour: Union[int, str] = "*",
@@ -142,7 +160,7 @@ class StrategyUtilsMixin(object):
                     periodic(0, 30, '*')
                     periodic(0, 45, '*')
         """
-        return self._manager.periodic(function, second, minute, hour)
+        return self._manager.at(function, second, minute, hour)
 
     def restrictTradingHours(
         self,

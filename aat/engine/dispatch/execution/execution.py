@@ -40,7 +40,7 @@ class OrderManager(ManagerBase):
 
         ret = await exchange.newOrder(order)
         if ret:
-            print('putting into pending')
+            print("putting into pending")
             self._pending_orders[order.id] = (order, strategy)
         return ret
 

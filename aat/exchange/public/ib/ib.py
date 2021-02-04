@@ -1,7 +1,7 @@
 import asyncio
 import threading
 from datetime import datetime
-from queue import Empty, Queue
+from queue import Queue
 from random import randint
 from typing import Any, AsyncGenerator, Dict, List, Set, Tuple, Union
 
@@ -155,15 +155,14 @@ class _API(EWrapper, EClient):
         # TODO?
 
     def error(self, reqId: int, errorCode: int, errorString: str) -> None:
-        if errorCode in (201,):
+        if errorCode in (201, 110):
             self._order_event_queue.put(
                 dict(
                     orderId=reqId,
                     status="Rejected",
                 )
             )
-        elif errorCode in (10148, ):
-            print('putting rejectedcancel')
+        elif errorCode in (10148,):
             self._order_event_queue.put(
                 dict(
                     orderId=reqId,
@@ -177,7 +176,8 @@ class _API(EWrapper, EClient):
                     status="Cancelled",
                 )
             )
-        super().error(reqId, errorCode, errorString)
+        else:
+            super().error(reqId, errorCode, errorString)
 
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: str) -> None:
         # TODO implement more of order book
@@ -239,11 +239,13 @@ class InteractiveBrokersExchange(Exchange):
         self._orders: Dict[str, Order] = {}
 
         # map order id to received event
-        self._order_received_map: Dict[str, asyncio.Event] = {}
+        self._order_received_map_set: Dict[str, asyncio.Event] = {}
+        self._order_received_map_get: Dict[str, asyncio.Event] = {}
         self._order_received_res: Dict[str, bool] = {}
 
         # map order id to cancelled event
-        self._order_cancelled_map: Dict[str, asyncio.Event] = {}
+        self._order_cancelled_map_set: Dict[str, asyncio.Event] = {}
+        self._order_cancelled_map_get: Dict[str, asyncio.Event] = {}
         self._order_cancelled_res: Dict[str, bool] = {}
 
         # track "finished" orders so we can ignore them
@@ -320,58 +322,109 @@ class InteractiveBrokersExchange(Exchange):
     async def subscribe(self, instrument: Instrument) -> None:
         self._api.subscribeMarketData(instrument)
 
-    async def _send_order_received(self, orderId: str, ret: bool) -> None:
+    def _create_order_received(self, orderId: str) -> None:
+        # create initial event
+        self._order_received_map_get[orderId] = asyncio.Event()
+        self._order_received_map_set[orderId] = asyncio.Event()
+
+    async def _send_order_received(
+        self, orderId: str, ret: bool, waitfor: bool = True
+    ) -> None:
         # set result
         self._order_received_res[orderId] = ret
 
-        # wait until consumed
-        while orderId in self._order_received_res:
-            await asyncio.sleep(0.1)
+        # if setter exists, set it
+        if orderId in self._order_received_map_set:
+            self._order_received_map_set[orderId].set()
 
-    async def _send_cancel_received(self, orderId: str, ret: bool) -> None:
+            # let the event be consumed
+            await asyncio.sleep(0)
+
+            # wait for result to be consumed
+            await self._order_received_map_get[orderId].wait()
+
+    async def _send_cancel_received(
+        self, orderId: str, ret: bool, waitfor: bool = True
+    ) -> None:
         # set result
         self._order_cancelled_res[orderId] = ret
 
-        # wait until consumed
-        while orderId in self._order_cancelled_res:
-            await asyncio.sleep(0.1)
+        # if setter exists, set it
+        if orderId in self._order_cancelled_map_set:
+            self._order_cancelled_map_set[orderId].set()
+
+            # let the event be consumed
+            await asyncio.sleep(0)
+
+            # wait for result to be consumed
+            await self._order_cancelled_map_get[orderId].wait()
 
     async def _consume_order_received(self, orderId: str) -> bool:
-        while orderId not in self._order_received_res:
-            print('here2')
-            if orderId in self._finished_orders:
-                return True
-            await asyncio.sleep(0.1)
-        return self._order_received_res.pop(orderId)
+        # if already received result
+        if orderId in self._order_received_res:
+            return self._order_received_res[orderId]
+
+        # if already waiting for result, reject
+        if orderId in self._order_received_map_set:
+            return False
+
+        # initialize events
+        self._order_received_map_get[orderId] = asyncio.Event()
+        self._order_received_map_set[orderId] = asyncio.Event()
+
+        # wait for it to be set
+        await self._order_received_map_set[orderId].wait()
+
+        # trigger getter
+        self._order_received_map_get[orderId].set()
+
+        # if finished, add to finished
+        if self._order_received_res[orderId]:
+            self._finished_orders.add(orderId)
+
+        # let setter finish
+        return self._order_received_res[orderId]
 
     async def _consume_cancel_received(self, orderId: str) -> bool:
-        while orderId not in self._order_cancelled_res:
-            print('here')
-            if orderId in self._finished_orders:
-                return True
-            await asyncio.sleep(0.1)
-        return self._order_cancelled_res.pop(orderId)
+        # if already received result
+        if orderId in self._order_cancelled_res:
+            return self._order_cancelled_res[orderId]
+
+        # if already waiting for result, reject
+        if orderId in self._order_cancelled_map_set:
+            return False
+
+        # initialize events
+        self._order_cancelled_map_get[orderId] = asyncio.Event()
+        self._order_cancelled_map_set[orderId] = asyncio.Event()
+
+        # wait for it to be set
+        await self._order_cancelled_map_set[orderId].wait()
+
+        # trigger getter
+        self._order_cancelled_map_get[orderId].set()
+
+        # if finished, add to finished
+        if self._order_cancelled_res[orderId]:
+            self._finished_orders.add(orderId)
+
+        # let setter finish
+        return self._order_cancelled_res[orderId]
 
     async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         """return data from exchange"""
         while True:
             # clear order events
             while self._order_event_queue.qsize() > 0:
-                try:
-                    order_data = self._order_event_queue.get_nowait()
-                except Empty:
-                    await asyncio.sleep(0.1)
-                    continue
+                order_data = self._order_event_queue.get()
                 status = order_data["status"]
                 order = self._orders[str(order_data["orderId"])]
-                print('got {}'.format(status))
                 if status in (
                     "ApiPending",
                     "PendingSubmit",
                     "PendingCancel",
                     "PreSubmitted",
                     "ApiCancelled",
-                    "Inactive",
                 ):
                     # ignore
                     continue
@@ -384,7 +437,6 @@ class InteractiveBrokersExchange(Exchange):
                     await self._send_order_received(order.id, False)
 
                 elif status in ("RejectedCancel",):
-                    print('rejected cancel')
                     await self._send_cancel_received(order.id, False)
 
                 elif status in ("Submitted",):
@@ -414,7 +466,7 @@ class InteractiveBrokersExchange(Exchange):
                     if order.finished():
                         self._finished_orders.add(order.id)
 
-                    # create trade object
+                        # create trade object
                     t = Trade(
                         volume=order_data["filled"],  # type: ignore
                         price=order_data["avgFillPrice"],  # type: ignore
@@ -428,18 +480,12 @@ class InteractiveBrokersExchange(Exchange):
                     e = Event(type=EventType.TRADE, target=t)
 
                     # if submitted was skipped, clear out the wait
-                    print('sending received')
                     await self._send_order_received(order.id, True)
-                    print('yielding execution {}'.format(t.my_order))
                     yield e
 
             # clear market data events
             while self._market_data_queue.qsize() > 0:
-                try:
-                    market_data = self._market_data_queue.get_nowait()
-                except Empty:
-                    await asyncio.sleep(0.1)
-                    continue
+                market_data = self._market_data_queue.get()
                 instrument: Instrument = market_data["instrument"]  # type: ignore
                 price: float = market_data["price"]  # type: ignore
                 o = AATOrder(
@@ -492,9 +538,8 @@ class InteractiveBrokersExchange(Exchange):
         self._orders[order.id] = order
 
         # send to IB
-        id = self._api.placeOrder(ibcontract, iborder)
+        self._api.placeOrder(ibcontract, iborder)
 
-        print('wait for received')
         # update order id
         return await self._consume_order_received(_temp_id)
 
@@ -514,6 +559,5 @@ class InteractiveBrokersExchange(Exchange):
         # send to IB
         self._api.cancelOrder(order)
 
-        print('wait for cancel')
         # wait for IB to respond
         return await self._consume_cancel_received(order.id)

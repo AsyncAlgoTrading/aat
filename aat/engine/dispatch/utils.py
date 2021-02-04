@@ -116,9 +116,37 @@ class StrategyManagerUtilsMixin(object):
     def periodic(
         self,
         function: Callable,
+        seconds: int = 0,
+        minutes: int = 0,
+        hours: int = 0,
+    ):
+        """run a function periodically:
+        if the amount of time between previous call and current call
+        is more than `seconds` seconds + `minutes` minutes + `hours` hours,
+        then reexecute
+        """
+        return self._periodic(function, seconds, minutes, hours, interval=True)
+
+    def at(
+        self,
+        function: Callable,
         second: Union[int, str] = 0,
         minute: Union[int, str] = "*",
         hour: Union[int, str] = "*",
+    ):
+        """run a function at a certain point in time:
+        e.g. run it on every `second` second every minute of every hour
+        So 2, "*", "*", would run 1:00:02, 1:01:02, etc
+        """
+        return self._periodic(function, second, minute, hour, interval=False)
+
+    def _periodic(
+        self,
+        function: Callable,
+        second: Union[int, str] = 0,
+        minute: Union[int, str] = "*",
+        hour: Union[int, str] = "*",
+        interval: bool = False,
     ) -> Periodic:
         """periodically run a given async function. NOTE: precise timing
         is NOT guaranteed due to event loop scheduling."""
@@ -161,7 +189,13 @@ class StrategyManagerUtilsMixin(object):
         # End Validation
 
         periodic = Periodic(
-            self.loop(), self._engine._latest, function, second, minute, hour  # type: ignore
+            self.loop(),
+            self._engine._latest,
+            function,
+            second,
+            minute,
+            hour,
+            interval,
         )
         self._periodics.append(periodic)
         return periodic
