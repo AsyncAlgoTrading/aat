@@ -322,12 +322,12 @@ class InteractiveBrokersExchange(Exchange):
 
     async def _consume_order_received(self, orderId: str) -> bool:
         while orderId not in self._order_received_res:
-            await asyncio.sleep(.1)
+            await asyncio.sleep(0.1)
         return self._order_received_res.pop(orderId)
 
     async def _consume_cancel_received(self, orderId: str) -> bool:
         while orderId not in self._order_cancelled_res:
-            await asyncio.sleep(.1)
+            await asyncio.sleep(0.1)
         return self._order_cancelled_res.pop(orderId)
 
     async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
@@ -338,7 +338,7 @@ class InteractiveBrokersExchange(Exchange):
                 try:
                     order_data = self._order_event_queue.get_nowait()
                 except Empty:
-                    await asyncio.sleep(.1)
+                    await asyncio.sleep(0.1)
                     continue
                 status = order_data["status"]
                 order = self._orders[str(order_data["orderId"])]
@@ -416,7 +416,7 @@ class InteractiveBrokersExchange(Exchange):
                 try:
                     market_data = self._market_data_queue.get_nowait()
                 except Empty:
-                    await asyncio.sleep(.1)
+                    await asyncio.sleep(0.1)
                     continue
                 instrument: Instrument = market_data["instrument"]  # type: ignore
                 price: float = market_data["price"]  # type: ignore
