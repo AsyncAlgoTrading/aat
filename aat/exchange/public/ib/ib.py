@@ -179,12 +179,14 @@ class _API(EWrapper, EClient):
         elif errorCode in (
             202,  # Order cancelled - Reason:
         ):
-            self._order_event_queue.put(
-                dict(
-                    orderId=reqId,
-                    status="Cancelled",
-                )
-            )
+            ...
+            # also sends event, don't need to handle error here
+            # self._order_event_queue.put(
+            #     dict(
+            #         orderId=reqId,
+            #         status="Cancelled",
+            #     )
+            # )
         else:
             super().error(reqId, errorCode, errorString)
 
