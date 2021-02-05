@@ -378,10 +378,6 @@ class InteractiveBrokersExchange(Exchange):
         # trigger getter
         self._order_received_map_get[orderId].set()
 
-        # if finished, add to finished
-        if self._order_received_res[orderId]:
-            self._finished_orders.add(orderId)
-
         # let setter finish
         return self._order_received_res[orderId]
 
