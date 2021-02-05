@@ -155,21 +155,30 @@ class _API(EWrapper, EClient):
         # TODO?
 
     def error(self, reqId: int, errorCode: int, errorString: str) -> None:
-        if errorCode in (201, 110):
+        if errorCode in (
+            110,  # The price does not conform to the minimum price variation for this contract.	
+            201,  # Order rejected - Reason:
+        ):
             self._order_event_queue.put(
                 dict(
                     orderId=reqId,
                     status="Rejected",
                 )
             )
-        elif errorCode in (10148,):
+        elif errorCode in (
+            136,  # This order cannot be cancelled.
+            161,  # Cancel attempted when order is not in a cancellable state. Order permId =
+            10148,  # OrderId <OrderId> that needs to be cancelled can not be cancelled, state:
+        ):
             self._order_event_queue.put(
                 dict(
                     orderId=reqId,
                     status="RejectedCancel",
                 )
             )
-        elif errorCode in (202,):
+        elif errorCode in (
+            202,  # Order cancelled - Reason:
+        ):
             self._order_event_queue.put(
                 dict(
                     orderId=reqId,
@@ -362,7 +371,7 @@ class InteractiveBrokersExchange(Exchange):
     async def _consume_order_received(self, orderId: str) -> bool:
         # if already received result
         if orderId in self._order_received_res:
-            return self._order_received_res[orderId]
+            return self._order_received_res.pop(orderId)
 
         # if already waiting for result, reject
         if orderId in self._order_received_map_set:
@@ -379,12 +388,12 @@ class InteractiveBrokersExchange(Exchange):
         self._order_received_map_get[orderId].set()
 
         # let setter finish
-        return self._order_received_res[orderId]
+        return self._order_received_res.pop(orderId)
 
     async def _consume_cancel_received(self, orderId: str) -> bool:
         # if already received result
         if orderId in self._order_cancelled_res:
-            return self._order_cancelled_res[orderId]
+            return self._order_cancelled_res.pop(orderId)
 
         # if already waiting for result, reject
         if orderId in self._order_cancelled_map_set:
@@ -405,7 +414,7 @@ class InteractiveBrokersExchange(Exchange):
             self._finished_orders.add(orderId)
 
         # let setter finish
-        return self._order_cancelled_res[orderId]
+        return self._order_cancelled_res.pop(orderId)
 
     async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         """return data from exchange"""
@@ -471,6 +480,8 @@ class InteractiveBrokersExchange(Exchange):
                     )
 
                     # set my order
+                    # FIXME this isnt technically necessary as
+                    # the engine should do this automatically
                     t.my_order = order
 
                     e = Event(type=EventType.TRADE, target=t)
@@ -544,12 +555,12 @@ class InteractiveBrokersExchange(Exchange):
 
         For MarketData-only, can just return None
         """
-        # ignore if order not sujbmitted yet
+        # ignore if order not submitted yet
         if not order.id:
             return False
 
         # ignore if already finished
-        if order.id and order.id in self._finished_orders:
+        if order.id in self._finished_orders:
             return False
 
         # send to IB
