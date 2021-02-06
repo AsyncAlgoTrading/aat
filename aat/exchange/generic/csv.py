@@ -62,7 +62,7 @@ class CSV(Exchange):
     async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         for item in self._data:
             yield Event(EventType.TRADE, item)
-            await asyncio.sleep(1)
+            await asyncio.sleep(0)
 
             # save timestamp
             timestamp = item.timestamp

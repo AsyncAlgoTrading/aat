@@ -318,13 +318,13 @@ class TradingEngine(Application):
             return True
         return False
 
-    def pushEvent(self, event: Event) -> None:
+    async def pushEvent(self, event: Event) -> None:
         """push non-exchange event into the queue"""
-        self._queued_events.append(event)
+        await self._queued_events.put(event)
 
-    def pushTargetedEvent(self, strategy: Strategy, event: Event) -> None:
+    async def pushTargetedEvent(self, strategy: Strategy, event: Event) -> None:
         """push non-exchange event targeted to a specific strat into the queue"""
-        self._queued_targeted_events.append((strategy, event))
+        await self._queued_targeted_events.put((event, strategy))
 
     async def _wraptick(self, ticker) -> Event:
         async for ev in ticker:
@@ -334,8 +334,8 @@ class TradingEngine(Application):
     async def run(self) -> None:
         """run the engine"""
         # setup future queue
-        self._queued_events: Deque[Event] = deque()
-        self._queued_targeted_events: Deque[Tuple[Strategy, Event]] = deque()
+        self._queued_events: Deque[Event] = asyncio.Queue()
+        self._queued_targeted_events: Deque[Tuple[Strategy, Event]] = asyncio.Queue()
 
         # await all connections
         await asyncio.gather(
@@ -352,19 +352,21 @@ class TradingEngine(Application):
         # Main event loop
         # **************** #
         async with merge(
+            self._tick_queued_events(),
+            self._tick_queued_targeted_events(),
             *(
                 self._wraptick(exch.tick())
                 for exch in self.exchanges + [self]
                 if inspect.isasyncgenfunction(exch.tick)
             ),
-            self._tick_queued_events(),
-            self._tick_queued_targeted_events(),
         ).stream() as stream:
             # stream through all events
             async for event in stream:
                 # unpack targetted events
                 if isinstance(event, tuple):
                     event, strategy = event
+                else:
+                    strategy = None
 
                 # if done event
                 if event.type == EventType.EXIT:
@@ -409,7 +411,7 @@ class TradingEngine(Application):
                                 )
 
                 # tick exchange event to handlers
-                await self.processEvent(event)
+                await self.processEvent(event, strategy)
 
                 # TODO move out of critical path
                 if self._offline():
@@ -438,19 +440,11 @@ class TradingEngine(Application):
 
     async def _tick_queued_events(self):
         while True:
-            # process any secondary events
-            while self._queued_events:
-                event = self._queued_events.popleft()
-                yield event
+            yield await self._queued_events.get()
 
     async def _tick_queued_targeted_events(self):
         while True:
-            # process any secondary callback-targeted events (e.g. order fills)
-            # these need to route to a specific callback,
-            # rather than all callbacks
-            while self._queued_targeted_events:
-                strat, event = self._queued_targeted_events.popleft()
-                yield event, strat
+            yield await self._queued_targeted_events.get()
 
     async def processEvent(self, event: Event, strategy: Strategy = None) -> None:
         """send an event to all registered event handlers
@@ -510,6 +504,9 @@ class TradingEngine(Application):
 
         if self._offline():
             # periodics injected manually, see main event loop above
+            while True:
+                yield Event(type=EventType.HEARTBEAT, target=None)
+                await asyncio.sleep(0)
             return
 
         while True:

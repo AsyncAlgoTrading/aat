@@ -35,7 +35,7 @@ class StrategyManagerOrderEntryMixin(object):
 
         # push event to loop
         ev = Event(type=Event.Types.BOUGHT, target=trade)
-        self._engine.pushTargetedEvent(strategy, ev)
+        await self._engine.pushTargetedEvent(strategy, ev)
 
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, trade.my_order)
@@ -47,7 +47,7 @@ class StrategyManagerOrderEntryMixin(object):
 
         # push event to loop
         ev = Event(type=Event.Types.SOLD, target=trade)
-        self._engine.pushTargetedEvent(strategy, ev)
+        await self._engine.pushTargetedEvent(strategy, ev)
 
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, trade.my_order)
@@ -58,20 +58,20 @@ class StrategyManagerOrderEntryMixin(object):
         ev = Event(type=Event.Types.RECEIVED, target=order)
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, order)
-        self._engine.pushTargetedEvent(strategy, ev)
+        await self._engine.pushTargetedEvent(strategy, ev)
 
     async def _onCanceled(self, strategy: "Strategy", order: Order) -> None:
         # push event to loop
         ev = Event(type=Event.Types.CANCELED, target=order)
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, order)
-        self._engine.pushTargetedEvent(strategy, ev)
+        await self._engine.pushTargetedEvent(strategy, ev)
 
     async def _onRejected(self, strategy: "Strategy", order: Order) -> None:
         # push event to loop
         ev = Event(type=Event.Types.REJECTED, target=order)
         self._alerted_events[ev] = (strategy, order)
-        self._engine.pushTargetedEvent(strategy, ev)
+        await self._engine.pushTargetedEvent(strategy, ev)
 
     # *********************
     # Order Entry Methods *
