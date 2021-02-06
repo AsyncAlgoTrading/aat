@@ -38,10 +38,14 @@ class OrderManager(ManagerBase):
         if not exchange:
             raise Exception("Exchange not installed: {}".format(order.exchange))
 
+        # import pdb; pdb.set_trace()
         ret = await exchange.newOrder(order)
+        # import pdb; pdb.set_trace()
         if ret:
-            print("putting into pending")
+            print("putting into pending: {}".format(order.id))
             self._pending_orders[order.id] = (order, strategy)
+        else:
+            print("not putting into pending: {}".format(order.id))
         return ret
 
     async def cancelOrder(self, strategy: Optional["Strategy"], order: Order) -> bool:
@@ -63,6 +67,8 @@ class OrderManager(ManagerBase):
         strat: Optional[EventHandler] = None
 
         trade: Trade = event.target
+
+        # import pdb; pdb.set_trace()
 
         # if it comes with the order, use that
         if trade.my_order:

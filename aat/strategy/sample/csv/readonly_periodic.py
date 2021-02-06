@@ -17,7 +17,7 @@ class ReadOnlyStrategy(Strategy):
 
         for i in self.instruments():
             await self.subscribe(i)
-        self.periodic(self.onPeriodic, second=0, minute=0, hour=1)
+        self.at(self.onPeriodic, second=0, minute=0, hour=1)
 
     async def onTrade(self, event: Event) -> None:
         pprint(event)

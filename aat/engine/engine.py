@@ -326,6 +326,11 @@ class TradingEngine(Application):
         """push non-exchange event targeted to a specific strat into the queue"""
         self._queued_targeted_events.append((strategy, event))
 
+    async def _wraptick(self, ticker) -> Event:
+        async for ev in ticker:
+            yield ev
+        yield Event(type=EventType.EXIT, target=None)
+
     async def run(self) -> None:
         """run the engine"""
         # setup future queue
@@ -348,13 +353,23 @@ class TradingEngine(Application):
         # **************** #
         async with merge(
             *(
-                exch.tick()
+                self._wraptick(exch.tick())
                 for exch in self.exchanges + [self]
                 if inspect.isasyncgenfunction(exch.tick)
-            )
+            ),
+            self._tick_queued_events(),
+            self._tick_queued_targeted_events(),
         ).stream() as stream:
             # stream through all events
             async for event in stream:
+                # unpack targetted events
+                if isinstance(event, tuple):
+                    event, strategy = event
+
+                # if done event
+                if event.type == EventType.EXIT:
+                    break
+
                 # TODO move out of critical path
                 if self._offline():
                     # inject periodics
@@ -409,20 +424,6 @@ class TradingEngine(Application):
                     # use now
                     self._latest = datetime.now()
 
-                # process any secondary events
-                while self._queued_events:
-                    event = self._queued_events.popleft()
-                    await self.processEvent(event)
-
-                # process any secondary callback-targeted events (e.g. order fills)
-                # these need to route to a specific callback,
-                # rather than all callbacks
-                while self._queued_targeted_events:
-                    strat, event = self._queued_targeted_events.popleft()
-
-                    # send to the generating strategy
-                    await self.processEvent(event, strat)
-
                 # process any periodics
                 await asyncio.gather(
                     *(
@@ -434,6 +435,22 @@ class TradingEngine(Application):
 
         # Before engine shutdown, send an exit event
         await self.processEvent(Event(type=EventType.EXIT, target=None))
+
+    async def _tick_queued_events(self):
+        while True:
+            # process any secondary events
+            while self._queued_events:
+                event = self._queued_events.popleft()
+                yield event
+
+    async def _tick_queued_targeted_events(self):
+        while True:
+            # process any secondary callback-targeted events (e.g. order fills)
+            # these need to route to a specific callback,
+            # rather than all callbacks
+            while self._queued_targeted_events:
+                strat, event = self._queued_targeted_events.popleft()
+                yield event, strat
 
     async def processEvent(self, event: Event, strategy: Strategy = None) -> None:
         """send an event to all registered event handlers

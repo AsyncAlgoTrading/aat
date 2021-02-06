@@ -62,7 +62,7 @@ class CSV(Exchange):
     async def tick(self) -> AsyncGenerator[Any, Event]:  # type: ignore[override]
         for item in self._data:
             yield Event(EventType.TRADE, item)
-            await asyncio.sleep(0)
+            await asyncio.sleep(1)
 
             # save timestamp
             timestamp = item.timestamp
@@ -82,7 +82,6 @@ class CSV(Exchange):
                 )
 
                 yield Event(type=EventType.TRADE, target=t)
-                await asyncio.sleep(0)
 
     async def cancelOrder(self, order: Order) -> bool:
         # Can't cancel, orders execute immediately

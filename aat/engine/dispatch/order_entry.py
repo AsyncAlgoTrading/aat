@@ -53,32 +53,29 @@ class StrategyManagerOrderEntryMixin(object):
         self._alerted_events[ev] = (strategy, trade.my_order)
 
     # TODO ugly private method
-
     async def _onReceived(self, strategy: "Strategy", order: Order) -> None:
         # push event to loop
         ev = Event(type=Event.Types.RECEIVED, target=order)
-        self._engine.pushTargetedEvent(strategy, ev)
-
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, order)
+        self._engine.pushTargetedEvent(strategy, ev)
 
     async def _onCanceled(self, strategy: "Strategy", order: Order) -> None:
         # push event to loop
         ev = Event(type=Event.Types.CANCELED, target=order)
-        self._engine.pushTargetedEvent(strategy, ev)
-
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, order)
+        self._engine.pushTargetedEvent(strategy, ev)
 
     async def _onRejected(self, strategy: "Strategy", order: Order) -> None:
         # push event to loop
         ev = Event(type=Event.Types.REJECTED, target=order)
+        self._alerted_events[ev] = (strategy, order)
         self._engine.pushTargetedEvent(strategy, ev)
 
     # *********************
     # Order Entry Methods *
     # *********************
-
     async def newOrder(self, strategy: "Strategy", order: Order) -> bool:
         """helper method, defers to buy/sell"""
         # ensure has list
