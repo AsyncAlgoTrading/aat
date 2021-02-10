@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, cast, Dict, List, Optional, Tuple
 
+from aat import AATException
 from aat.core import Order, Event, Trade, ExchangeType
 from aat.core.handler import EventHandler
 from aat.exchange import Exchange
@@ -51,7 +52,7 @@ class OrderManager(ManagerBase):
     async def cancelOrder(self, strategy: Optional["Strategy"], order: Order) -> bool:
         exchange = self._exchanges.get(order.exchange)
         if not exchange:
-            raise Exception("Exchange not installed: {}".format(order.exchange))
+            raise AATException("Exchange not installed: {}".format(order.exchange))
 
         ret = await exchange.cancelOrder(order)
         if ret:
@@ -73,7 +74,10 @@ class OrderManager(ManagerBase):
         # if it comes with the order, use that
         if trade.my_order:
             action = True
-            order, strat = self._pending_orders[trade.my_order.id]
+            try:
+                order, strat = self._pending_orders[trade.my_order.id]
+            except KeyError:
+                raise AATException("Exchange did not acknowledge order before trade!")
 
             # TODO cleaner?
             trade.id = trade.my_order.id
