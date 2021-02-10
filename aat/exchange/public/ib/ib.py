@@ -156,7 +156,7 @@ class _API(EWrapper, EClient):
 
     def error(self, reqId: int, errorCode: int, errorString: str) -> None:
         if errorCode in (
-            110,  # The price does not conform to the minimum price variation for this contract.	
+            110,  # The price does not conform to the minimum price variation for this contract.
             201,  # Order rejected - Reason:
         ):
             self._order_event_queue.put(
@@ -176,9 +176,7 @@ class _API(EWrapper, EClient):
                     status="RejectedCancel",
                 )
             )
-        elif errorCode in (
-            202,  # Order cancelled - Reason:
-        ):
+        elif errorCode in (202,):  # Order cancelled - Reason:
             ...
             # also sends event, don't need to handle error here
             # self._order_event_queue.put(

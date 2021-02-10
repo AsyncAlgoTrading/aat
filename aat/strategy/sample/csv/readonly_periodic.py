@@ -41,6 +41,8 @@ if __name__ == "__main__":
             "--trading_type",
             "backtest",
             "--load_accounts",
+            "--timezone",
+            "America/New_York",
             "--exchanges",
             "aat.exchange.generic:CSV,{}".format(
                 os.path.join(os.path.dirname(__file__), "data", "aapl.csv")

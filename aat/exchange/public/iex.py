@@ -309,7 +309,7 @@ class IEX(Exchange):
                         taker_order=order,
                         maker_orders=[],
                         my_order=order,  # FIXME this isnt technically necessary as
-                                         # the engine should do this automatically
+                        # the engine should do this automatically
                     )
 
                     yield Event(type=EventType.TRADE, target=t)

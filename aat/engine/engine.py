@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import os
 import os.path
+import pytz
 
 from aiostream.stream import merge  # type: ignore
 from collections import deque
@@ -69,6 +70,12 @@ class TradingEngine(Application):
     verbose = Bool(default_value=True)
     api = Bool(default_value=False)
     port = Unicode(default_value="8080", help="Port to run on").tag(config=True)
+    tz = Instance(
+        klass=pytz.BaseTzInfo,
+        default_value=None,
+        allow_none=True,
+        help="Timezone to localize to",
+    ).tag(config=True)
     event_loop = Instance(klass=asyncio.events.AbstractEventLoop)
     executor = Instance(klass=ThreadPoolExecutor, args=(4,), kwargs={})
 
@@ -119,6 +126,13 @@ class TradingEngine(Application):
         # enable API access?
         self.api = bool(int(config.get("general", {}).get("api", self.api)))
 
+        # override timezome
+        self.tz = (
+            pytz.timezone(config.get("general", {}).get("timezone", None))
+            if config.get("general", {}).get("timezone", None)
+            else None
+        )
+
         # Trading type
         self.trading_type = TradingType(
             config.get("general", {}).get("trading_type", "simulation").upper()
@@ -152,7 +166,9 @@ class TradingEngine(Application):
         }
 
         # setup `now` handler for backtest
-        self._latest = datetime.fromtimestamp(0) if self._offline() else datetime.now()
+        self._latest = (
+            datetime.fromtimestamp(0, tz=self.tz) if self._offline() else datetime.now()
+        )
 
         # register internal management event handler before all strategy handlers
         self.registerHandler(self.manager)
@@ -374,6 +390,18 @@ class TradingEngine(Application):
 
                 # TODO move out of critical path
                 if self._offline():
+                    # handle timezone
+                    if (
+                        hasattr(event, "target")
+                        and hasattr(event.target, "timestamp")
+                        and self._latest.tzinfo
+                        and not event.target.timestamp.tzinfo
+                    ):
+                        # assume in local time
+                        event.target.timestamp = event.target.timestamp.replace(
+                            tzinfo=self._latest.tzinfo
+                        )
+
                     # inject periodics
                     # TODO optimize
                     # Manager should keep track of the intervals for its periodics,
@@ -381,7 +409,7 @@ class TradingEngine(Application):
                     # live engine's `tick` method does below). Instead we can just
                     # calculate exactly the intervals
                     if (
-                        self._latest != datetime.fromtimestamp(0)
+                        self._latest != datetime.fromtimestamp(0, tz=self.tz)
                         and hasattr(event, "target")
                         and hasattr(event.target, "timestamp")
                     ):
@@ -424,7 +452,7 @@ class TradingEngine(Application):
                     )
                 else:
                     # use now
-                    self._latest = datetime.now()
+                    self._latest = datetime.now(tz=self.tz)
 
                 # process any periodics
                 await asyncio.gather(
@@ -519,7 +547,7 @@ class TradingEngine(Application):
         return (
             self._latest
             if self.trading_type == TradingType.BACKTEST
-            else datetime.now()
+            else datetime.now(tz=self.tz)
         )
 
     def start(self) -> None:
