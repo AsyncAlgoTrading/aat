@@ -436,7 +436,6 @@ class TradingEngine(Application):
                 if any(exceptions):
                     raise exceptions[0].exception()
 
-
         # Before engine shutdown, send an exit event
         await self.processEvent(Event(type=EventType.EXIT, target=None))
 
