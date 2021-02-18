@@ -424,13 +424,18 @@ class TradingEngine(Application):
                     await self.processEvent(event, strat)
 
                 # process any periodics
-                await asyncio.gather(
+                periodic_result = await asyncio.gather(
                     *(
                         asyncio.create_task(p.execute(self._latest))
                         for p in self.manager.periodics()
                         if p.expires(self._latest)
                     )
                 )
+
+                exceptions = [r for r in periodic_result if r.exception()]
+                if any(exceptions):
+                    raise exceptions[0].exception()
+
 
         # Before engine shutdown, send an exit event
         await self.processEvent(Event(type=EventType.EXIT, target=None))
