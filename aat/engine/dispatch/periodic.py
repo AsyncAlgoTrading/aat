@@ -48,10 +48,12 @@ class Periodic(object):
             return False
         return should_expire(self._last, timestamp, self.second, self.minute, self.hour)
 
-    async def execute(self, timestamp: datetime) -> Future:
+    async def execute(self, timestamp: datetime) -> Optional[Future]:
         if self.expires(timestamp):
             self._last = timestamp
             return asyncio.ensure_future(self._function(timestamp=timestamp))
+        else:
+            return None
 
 
 class PeriodicManagerMixin(object):
