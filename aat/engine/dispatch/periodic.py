@@ -1,4 +1,5 @@
 import asyncio
+from asyncio import Future
 from datetime import datetime
 from typing import Awaitable, Callable, List, Optional
 
@@ -56,10 +57,12 @@ class Periodic(object):
             )
         return should_expire(self._last, timestamp, self.second, self.minute, self.hour)
 
-    async def execute(self, timestamp: datetime) -> None:
+    async def execute(self, timestamp: datetime) -> Optional[Future]:
         if self.expires(timestamp):
-            asyncio.ensure_future(self._function(timestamp=timestamp))
             self._last = timestamp
+            return asyncio.ensure_future(self._function(timestamp=timestamp))
+        else:
+            return None
 
 
 class PeriodicManagerMixin(object):
