@@ -82,15 +82,15 @@ class OrderManager(ManagerBase):
             # if cancelled, remove from pending and return to caller
             self._pending_orders.pop(order.id, None)
 
-        if (order, strategy) in self._pending_action:
-            # remove from pre pending
-            self._pending_action.remove((order, strategy))
+            if (order, strategy) in self._pending_action:
+                # remove from pre pending
+                self._pending_action.remove((order, strategy))
 
             # tell manager it was canceled/rejected
-            if ret:
-                await self._manager._onCanceled(strategy, order)
-            else:
-                await self._manager._onRejected(strategy, order)
+            await self._manager._onCanceled(strategy, order)
+
+        else:
+            await self._manager._onRejected(strategy, order)
 
         # return to caller
         return ret
