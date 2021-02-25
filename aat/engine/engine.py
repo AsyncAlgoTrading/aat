@@ -4,6 +4,7 @@ import os
 import os.path
 import pytz
 
+from asyncio import Future, Queue
 from aiostream.stream import merge  # type: ignore
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
@@ -161,7 +162,7 @@ class TradingEngine(Application):
         self.event_loop = asyncio.get_event_loop()
 
         # setup subscriptions
-        self._handler_subscriptions: Dict[EventType, List] = {
+        self._handler_subscriptions: Dict[EventType, ListType] = {
             m: [] for m in EventType.__members__.values()
         }
 
@@ -342,7 +343,7 @@ class TradingEngine(Application):
         """push non-exchange event targeted to a specific strat into the queue"""
         await self._queued_targeted_events.put((event, strategy))
 
-    async def _wraptick(self, ticker) -> Event:
+    async def _wraptick(self, ticker) -> Event:  # type: ignore
         async for ev in ticker:
             yield ev
         yield Event(type=EventType.EXIT, target=None)
@@ -350,9 +351,9 @@ class TradingEngine(Application):
     async def run(self) -> None:
         """run the engine"""
         # setup future queue
-        self._queued_events: Deque[Event] = asyncio.Queue()
-        self._queued_targeted_events: Deque[Tuple[Strategy, Event]] = asyncio.Queue()
-        self._futures: Deque[asyncio.Future] = deque()
+        self._queued_events: Queue[Event] = Queue()
+        self._queued_targeted_events: Queue[Tuple[Event, Strategy]] = Queue()
+        self._futures: Deque[Future] = deque()
 
         # await all connections
         await asyncio.gather(
@@ -459,11 +460,15 @@ class TradingEngine(Application):
                     self._latest = datetime.now(tz=self.tz)
 
                 # process any periodics
-                self._futures.extend([asyncio.create_task(p.execute(self._latest))
-                                      for p in self.manager.periodics()
-                                      if p.expires(self._latest)])
+                self._futures.extend(
+                    [
+                        asyncio.create_task(p.execute(self._latest))
+                        for p in self.manager.periodics()
+                        if p.expires(self._latest)
+                    ]
+                )
 
-                remaining_futures = deque()
+                remaining_futures: Deque[Future] = deque()
                 for fut in self._futures:
                     if fut.done():
                         # trigger exception if necessary
@@ -475,21 +480,25 @@ class TradingEngine(Application):
         # Before engine shutdown, send an exit event
         await self.processEvent(Event(type=EventType.EXIT, target=None))
 
-    async def _tick_queued_events(self):
+    async def _tick_queued_events(self) -> AsyncGenerator[Event, None]:
         while True:
             yield await self._queued_events.get()
 
-    async def _tick_queued_targeted_events(self):
+    async def _tick_queued_targeted_events(
+        self,
+    ) -> AsyncGenerator[Tuple[Event, Strategy], None]:
         while True:
             yield await self._queued_targeted_events.get()
 
-    async def processEvent(self, event: Event, strategy: Strategy = None) -> None:
+    async def processEvent(
+        self, event: Event, strategy: Strategy = None
+    ) -> ListType[Future]:
         """send an event to all registered event handlers
 
         Arguments:
             event (Event): event to send
         """
-        ret = []
+        ret: ListType[Future] = []
         if event.type == EventType.HEARTBEAT:
             # ignore heartbeat
             return ret
@@ -524,19 +533,21 @@ class TradingEngine(Application):
                     # don't infinite error
                     raise
                 await asyncio.sleep(1)
-                return [asyncio.ensure_future(
-                    self.processEvent(
-                        Event(
-                            type=EventType.ERROR,
-                            target=Error(
-                                target=event,
-                                handler=handler,
-                                callback=callback,
-                                exception=e,
-                            ),
+                return [
+                    asyncio.ensure_future(
+                        self.processEvent(
+                            Event(
+                                type=EventType.ERROR,
+                                target=Error(
+                                    target=event,
+                                    handler=handler,
+                                    callback=callback,
+                                    exception=e,
+                                ),
+                            )
                         )
                     )
-                )]
+                ]
         return ret
 
     async def tick(self) -> AsyncGenerator:

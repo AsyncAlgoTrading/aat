@@ -18,11 +18,11 @@ class OrderManager(ManagerBase):
         self._exchanges: Dict[ExchangeType, Exchange] = {}
 
         # for race conditions where trade/cancel comes before acknowledgement
-        self._pending_action: List[Order] = []
+        self._pending_action: List[Tuple[Order, "Strategy"]] = []
 
         # track which strategies generated which orders
         self._pending_orders: Dict[
-            str, Tuple[Order, Optional["Strategy"]]
+            str, Tuple[Order, "Strategy"]
         ] = {}  # lookup strategy by order
 
         # past orders
@@ -45,24 +45,24 @@ class OrderManager(ManagerBase):
             raise Exception("Exchange not installed: {}".format(order.exchange))
 
         # stash in case execution occurs before newOrder returns
-        self._pending_action.append((order, strategy))
+        self._pending_action.append((order, cast("Strategy", strategy)))
 
         # tell exchange to submit
         ret = await exchange.newOrder(order)
 
         if ret:
             # if received, store in pending and return to caller
-            self._pending_orders[order.id] = (order, strategy)
+            self._pending_orders[order.id] = (order, cast("Strategy", strategy))
 
         if (order, strategy) in self._pending_action:
             # remove from pre pending
-            self._pending_action.remove((order, strategy))
+            self._pending_action.remove((order, cast("Strategy", strategy)))
 
             # tell manager it was received/rejected
             if ret:
-                await self._manager._onReceived(strategy, order)
+                await self._manager._onReceived(cast("Strategy", strategy), order)
             else:
-                await self._manager._onRejected(strategy, order)
+                await self._manager._onRejected(cast("Strategy", strategy), order)
 
         # return to caller
         return ret
@@ -73,7 +73,7 @@ class OrderManager(ManagerBase):
             raise AATException("Exchange not installed: {}".format(order.exchange))
 
         # stash in case cancel occurs before cancelOrder returns
-        self._pending_action.append((order, strategy))
+        self._pending_action.append((order, cast("Strategy", strategy)))
 
         # tell exchange to cancel
         ret = await exchange.cancelOrder(order)
@@ -84,13 +84,13 @@ class OrderManager(ManagerBase):
 
             if (order, strategy) in self._pending_action:
                 # remove from pre pending
-                self._pending_action.remove((order, strategy))
+                self._pending_action.remove((order, cast("Strategy", strategy)))
 
             # tell manager it was canceled/rejected
-            await self._manager._onCanceled(strategy, order)
+            await self._manager._onCanceled(cast("Strategy", strategy), order)
 
         else:
-            await self._manager._onRejected(strategy, order)
+            await self._manager._onRejected(cast("Strategy", strategy), order)
 
         # return to caller
         return ret
@@ -103,7 +103,7 @@ class OrderManager(ManagerBase):
         action: bool = False
         ooo: bool = False  # execution is out of order with receipt
         strat: Optional[EventHandler] = None
-        trade: Trade = event.target
+        trade: Trade = cast(Trade, event.target)
 
         # if it comes with the order, use that
         if trade.my_order:
@@ -177,7 +177,7 @@ class OrderManager(ManagerBase):
                 self._past_orders.append(order)
 
     async def onCancel(self, event: Event) -> None:
-        canceled_order: Order = event.target
+        canceled_order: Order = cast(Order, event.target)
         if canceled_order.id in self._pending_orders:
             order, strat = self._pending_orders[canceled_order.id]
 

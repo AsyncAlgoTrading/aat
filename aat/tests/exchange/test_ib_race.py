@@ -1,5 +1,4 @@
 import asyncio
-from datetime import datetime, timedelta
 from typing import List, Any, AsyncGenerator, Optional
 from aat import Strategy
 from aat.config import EventType, InstrumentType, Side, TradingType

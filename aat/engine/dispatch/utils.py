@@ -117,9 +117,9 @@ class StrategyManagerUtilsMixin(object):
         self,
         function: Callable,
         seconds: int = 0,
-        minutes: int = 0,
-        hours: int = 0,
-    ):
+        minutes: int = None,
+        hours: int = None,
+    ) -> Periodic:
         """run a function periodically:
         if the amount of time between previous call and current call
         is more than `seconds` seconds + `minutes` minutes + `hours` hours,
@@ -130,10 +130,10 @@ class StrategyManagerUtilsMixin(object):
     def at(
         self,
         function: Callable,
-        second: Union[int, str] = 0,
-        minute: Union[int, str] = "*",
-        hour: Union[int, str] = "*",
-    ):
+        second: int = 0,
+        minute: int = None,
+        hour: int = None,
+    ) -> Periodic:
         """run a function at a certain point in time:
         e.g. run it on every `second` second every minute of every hour
         So 2, "*", "*", would run 1:00:02, 1:01:02, etc
@@ -143,9 +143,9 @@ class StrategyManagerUtilsMixin(object):
     def _periodic(
         self,
         function: Callable,
-        second: Union[int, str] = 0,
-        minute: Union[int, str] = "*",
-        hour: Union[int, str] = "*",
+        second: int = 0,
+        minute: int = None,
+        hour: int = None,
         interval: bool = False,
     ) -> Periodic:
         """periodically run a given async function. NOTE: precise timing
@@ -157,34 +157,22 @@ class StrategyManagerUtilsMixin(object):
         if not asyncio.iscoroutinefunction(function):
             function = self._make_async(function)
 
-        if not isinstance(second, (int, str)):
-            raise Exception("`second` arg must be int or str")
+        if second is not None and not isinstance(second, int):
+            raise Exception("`second` arg must be int")
 
-        if not isinstance(minute, (int, str)):
-            raise Exception("`minute` arg must be int or str")
+        if minute is not None and not isinstance(minute, int):
+            raise Exception("`minute` arg must be int")
 
-        if not isinstance(hour, (int, str)):
-            raise Exception("`hour` arg must be int or str")
+        if hour is not None and not isinstance(hour, int):
+            raise Exception("`hour` arg must be int")
 
-        if isinstance(second, str) and second != "*":
-            raise Exception('Only "*" or int allowed for argument `second`')
-        elif isinstance(second, str):
-            second = None  # type: ignore
-        elif second < 0 or second > 60:
+        if second is not None and (second < 0 or second > 60):
             raise Exception("`second` must be between 0 and 60")
 
-        if isinstance(minute, str) and minute != "*":
-            raise Exception('Only "*" or int allowed for argument `minute`')
-        elif isinstance(minute, str):
-            minute = None  # type: ignore
-        elif minute < 0 or minute > 60:
+        if minute is not None and (minute < 0 or minute > 60):
             raise Exception("`minute` must be between 0 and 60")
 
-        if isinstance(hour, str) and hour != "*":
-            raise Exception('Only "*" or int allowed for argument `hour`')
-        elif isinstance(hour, str):
-            hour = None  # type: ignore
-        elif hour < 0 or hour > 24:
+        if hour is not None and (hour < 0 or hour > 24):
             raise Exception("`hour` must be between 0 and 24")
         # End Validation
 

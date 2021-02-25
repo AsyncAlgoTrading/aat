@@ -37,7 +37,7 @@ class Error(object):
         return self.__timestamp
 
     @timestamp.setter
-    def id(self, timestamp: datetime) -> None:
+    def timestamp(self, timestamp: datetime) -> None:
         assert isinstance(timestamp, datetime)
         self.__timestamp = timestamp
 

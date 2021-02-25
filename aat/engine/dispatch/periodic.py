@@ -19,9 +19,6 @@ class Periodic(object):
     ) -> None:
         self._loop = loop
         self._function: Callable[..., Awaitable[None]] = function
-        assert (
-            second != "*" and minute != "*" and hour != "*"
-        ), "Please use None instead of '*'"
         self.__second = second
         self.__minute = minute
         self.__hour = hour

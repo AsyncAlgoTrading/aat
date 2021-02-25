@@ -67,7 +67,7 @@ class StrategyManagerOrderEntryMixin(object):
         self._alerted_events[ev] = (strategy, order)
         await self._engine.pushTargetedEvent(strategy, ev)
 
-    async def _onRejected(self, strategy: "Strategy", order: Order) -> None:
+    async def _onRejected(self, strategy: "Strategy", order: Order) -> bool:
         # push event to loop
         ev = Event(type=Event.Types.REJECTED, target=order)
         self._alerted_events[ev] = (strategy, order)
