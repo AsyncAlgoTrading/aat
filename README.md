@@ -53,7 +53,9 @@ The only method that is required to be implemented is the `onTrade` method. The 
 ## Support / Contributors
 Thanks to the following organizations for providing code or financial support.
 
-<a href="https://nemoulous.com"><img src="https://raw.githubusercontent.com/asyncalgotrading/aat/main/docs/img/nem.png" width="150"></a>
+<a href="https://nemoulous.com"><img src="https://raw.githubusercontent.com/asyncalgotrading/aat/main/docs/img/nem.png" width="50"></a>
+
+<a href="https://nemoulous.com">Nemoulous</a>
 
 ## License
 This software is licensed under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
