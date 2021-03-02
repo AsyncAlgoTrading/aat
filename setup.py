@@ -112,7 +112,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/timkpaine/{}".format(name),
     author="Tim Paine",
-    author_email="timothy.k.paine@gmail.com",
+    author_email="t.paine154@gmail.com",
     license="Apache 2.0",
     install_requires=requires,
     extras_require={"dev": requires_dev},
