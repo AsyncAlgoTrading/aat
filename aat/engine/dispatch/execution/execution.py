@@ -26,7 +26,9 @@ class OrderManager(ManagerBase):
         ] = {}  # lookup strategy by order
 
         # past orders
-        self._past_orders: List[Order] = []
+        self._past_orders: Dict[
+            str, Tuple[Order, "Strategy"]
+        ] = {}  # lookup strategy by order
 
     def addExchange(self, exchange: Exchange) -> None:
         """add an exchange"""
@@ -102,7 +104,7 @@ class OrderManager(ManagerBase):
         """Match trade with order"""
         action: bool = False
         ooo: bool = False  # execution is out of order with receipt
-        strat: Optional[EventHandler] = None
+        strat: Optional["Strategy"] = None
         trade: Trade = cast(Trade, event.target)
 
         # if it comes with the order, use that
@@ -113,6 +115,9 @@ class OrderManager(ManagerBase):
             if trade.my_order.id in self._pending_orders:
                 # grab order and strategy from pending orders
                 order, strat = self._pending_orders[trade.my_order.id]
+            elif trade.my_order.id in self._past_orders:
+                # duplicate message, ignore
+                return
             else:
                 # execution was out of order, look which orders are pending actions
                 lookup = [x for x in self._pending_action if x[0] == trade.my_order]
@@ -174,7 +179,7 @@ class OrderManager(ManagerBase):
 
             if order.finished():
                 self._pending_orders.pop(order.id, None)
-                self._past_orders.append(order)
+                self._past_orders[order.id] = (order, cast("Strategy", strat))
 
     async def onCancel(self, event: Event) -> None:
         canceled_order: Order = cast(Order, event.target)
