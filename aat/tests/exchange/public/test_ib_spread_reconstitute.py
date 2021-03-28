@@ -14,19 +14,19 @@ class Wrapper:
 
 sys.modules["ibapi"] = MagicMock()
 sys.modules["ibapi.client"] = MagicMock()
-sys.modules["ibapi.client"].EClient = object
+sys.modules["ibapi.client"].EClient = object  # type: ignore
 sys.modules["ibapi.commission_report"] = MagicMock()
 sys.modules["ibapi.contract"] = MagicMock()
 sys.modules["ibapi.execution"] = MagicMock()
 sys.modules["ibapi.order"] = MagicMock()
 sys.modules["ibapi.wrapper"] = MagicMock()
-sys.modules["ibapi.wrapper"].EWrapper = Wrapper
+sys.modules["ibapi.wrapper"].EWrapper = Wrapper  # type: ignore
 
 from aat.exchange.public.ib.spread import SpreadReconstitute  # noqa: E402
 
 
 class TestIBReconstituteSpread:
-    def test_spread(self):
+    def test_spread(self) -> None:
 
         sr = SpreadReconstitute()
 
