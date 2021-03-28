@@ -1,7 +1,7 @@
 import sys
 from mock import MagicMock
 from aat.core import Order, Instrument
-from aat.config import OrderType, InstrumentType, Side
+from aat.config import InstrumentType, Side
 
 leg1 = Instrument(name="LEG1", type=InstrumentType.FUTURE)
 leg2 = Instrument(name="LEG2", type=InstrumentType.FUTURE)
@@ -22,7 +22,7 @@ sys.modules["ibapi.order"] = MagicMock()
 sys.modules["ibapi.wrapper"] = MagicMock()
 sys.modules["ibapi.wrapper"].EWrapper = Wrapper
 
-from aat.exchange.public.ib.spread import SpreadReconstitute
+from aat.exchange.public.ib.spread import SpreadReconstitute  # noqa: E402
 
 
 class TestIBReconstituteSpread:
@@ -38,7 +38,7 @@ class TestIBReconstituteSpread:
 
         sr.push(order1_l1)
 
-        assert sr.get(original_order) == None
+        assert sr.get(original_order) == None  # noqa: E711
 
         sr.push(order1_l2)
 
@@ -50,7 +50,7 @@ class TestIBReconstituteSpread:
 
         sr.push(order2_l1)
 
-        assert sr.get(original_order) == None
+        assert sr.get(original_order) == None  # noqa: E711
 
         sr.push(order2_l2)
 
