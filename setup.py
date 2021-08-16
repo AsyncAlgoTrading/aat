@@ -68,6 +68,7 @@ requires_dev = [
     "Sphinx>=1.8.4",
     "sphinx-markdown-builder>=0.5.2",
     "types-pytz>=2021.1.2",
+    "types-requests>=2.25.6",
 ] + requires
 
 
