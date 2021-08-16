@@ -47,7 +47,8 @@ requires = [
     "aiostream>=0.3.1",
     "matplotlib>2.2",
     "numpy>=1.11.0",
-    "pandas>=0.24.1" "perspective-python>=0.4.8",
+    "pandas>=0.24.1",
+    "perspective-python>=0.4.8",
     "pybind11>=2",
     "temporal-cache>=0.1.2",
     "tornado>=6.0",
@@ -66,6 +67,8 @@ requires_dev = [
     "pytest-faulthandler>=2.0.1",
     "Sphinx>=1.8.4",
     "sphinx-markdown-builder>=0.5.2",
+    "types-pytz>=2021.1.2",
+    "types-requests>=2.25.6",
 ] + requires
 
 
