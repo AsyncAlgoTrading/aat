@@ -65,7 +65,6 @@ jobs:
 
     - name: Type Annotate
       run: |
-        mypy --install-types
         make annotate
 
     - name: Test
