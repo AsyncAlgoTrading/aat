@@ -48,9 +48,18 @@ namespace core {
 
     void setCallback(std::function<void(std::shared_ptr<Event>)> callback);
 
-    Instrument getInstrument() const { return instrument; }
-    ExchangeType getExchange() const { return exchange; }
-    std::function<void(std::shared_ptr<Event>)> getCallback() const { return callback; }
+    Instrument
+    getInstrument() const {
+      return instrument;
+    }
+    ExchangeType
+    getExchange() const {
+      return exchange;
+    }
+    std::function<void(std::shared_ptr<Event>)>
+    getCallback() const {
+      return callback;
+    }
 
     void reset();
 

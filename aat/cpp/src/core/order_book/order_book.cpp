@@ -3,8 +3,7 @@
 namespace aat {
 namespace core {
 
-  OrderBookIterator&
-  OrderBookIterator::operator++() {
+  OrderBookIterator& OrderBookIterator::operator++() {
     // TODO
 
     return *this;
@@ -45,7 +44,8 @@ namespace core {
     collector.setCallback(callback);
   }
 
-  void OrderBook::reset() {
+  void
+  OrderBook::reset() {
     buy_levels = std::vector<double>();
     sell_levels = std::vector<double>();
     buys = std::unordered_map<double, std::shared_ptr<PriceLevel>>();
