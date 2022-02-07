@@ -455,17 +455,13 @@ class TradingEngine(Application):
                 continue
 
             # TODO make cleaner? move to somewhere not in critical path?
-            if (
-                event.type
-                in (
-                    EventType.TRADE,
-                    EventType.OPEN,
-                    EventType.CHANGE,
-                    EventType.CANCEL,
-                    EventType.DATA,
-                )
-                and not self.manager.dataSubscriptions(handler, event)
-            ):
+            if event.type in (
+                EventType.TRADE,
+                EventType.OPEN,
+                EventType.CHANGE,
+                EventType.CANCEL,
+                EventType.DATA,
+            ) and not self.manager.dataSubscriptions(handler, event):
                 continue
 
             try:

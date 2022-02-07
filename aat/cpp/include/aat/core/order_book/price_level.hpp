@@ -39,7 +39,10 @@ namespace core {
       return orders.size();
     }
 
-    std::shared_ptr<Order> operator[](int i) { return orders[i]; }
+    std::shared_ptr<Order>
+    operator[](int i) {
+      return orders[i];
+    }
     explicit operator bool() const { return orders.size() > 0; }
     using iterator = std::deque<std::shared_ptr<Order>>::iterator;
     using const_iterator = std::deque<std::shared_ptr<Order>>::const_iterator;
