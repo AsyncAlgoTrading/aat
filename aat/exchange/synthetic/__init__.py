@@ -74,7 +74,7 @@ class SyntheticExchange(Exchange):
 
     def _seed(self, symbols: List[str] = None) -> None:
         self._instruments = {
-            symbol: Instrument(symbol)
+            symbol: Instrument(symbol, exchange=self.exchange())
             for symbol in symbols or _getName(self._inst_count)
         }
         self._orderbooks = {
