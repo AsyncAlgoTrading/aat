@@ -14,3 +14,5 @@ from .core import (  # noqa: F401
 )
 from .engine import TradingEngine  # noqa: F401
 from .strategy import *  # noqa: F401, F403
+
+__version__ = "0.1.0"
