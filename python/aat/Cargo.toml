@@ -1,0 +1,25 @@
+[package]
+# Name this aat_rs so as to not conflict with the rust library
+name = "aat_rs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+# Name this aat to match the python library
+name = "aat"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+aat = { path = "../../rust/aat", version = "*" }
+pyo3 = { version = "0.16", features = ["abi3-py37", "extension-module", "multiple-pymethods"] }
+# pyo3-asyncio = { version = "0.16", features = ["attributes", "tokio-runtime"] }
+# tokio = { version = "1", features = ["full"] }
+
+[profile.release]
+panic = 'abort'
+lto = true
+
+[package.metadata.maturin]
+# python-source = "python" 

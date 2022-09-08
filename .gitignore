@@ -35,6 +35,7 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
+coverage
 .coverage
 .coverage.*
 .cache
@@ -42,6 +43,10 @@ nosetests.xml
 coverage.xml
 *,cover
 cover
+results.xml
+python_junit.xml
+.mypy_cache
+venv/
 
 # Translations
 *.mo
@@ -52,6 +57,8 @@ cover
 
 # Sphinx documentation
 docs/_build/
+docs/api
+docs/index.md
 
 # PyBuilder
 target/
@@ -59,40 +66,28 @@ target/
 *_keys
 horizon
 
+# Mac files
 *.DS_Store
+
+# JS Files
 js/node_modules/
 js/build/
 aat/ui/assets/static/
-notes.txt
-ref
+node_modules
+
+# Keys
 coinbase.sh
 coinbase_sandbox.sh
 keys
-old
 
+# Notebooks
 .ipynb_checkpoints
-*.pkl
 notebooks/BTC_*
-.idea
 
+# IDE
+.idea
+.vscode
+
+# Other
 custom_strategies
 
-node_modules
-package-lock.json
-yarn.lock
-logo.ai
-logo.png
-coverage
-experiments
-aat_test
-docs/api
-docs/index.md
-tornado_sqlalchemy_login
-aat.db
-python_junit.xml
-.mypy_cache
-.vscode
-private_config
-_aat_BACKTEST*
-
-venv/
