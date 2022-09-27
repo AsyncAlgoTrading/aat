@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: dev build lint fix check tests tests-ci-run tests-ci-gha tests-ci-jenkins test format checks help
+.PHONY: dev build lint fix check tests tests-ci-run tests-ci-gha tests-ci-jenkins develop test format checks help
 
 dev:  ## Install required dev dependencies
 	rustup component add rustfmt
@@ -9,20 +9,29 @@ dev:  ## Install required dev dependencies
 	rustup component add llvm-tools-preview
 
 build:  ## Build release
-	cargo build --release --all-features
-
-build-dev:  ## Build dev
-	cargo build --all-features
+	cargo build --release --all-features \
+		-p aat \
+		-p aat-core \
+		-p aat-orderbook
 
 lint:  ## Run Clippy for linting, rustfmt for autoformat checks
-	cargo clippy --all-features
+	cargo clippy --all-features \
+		-p aat \
+		-p aat-core \
+		-p aat-orderbook
 	cargo fmt --all -- --check
 
 fix:  ## Fix code with rustfmt
-	cargo fmt --all
+	cargo fmt --all \
+		-p aat \
+		-p aat-core \
+		-p aat-orderbook
 
-check:  ## Check the code with cargo check
-	cargo check --all-features
+check:
+	cargo check --all-features \
+	    -p aat \
+	    -p aat-core \
+	    -p aat-orderbook
 
 tests:  ## Run the tests
 	cargo test -- --show-output 
@@ -36,7 +45,6 @@ tests-ci-run: $(eval SHELL:=/bin/bash)
 		cargo test -- -Z unstable-options --format json | cargo2junit > results.xml;\
 	}
 
-
 tests-ci-gha: tests-ci-run
 	grcov . --llvm -s . -t lcov --branch --ignore-not-existing -o ./coverage.info;\
 
@@ -44,8 +52,10 @@ tests-ci-jenkins: tests-ci-run
 	grcov . --llvm -s . -t cobertura --branch --ignore-not-existing -o ./coverage.xml;\
 
 # aliases
+develop: dev
 test: tests
 format: fix
+checks: check
 
 # Thanks to Francoise at marmelab.com for this
 help:

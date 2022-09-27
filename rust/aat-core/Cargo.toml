@@ -1,0 +1,23 @@
+[package]
+name = "aat-core"
+version.workspace = true
+license = "Apache-2.0"
+edition = "2021"
+
+# TODO publish
+publish = false
+
+[lib]
+name = "aat_core"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
+[dependencies]
+chrono.workspace = true
+num.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[profile.release]
+panic = 'abort'
+lto = true

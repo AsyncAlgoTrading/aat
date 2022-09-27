@@ -41,6 +41,7 @@ coverage
 .cache
 nosetests.xml
 coverage.xml
+coverage.info
 *,cover
 cover
 results.xml

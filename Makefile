@@ -1,14 +1,33 @@
 .DEFAULT_GOAL := help
 .PHONY: develop build lint checks tests tests-ci-gha
 
-develop:  ## Setup project for development
+develop-rust:
+	make -C rust develop
 
-build:  ## Build the project
+develop: develop-rust  ## Setup project for development
 
-lint:  ## Run project linters
+build-rust:
+	make -C rust build
 
-checks:  ## Run any other checks
+build: build-rust  ## Build the project
 
-tests:  ## Run the tests
+lint-rust:
+	make -C rust lint
 
-tests-ci-gha:
+lint: lint-rust  ## Run project linters
+
+checks-rust:
+	make -C rust checks
+
+checks: checks-rust  ## Run any other checks
+
+tests-rust:
+	make -C rust tests
+
+tests: tests-rust  ## Run the tests
+
+tests-ci-gha-rust:
+	make -C rust tests-ci-gha
+
+tests-ci-gha: tests-ci-gha-rust
+	

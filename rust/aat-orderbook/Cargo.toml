@@ -1,0 +1,27 @@
+[package]
+name = "aat-orderbook"
+version.workspace = true
+license = "Apache-2.0"
+edition = "2021"
+
+# TODO publish
+publish = false
+
+[lib]
+name = "aat_orderbook"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
+[dependencies]
+aat-core = { path = "../aat-core", version = "*" }
+chrono.workspace = true
+num.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+rand = "0.8"
+
+[profile.release]
+panic = 'abort'
+lto = true

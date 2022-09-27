@@ -1,10 +1,12 @@
 [package]
 name = "aat"
 version = "0.1.0"
+authors = ["timkpaine <t.paine154@gmail.com>"]
 edition = "2021"
-
-# TODO publish
-publish = false
+license = "Apache-2.0"
+readme = "../README.md"
+repository = "https://github.com/asyncalgotrading/aat"
+description = "Async algorithmic trading library"
 
 [lib]
 name = "aat"
@@ -12,16 +14,5 @@ path = "src/lib.rs"
 crate-type = ["rlib"]
 
 [dependencies]
-chrono = { version = "0.4", features = ["serde"] }
-num = "0.4"
-ordered-float = "3.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1"
-# tokio = { version = "1", features = ["full"] }
-
-[dev-dependencies]
-rand = "0.8"
-
-[profile.release]
-panic = 'abort'
-lto = true
+aat-core = { version = "0.1.0", path = "../aat-core", optional = false }
+aat-orderbook = { version = "0.1.0", path = "../aat-orderbook", optional = false }
