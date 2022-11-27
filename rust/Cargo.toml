@@ -1,0 +1,16 @@
+[workspace]
+members = [
+  "aat",
+  "aat-core",
+  "aat-orderbook",
+]
+
+[workspace.package]
+version = "0.1.0"
+
+[workspace.dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+num = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1"
+# tokio = { version = "1", features = ["full"] }

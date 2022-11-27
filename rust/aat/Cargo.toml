@@ -1,0 +1,18 @@
+[package]
+name = "aat"
+version = "0.1.0"
+authors = ["timkpaine <t.paine154@gmail.com>"]
+edition = "2021"
+license = "Apache-2.0"
+readme = "../README.md"
+repository = "https://github.com/asyncalgotrading/aat"
+description = "Async algorithmic trading library"
+
+[lib]
+name = "aat"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
+[dependencies]
+aat-core = { version = "0.1.0", path = "../aat-core", optional = false }
+aat-orderbook = { version = "0.1.0", path = "../aat-orderbook", optional = false }
