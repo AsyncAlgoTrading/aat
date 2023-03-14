@@ -45,10 +45,9 @@ requires = [
 ]
 
 requires_dev = [
-    "black>=20.",
+    "black>=23",
     "flake8>=3.7.9",
     "flake8-black>=0.2.1",
-    "mock>=3.0.5",
     "mypy>=0.782",
     "pybind11>=2.4.3",
     "pytest>=6.0.1",
@@ -116,7 +115,9 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     keywords="algorithmic trading cryptocurrencies",
-    packages=find_packages(),
+    packages=find_packages(
+        include=["aat.strategy.sample.csv.data"], exclude=["aat.cpp*"]
+    ),
     include_package_data=True,
     zip_safe=False,
     entry_points={

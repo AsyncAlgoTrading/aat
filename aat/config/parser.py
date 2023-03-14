@@ -3,8 +3,9 @@ import importlib
 import itertools
 import os
 import os.path
+import pytz
 from configparser import ConfigParser
-from typing import Any, Dict, List, Union, TYPE_CHECKING
+from typing import Optional, Any, Dict, List, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aat.config import TradingType
@@ -43,6 +44,7 @@ def _args_to_dict(args: Any) -> dict:
     ret["general"]["trading_type"] = args.trading_type
     ret["general"]["load_accounts"] = args.load_accounts
     ret["general"]["api"] = args.api
+    ret["general"]["timezone"] = args.timezone
     ret["exchange"] = {
         "exchanges": list(
             _.split(",") for _ in itertools.chain.from_iterable(args.exchanges)
@@ -98,7 +100,7 @@ def getExchanges(
     return exchange_instances
 
 
-def parseConfig(argv: list = None) -> dict:
+def parseConfig(argv: Optional[list] = None) -> dict:
     from aat import TradingType
 
     parser = argparse.ArgumentParser()
@@ -111,6 +113,10 @@ def parseConfig(argv: list = None) -> dict:
 
     parser.add_argument(
         "--api", action="store_true", help="Enable HTTP server", default=False
+    )
+
+    parser.add_argument(
+        "--timezone", help="Timezone override", default="", choices=pytz.all_timezones
     )
 
     parser.add_argument(

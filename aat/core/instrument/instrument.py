@@ -303,7 +303,9 @@ class Instrument(object):
     def exchange(self) -> ExchangeType:
         return self.__exchange
 
-    def tradingLines(self, exchange: ExchangeType = None) -> List["Instrument"]:
+    def tradingLines(
+        self, exchange: Optional[ExchangeType] = None
+    ) -> List["Instrument"]:
         """Returns other exchanges that the same instrument trades on
 
         Returns:
@@ -312,7 +314,9 @@ class Instrument(object):
         return self._instrumentdb.instruments(self.name, self.type, exchange)
 
     def synthetics(
-        self, type: InstrumentType = None, exchange: ExchangeType = None
+        self,
+        type: Optional[InstrumentType] = None,
+        exchange: Optional[ExchangeType] = None,
     ) -> List["Instrument"]:
         """Returns other instruments with the same name
 

@@ -37,6 +37,11 @@ namespace core {
   }
 
   bool
+  Order::operator==(Order& other) const {
+    return this->id == other.id;
+  }
+
+  bool
   Order::finished() const {
     return (volume == filled) || force_done;
   }

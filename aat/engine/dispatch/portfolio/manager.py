@@ -57,14 +57,16 @@ class PortfolioManager(ManagerBase):
     def positions(
         self,
         strategy: "Strategy",
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
     ) -> List[Position]:
         return self._portfolio.positions(
             strategy=strategy, instrument=instrument, exchange=exchange
         )
 
-    def priceHistory(self, instrument: Instrument = None) -> Union[dict, pd.DataFrame]:
+    def priceHistory(
+        self, instrument: Optional[Instrument] = None
+    ) -> Union[dict, pd.DataFrame]:
         if instrument:
             return pd.DataFrame(
                 self._prices[instrument], columns=[instrument.name, "when"]

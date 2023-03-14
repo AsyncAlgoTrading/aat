@@ -18,6 +18,9 @@ namespace core {
     Order(str_t id, timestamp_t timestamp, double volume, double price, Side side, Instrument& instrument,
       ExchangeType& exchange = NullExchange, double notional = 0.0, OrderType order_type = OrderType::MARKET,
       OrderFlag flag = OrderFlag::NONE, std::shared_ptr<Order> stop_target = nullptr);
+    virtual ~Order() {}
+
+    virtual bool operator==(Order& other) const;
 
     bool finished() const;
     void finish();

@@ -4,7 +4,7 @@ import string
 from datetime import datetime, timedelta
 from collections import deque
 from random import choice, random, randint
-from typing import AsyncIterator, Deque, Iterator, List, Set
+from typing import Optional, AsyncIterator, Deque, Iterator, List, Set
 from ..exchange import Exchange
 from ...core import Instrument, OrderBook, Order, Event, ExchangeType, Position
 from ...config import TradingType, Side, EventType, OrderType
@@ -25,7 +25,7 @@ class SyntheticExchange(Exchange):
 
     def __init__(
         self,
-        trading_type: TradingType = None,
+        trading_type: Optional[TradingType] = None,
         verbose: bool = False,
         inst_count: int = 3,
         cycles: int = 10000,
@@ -72,7 +72,7 @@ class SyntheticExchange(Exchange):
 
         self._generate_positions = positions
 
-    def _seed(self, symbols: List[str] = None) -> None:
+    def _seed(self, symbols: Optional[List[str]] = None) -> None:
         self._instruments = {
             symbol: Instrument(symbol, exchange=self.exchange())
             for symbol in symbols or _getName(self._inst_count)
@@ -88,7 +88,6 @@ class SyntheticExchange(Exchange):
     def _seedOrders(self) -> None:
         # seed all orderbooks
         for instrument, orderbook in self._orderbooks.items():
-
             # pick a random startpoint, endpoint, and midpoint
             offset = 50
             start = round(random() * offset, 2) + offset

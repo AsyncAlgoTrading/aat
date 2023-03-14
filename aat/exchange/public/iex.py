@@ -88,9 +88,7 @@ class IEX(Exchange):
 
         For OrderEntry-only, can just return None
         """
-        self._client = pyEX.Client(
-            self._api_key, "sandbox" if self._is_sandbox else "stable"
-        )
+        self._client = pyEX.Client(self._api_key, "stable")
 
     # ******************* #
     # Market Data Methods #
@@ -308,7 +306,8 @@ class IEX(Exchange):
                         price=order.price,
                         taker_order=order,
                         maker_orders=[],
-                        my_order=order,
+                        my_order=order,  # FIXME this isnt technically necessary as
+                        # the engine should do this automatically
                     )
 
                     yield Event(type=EventType.TRADE, target=t)

@@ -2,7 +2,7 @@ import os
 import os.path
 import types
 from datetime import datetime
-from typing import Any, Callable, Set, TYPE_CHECKING
+from typing import Optional, Any, Callable, Set, TYPE_CHECKING
 
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np  # type: ignore
@@ -19,7 +19,7 @@ class CalculationsMixin(object):
     __save_dir: str = ""  # TODO move
     portfolio: Callable[..., "Portfolio"]
 
-    def plotPrice(self, ax: Any = None, **plot_kwargs: Any) -> None:
+    def plotPrice(self, ax: Optional[Any] = None, **plot_kwargs: Any) -> None:
         self._df_price = self.portfolio().getPrice()
 
         if not self._df_price.empty:
@@ -28,7 +28,7 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Price")
 
-    def plotAssetPrice(self, ax: Any = None, **plot_kwargs: Any) -> None:
+    def plotAssetPrice(self, ax: Optional[Any] = None, **plot_kwargs: Any) -> None:
         self._df_asset_price = self.portfolio().getAssetPrice(self)  # type: ignore # mixin
 
         if not self._df_asset_price.empty:
@@ -37,7 +37,7 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Price")
 
-    def plotPositions(self, ax: Any = None, **plot_kwargs: Any) -> None:
+    def plotPositions(self, ax: Optional[Any] = None, **plot_kwargs: Any) -> None:
         self._df_size = self.portfolio().getSize(self)  # type: ignore # mixin
         self._df_size.columns = [c.replace("s:", "") for c in self._df_size.columns]
 
@@ -54,7 +54,7 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Positions")
 
-    def plotPositionsAll(self, ax: Any = None, **plot_kwargs: Any) -> None:
+    def plotPositionsAll(self, ax: Optional[Any] = None, **plot_kwargs: Any) -> None:
         self._df_size_all = self.portfolio().getSizeAll()
         self._df_size_all.columns = [
             c.replace("s:", "") for c in self._df_size_all.columns
@@ -73,7 +73,7 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Positions")
 
-    def plotNotional(self, ax: Any = None, **plot_kwargs: Any) -> None:
+    def plotNotional(self, ax: Optional[Any] = None, **plot_kwargs: Any) -> None:
         self._df_asset_price = self.portfolio().getAssetPrice(self)  # type: ignore # mixin
         self._df_position_notional = self.portfolio().getSize(self)  # type: ignore # mixin
         self._df_position_notional.columns = [
@@ -94,7 +94,7 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Notional")
 
-    def plotNotionalAll(self, ax: Any = None, **plot_kwargs: Any) -> None:
+    def plotNotionalAll(self, ax: Optional[Any] = None, **plot_kwargs: Any) -> None:
         self._df_asset_price = self.portfolio().getAssetPrice(self)  # type: ignore # mixin
         self._df_position_notional_all = self.portfolio().getSizeAll()
         self._df_position_notional_all.columns = [
@@ -115,7 +115,7 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Notional")
 
-    def plotPnl(self, ax: Any = None, **plot_kwargs: Any) -> None:
+    def plotPnl(self, ax: Optional[Any] = None, **plot_kwargs: Any) -> None:
         # cm = matplotlib.cm.get_cmap("Paired")
         # ls = np.linspace(0, 1, len(pnl_cols) // 2)
         # colors = []
@@ -135,7 +135,7 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("PNL")
 
-    def plotPnlAll(self, ax: Any = None, **plot_kwargs: Any) -> None:
+    def plotPnlAll(self, ax: Optional[Any] = None, **plot_kwargs: Any) -> None:
         self._df_pnl_all = self.portfolio().getPnlAll()
         self._df_pnl_all.fillna(0.0, inplace=True)
 
@@ -152,7 +152,7 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("PNL")
 
-    def plotUpDown(self, ax: Any = None, **plot_kwargs: Any) -> None:
+    def plotUpDown(self, ax: Optional[Any] = None, **plot_kwargs: Any) -> None:
         self._df_pnl = self.portfolio().getPnl(self)  # type: ignore # mixin
         self._df_pnl.fillna(0.0, inplace=True)
 
@@ -179,7 +179,7 @@ class CalculationsMixin(object):
         if ax:
             ax.set_ylabel("Alpha")
 
-    def plotUpDownAll(self, ax: Any = None, **plot_kwargs: Any) -> None:
+    def plotUpDownAll(self, ax: Optional[Any] = None, **plot_kwargs: Any) -> None:
         self._df_pnl_all = self.portfolio().getPnlAll()
         self._df_pnl_all.fillna(0.0, inplace=True)
 
@@ -431,7 +431,7 @@ class CalculationsMixin(object):
 
     def performanceCharts(
         self,
-        strategy: Any = None,
+        strategy: Optional[Any] = None,
         render: bool = True,
         save: bool = False,
         save_data: bool = False,
@@ -578,7 +578,7 @@ class CalculationsMixin(object):
     def ipython(self) -> None:
         import IPython  # type: ignore
 
-        IPython.embed()
+        IPython.embed()  # type: ignore
 
 
 def main() -> None:

@@ -475,8 +475,6 @@ namespace core {
     // show top 5 levels, then group next 5, 10, 20, etc
     // sells first
     std::vector<std::shared_ptr<PriceLevel>> sells_to_print;
-    auto count = 5;
-    auto orig = 5;
 
     for (std::uint64_t i = 0; i < sell_levels.size(); ++i) {
       if (i < 5) {
@@ -494,8 +492,7 @@ namespace core {
     // show top 5 levels, then group next 5, 10, 20, etc
     // buys second
     std::vector<std::shared_ptr<PriceLevel>> buys_to_print;
-    count = 5;
-    orig = 5;
+
     int i = 0;
 
     for (auto iter = buy_levels.end() - 1; iter > buy_levels.begin(); --iter) {

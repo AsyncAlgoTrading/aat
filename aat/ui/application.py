@@ -11,13 +11,12 @@ class ServerApplication(tornado.web.Application):
         self,
         basepath: str = "/",
         wspath: str = "/api/v1/ws",
-        handlers: List[Any] = None,
+        handlers: Optional[List[Any]] = None,
         debug: bool = True,
         cookie_secret: Optional[str] = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
-
         handlers = handlers or []
 
         logging.getLogger("tornado.access").disabled = False

@@ -1,7 +1,7 @@
 import asyncio
 
 from datetime import datetime
-from typing import Union, Callable, Optional, List, TYPE_CHECKING
+from typing import Callable, Optional, List, TYPE_CHECKING
 from ..config import Side, TradingType, ExitRoutine, InstrumentType
 from ..core import Trade, Instrument, ExchangeType, Order, OrderBook
 from ..exchange import Exchange
@@ -17,9 +17,9 @@ class StrategyUtilsMixin(object):
 
     def orders(
         self,
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Order]:
         """select all open orders
 
@@ -34,9 +34,9 @@ class StrategyUtilsMixin(object):
 
     def pastOrders(
         self,
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Order]:
         """select all past orders
 
@@ -51,9 +51,9 @@ class StrategyUtilsMixin(object):
 
     def trades(
         self,
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Trade]:
         """select all past trades
 
@@ -83,12 +83,16 @@ class StrategyUtilsMixin(object):
         return self._manager.now()
 
     def instruments(
-        self, type: InstrumentType = None, exchange: ExchangeType = None
+        self,
+        type: Optional[InstrumentType] = None,
+        exchange: Optional[ExchangeType] = None,
     ) -> List[Instrument]:
         """Return list of all available instruments"""
         return Instrument._instrumentdb.instruments(type=type, exchange=exchange)
 
-    def exchanges(self, instrument_type: InstrumentType = None) -> List[Exchange]:
+    def exchanges(
+        self, instrument_type: Optional[InstrumentType] = None
+    ) -> List[Exchange]:
         """Return list of all available exchanges"""
         return list(
             set(
@@ -99,7 +103,9 @@ class StrategyUtilsMixin(object):
         )
 
     def accounts(
-        self, type: InstrumentType = None, exchange: ExchangeType = None
+        self,
+        type: Optional[InstrumentType] = None,
+        exchange: Optional[ExchangeType] = None,
     ) -> None:  # TODO
         """Return list of all accounts"""
         raise NotImplementedError()
@@ -109,7 +115,7 @@ class StrategyUtilsMixin(object):
         return await self._manager.subscribe(instrument=instrument, strategy=self)  # type: ignore # mixin
 
     async def lookup(
-        self, instrument: Optional[Instrument], exchange: ExchangeType = None
+        self, instrument: Optional[Instrument], exchange: Optional[ExchangeType] = None
     ) -> List[Instrument]:
         """Return list of all available instruments that match the instrument given"""
         return await self._manager.lookup(instrument, exchange=exchange)
@@ -121,28 +127,46 @@ class StrategyUtilsMixin(object):
     def periodic(
         self,
         function: Callable,
-        second: Union[int, str] = 0,
-        minute: Union[int, str] = "*",
-        hour: Union[int, str] = "*",
+        seconds: int = 0,
+        minutes: Optional[int] = None,
+        hours: Optional[int] = None,
     ) -> Periodic:
         """periodically run a given async function. NOTE: precise timing
         is NOT guaranteed due to event loop scheduling.
 
         Args:
             function (callable); function to call periodically
-            second (Union[int, str]); second to align periodic to, or '*' for every second
-            minute (Union[int, str]); minute to align periodic to, or '*' for every minute
-            hour (Union[int, str]); hour to align periodic to, or '*' for every hour
+            second (str); second to align periodic to
+            minute (str); minute to align periodic to
+            hour (str); hour to align periodic to
+        """
+        return self._manager.periodic(function, seconds, minutes, hours)
+
+    def at(
+        self,
+        function: Callable,
+        second: int = 0,
+        minute: Optional[int] = None,
+        hour: Optional[int] = None,
+    ) -> Periodic:
+        """periodically run a given async function. NOTE: precise timing
+        is NOT guaranteed due to event loop scheduling.
+
+        Args:
+            function (callable); function to call periodically
+            second (str); second to align periodic to
+            minute (str); minute to align periodic to
+            hour (str); hour to align periodic to
 
                 NOTE: this is a rudimentary scheme but should be sufficient. For more
                 complicated scheduling, just install multiple instances of the same periodic
                 e.g. for running on :00, :15, :30, and :45 install
-                    periodic(0, 0, '*')
-                    periodic(0, 15, '*')
-                    periodic(0, 30, '*')
-                    periodic(0, 45, '*')
+                    periodic(0, 0)
+                    periodic(0, 15)
+                    periodic(0, 30)
+                    periodic(0, 45)
         """
-        return self._manager.periodic(function, second, minute, hour)
+        return self._manager.at(function, second, minute, hour)
 
     def restrictTradingHours(
         self,

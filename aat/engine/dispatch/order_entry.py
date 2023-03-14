@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING
+from typing import Optional, List, TYPE_CHECKING
 
 from aat.core import Instrument, ExchangeType, Event, Order, Trade
 from aat.config import Side
@@ -35,7 +35,7 @@ class StrategyManagerOrderEntryMixin(object):
 
         # push event to loop
         ev = Event(type=Event.Types.BOUGHT, target=trade)
-        self._engine.pushTargetedEvent(strategy, ev)
+        await self._engine.pushTargetedEvent(strategy, ev)
 
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, trade.my_order)
@@ -47,38 +47,38 @@ class StrategyManagerOrderEntryMixin(object):
 
         # push event to loop
         ev = Event(type=Event.Types.SOLD, target=trade)
-        self._engine.pushTargetedEvent(strategy, ev)
+        await self._engine.pushTargetedEvent(strategy, ev)
 
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, trade.my_order)
 
     # TODO ugly private method
-
     async def _onReceived(self, strategy: "Strategy", order: Order) -> None:
         # push event to loop
         ev = Event(type=Event.Types.RECEIVED, target=order)
-        self._engine.pushTargetedEvent(strategy, ev)
-
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, order)
+        await self._engine.pushTargetedEvent(strategy, ev)
 
     async def _onCanceled(self, strategy: "Strategy", order: Order) -> None:
         # push event to loop
         ev = Event(type=Event.Types.CANCELED, target=order)
-        self._engine.pushTargetedEvent(strategy, ev)
-
         # synchronize state when engine processes this
         self._alerted_events[ev] = (strategy, order)
+        await self._engine.pushTargetedEvent(strategy, ev)
 
-    async def _onRejected(self, strategy: "Strategy", order: Order) -> None:
+    async def _onRejected(self, strategy: "Strategy", order: Order) -> bool:
         # push event to loop
         ev = Event(type=Event.Types.REJECTED, target=order)
-        self._engine.pushTargetedEvent(strategy, ev)
+        self._alerted_events[ev] = (strategy, order)
+        await self._engine.pushTargetedEvent(strategy, ev)
+
+        # always return false
+        return False
 
     # *********************
     # Order Entry Methods *
     # *********************
-
     async def newOrder(self, strategy: "Strategy", order: Order) -> bool:
         """helper method, defers to buy/sell"""
         # ensure has list
@@ -103,33 +103,21 @@ class StrategyManagerOrderEntryMixin(object):
         # was this trade allowed?
         if approved:
             # send to be executed
-            received = await self._order_mgr.newOrder(strategy, order)
-
-            if received:
-                await self._onReceived(strategy, order)
-            return received
+            return await self._order_mgr.newOrder(strategy, order)
 
         # raise onRejected
-        await self._onRejected(strategy, order)
-        return False
+        return await self._onRejected(strategy, order)
 
     async def cancelOrder(self, strategy: "Strategy", order: Order) -> bool:
         """cancel an open order"""
-        ret = await self._order_mgr.cancelOrder(strategy, order)
-        if ret:
-            await self._onCanceled(strategy, order)
-            return ret
-
-        # TODO something else?
-        await self._onRejected(strategy, order)
-        return False
+        return await self._order_mgr.cancelOrder(strategy, order)
 
     def orders(
         self,
         strategy: "Strategy",
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Order]:
         """select all open orders
 
@@ -156,9 +144,9 @@ class StrategyManagerOrderEntryMixin(object):
     def pastOrders(
         self,
         strategy: "Strategy",
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Order]:
         """select all past orders
 
@@ -185,9 +173,9 @@ class StrategyManagerOrderEntryMixin(object):
     def trades(
         self,
         strategy: "Strategy",
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Trade]:
         """select all past trades
 

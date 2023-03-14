@@ -32,6 +32,7 @@ namespace core {
       // enforce that stop target match stop type
       // assert(maker_orders.size() > 0);  // not necessarily
     }
+    virtual ~Trade() {}
 
     double
     slippage() const {

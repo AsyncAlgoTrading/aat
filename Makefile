@@ -38,7 +38,14 @@ testpycpp: ## Make unit tests
 	# AAT_USE_CPP=1 $(PYTHON) -m pytest -vvv ./aat/tests --cov=aat --junitxml=python_junit.xml --cov-report=xml --cov-branch --capture=no
 	AAT_USE_CPP=1 $(PYTHON) -m pytest -vs ./aat/tests
 
-testruns:  testrunscsv testrunsiex ## Run a few examples as a live end-to-end test
+testjs:  ## Make js tests
+	cd js; yarn test
+
+testruns:  testrunscsv testrunsiex testrunsother ## Run a few examples as a live end-to-end test
+
+testrunsother:
+	$(PYTHON) -m aat.exchange.test.harness
+	$(PYTHON) -m aat.tests.exchange.test_ib_race
 
 testrunscsv:
 	$(PYTHON) -m aat.strategy.sample.csv.readonly

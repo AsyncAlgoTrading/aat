@@ -2,7 +2,7 @@ import pandas as pd  # type: ignore
 import json
 from datetime import datetime
 from json import JSONEncoder
-from typing import Any, Dict, List, Union, TYPE_CHECKING
+from typing import Optional, Any, Dict, List, Union, TYPE_CHECKING
 
 from aat.config import Side
 from aat.core import Order, Trade, Instrument, ExchangeType, Position
@@ -109,7 +109,6 @@ class Portfolio(object):
             and strategy.name() in self._active_positions_by_strategy
             and trade.instrument in self._active_positions_by_strategy[strategy.name()]
         ):
-
             # update position
             cur_pos = self._active_positions_by_strategy[strategy.name()][
                 trade.instrument
@@ -224,8 +223,8 @@ class Portfolio(object):
     def positions(
         self,
         strategy: "Strategy",
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
     ) -> List[Position]:
         ret = {}
 
@@ -244,13 +243,14 @@ class Portfolio(object):
         return list(ret.values())
 
     def allPositions(
-        self, instrument: Instrument = None, exchange: ExchangeType = None
+        self,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
     ) -> List[Position]:
         ret = {}
 
         for position_list in self._active_positions_by_instrument.values():
             for position in position_list:
-
                 if instrument and position.instrument != instrument:
                     # Skip if not asking for this instrument
                     continue
@@ -265,7 +265,9 @@ class Portfolio(object):
                     ret[position.instrument] += position
         return list(ret.values())
 
-    def priceHistory(self, instrument: Instrument = None) -> Union[pd.DataFrame, dict]:
+    def priceHistory(
+        self, instrument: Optional[Instrument] = None
+    ) -> Union[pd.DataFrame, dict]:
         if instrument:
             return pd.DataFrame(
                 self._prices[instrument], columns=[instrument.name, "when"]

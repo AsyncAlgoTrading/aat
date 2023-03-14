@@ -21,6 +21,7 @@ namespace core {
       : name(name)
       , type(InstrumentType::EQUITY) {}
 
+    virtual ~Instrument() {}
     bool operator==(const Instrument& other) const;
     str_t toString() const;
     virtual json toJson() const;

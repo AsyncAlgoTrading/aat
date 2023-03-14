@@ -36,7 +36,7 @@ class OrderBookBase(ABC):
         pass
 
     @abstractmethod
-    def level(self, level: int = 0, price: float = None) -> Tuple:
+    def level(self, level: int = 0, price: Optional[float] = None) -> Tuple:
         pass
 
     @abstractmethod

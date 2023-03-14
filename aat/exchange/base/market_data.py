@@ -15,7 +15,7 @@ class _MarketData(metaclass=ABCMeta):
     async def subscribe(self, instrument: Instrument) -> None:
         """subscribe to market data for a given instrument"""
 
-    async def tick(self) -> AsyncIterator[Event]:
+    async def tick(self) -> AsyncIterator[Event]:  # type: ignore
         """return data from exchange"""
 
     async def book(self, instrument: Instrument) -> Optional[OrderBook]:

@@ -10,6 +10,7 @@ include Makefile
 include aat/*.so
 include aat/*.dll
 include aat/*.dylib
+include *.csv
 
 graft aat/tests
 
