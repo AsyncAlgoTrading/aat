@@ -45,7 +45,7 @@ requires = [
 ]
 
 requires_dev = [
-    "black>=20.",
+    "black>=20",
     "flake8>=3.7.9",
     "flake8-black>=0.2.1",
     "mock>=3.0.5",
