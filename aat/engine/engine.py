@@ -64,42 +64,43 @@ except ImportError:
 class TradingEngine(Application):
     """A configureable trading application"""
 
-    name = "AAT"
-    description = "async algorithmic trading engine"
+    name = "AAT"  # type: ignore
+    description = "async algorithmic trading engine"  # type: ignore
 
     # Configureable parameters
-    verbose = Bool(default_value=True)
-    api = Bool(default_value=False)
-    port = Unicode(default_value="8080", help="Port to run on").tag(config=True)
+    verbose = Bool(default_value=True)  # type: ignore
+    api = Bool(default_value=False)  # type: ignore
+    port = Unicode(default_value="8080", help="Port to run on").tag(config=True)  # type: ignore
     tz = Instance(
         klass=pytz.BaseTzInfo,
         default_value=None,
         allow_none=True,
         help="Timezone to localize to",
     ).tag(config=True)
-    event_loop = Instance(klass=asyncio.events.AbstractEventLoop)
+    event_loop = Instance(klass=asyncio.events.AbstractEventLoop)  # type: ignore
     executor = Instance(klass=ThreadPoolExecutor, args=(4,), kwargs={})
+    executor = Instance(klass=ThreadPoolExecutor, args=(4,), kwargs={})  # type: ignore
 
     # Core components
-    trading_type = Instance(klass=TradingType, default_value=TradingType.SIMULATION)
-    order_manager = Instance(OrderManager, args=(), kwargs={})
-    risk_manager = Instance(RiskManager, args=(), kwargs={})
-    portfolio_manager = Instance(PortfolioManager, args=(), kwargs={})
-    exchanges = List(trait=Instance(klass=Exchange))
-    event_handlers = List(trait=Instance(EventHandler), default_value=[])
-    strategies = List(trait=Instance(Strategy), default_value=[])
+    trading_type = Instance(klass=TradingType, default_value=TradingType.SIMULATION)  # type: ignore
+    order_manager = Instance(OrderManager, args=(), kwargs={})  # type: ignore
+    risk_manager = Instance(RiskManager, args=(), kwargs={})  # type: ignore
+    portfolio_manager = Instance(PortfolioManager, args=(), kwargs={})  # type: ignore
+    exchanges = List(trait=Instance(klass=Exchange))  # type: ignore
+    event_handlers = List(trait=Instance(EventHandler), default_value=[])  # type: ignore
+    strategies = List(trait=Instance(Strategy), default_value=[])  # type: ignore
 
     # API application
-    api_application = Instance(klass=TornadoApplication)
-    api_handlers = List(default_value=[])
+    api_application = Instance(klass=TornadoApplication)  # type: ignore
+    api_handlers = List(default_value=[])  # type: ignore
 
-    table_manager = Instance(
+    table_manager = Instance(  # type: ignore
         klass=PerspectiveManager or object, args=(), kwargs={}
     )  # failover to object
 
     aliases = {"port": "AAT.port", "trading_type": "AAT.trading_type"}
 
-    @validate("trading_type")
+    @validate("trading_type")  # type: ignore
     def _validate_trading_type(self, proposal: dict) -> TradingType:
         if proposal["value"] not in (
             TradingType.LIVE,
@@ -110,7 +111,7 @@ class TradingEngine(Application):
             raise TraitError(f'Invalid trading type: {proposal["value"]}')
         return proposal["value"]
 
-    @validate("exchanges")
+    @validate("exchanges")  # type: ignore
     def _validate_exchanges(self, proposal: dict) -> ListType[Exchange]:
         for exch in proposal["value"]:
             if not isinstance(exch, Exchange):
@@ -163,7 +164,7 @@ class TradingEngine(Application):
 
         # setup subscriptions
         self._handler_subscriptions: Dict[EventType, ListType] = {
-            m: [] for m in EventType.__members__.values()
+            m: [] for m in EventType.__members__.values()  # type: ignore
         }
 
         # setup `now` handler for backtest
@@ -328,10 +329,10 @@ class TradingEngine(Application):
         Returns:
             value (bool): True if registered (new), else False
         """
-        if (callback, handler) not in self._handler_subscriptions[event_type]:
+        if (callback, handler) not in self._handler_subscriptions[event_type]:  # type: ignore
             if not asyncio.iscoroutinefunction(callback):
                 callback = self._make_async(callback)
-            self._handler_subscriptions[event_type].append((callback, handler))
+            self._handler_subscriptions[event_type].append((callback, handler))  # type: ignore
             return True
         return False
 
@@ -503,23 +504,19 @@ class TradingEngine(Application):
             # ignore heartbeat
             return ret
 
-        for callback, handler in self._handler_subscriptions[event.type]:
+        for callback, handler in self._handler_subscriptions[event.type]:  # type: ignore
             # TODO make cleaner? move to somewhere not in critical path?
             if strategy is not None and (handler not in (strategy, self.manager)):
                 continue
 
             # TODO make cleaner? move to somewhere not in critical path?
-            if (
-                event.type
-                in (
-                    EventType.TRADE,
-                    EventType.OPEN,
-                    EventType.CHANGE,
-                    EventType.CANCEL,
-                    EventType.DATA,
-                )
-                and not self.manager.dataSubscriptions(handler, event)
-            ):
+            if event.type in (
+                EventType.TRADE,
+                EventType.OPEN,
+                EventType.CHANGE,
+                EventType.CANCEL,
+                EventType.DATA,
+            ) and not self.manager.dataSubscriptions(handler, event):
                 continue
 
             try:

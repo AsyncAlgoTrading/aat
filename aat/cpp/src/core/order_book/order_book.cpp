@@ -9,7 +9,8 @@ namespace core {
     return *this;
   }
 
-  std::shared_ptr<Order> OrderBookIterator::operator*() {
+  std::shared_ptr<Order>
+  OrderBookIterator::operator*() {
     if (side == Side::SELL) {
       return (*(order_book.sells.at(price_level)))[index_in_level];
     } else {

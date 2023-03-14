@@ -1,8 +1,8 @@
 import asyncio
 import os
-import websockets  # type: ignore
 import ujson  # type: ignore
 import uvloop  # type: ignore
+from websockets import serve  # type: ignore
 from aat.exchange.synthetic import SyntheticExchange
 from aat.core import Order
 from aat.config import TradingType
@@ -31,7 +31,7 @@ def _main(port: int = 5000):  # type: ignore
                 except asyncio.TimeoutError:
                     pass
 
-    start_server = websockets.serve(handle, "0.0.0.0", port)
+    start_server = serve(handle, "0.0.0.0", port)
     print("listening on %d" % port)
     return start_server
 

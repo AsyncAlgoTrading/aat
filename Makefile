@@ -26,9 +26,6 @@ build: buildext  ## build the package
 debug: ## build debug build of the package
 	DEBUG=1 $(PYTHON) setup.py build
 
-js:  ## build the js assets
-	cd js; yarn build
-
 install: ## install the package
 	$(PYTHON) -m pip install .
 
@@ -61,27 +58,21 @@ testrunsiex:
 	TESTING=1 $(PYTHON) -m aat.strategy.sample.iex.momentum
 	TESTING=1 $(PYTHON) -m aat.strategy.sample.iex.golden_death
 
-lint: lintpy lintjs lintcpp  ## run all linters
+lint: lintpy lintcpp  ## run all linters
 
 lintpy: ## run python linter
 	$(PYTHON) -m flake8 aat setup.py
 
-lintjs: ## run js linter
-	cd js; yarn lint
-	
 lintcpp: ## run cpp linter
 	cpplint --linelength=120 --recursive aat/cpp/{src,include}
 
-fix: fixpy fixjs fixcpp  ## run all fixers
+fix: fixpy fixcpp  ## run all fixers
 
 fixpy:  ## run autopep8 fix
 	$(PYTHON) -m black aat/ setup.py
 
 fixcpp:  ## run clang-format
 	clang-format -i -style=file `find ./aat/cpp/{src,include} -name "*.*pp"`
-
-fixjs:  ## run clang-format
-	cd js; yarn fix
 
 annotate: ## MyPy type annotation check
 	$(PYTHON) -m mypy aat
@@ -96,14 +87,13 @@ docs:  ## Build the sphinx docs
 	make -C docs html
 	open ./docs/_build/html/index.html
 
-dist: js  ## create dists
+dist:  ## create dists
 	rm -rf dist build
 	python setup.py sdist bdist_wheel
 	python -m twine check dist/*
 
 publish: dist  ## dist to pypi and npm
 	python -m twine upload dist/* --skip-existing
-	cd js; npm publish || echo "can't publish - might already exist"
 
 clean: ## clean the repository
 	find . -name "__pycache__" | xargs rm -rf
@@ -121,5 +111,5 @@ help:
 print-%:
 	@echo '$*=$($*)'
 
-.PHONY: run buildext build js install tests lint fix docs dist clean help fixcpp
+.PHONY: run buildext build install tests lint fix docs dist clean help fixcpp
 

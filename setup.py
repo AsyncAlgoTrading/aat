@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages, Extension
 from codecs import open
-import io
 import os
 import os.path
 import os
@@ -26,16 +25,6 @@ try:
 except ImportError:
     pass  # no numpy
 
-
-def get_version(file, name="__version__"):
-    path = os.path.realpath(file)
-    version_ns = {}
-    with io.open(path, encoding="utf8") as f:
-        exec(f.read(), {}, version_ns)
-    return version_ns[name]
-
-
-version = get_version(pjoin(here, name, "_version.py"))
 
 with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read().replace("\r\n", "\n")
@@ -109,7 +98,7 @@ extension = Extension(
 
 setup(
     name=name,
-    version=version,
+    version="0.1.0",
     description="Algorithmic trading library",
     long_description=long_description,
     long_description_content_type="text/markdown",
