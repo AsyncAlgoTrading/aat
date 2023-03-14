@@ -71,14 +71,13 @@ class TradingEngine(Application):
     verbose = Bool(default_value=True)  # type: ignore
     api = Bool(default_value=False)  # type: ignore
     port = Unicode(default_value="8080", help="Port to run on").tag(config=True)  # type: ignore
-    tz = Instance(
+    tz = Instance(  # type: ignore
         klass=pytz.BaseTzInfo,
         default_value=None,
         allow_none=True,
         help="Timezone to localize to",
     ).tag(config=True)
     event_loop = Instance(klass=asyncio.events.AbstractEventLoop)  # type: ignore
-    executor = Instance(klass=ThreadPoolExecutor, args=(4,), kwargs={})
     executor = Instance(klass=ThreadPoolExecutor, args=(4,), kwargs={})  # type: ignore
 
     # Core components
@@ -318,7 +317,10 @@ class TradingEngine(Application):
         return _wrapper
 
     def registerCallback(
-        self, event_type: EventType, callback: Callable, handler: EventHandler = None
+        self,
+        event_type: EventType,
+        callback: Callable,
+        handler: Optional[EventHandler] = None,
     ) -> bool:
         """register a callback for a given event type
 
@@ -492,7 +494,7 @@ class TradingEngine(Application):
             yield await self._queued_targeted_events.get()
 
     async def processEvent(
-        self, event: Event, strategy: Strategy = None
+        self, event: Event, strategy: Optional[Strategy] = None
     ) -> ListType[Future]:
         """send an event to all registered event handlers
 

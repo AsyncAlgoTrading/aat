@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING
+from typing import Optional, List, TYPE_CHECKING
 
 from aat.core import Instrument, ExchangeType, Event, Order, Trade
 from aat.config import Side
@@ -115,9 +115,9 @@ class StrategyManagerOrderEntryMixin(object):
     def orders(
         self,
         strategy: "Strategy",
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Order]:
         """select all open orders
 
@@ -144,9 +144,9 @@ class StrategyManagerOrderEntryMixin(object):
     def pastOrders(
         self,
         strategy: "Strategy",
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Order]:
         """select all past orders
 
@@ -173,9 +173,9 @@ class StrategyManagerOrderEntryMixin(object):
     def trades(
         self,
         strategy: "Strategy",
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Trade]:
         """select all past trades
 

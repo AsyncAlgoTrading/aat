@@ -5,7 +5,7 @@ import os
 import os.path
 import pytz
 from configparser import ConfigParser
-from typing import Any, Dict, List, Union, TYPE_CHECKING
+from typing import Optional, Any, Dict, List, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aat.config import TradingType
@@ -100,7 +100,7 @@ def getExchanges(
     return exchange_instances
 
 
-def parseConfig(argv: list = None) -> dict:
+def parseConfig(argv: Optional[list] = None) -> dict:
     from aat import TradingType
 
     parser = argparse.ArgumentParser()

@@ -1,5 +1,5 @@
 import sys
-from mock import MagicMock
+from unittest.mock import MagicMock
 from aat.core import Order, Instrument
 from aat.config import InstrumentType, Side
 

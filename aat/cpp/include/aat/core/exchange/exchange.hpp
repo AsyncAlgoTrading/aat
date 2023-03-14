@@ -20,6 +20,8 @@ namespace core {
     explicit ExchangeType(str_t name)
       : name(name) {}
 
+    virtual ~ExchangeType() {}
+
     str_t toString() const;
     virtual json toJson() const;
 

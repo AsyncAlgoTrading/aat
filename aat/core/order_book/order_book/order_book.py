@@ -163,7 +163,7 @@ class OrderBook(OrderBookBase):
         tob: Dict[Side, PriceLevelRO] = self.topOfBook()
         return tob[Side.SELL].price - tob[Side.BUY].price
 
-    def level(self, level: int = 0, price: float = None) -> Tuple:
+    def level(self, level: int = 0, price: Optional[float] = None) -> Tuple:
         """return book level
 
         Args:

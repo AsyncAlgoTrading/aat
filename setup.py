@@ -48,7 +48,6 @@ requires_dev = [
     "black>=23",
     "flake8>=3.7.9",
     "flake8-black>=0.2.1",
-    "mock>=3.0.5",
     "mypy>=0.782",
     "pybind11>=2.4.3",
     "pytest>=6.0.1",

@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Deque, Dict, List, Union
+from typing import Optional, Deque, Dict, List, Union
 from aat.core import Order
 
 
@@ -18,7 +18,7 @@ class PriceLevelRO(object):
         price: float,
         volume: float,
         number_of_orders: int = 0,
-        _orders: Deque[Order] = None,
+        _orders: Optional[Deque[Order]] = None,
     ):
         self._price = price
         self._volume = volume

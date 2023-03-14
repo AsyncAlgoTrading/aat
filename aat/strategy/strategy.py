@@ -1,6 +1,6 @@
 import asyncio
 from abc import abstractmethod
-from typing import Any, List
+from typing import Optional, Any, List
 from .calculations import CalculationsMixin
 from .portfolio import StrategyPortfolioMixin
 from .risk import StrategyRiskMixin
@@ -175,7 +175,7 @@ class Strategy(
         """
         return await self._manager.newOrder(self, order)
 
-    async def cancelAll(self, instrument: Instrument = None) -> List[bool]:
+    async def cancelAll(self, instrument: Optional[Instrument] = None) -> List[bool]:
         """cancel all open orders. If argument is provided, cancel only orders for
         that instrument.
 
@@ -189,7 +189,7 @@ class Strategy(
             return await asyncio.gather(*(self.cancel(order) for order in orders))
         return []
 
-    async def closeAll(self, instrument: Instrument = None) -> List[bool]:
+    async def closeAll(self, instrument: Optional[Instrument] = None) -> List[bool]:
         """close all open postions immediately. If argument is provided, close only positions for
         that instrument.
 

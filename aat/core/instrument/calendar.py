@@ -20,8 +20,8 @@ class TradingDay(object):
 
     def __init__(
         self,
-        open_times: Union[time, Tuple[time, ...]] = None,
-        close_times: Union[time, Tuple[time, ...]] = None,
+        open_times: Optional[Union[time, Tuple[time, ...]]] = None,
+        close_times: Optional[Union[time, Tuple[time, ...]]] = None,
     ):
         if open_times and not isinstance(open_times, (tuple, time)):
             # raise exception if wrong type

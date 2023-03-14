@@ -50,8 +50,8 @@ def _make_cpp_order(
     order_type: OrderType = OrderType.MARKET,
     flag: OrderFlag = OrderFlag.NONE,
     stop_target: Optional["Order"] = None,
-    id: str = None,
-    timestamp: datetime = None,
+    id: Optional[str] = None,
+    timestamp: Optional[datetime] = None,
 ) -> OrderCpp:
     """helper method to ensure all arguments are setup"""
     return OrderCpp(
@@ -72,7 +72,7 @@ def _make_cpp_order(
 def _make_cpp_trade(
     id: str,
     timestamp: datetime,
-    maker_orders: List["Order"] = None,
+    maker_orders: Optional[List["Order"]] = None,
     taker_order: Optional["Order"] = None,
 ) -> TradeCpp:
     """helper method to ensure all arguments are setup"""

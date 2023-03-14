@@ -30,7 +30,7 @@ namespace core {
       , instrument(instrument)
       , exchange(exchange)
       , data(data) {}
-
+    virtual ~Data() {}
     bool operator==(const Data& other);
     virtual str_t toString() const;
     virtual json toJson() const;

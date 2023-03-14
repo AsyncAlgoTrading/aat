@@ -36,12 +36,14 @@ class StrategyManagerUtilsMixin(object):
         return self._engine.now()
 
     def instruments(
-        self, type: InstrumentType = None, exchange: Optional[ExchangeType] = None
+        self,
+        type: Optional[InstrumentType] = None,
+        exchange: Optional[ExchangeType] = None,
     ) -> List[Instrument]:
         """Return list of all available instruments"""
         return Instrument._instrumentdb.instruments(type=type, exchange=exchange)
 
-    def exchanges(self, type: InstrumentType = None) -> List[ExchangeType]:
+    def exchanges(self, type: Optional[InstrumentType] = None) -> List[ExchangeType]:
         """Return list of all available exchanges"""
         if type:
             raise NotImplementedError()
@@ -74,7 +76,7 @@ class StrategyManagerUtilsMixin(object):
         return target.instrument in self._data_subscriptions[handler]
 
     async def lookup(
-        self, instrument: Optional[Instrument], exchange: ExchangeType = None
+        self, instrument: Optional[Instrument], exchange: Optional[ExchangeType] = None
     ) -> List[Instrument]:
         """Return list of all available instruments that match the instrument given"""
         if exchange:
@@ -117,8 +119,8 @@ class StrategyManagerUtilsMixin(object):
         self,
         function: Callable,
         seconds: int = 0,
-        minutes: int = None,
-        hours: int = None,
+        minutes: Optional[int] = None,
+        hours: Optional[int] = None,
     ) -> Periodic:
         """run a function periodically:
         if the amount of time between previous call and current call
@@ -131,8 +133,8 @@ class StrategyManagerUtilsMixin(object):
         self,
         function: Callable,
         second: int = 0,
-        minute: int = None,
-        hour: int = None,
+        minute: Optional[int] = None,
+        hour: Optional[int] = None,
     ) -> Periodic:
         """run a function at a certain point in time:
         e.g. run it on every `second` second every minute of every hour
@@ -144,8 +146,8 @@ class StrategyManagerUtilsMixin(object):
         self,
         function: Callable,
         second: int = 0,
-        minute: int = None,
-        hour: int = None,
+        minute: Optional[int] = None,
+        hour: Optional[int] = None,
         interval: bool = False,
     ) -> Periodic:
         """periodically run a given async function. NOTE: precise timing

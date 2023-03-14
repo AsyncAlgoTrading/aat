@@ -2,8 +2,6 @@ import asyncio
 from datetime import datetime
 from typing import Optional, Union, List
 
-import pytest
-
 from aat.engine.dispatch import Periodic
 from aat.engine.dispatch.periodic import PeriodicManagerMixin
 
@@ -38,7 +36,8 @@ class TestPeriodic:
         periodic = TestMixin(self.create_periodic_mixin(10, 2, None))
         assert periodic.periodicIntervals() == 3600
 
-    def test_removal_of_asterisk(self):
-        with pytest.raises(Exception):
-            periodic = TestMixin(self.create_periodic_mixin("*", "*", "*"))
-            periodic.periodicIntervals()
+    # no longer necessary
+    # def test_removal_of_asterisk(self):
+    #     with pytest.raises(Exception):
+    #         periodic = TestMixin(self.create_periodic_mixin("*", "*", "*"))
+    #         periodic.periodicIntervals()

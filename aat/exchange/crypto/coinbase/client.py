@@ -839,7 +839,7 @@ class CoinbaseExchangeClient(AuthBase):
             )
         return o
 
-    def _process_change(self, x: Dict[str, Union[str, int, float]]) -> Order:
+    def _process_change(self, x: Dict[str, Union[str, int, float]]) -> Optional[Order]:
         # An order has changed. This is the result
         # of self-trade prevention adjusting the
         # order size or available funds. Orders can

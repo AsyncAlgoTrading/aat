@@ -1,4 +1,4 @@
-from typing import Dict, TYPE_CHECKING
+from typing import Optional, Dict, TYPE_CHECKING
 from ...config import InstrumentType
 
 if TYPE_CHECKING:
@@ -27,7 +27,9 @@ class ExchangeDB(object):
     ) -> None:
         raise NotImplementedError()
 
-    def get(self, name: str = "", instrument: "Instrument" = None) -> "ExchangeType":
+    def get(
+        self, name: str = "", instrument: Optional["Instrument"] = None
+    ) -> "ExchangeType":
         if name:
             return self._name_map[name]
         raise NotImplementedError()

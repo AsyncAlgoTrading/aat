@@ -17,9 +17,9 @@ class StrategyUtilsMixin(object):
 
     def orders(
         self,
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Order]:
         """select all open orders
 
@@ -34,9 +34,9 @@ class StrategyUtilsMixin(object):
 
     def pastOrders(
         self,
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Order]:
         """select all past orders
 
@@ -51,9 +51,9 @@ class StrategyUtilsMixin(object):
 
     def trades(
         self,
-        instrument: Instrument = None,
-        exchange: ExchangeType = None,
-        side: Side = None,
+        instrument: Optional[Instrument] = None,
+        exchange: Optional[ExchangeType] = None,
+        side: Optional[Side] = None,
     ) -> List[Trade]:
         """select all past trades
 
@@ -83,12 +83,16 @@ class StrategyUtilsMixin(object):
         return self._manager.now()
 
     def instruments(
-        self, type: InstrumentType = None, exchange: ExchangeType = None
+        self,
+        type: Optional[InstrumentType] = None,
+        exchange: Optional[ExchangeType] = None,
     ) -> List[Instrument]:
         """Return list of all available instruments"""
         return Instrument._instrumentdb.instruments(type=type, exchange=exchange)
 
-    def exchanges(self, instrument_type: InstrumentType = None) -> List[Exchange]:
+    def exchanges(
+        self, instrument_type: Optional[InstrumentType] = None
+    ) -> List[Exchange]:
         """Return list of all available exchanges"""
         return list(
             set(
@@ -99,7 +103,9 @@ class StrategyUtilsMixin(object):
         )
 
     def accounts(
-        self, type: InstrumentType = None, exchange: ExchangeType = None
+        self,
+        type: Optional[InstrumentType] = None,
+        exchange: Optional[ExchangeType] = None,
     ) -> None:  # TODO
         """Return list of all accounts"""
         raise NotImplementedError()
@@ -109,7 +115,7 @@ class StrategyUtilsMixin(object):
         return await self._manager.subscribe(instrument=instrument, strategy=self)  # type: ignore # mixin
 
     async def lookup(
-        self, instrument: Optional[Instrument], exchange: ExchangeType = None
+        self, instrument: Optional[Instrument], exchange: Optional[ExchangeType] = None
     ) -> List[Instrument]:
         """Return list of all available instruments that match the instrument given"""
         return await self._manager.lookup(instrument, exchange=exchange)
@@ -122,8 +128,8 @@ class StrategyUtilsMixin(object):
         self,
         function: Callable,
         seconds: int = 0,
-        minutes: int = None,
-        hours: int = None,
+        minutes: Optional[int] = None,
+        hours: Optional[int] = None,
     ) -> Periodic:
         """periodically run a given async function. NOTE: precise timing
         is NOT guaranteed due to event loop scheduling.
@@ -140,8 +146,8 @@ class StrategyUtilsMixin(object):
         self,
         function: Callable,
         second: int = 0,
-        minute: int = None,
-        hour: int = None,
+        minute: Optional[int] = None,
+        hour: Optional[int] = None,
     ) -> Periodic:
         """periodically run a given async function. NOTE: precise timing
         is NOT guaranteed due to event loop scheduling.
