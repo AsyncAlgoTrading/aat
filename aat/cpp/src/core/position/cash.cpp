@@ -7,10 +7,10 @@ namespace aat {
 namespace core {
 
   CashPosition::CashPosition(double notional, timestamp_t timestamp, Instrument& instrument, ExchangeType& exchange)
-    : instrument(instrument)
+    : timestamp(timestamp)
+    , instrument(instrument)
     , exchange(exchange)
-    , notional(notional)
-    , timestamp(timestamp) {
+    , notional(notional) {
     notional_history.push_back(notional);
     notional_timestamps.push_back(timestamp);
   }

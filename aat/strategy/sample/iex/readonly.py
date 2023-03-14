@@ -31,7 +31,7 @@ if __name__ == "__main__":
             "--trading_type",
             "backtest",
             "--exchanges",
-            "aat.exchange.public.iex:IEX,Tpk_ecc89ddf30a611e9958142010a80043c,True,1m,,,,",
+            "aat.exchange.public.iex:IEX,pk_75e8105f05d342a8abb1630c8894376c,True,1m,,,,",
             "--strategies",
             "aat.strategy.sample.iex.readonly:ReadOnlyStrategy,F",
         ]

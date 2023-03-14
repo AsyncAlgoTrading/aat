@@ -243,7 +243,7 @@ if __name__ == "__main__":
             "--trading_type",
             "backtest",
             "--exchanges",
-            "aat.exchange.public.iex:IEX,Tpk_ecc89ddf30a611e9958142010a80043c,True,1m,,,,",
+            "aat.exchange.public.iex:IEX,pk_75e8105f05d342a8abb1630c8894376c,True,1m,,,,",
             # "aat.exchange.public.iex:IEX,Tpk_ecc89ddf30a611e9958142010a80043c,True,1d,20210821",
             "--strategies",
             "aat.strategy.sample.iex.momentum:MomentumStrategy,SPY-EQUITY,25,45,-10,10000",

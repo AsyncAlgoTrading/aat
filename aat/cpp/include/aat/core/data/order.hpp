@@ -20,6 +20,8 @@ namespace core {
       OrderFlag flag = OrderFlag::NONE, std::shared_ptr<Order> stop_target = nullptr);
     virtual ~Order() {}
 
+    virtual bool operator==(Order& other) const;
+
     bool finished() const;
     void finish();
 

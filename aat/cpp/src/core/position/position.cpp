@@ -8,11 +8,11 @@ namespace core {
 
   Position::Position(double size, double price, timestamp_t timestamp, Instrument& instrument, ExchangeType& exchange,
     std::vector<std::shared_ptr<Trade>>& trades)
-    : instrument(instrument)
+    : timestamp(timestamp)
+    , instrument(instrument)
     , exchange(exchange)
     , size(size)
     , price(price)
-    , timestamp(timestamp)
     , investment(size * price)
     , notional(size * price)
     , instrumentPrice(price)

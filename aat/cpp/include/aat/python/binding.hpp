@@ -70,8 +70,18 @@ PYBIND11_MODULE(binding, m) {
     .export_values();
 
   py::enum_<InstrumentType>(m, "InstrumentTypeCpp", py::arithmetic())
-    .value("CURRENCY", InstrumentType::CURRENCY)
+    .value("OTHER", InstrumentType::OTHER)
     .value("EQUITY", InstrumentType::EQUITY)
+    .value("BOND", InstrumentType::BOND)
+    .value("OPTION", InstrumentType::OPTION)
+    .value("FUTURE", InstrumentType::FUTURE)
+    .value("PAIR", InstrumentType::PAIR)
+    .value("SPREAD", InstrumentType::SPREAD)
+    .value("FUTURESOPTION", InstrumentType::FUTURESOPTION)
+    .value("MUTUALFUND", InstrumentType::MUTUALFUND)
+    .value("COMMODITY", InstrumentType::COMMODITY)
+    .value("CURRENCY", InstrumentType::CURRENCY)
+    .value("INDEX", InstrumentType::INDEX)
     .export_values();
 
   py::enum_<OrderType>(m, "OrderTypeCpp", py::arithmetic())
@@ -198,6 +208,7 @@ PYBIND11_MODULE(binding, m) {
       py::arg("exchange").none(false), py::arg("notional").none(false), py::arg("order_type").none(false),
       py::arg("flag").none(false), py::arg("stop_target").none(true))
     .def("__repr__", &Order::toString)
+    .def("__eq__", &Order::operator==)
     .def("finished", &Order::finished)
     .def("finish", &Order::finish)
     .def("json", &Order::toJson)

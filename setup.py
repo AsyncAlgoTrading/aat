@@ -115,7 +115,9 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     keywords="algorithmic trading cryptocurrencies",
-    packages=find_packages(),
+    packages=find_packages(
+        include=["aat.strategy.sample.csv.data"], exclude=["aat.cpp*"]
+    ),
     include_package_data=True,
     zip_safe=False,
     entry_points={

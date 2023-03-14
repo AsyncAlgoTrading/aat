@@ -88,9 +88,7 @@ class IEX(Exchange):
 
         For OrderEntry-only, can just return None
         """
-        self._client = pyEX.Client(
-            self._api_key, "sandbox" if self._is_sandbox else "stable"
-        )
+        self._client = pyEX.Client(self._api_key, "stable")
 
     # ******************* #
     # Market Data Methods #
