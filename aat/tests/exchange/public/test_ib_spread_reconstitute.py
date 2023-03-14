@@ -27,7 +27,6 @@ from aat.exchange.public.ib.spread import SpreadReconstitute  # noqa: E402
 
 class TestIBReconstituteSpread:
     def test_spread(self) -> None:
-
         sr = SpreadReconstitute()
 
         original_order = Order(10, 7, Side.BUY, spread)

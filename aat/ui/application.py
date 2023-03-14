@@ -17,7 +17,6 @@ class ServerApplication(tornado.web.Application):
         *args: Any,
         **kwargs: Any,
     ) -> None:
-
         handlers = handlers or []
 
         logging.getLogger("tornado.access").disabled = False

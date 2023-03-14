@@ -109,7 +109,6 @@ class Portfolio(object):
             and strategy.name() in self._active_positions_by_strategy
             and trade.instrument in self._active_positions_by_strategy[strategy.name()]
         ):
-
             # update position
             cur_pos = self._active_positions_by_strategy[strategy.name()][
                 trade.instrument
@@ -250,7 +249,6 @@ class Portfolio(object):
 
         for position_list in self._active_positions_by_instrument.values():
             for position in position_list:
-
                 if instrument and position.instrument != instrument:
                     # Skip if not asking for this instrument
                     continue

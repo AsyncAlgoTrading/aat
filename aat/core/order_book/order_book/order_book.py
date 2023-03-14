@@ -73,7 +73,6 @@ class OrderBook(OrderBookBase):
         exchange_name: Union[ExchangeType, str] = "",
         callback: Optional[Callable] = None,
     ) -> None:
-
         self._instrument = instrument
         self._exchange_name: ExchangeType = (
             exchange_name

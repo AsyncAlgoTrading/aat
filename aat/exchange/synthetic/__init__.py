@@ -88,7 +88,6 @@ class SyntheticExchange(Exchange):
     def _seedOrders(self) -> None:
         # seed all orderbooks
         for instrument, orderbook in self._orderbooks.items():
-
             # pick a random startpoint, endpoint, and midpoint
             offset = 50
             start = round(random() * offset, 2) + offset

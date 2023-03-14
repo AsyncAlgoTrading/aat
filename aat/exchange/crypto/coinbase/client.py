@@ -49,7 +49,6 @@ class CoinbaseExchangeClient(AuthBase):
         passphrase: str,
         satoshis: bool = False,
     ) -> None:
-
         self.trading_type = trading_type
 
         # if running in sandbox mode, use sandbox urls
@@ -321,7 +320,7 @@ class CoinbaseExchangeClient(AuthBase):
             self.seqnum[sub] = ob["sequence"]  # type: ignore
 
             # generate an open limit order for each bid
-            for (bid, qty, id) in ob["bids"]:
+            for bid, qty, id in ob["bids"]:
                 o = Order(
                     float(qty) * self._multiple,
                     float(bid),
@@ -333,7 +332,7 @@ class CoinbaseExchangeClient(AuthBase):
                 yield Event(type=EventType.OPEN, target=o)
 
             # generate an open limit order for each ask
-            for (bid, qty, id) in ob["asks"]:
+            for bid, qty, id in ob["asks"]:
                 o = Order(
                     float(qty) * self._multiple,
                     float(bid),
@@ -484,7 +483,6 @@ class CoinbaseExchangeClient(AuthBase):
             async for msg in ws:
                 # only handle text messages
                 if msg.type == aiohttp.WSMsgType.TEXT:
-
                     # load the data as json
                     x = json.loads(msg.data)
 
@@ -551,7 +549,6 @@ class CoinbaseExchangeClient(AuthBase):
             async for msg in ws:
                 # only handle text messages
                 if msg.type == aiohttp.WSMsgType.TEXT:
-
                     # load the data as json
                     x = json.loads(msg.data)
 
