@@ -1,9 +1,9 @@
 
 <img src="https://raw.githubusercontent.com/AsyncAlgoTrading/aat/main/docs/img/icon.png" width="200px"></img>
 
-[![Build Status](https://github.com/AsyncAlgoTrading/aat/workflows/Build%20Status/badge.svg?branch=main)](https://github.com/AsyncAlgoTrading/aat/actions?query=workflow%3A%22Build+Status%22)
+[![Build Status](https://github.com/AsyncAlgoTrading/aat/actions/workflows/build.yml/badge.svg)](https://github.com/AsyncAlgoTrading/aat/actions?query=workflow%3A%22Build+Status%22)
 [![Coverage](https://codecov.io/gh/AsyncAlgoTrading/aat/branch/main/graph/badge.svg)](https://codecov.io/gh/AsyncAlgoTrading/aat)
-[![License](https://img.shields.io/github/license/timkpaine/aat.svg)](https://pypi.python.org/pypi/aat)
+[![License](https://img.shields.io/github/license/timkpaine/aat.svg)](https://github.com/AsyncAlgoTrading/aat/blob/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/aat.svg)](https://pypi.python.org/pypi/aat)
 [![Docs](https://img.shields.io/readthedocs/aat.svg)](http://aat.readthedocs.io/en/latest/)
  
