@@ -6,7 +6,7 @@ _INSTRUMENT = Instrument("TE.ST")
 
 
 class TestOrderFlagsTaker:
-    def setup(self):
+    def setup_method(self, method):
         self.ob = OrderBook(_INSTRUMENT)
         _seed(self.ob, _INSTRUMENT)
         assert self.ob.topOfBook() == {Side.BUY: [5.0, 1.0], Side.SELL: [5.5, 1.0]}
